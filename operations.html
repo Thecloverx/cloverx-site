@@ -152,24 +152,27 @@
     <nav class="nav" id="nav">
       <button class="item active" data-view="overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</button>
 
-      <div class="group open" id="g-dash">
-        <button class="item" data-toggle="g-dash"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h8V3H3zM13 21h8V3h-8zM3 21h8v-6H3z"/></svg>Dashboards<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="group open" id="g-manage">
+        <button class="item" data-toggle="g-manage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>การจัดการ (Management)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <div class="group open" id="g-sales">
-            <button class="item" data-toggle="g-sales">Sales &amp; Orders<svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-            <div class="children">
-              <button class="item" data-view="order"><span class="dot"></span>Order</button>
-              <button class="item" data-view="preorder"><span class="dot"></span>Pre-Order</button>
-              <button class="item" data-view="podash"><span class="dot"></span>วิเคราะห์ยอดขาย</button>
-            </div>
-          </div>
-          <div class="group open" id="g-xvisor">
-            <button class="item" data-toggle="g-xvisor">X-Visor Management<svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-            <div class="children">
-              <button class="item" data-view="cert"><span class="dot"></span>Certification</button>
-              <button class="item" data-view="activity"><span class="dot"></span>Activity</button>
-            </div>
-          </div>
+          <button class="item" data-view="order"><span class="dot"></span>Order</button>
+          <button class="item" data-view="preorder"><span class="dot"></span>Pre-Order</button>
+          <button class="item" data-view="qr"><span class="dot"></span>QR Code</button>
+        </div>
+      </div>
+
+      <div class="group open" id="g-dash">
+        <button class="item" data-toggle="g-dash"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>แดชบอร์ด (Dashboard)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="podash"><span class="dot"></span>Pre-Order</button>
+        </div>
+      </div>
+
+      <div class="group open" id="g-xvisor">
+        <button class="item" data-toggle="g-xvisor"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>X-Visor Management<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="cert"><span class="dot"></span>Certification</button>
+          <button class="item" data-view="activity"><span class="dot"></span>Activity</button>
         </div>
       </div>
 
@@ -265,9 +268,10 @@
 
   // view meta for non-overview pages
   var META={
-    order:{t:'Order Dashboard',th:'แดชบอร์ดคำสั่งซื้อ',d:'ติดตามคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'dash'},
-    preorder:{t:'Pre-Order Dashboard',th:'แดชบอร์ด Pre-Order',d:'จัดการคำสั่งซื้อล่วงหน้าและคิวรอดำเนินการ',kind:'dash'},
-    podash:{t:'Sales Analytics',th:'วิเคราะห์ยอดขาย Pre-Order',d:'ยอดขายรายวัน ตามสินค้า ช่องทางชำระ สถานะ ผู้แนะนำ และจังหวัด',kind:'dash'},
+    order:{t:'Order Management',th:'จัดการคำสั่งซื้อ',d:'ติดตามและจัดการคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'plain'},
+    preorder:{t:'Pre-Order Management',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบเสร็จ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
+    qr:{t:'QR Code',th:'QR Code สั่งซื้อ Pre-Order',d:'ลิงก์และ QR สำหรับส่งให้ลูกค้าเปิดหน้าสั่งซื้อ',kind:'plain'},
+    podash:{t:'Pre-Order Dashboard',th:'แดชบอร์ด Pre-Order',d:'ตัวเลข ยอดขาย แนวโน้ม และสัดส่วน (ดูอย่างเดียว)',kind:'dash'},
     cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
     activity:{t:'Activity Dashboard',th:'แดชบอร์ดกิจกรรม X-Visor',d:'ติดตามกิจกรรมและความเคลื่อนไหวของทีม X-Visor',kind:'dash'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
@@ -393,8 +397,24 @@
     }).join('');
     var prodPanel='<div class="panel"><div class="ph"><h3>ตั้งค่าสินค้า / ราคา / สต๊อกพรีออเดอร์</h3><a class="link" href="#" onclick="return false">แก้ไข →</a></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>สินค้า</th><th>ราคา</th><th>โควตา</th><th>คงเหลือ</th><th>สถานะ</th></tr></thead><tbody>'+prows+'</tbody></table></div></div>';
-    gen.innerHTML='<div class="head"><h1>แดชบอร์ด Pre-Order</h1><p>จัดการคำสั่งซื้อล่วงหน้า ตรวจสลิป ยืนยันการชำระเงิน และแจกลิงก์/QR ให้ลูกค้า</p></div>'
-      +kpis+linkPanel+ordersPanel+prodPanel;
+    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>จัดการ Pre-Order</h1><p>ตรวจสลิป ยืนยันการชำระเงิน ออกใบเสร็จ และจัดคิวคำสั่งซื้อ</p></div><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button></div>'
+      +kpis+ordersPanel+prodPanel;
+  }
+  function renderQR(){
+    gen.innerHTML='<div class="head"><h1>QR Code สั่งซื้อ Pre-Order</h1><p>ส่ง QR หรือลิงก์นี้ให้ลูกค้าเพื่อเปิดหน้าสั่งซื้อ — คำสั่งซื้อจะเข้ามาที่หน้า "จัดการ Pre-Order" อัตโนมัติ</p></div>'
+      +'<div class="panel" style="max-width:640px"><div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3></div>'
+      +'<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">'
+      +'<div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;flex:none;text-align:center"><img src="'+PO_QR+'" alt="QR Pre-Order" style="width:190px;height:190px;display:block;image-rendering:pixelated"><a href="'+PO_QR+'" download="cloverx-preorder-qr.png" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--brand);font-weight:700;text-decoration:none">ดาวน์โหลด QR ⤓</a></div>'
+      +'<div style="flex:1;min-width:260px">'
+      +'<label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์หน้าสั่งซื้อ (ลูกค้าสั่งเอง)</label>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><input id="poLinkInput" readonly value="'+PO_LINK+'" style="flex:1;min-width:200px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;color:var(--ink);background:var(--soft)">'
+      +'<button id="poCopyBtn" onclick="poCopy()" style="background:var(--brand);color:#fff;border:0;border-radius:10px;padding:0 18px;font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer">คัดลอกลิงก์</button>'
+      +'<a href="'+PO_LINK+'" target="_blank" style="background:#fff;color:var(--brand);border:1.5px solid var(--brand);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.86rem;text-decoration:none">เปิดหน้า ↗</a></div>'
+      +'<label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์สำหรับตัวแทน (ได้กล่องลิงก์ส่งลูกค้า)</label>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="poAgentInput" readonly value="'+PO_LINK+'?agent=1" style="flex:1;min-width:200px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;color:var(--ink);background:var(--soft)">'
+      +'<a href="'+PO_LINK+'?agent=1" target="_blank" style="background:#fff;color:var(--brand);border:1.5px solid var(--brand);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.86rem;text-decoration:none">เปิดโหมดตัวแทน ↗</a></div>'
+      +'<p style="font-size:.78rem;color:var(--muted);margin-top:12px">* ลูกค้าสั่งเอง = เด้งไปหน้าชำระเงินอัตโนมัติ · ตัวแทน = ได้ลิงก์ชำระเงินไว้ส่งต่อให้ลูกค้า</p>'
+      +'</div></div></div>';
   }
   function renderPreorder(){ poDraw(); poRefresh(); }
 
@@ -484,7 +504,7 @@
     var isOv=(v==='overview');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     var m=v==='overview'?{t:'Overview'}:META[v];
