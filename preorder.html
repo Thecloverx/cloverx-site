@@ -394,7 +394,7 @@
           <div id="bankFields">
             <div class="bankbox">
               <div class="r"><span>ธนาคาร</span><b>กสิกรไทย (KBank)</b></div>
-              <div class="r"><span>เลขที่บัญชี</span><span style="display:inline-flex;align-items:center;gap:8px"><b class="num" id="acctNo">231-1-71119-1</b><button type="button" id="acctCopy" onclick="copyAcct()" title="คัดลอกเลขบัญชี" style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--accent);color:var(--accent);border-radius:8px;padding:4px 10px;font-family:inherit;font-weight:700;font-size:.74rem;cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="acctCopyTxt">คัดลอก</span></button></span></div>
+              <div class="r"><span>เลขที่บัญชี</span><span style="display:inline-flex;align-items:center;gap:8px"><b class="num" id="acctNo">231-1-71119-1</b><button type="button" id="acctCopy" onclick="copyAcct()" title="คัดลอกเลขบัญชี" aria-label="คัดลอกเลขบัญชี" style="display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid var(--accent);color:var(--accent);border-radius:8px;padding:6px 8px;cursor:pointer"><span id="acctCopyIcon" style="display:inline-flex"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span></button></span></div>
               <div class="r"><span>ชื่อบัญชี</span><b>บจก. โคลเวอร์เอ็กซ์ (ไทยแลนด์)</b></div>
               <div class="note">* กรุณาโอนตามยอดที่สั่งซื้อ แล้วแนบสลิปยืนยันการชำระเงิน</div>
             </div>
@@ -497,8 +497,10 @@
   function scrollTop(){window.scrollTo(0,0)}
   function copyAcct(){
     var no='231-1-71119-1';
-    var done=function(){var t=byId('acctCopyTxt'),b=byId('acctCopy');if(!t)return;var o=t.textContent;t.textContent='คัดลอกแล้ว ✓';if(b){b.style.background='var(--accent)';b.style.color='#fff';}
-      setTimeout(function(){t.textContent=o;if(b){b.style.background='#fff';b.style.color='var(--accent)';}},1600);};
+    var done=function(){var ic=byId('acctCopyIcon'),b=byId('acctCopy');if(!ic)return;var o=ic.innerHTML;
+      ic.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>';
+      if(b){b.style.background='var(--accent)';b.style.color='#fff';}
+      setTimeout(function(){ic.innerHTML=o;if(b){b.style.background='#fff';b.style.color='var(--accent)';}},1600);};
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(no).then(done).catch(function(){fallbackCopy(no);done();});}
     else{fallbackCopy(no);done();}
   }
