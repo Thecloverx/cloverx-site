@@ -151,6 +151,7 @@
     </div>
     <nav class="nav" id="nav">
       <button class="item active" data-view="overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</button>
+      <button class="item" data-view="podash"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>Dashboard</button>
 
       <div class="group open" id="g-manage">
         <button class="item" data-toggle="g-manage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>การจัดการ (Management)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -158,13 +159,6 @@
           <button class="item" data-view="order"><span class="dot"></span>Order</button>
           <button class="item" data-view="preorder"><span class="dot"></span>Pre-Order</button>
           <button class="item" data-view="qr"><span class="dot"></span>QR Code</button>
-        </div>
-      </div>
-
-      <div class="group open" id="g-dash">
-        <button class="item" data-toggle="g-dash"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>แดชบอร์ด (Dashboard)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="children">
-          <button class="item" data-view="podash"><span class="dot"></span>Pre-Order</button>
         </div>
       </div>
 
@@ -430,10 +424,23 @@
       return '<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:.85rem;margin-bottom:5px"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.label+'</span><span class="num" style="color:var(--muted);white-space:nowrap">'+(x.sub||'')+'</span></div>'
         +'<div class="progress"><b style="width:'+pct+'%;background:'+(color||'var(--brand)')+'"></b></div></div>';}).join('');
   }
+  var DASH_SRC={ preorder:'/preorder-dashboard.html' };
   function renderPoDash(){
-    gen.innerHTML='<div class="head"><h1>วิเคราะห์ยอดขาย Pre-Order</h1><p>กำลังโหลดข้อมูล…</p></div>';
-    fetch(ordersUrl()).then(function(r){return r.json();}).then(function(d){pdDraw(Array.isArray(d)?d:[]);}).catch(function(){pdDraw([]);});
+    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
+      +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+        +'<h1 style="margin:0">Dashboard</h1>'
+        +'<select id="dashPick" onchange="pickDash(this.value)" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-family:inherit;font-weight:700;color:var(--brand);font-size:.9rem;cursor:pointer">'
+          +'<option value="preorder">พรีออเดอร์ (Pre-Order)</option>'
+          +'<option value="order" disabled>ออเดอร์ (Order) · เร็ว ๆ นี้</option>'
+          +'<option value="finance" disabled>การเงิน (Finance) · เร็ว ๆ นี้</option>'
+          +'<option value="exam" disabled>ระบบสอบ (Exam) · เร็ว ๆ นี้</option>'
+        +'</select>'
+      +'</div>'
+      +'<a href="/preorder-dashboard.html" target="_blank" rel="noopener" style="background:var(--brand);border:1px solid var(--brand);border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a>'
+    +'</div>'
+    +'<iframe id="dashFrame" src="'+DASH_SRC.preorder+'" style="width:100%;height:calc(100vh - 168px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
   }
+  function pickDash(v){ var f=document.getElementById('dashFrame'); if(f&&DASH_SRC[v])f.src=DASH_SRC[v]; }
   function pdDraw(orders){
     var PAID=['confirmed','paid'];
     var rev=orders.filter(function(o){return PAID.indexOf(o.status)>=0;});
