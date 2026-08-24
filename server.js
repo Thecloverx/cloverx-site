@@ -135,6 +135,50 @@ function sendReceiptEmail(o, base) {
   });
 }
 
+// ================= STRIPE CHECKOUT SESSION (ลิงก์ชำระเงินรวมยอดอัตโนมัติ) =================
+// เปิดใช้งานเมื่อกำหนด ENV: STRIPE_SECRET_KEY (sk_live_... หรือ sk_test_...)
+// สร้างลิงก์ชำระเงิน Stripe รวมทุกชิ้นในออเดอร์เป็นลิงก์เดียว + ผูก client_reference_id = เลขออเดอร์
+// เพื่อให้ webhook จับคู่การชำระเงินแบบเรียลไทม์ได้ (ไม่ต้องแยกลิงก์ตามสินค้าอีก)
+function stripeConfigured() { return !!process.env.STRIPE_SECRET_KEY; }
+function createCheckoutSession(o, base) {
+  return new Promise(function (resolve) {
+    if (!stripeConfigured()) { resolve(null); return; }
+    var items = (o.items || []).filter(function (it) { return (Number(it.price) || 0) > 0; });
+    if (!items.length) { resolve(null); return; }
+    var params = [];
+    params.push(['mode', 'payment']);
+    params.push(['client_reference_id', o.id]);
+    params.push(['success_url', base + '/preorder?paid=' + encodeURIComponent(o.id)]);
+    params.push(['cancel_url', base + '/preorder']);
+    params.push(['metadata[order_id]', o.id]);
+    if (o.email) params.push(['customer_email', o.email]);
+    else if (o.payEmail) params.push(['customer_email', o.payEmail]);
+    items.forEach(function (it, i) {
+      var name = String(it.nm || 'CloverX') + (it.fam ? ' (ครอบครัว)' : '');
+      params.push(['line_items[' + i + '][price_data][currency]', 'thb']);
+      params.push(['line_items[' + i + '][price_data][product_data][name]', name]);
+      params.push(['line_items[' + i + '][price_data][unit_amount]', String(Math.round((Number(it.price) || 0) * 100))]);
+      params.push(['line_items[' + i + '][quantity]', '1']);
+    });
+    var body = params.map(function (p) { return encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1]); }).join('&');
+    var req = https.request({
+      hostname: 'api.stripe.com', path: '/v1/checkout/sessions', method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) }
+    }, function (resp) {
+      var b = ''; resp.on('data', function (d) { b += d; });
+      resp.on('end', function () {
+        try {
+          var j = JSON.parse(b);
+          if (resp.statusCode >= 200 && resp.statusCode < 300 && j.url) { resolve({ url: j.url, id: j.id }); }
+          else { console.log('[stripe] checkout session fail', resp.statusCode, b.slice(0, 200)); resolve(null); }
+        } catch (e) { console.log('[stripe] checkout parse error', e.message); resolve(null); }
+      });
+    });
+    req.on('error', function (e) { console.log('[stripe] checkout error', e.message); resolve(null); });
+    req.write(body); req.end();
+  });
+}
+
 // ---- create an order (from customer Pre-Order page) ----
 app.post('/api/orders', (req, res) => {
   const o = req.body || {};
@@ -166,7 +210,22 @@ app.post('/api/orders', (req, res) => {
   };
   list.unshift(rec);
   write(list);
-  res.json({ ok: true, id });
+
+  // บัตรเครดิต: สร้างลิงก์ชำระเงิน Stripe รวมยอดทั้งออเดอร์ (ทุกชิ้น) เป็นลิงก์เดียวอัตโนมัติ
+  if (rec.pay === 'card' && stripeConfigured()) {
+    const base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host);
+    createCheckoutSession(rec, base).then(function (s) {
+      if (s) {
+        const l = read(); const x = l.find(function (y) { return y.id === rec.id; });
+        if (x) { x.stripe = Object.assign({}, x.stripe, { checkoutSessionId: s.id, checkoutUrl: s.url }); write(l); }
+        res.json({ ok: true, id: rec.id, payUrl: s.url });
+      } else {
+        res.json({ ok: true, id: rec.id }); // สร้างลิงก์ไม่สำเร็จ → ยังบันทึกออเดอร์ปกติ
+      }
+    });
+  } else {
+    res.json({ ok: true, id: rec.id });
+  }
 });
 
 // ---- list orders (for Operations dashboard) ----

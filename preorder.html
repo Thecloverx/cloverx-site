@@ -942,11 +942,16 @@
       .then(function(r){return r.json();})
       .then(function(res){
         var oid=res&&res.id?res.id:'PO-'+Date.now().toString().slice(-6);
-        if(payBase&&res&&res.id){
-          var sep=payBase.indexOf('?')>=0?'&':'?';
-          var cem=byId('f_cardEmail').value.trim();
-          // client_reference_id = เลขคำสั่งซื้อ → Stripe ส่งกลับใน webhook เพื่อจับคู่แบบเรียลไทม์
-          state.payUrl=payBase+sep+'client_reference_id='+encodeURIComponent(res.id)+(cem?('&prefilled_email='+encodeURIComponent(cem)):'');
+        if(state.pay==='card'){
+          if(res&&res.payUrl){
+            // ลิงก์ Stripe รวมยอดทั้งออเดอร์ (ทุกชิ้น) ที่เซิร์ฟเวอร์สร้างให้ — ผูกเลขคำสั่งซื้อไว้แล้ว
+            state.payUrl=res.payUrl;
+          } else if(payBase&&res&&res.id){
+            // สำรอง: ลิงก์สินค้าเดี่ยวแบบเดิม (กรณียังไม่ตั้งค่า STRIPE_SECRET_KEY)
+            var sep=payBase.indexOf('?')>=0?'&':'?';
+            var cem=byId('f_cardEmail').value.trim();
+            state.payUrl=payBase+sep+'client_reference_id='+encodeURIComponent(res.id)+(cem?('&prefilled_email='+encodeURIComponent(cem)):'');
+          }
         }
         showDone(oid, !!(res&&res.id));
       })
