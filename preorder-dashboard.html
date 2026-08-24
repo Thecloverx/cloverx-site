@@ -207,6 +207,8 @@ function maskName(n){ n=String(n||'').trim(); if(!n)return 'ลูกค้า';
 var ALL=[], VIEW=[], RANGE='all';
 var custPage=1, refPage=1, provPage=1;
 var custFilters={team:'',status:'',product:''};
+var SEG='day'; // มิติแบ่งกลุ่มสำหรับรายงาน CEO: day|team|xvisor|channel|campaign
+function setSeg(v){ SEG=v; render(); }
 
 /* ================= LOAD ================= */
 function loadData(){
@@ -272,6 +274,7 @@ function render(){
  if(!VIEW.length){ el('app').innerHTML='<div class="card panel"><div class="center">ยังไม่มีข้อมูลออเดอร์ในช่วงเวลานี้</div></div>'; return; }
  var h='';
  h+=kpiRow(A);
+ h+=ceoSection(A);
  h+=stockRow(A);
  h+=perProductTable(A);
  h+=actionCards(A);
@@ -514,6 +517,53 @@ function provinceSection(A){
   return '<div class="li"><div class="rank">'+idx+'</div><div class="body"><div class="t">'+esc(r.p)+'</div><div class="track" style="margin-top:6px"><b style="width:'+p+'%;background:var(--pink)"></b></div></div><div class="amt">'+num(r.n)+'<small>ราย</small></div></div>';
  }).join('');
  return '<div class="sec"><h2>ปลายทางจัดส่ง <span class="stamp">'+num(arr.length)+' จังหวัด</span></h2><div class="card panel">'+(body||'<div class="center">—</div>')+pager(provPage,pages,'provPage')+'</div></div>';
+}
+
+/* ================= CEO SUMMARY (รายงานผู้บริหาร) ================= */
+function segValue(o){
+ if(SEG==='day'){ var d=new Date(o.at); if(isNaN(d))return 'ไม่ระบุ'; return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2); }
+ if(SEG==='team'){ var r=(o.team||'').trim(); if(!r){ var rf=(o.ref||'').trim(); if(rf){ var parts=rf.split('·'); r=(parts[1]||parts[0]||'').trim(); } } return r?maskName(r.replace(/[0-9]{3,}/g,'').trim()):'ไม่ระบุ'; }
+ if(SEG==='xvisor'){ return (o.xvisor||'').trim()||'ไม่ระบุ'; }
+ if(SEG==='channel'){ return (o.channel||'').trim()||'ไม่ระบุ'; }
+ if(SEG==='campaign'){ return (o.campaign||'').trim()||'ไม่ระบุ'; }
+ return 'ไม่ระบุ';
+}
+function isDelivered(o){ return !!(o.delivered||o.deliveredAt); }
+function isRefund(o){ return o.status==='refunded'||!!o.refunded; }
+function ceoSection(A){
+ var delivered=0, refundN=0, refundAmt=0;
+ VIEW.forEach(function(o){ if(isDelivered(o))delivered++; if(isRefund(o)){refundN++;refundAmt+=(Number(o.total)||0);} });
+ function tile(lb,v,sub,cls){ return '<div class="card kpi"><div class="lb" style="color:var(--sub);font-size:.8rem;font-weight:600;margin-bottom:6px">'+lb+'</div><div class="v num" style="font-size:1.5rem">'+v+'</div><div class="d '+(cls||'')+'">'+sub+'</div></div>'; }
+ var tiles='<div class="grid g4 mb">'
+  +tile('Order (คำสั่งซื้อ)',num(A.n),num(A.sets)+' ที่ยังอยู่ · '+num(A.pieces)+' ชิ้น')
+  +tile('Customer (ลูกค้า)',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
+  +tile('Revenue (ยอดขาย)',baht(A.sales),'เก็บเงินได้ '+baht(A.paidAmt),'up')
+  +tile('Package (แพ็กเกจ)',num(A.sets),num(A.family)+' สิทธิ์ Family')
+  +tile('Payment (ชำระแล้ว)',num(A.paidN),pct(A.paidN,A.n)+'% · รอ '+num(A.pendN),'up')
+  +tile('Delivered (จัดส่งแล้ว)',num(delivered),delivered?'':'ยังไม่เก็บสถานะจัดส่ง')
+  +tile('Cancel (ยกเลิก)',num(A.cancN),baht(A.cancAmt),A.cancN?'down':'')
+  +tile('Refund (คืนเงิน)',num(refundN),refundN?baht(refundAmt):'ยังไม่มีการคืนเงิน',refundN?'down':'')
+  +'</div>';
+ var dims=[['day','วัน'],['team','ทีม'],['xvisor','X-Visor'],['channel','Channel'],['campaign','Campaign']];
+ var picker='<select class="f" onchange="setSeg(this.value)" style="font-weight:700;color:var(--brand)">'+dims.map(function(d){return '<option value="'+d[0]+'"'+(SEG===d[0]?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select>';
+ var groups={};
+ VIEW.forEach(function(o){ var k=segValue(o); if(!groups[k])groups[k]={orders:0,cust:{},rev:0,deliv:0,cancel:0,refund:0}; var g=groups[k];
+   var b=bucket(o.status); g.orders++; g.cust[o.phone||o.name||o.id]=1;
+   if(b!=='cancel')g.rev+=(Number(o.total)||0);
+   if(isDelivered(o))g.deliv++; if(b==='cancel')g.cancel++; if(isRefund(o))g.refund++;
+ });
+ var keys=Object.keys(groups);
+ keys.sort(function(a,b){ if(SEG==='day')return a<b?1:-1; return groups[b].rev-groups[a].rev; });
+ var noData=(keys.length===1 && keys[0]==='ไม่ระบุ');
+ var rows=keys.slice(0,SEG==='day'?15:30).map(function(k){var g=groups[k];
+   return '<tr><td><b>'+esc(k)+'</b></td><td class="n">'+num(g.orders)+'</td><td class="n">'+num(Object.keys(g.cust).length)+'</td><td class="n"><b>'+baht(g.rev)+'</b></td><td class="n">'+num(g.deliv)+'</td><td class="n" style="color:var(--bad)">'+num(g.cancel)+'</td><td class="n">'+num(g.refund)+'</td></tr>';
+ }).join('');
+ var dimLabel=(dims.filter(function(d){return d[0]===SEG;})[0]||['','กลุ่ม'])[1];
+ var note = noData ? '<div class="note amber" style="margin:0 0 12px">มิติ “'+dimLabel+'” ยังไม่ได้เก็บข้อมูลในออเดอร์ชุดนี้ — ตัวเลขจะขึ้นเมื่อออเดอร์ใหม่บันทึกฟิลด์นี้ (เพิ่มช่องเก็บได้ในหน้าสั่งซื้อ/Operations)</div>' : '';
+ var seg='<div class="card panel">'
+   +'<div class="ph"><h3>แบ่งตาม</h3>'+picker+'</div>'+note
+   +'<div class="twrap"><table><thead><tr><th>'+dimLabel+'</th><th class="n">Order</th><th class="n">Customer</th><th class="n">Revenue</th><th class="n">Delivered</th><th class="n">Cancel</th><th class="n">Refund</th></tr></thead><tbody>'+(rows||'<tr><td colspan=7 class=center>—</td></tr>')+'</tbody></table></div></div>';
+ return '<div class="sec"><h2>รายงานผู้บริหาร (CEO Summary) <span class="stamp">สำหรับช่วง Launch</span></h2>'+tiles+seg+'</div>';
 }
 
 /* ================= PAGER ================= */
