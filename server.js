@@ -39,7 +39,9 @@ app.post('/api/orders', (req, res) => {
     name: o.name || '', phone: o.phone || '', email: o.email || '', addr: o.addr || '',
     ref: o.ref || '', ship: o.ship || 'post', pickup: o.pickup || null,
     pay: o.pay || 'bank', items: Array.isArray(o.items) ? o.items : [], total: Number(o.total) || 0,
-    transfer: o.transfer || null, slipUrl
+    transfer: o.transfer || null, slipUrl,
+    famMembers: Array.isArray(o.famMembers) ? o.famMembers : [],
+    payEmail: o.payEmail || '', tax: o.tax || null
   };
   list.unshift(rec);
   write(list);
