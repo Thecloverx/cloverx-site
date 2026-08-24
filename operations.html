@@ -1,0 +1,378 @@
+<title>CloverX Operations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#EEF2F8;--panel:#FFFFFF;--ink:#1E2A44;--muted:#6B7793;--line:#E7ECF4;--soft:#F5F8FC;
+    --brand:#2563EB;--brand-tint:#E7EFFF;--brand-ink:#1B49C7;
+    --good:#12A67C;--good-tint:#E5F6EF;--warn:#D98A1A;--warn-tint:#FFF3E0;--bad:#E5484D;--bad-tint:#FDECEC;--info:#6366F1;
+    --radius:14px;color-scheme:light;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,h4{font-weight:800;letter-spacing:-.01em;line-height:1.2}
+  .xmark{width:1em;height:1em;flex:none;display:block;color:var(--brand)}
+  .num{font-variant-numeric:tabular-nums}
+
+  .app{display:grid;grid-template-columns:262px 1fr;min-height:100vh}
+
+  /* SIDEBAR */
+  .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .brand{padding:18px 20px;border-bottom:1px solid var(--line);display:block}
+  .brand .logo{display:flex;align-items:center;gap:7px;font-weight:800;font-size:1.32rem;letter-spacing:.04em}
+  .brand small{display:block;color:var(--muted);font-size:.72rem;font-weight:600;margin-top:6px}
+  .wsbadge{margin:14px 16px 6px;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
+  .wsbadge .ic{width:34px;height:34px;border-radius:9px;background:#7A8699;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .wsbadge b{font-size:.92rem}.wsbadge span{display:block;font-size:.72rem;color:var(--muted)}
+  .nav{padding:8px 12px 18px;display:flex;flex-direction:column;gap:2px;flex:1;overflow:auto}
+  .nav .item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--ink);font-weight:600;font-size:.92rem;cursor:pointer;transition:.14s;border:0;background:none;width:100%;text-align:left;font-family:inherit}
+  .nav .item svg.i{width:19px;height:19px;flex:none;color:var(--muted)}
+  .nav .item:hover{background:var(--soft)}
+  .nav .item.active{background:var(--brand-tint);color:var(--brand)}
+  .nav .item.active svg.i{color:var(--brand)}
+  .nav .item .caret{margin-left:auto;transition:transform .18s;color:var(--muted)}
+  .nav .group.open>.item .caret{transform:rotate(90deg)}
+  .nav .children{display:none;flex-direction:column;gap:2px;margin:2px 0 2px 0;padding-left:0}
+  .nav .group.open>.children{display:flex}
+  .nav .children .item{font-weight:500;padding-left:42px;font-size:.9rem}
+  .nav .children .children .item{padding-left:58px;font-size:.88rem;color:var(--muted)}
+  .nav .children .children .item.active{color:var(--brand)}
+  .nav .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:none;margin-left:2px}
+
+  /* MAIN */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 26px;height:70px}
+  .burger{display:none;background:none;border:0;cursor:pointer;color:var(--ink)}
+  .crumb{font-size:.82rem;color:var(--muted)}
+  .crumb b{color:var(--ink);font-weight:700;font-size:1.02rem;display:block}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 15px;color:var(--muted);font-size:.86rem;min-width:210px}
+  @media(max-width:760px){.search{display:none}}
+  .bell{position:relative;color:#42506e;cursor:pointer}
+  .bell .badge{position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+  .user{display:flex;align-items:center;gap:10px}
+  .user .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,#3B82F6,#1E40AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex:none}
+  .user .info b{font-size:.88rem}.user .info span{display:block;font-size:.74rem;color:var(--muted)}
+  @media(max-width:560px){.user .info{display:none}}
+
+  .content{padding:26px;flex:1}
+  .wrapc{max-width:1200px;margin:0 auto}
+  .head{margin-bottom:20px}
+  .head h1{font-size:1.6rem}
+  .head p{color:var(--muted);margin-top:4px;font-size:.95rem}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .kpi .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .kpi .ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+  .kpi .lb{font-size:.85rem;color:var(--muted)}
+  .kpi .v{font-size:1.9rem;font-weight:800;letter-spacing:-.02em}
+  .kpi .delta{font-size:.8rem;font-weight:700;display:inline-flex;align-items:center;gap:3px}
+  .delta.up{color:var(--good)}.delta.down{color:var(--bad)}
+  @media(max-width:1000px){.kpis{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.kpis{grid-template-columns:1fr}}
+
+  .row2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
+  @media(max-width:900px){.row2{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+  .panel .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .panel h3{font-size:1.05rem}
+  .panel .link{font-size:.82rem;color:var(--brand);font-weight:600}
+
+  /* chart */
+  .chart{display:flex;align-items:flex-end;gap:12px;height:180px;padding-top:10px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+  .bar .b{width:70%;max-width:34px;background:var(--brand-tint);border-radius:7px 7px 3px 3px;position:relative;transition:.3s}
+  .bar:last-child .b{background:var(--brand)}
+  .bar .cap{font-size:.72rem;color:var(--muted)}
+  .bar .val{font-size:.72rem;font-weight:700;color:var(--ink)}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;padding:0 10px 10px}
+  td{padding:12px 10px;border-top:1px solid var(--line)}
+  tbody tr:hover{background:var(--soft)}
+  .pill{font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-block}
+  .pill.ok{background:var(--good-tint);color:var(--good)}
+  .pill.pend{background:var(--warn-tint);color:var(--warn)}
+  .pill.new{background:var(--brand-tint);color:var(--brand)}
+  .pill.bad{background:var(--bad-tint);color:var(--bad)}
+
+  /* list */
+  .li{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+  .li:first-of-type{border-top:0}
+  .li .dotc{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+  .li .t{font-size:.9rem;font-weight:600}
+  .li .s{font-size:.8rem;color:var(--muted)}
+  .li .meta{margin-left:auto;font-size:.76rem;color:var(--muted);white-space:nowrap}
+
+  .progress{height:8px;border-radius:999px;background:var(--soft);overflow:hidden;margin-top:6px}
+  .progress > b{display:block;height:100%;border-radius:999px;background:var(--brand)}
+
+  /* placeholder view */
+  .ph-empty{background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:44px;text-align:center;color:var(--muted)}
+  .ph-empty .ic{width:60px;height:60px;border-radius:16px;background:var(--soft);color:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .ph-empty h3{color:var(--ink);font-size:1.2rem;margin-bottom:6px}
+  .skel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:22px}
+  .skel .s{height:96px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
+  @media(max-width:700px){.skel{grid-template-columns:1fr}}
+
+  .view{display:none}.view.active{display:block}
+
+  @media(max-width:900px){
+    .app{grid-template-columns:1fr}
+    .side{position:fixed;left:0;top:0;bottom:0;width:270px;z-index:60;transform:translateX(-100%);transition:transform .22s}
+    .side.open{transform:none}
+    .burger{display:block}
+    .scrim{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:50;display:none}
+    .scrim.show{display:block}
+  }
+  .scrim{display:none}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="xmark-shape"><path fill-rule="evenodd" d="M8,8 Q50,50 92,8 Q50,50 92,92 Q50,50 8,92 Q50,50 8,8 Z M27,27 Q50,50 73,27 Q50,50 73,73 Q50,50 27,73 Q50,50 27,27 Z"/></g>
+</defs></svg>
+
+<div class="app">
+  <aside class="side" id="side">
+    <a class="brand" href="center.html" title="กลับ CloverX Center">
+      <div class="logo">CLOVER<svg class="xmark" viewBox="0 0 100 100"><use href="#xmark-shape" fill="currentColor"/></svg></div>
+      <small>One Platform, All Departments</small>
+    </a>
+    <div class="wsbadge">
+      <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+      <div><b>ฝ่ายปฏิบัติการ</b><span>Operations</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="item active" data-view="overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</button>
+
+      <div class="group open" id="g-dash">
+        <button class="item" data-toggle="g-dash"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h8V3H3zM13 21h8V3h-8zM3 21h8v-6H3z"/></svg>Dashboards<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <div class="group open" id="g-sales">
+            <button class="item" data-toggle="g-sales">Sales &amp; Orders<svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="children">
+              <button class="item" data-view="order"><span class="dot"></span>Order</button>
+              <button class="item" data-view="preorder"><span class="dot"></span>Pre-Order</button>
+            </div>
+          </div>
+          <div class="group open" id="g-xvisor">
+            <button class="item" data-toggle="g-xvisor">X-Visor Management<svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="children">
+              <button class="item" data-view="cert"><span class="dot"></span>Certification</button>
+              <button class="item" data-view="activity"><span class="dot"></span>Activity</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group open" id="g-exam">
+        <button class="item" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg>Exam Certification<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="exam-overview"><span class="dot"></span>Exam Overview</button>
+          <button class="item" data-view="exam-session"><span class="dot"></span>Exam Session</button>
+          <button class="item" data-view="exam-tracker"><span class="dot"></span>Exam Tracker</button>
+          <button class="item" data-view="exam-result"><span class="dot"></span>Exam Result</button>
+        </div>
+      </div>
+
+      <button class="item" data-view="customers"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9"/></svg>Customers</button>
+      <button class="item" data-view="tasks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tasks</button>
+      <button class="item" data-view="issues"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/></svg>Issues / Tickets</button>
+      <button class="item" data-view="reports"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>Reports</button>
+      <button class="item" data-view="documents"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Documents</button>
+      <button class="item" data-view="settings"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 17 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</button>
+    </nav>
+  </aside>
+  <div class="scrim" id="scrim" onclick="toggleSide()"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="burger" onclick="toggleSide()" aria-label="เมนู"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="crumb">ฝ่ายปฏิบัติการ<b id="crumbTitle">Overview</b></div>
+      <div class="right">
+        <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>ค้นหา...</div>
+        <div class="bell"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="badge">5</span></div>
+        <div class="user"><div class="av">ณ</div><div class="info"><b>ณัฐวุฒิ</b><span>Operations</span></div></div>
+      </div>
+    </header>
+
+    <div class="content"><div class="wrapc">
+
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="head"><h1>ภาพรวมฝ่ายปฏิบัติการ</h1><p>สรุปสถานะงานประจำวัน · ข้อมูลตัวอย่าง (demo)</p></div>
+        <div class="kpis">
+          <div class="kpi"><div class="top"><div class="lb">คำสั่งซื้อวันนี้</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/><path d="M2 3h3l2.5 13h11l2-9H6"/></svg></div></div><div class="v num">128</div><div class="delta up">▲ 12% <span style="color:var(--muted);font-weight:500">vs เมื่อวาน</span></div></div>
+          <div class="kpi"><div class="top"><div class="lb">Pre-Order รอดำเนินการ</div><div class="ic" style="background:var(--warn-tint);color:var(--warn)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div><div class="v num">37</div><div class="delta down">▼ 4% <span style="color:var(--muted);font-weight:500">สัปดาห์นี้</span></div></div>
+          <div class="kpi"><div class="top"><div class="lb">X-VISOR ผ่าน Cert.</div><div class="ic" style="background:var(--good-tint);color:var(--good)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L20 6M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg></div></div><div class="v num">86%</div><div class="delta up">▲ 3%</div></div>
+          <div class="kpi"><div class="top"><div class="lb">Ticket เปิดอยู่</div><div class="ic" style="background:var(--bad-tint);color:var(--bad)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/></svg></div></div><div class="v num">14</div><div class="delta down" style="color:var(--muted)">3 เกิน SLA</div></div>
+        </div>
+
+        <div class="row2">
+          <div class="panel">
+            <div class="ph"><h3>ยอดคำสั่งซื้อ 7 วันล่าสุด</h3><a class="link" href="#" onclick="go('order');return false">ดูรายละเอียด →</a></div>
+            <div class="chart" role="img" aria-label="กราฟยอดคำสั่งซื้อ 7 วัน">
+              <div class="bar"><span class="val num">92</span><div class="b" style="height:46%"></div><span class="cap">จ.</span></div>
+              <div class="bar"><span class="val num">104</span><div class="b" style="height:54%"></div><span class="cap">อ.</span></div>
+              <div class="bar"><span class="val num">88</span><div class="b" style="height:44%"></div><span class="cap">พ.</span></div>
+              <div class="bar"><span class="val num">130</span><div class="b" style="height:68%"></div><span class="cap">พฤ.</span></div>
+              <div class="bar"><span class="val num">118</span><div class="b" style="height:61%"></div><span class="cap">ศ.</span></div>
+              <div class="bar"><span class="val num">156</span><div class="b" style="height:82%"></div><span class="cap">ส.</span></div>
+              <div class="bar"><span class="val num">128</span><div class="b" style="height:67%"></div><span class="cap">อา.</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ph"><h3>งานของฉันวันนี้</h3><a class="link" href="#" onclick="go('tasks');return false">ทั้งหมด →</a></div>
+            <div class="li"><span class="dotc" style="background:var(--warn-tint);color:var(--warn)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><div class="t">ตรวจ Pre-Order ค้าง 37 รายการ</div><div class="s">กำหนดส่ง 16:00</div></div><span class="meta">ด่วน</span></div>
+            <div class="li"><span class="dotc" style="background:var(--brand-tint);color:var(--brand)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></span><div><div class="t">อนุมัติเอกสาร Certification (8)</div><div class="s">X-Visor Management</div></div><span class="meta">วันนี้</span></div>
+            <div class="li"><span class="dotc" style="background:var(--bad-tint);color:var(--bad)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/></svg></span><div><div class="t">ตอบ Ticket เกิน SLA (3)</div><div class="s">Issues / Tickets</div></div><span class="meta">เกินเวลา</span></div>
+            <div style="margin-top:14px;font-size:.82rem;color:var(--muted)">ความคืบหน้าวันนี้ · 9/15 งาน<div class="progress"><b style="width:60%"></b></div></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:18px">
+          <div class="ph"><h3>คำสั่งซื้อล่าสุด</h3><a class="link" href="#" onclick="go('order');return false">ดูทั้งหมด →</a></div>
+          <div style="overflow-x:auto"><table>
+            <thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>X-Visor</th><th>ยอด</th><th>สถานะ</th><th>เวลา</th></tr></thead>
+            <tbody>
+              <tr><td class="num">#OD-24118</td><td>คุณสมชาย ใจดี</td><td>ปริญ จ.</td><td class="num">3,250 ฿</td><td><span class="pill ok">สำเร็จ</span></td><td class="s">10:24</td></tr>
+              <tr><td class="num">#OD-24117</td><td>คุณมาลี ศรีสุข</td><td>เนย ก.</td><td class="num">1,890 ฿</td><td><span class="pill pend">กำลังจัดส่ง</span></td><td class="s">10:02</td></tr>
+              <tr><td class="num">#OD-24116</td><td>คุณวิทยา ตั้งใจ</td><td>กิ่ง ม.</td><td class="num">5,400 ฿</td><td><span class="pill new">ใหม่</span></td><td class="s">09:47</td></tr>
+              <tr><td class="num">#OD-24115</td><td>คุณนภา จันทร์</td><td>ปริญ จ.</td><td class="num">990 ฿</td><td><span class="pill bad">ยกเลิก</span></td><td class="s">09:31</td></tr>
+              <tr><td class="num">#OD-24114</td><td>คุณเอกชัย พร</td><td>ญา พ.</td><td class="num">2,600 ฿</td><td><span class="pill ok">สำเร็จ</span></td><td class="s">09:15</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- GENERIC (other views injected here) -->
+      <section class="view" id="view-generic"></section>
+
+    </div></div>
+  </div>
+</div>
+
+<script>
+  function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
+
+  // view meta for non-overview pages
+  var META={
+    order:{t:'Order Dashboard',th:'แดชบอร์ดคำสั่งซื้อ',d:'ติดตามคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'dash'},
+    preorder:{t:'Pre-Order Dashboard',th:'แดชบอร์ด Pre-Order',d:'จัดการคำสั่งซื้อล่วงหน้าและคิวรอดำเนินการ',kind:'dash'},
+    cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
+    activity:{t:'Activity Dashboard',th:'แดชบอร์ดกิจกรรม X-Visor',d:'ติดตามกิจกรรมและความเคลื่อนไหวของทีม X-Visor',kind:'dash'},
+    'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
+    'exam-session':{t:'Exam Session',th:'รอบการสอบ',d:'จัดการรอบสอบ ตารางสอบ และผู้เข้าสอบ',kind:'plain'},
+    'exam-tracker':{t:'Exam Tracker',th:'ติดตามการสอบ',d:'ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ',kind:'dash'},
+    'exam-result':{t:'Exam Result',th:'ผลการสอบ',d:'ผลสอบ คะแนน และการออกใบรับรอง',kind:'dash'},
+    customers:{t:'Customers',th:'ลูกค้า',d:'ฐานข้อมูลลูกค้าและประวัติการสั่งซื้อ',kind:'plain'},
+    tasks:{t:'Tasks',th:'งาน',d:'รายการงานและการมอบหมายของฝ่ายปฏิบัติการ',kind:'plain'},
+    issues:{t:'Issues / Tickets',th:'ปัญหา / ทิกเก็ต',d:'จัดการปัญหาและคำร้องขอความช่วยเหลือ',kind:'plain'},
+    reports:{t:'Reports',th:'รายงาน',d:'รายงานสรุปและการวิเคราะห์',kind:'plain'},
+    documents:{t:'Documents',th:'เอกสาร',d:'คลังเอกสารและไฟล์ของฝ่าย',kind:'plain'},
+    settings:{t:'Settings',th:'ตั้งค่า',d:'ตั้งค่าการทำงานของฝ่ายปฏิบัติการ',kind:'plain'}
+  };
+  var gen=document.getElementById('view-generic');
+  function renderGeneric(v){
+    var m=META[v]; if(!m)return;
+    if(m.kind==='dash'){
+      gen.innerHTML='<div class="head"><h1>'+m.th+'</h1><p>'+m.d+' · ข้อมูลตัวอย่าง (demo)</p></div>'
+        +'<div class="kpis">'
+        +kpi('รวมทั้งหมด','1,204','var(--brand-tint)','var(--brand)')
+        +kpi('รอดำเนินการ','37','var(--warn-tint)','var(--warn)')
+        +kpi('สำเร็จ','1,140','var(--good-tint)','var(--good)')
+        +kpi('มีปัญหา','27','var(--bad-tint)','var(--bad)')
+        +'</div>'
+        +'<div class="panel"><div class="ph"><h3>รายการ ('+m.t+')</h3><a class="link" href="#">ส่งออก →</a></div>'
+        +'<div class="ph-empty" style="border:0;padding:30px 0"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg></div><h3>ตารางข้อมูล '+m.t+'</h3><p>ส่วนนี้กำลังจัดทำ — บอกได้ว่าต้องการคอลัมน์/ตัวกรอง/กราฟอะไรบ้าง เดี๋ยวผมใส่ให้</p></div></div>';
+    }else{
+      gen.innerHTML='<div class="head"><h1>'+m.th+'</h1><p>'+m.d+'</p></div>'
+        +'<div class="ph-empty"><div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div><h3>หน้า '+m.t+'</h3><p>โครงหน้าพร้อมแล้ว — กำลังรอเนื้อหา บอกได้เลยว่าจะให้มีอะไรบ้าง</p><div class="skel"><div class="s"></div><div class="s"></div><div class="s"></div></div></div>';
+    }
+  }
+  function kpi(lb,v,bg,fg){return '<div class="kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+bg+';color:'+fg+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg></div></div><div class="v num">'+v+'</div></div>';}
+
+  var PO_LINK='https://claude.ai/code/artifact/e261921a-67e7-4a38-b711-5f837a8bf246';
+  var PO_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUgAAAFIAQMAAAAI2vVwAAAABlBMVEULDhb///8FXNk8AAABzElEQVR42u2bwW7DMAxDif7/P2tobVFM2oOlywqUGTZstrHDGyVKcoY4feCTPvkfJ7Ge5/f7C9ba69dw94HT55dPIuGDf4a1ulDLrnke81xaBBJiEQV3zbPPMzFugpdd8xzwzMTLH6zPef7UtLnJOn9OeCLd/OOH/b3Js0on0ORTt7Jtnp38uYQqsV9kN3TzPI93yZVVKtGS1qd5NvwIgXvPFFuxSdw8Ozx3M5QutEJ+SXTvmed5/oyUYsU/Ipsm+3vb3+/GLqW98+ek/ozsNINWrzHveO/oU2wekPKeS+F4b+kzk6UM6bI5Ygdvnv38iTL3CGnu4fzZ9HeCjZ1M2deTt3ke6/Me8SGdE8J+1PWjCvm0dM7vwNmdeXZ4Vr9eGiVqz5fa9eelNoI08axOzfO8/swo1yF9SKVvf+/WS9AQB6VJkZpna7508SQd4MHz+Wn9eZktZfMezp8DnlWF1s1mDfB8vzntjxBSc96Omee5H2WvySE9Xwajbs2zU3+irKgK0ZBBk3n2/J33RihzChGpebb8SHRYt8eZQl1/jnnW5SbKmzxfmuszV+t1Rc8/p+8nixtpBrA+p+/XxdtqwPdH0/rT/7Xhk1938g8VtE0sEnnF9QAAAABJRU5ErkJggg==';
+  var PO_ORDERS=[
+    {id:'PO-000142',name:'สมชาย ใจดี',item:'TRIPLE SET',amt:12480,ch:'บัตรเครดิต',st:'ok',ref:'โค้ชนุ่น'},
+    {id:'PO-000141',name:'ธนพล วงศ์ทอง',item:'Band + Band(ครอบครัว)',amt:8950,ch:'โอนธนาคาร',st:'pend',ref:'โค้ชซิง'},
+    {id:'PO-000140',name:'ปิยะดา แสงทอง',item:'DUO SET',amt:4990,ch:'โอนธนาคาร',st:'pend',ref:'โค้ชจา'},
+    {id:'PO-000139',name:'อรวรรณ มีสุข',item:'RoutineX',amt:7490,ch:'โอนธนาคาร',st:'new',ref:'โค้ชต๊ะ'},
+    {id:'PO-000138',name:'กิตติ ศรีสมบัติ',item:'TWIN SET',amt:11850,ch:'โอนธนาคาร',st:'ok',ref:'โค้ชนุ่น'},
+    {id:'PO-000137',name:'ณัฐพร ชัยมงคล',item:'Scale',amt:1290,ch:'บัตรเครดิต',st:'ok',ref:'โค้ชซิง'},
+    {id:'PO-000136',name:'วีระ พันธุ์ดี',item:'Band',amt:4590,ch:'โอนธนาคาร',st:'bad',ref:'อื่น ๆ'}
+  ];
+  var PO_PROD=[
+    {nm:'Band',price:'4,590',quota:200,left:73,on:true},
+    {nm:'Scale',price:'1,290',quota:200,left:141,on:true},
+    {nm:'RoutineX',price:'7,490',quota:150,left:58,on:true},
+    {nm:'DUO SET',price:'4,990',quota:120,left:44,on:true},
+    {nm:'TRIPLE SET',price:'12,480',quota:80,left:12,on:true},
+    {nm:'TWIN SET (ครอบครัว)',price:'11,850',quota:100,left:0,on:false}
+  ];
+  var PO_STMAP={ok:['ยืนยันแล้ว','ok'],pend:['รอตรวจสลิป','pend'],new:['ใหม่','new'],bad:['มีปัญหา','bad']};
+  function poCopy(){var t=document.getElementById('poLinkInput');t.select();try{document.execCommand('copy');}catch(e){}
+    var b=document.getElementById('poCopyBtn');var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}
+  function poConfirm(id){var o=PO_ORDERS.find(function(x){return x.id===id});if(o){o.st='ok';renderPreorder();}}
+  function renderPreorder(){
+    var kpis='<div class="kpis">'
+      +'<div class="kpi"><div class="top"><div class="lb">คำสั่งจองวันนี้</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div></div><div class="v num">18</div><div class="delta up">▲ 20% <span style="color:var(--muted);font-weight:500">vs เมื่อวาน</span></div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">รอตรวจสลิป</div><div class="ic" style="background:var(--warn-tint);color:var(--warn)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div><div class="v num">'+PO_ORDERS.filter(function(o){return o.st==='pend'||o.st==='new'}).length+'</div><div class="delta down">ต้องดำเนินการ</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">ยืนยันแล้ว</div><div class="ic" style="background:var(--good-tint);color:var(--good)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div></div><div class="v num">'+PO_ORDERS.filter(function(o){return o.st==='ok'}).length+'</div><div class="delta up">พร้อมจัดส่ง</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">ยอดขายพรีออเดอร์</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="v num">฿1.24M</div><div class="delta up">▲ 8% <span style="color:var(--muted);font-weight:500">เดือนนี้</span></div></div>'
+      +'</div>';
+    var linkPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3><span style="font-size:.78rem;color:var(--muted)">ทีมส่งให้ลูกค้าเพื่อเปิดหน้าสั่งซื้อ</span></div>'
+      +'<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center">'
+      +'<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;flex:none"><img src="'+PO_QR+'" alt="QR Pre-Order" style="width:150px;height:150px;display:block;image-rendering:pixelated"></div>'
+      +'<div style="flex:1;min-width:260px">'
+      +'<label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์หน้าสั่งซื้อ (Pre-Order)</label>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="poLinkInput" readonly value="'+PO_LINK+'" style="flex:1;min-width:200px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;color:var(--ink);background:var(--soft)">'
+      +'<button id="poCopyBtn" onclick="poCopy()" style="background:var(--brand);color:#fff;border:0;border-radius:10px;padding:0 18px;font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer">คัดลอกลิงก์</button>'
+      +'<a href="'+PO_LINK+'" target="_blank" style="background:#fff;color:var(--brand);border:1.5px solid var(--brand);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.86rem;text-decoration:none">เปิดหน้า ↗</a></div>'
+      +'<p style="font-size:.78rem;color:var(--muted);margin-top:10px">* สแกน QR หรือส่งลิงก์ให้ลูกค้าได้ทันที — เมื่อขึ้นเว็บโดเมนจริงแล้ว ระบบจะอัปเดตลิงก์นี้ให้อัตโนมัติ</p>'
+      +'</div></div></div>';
+    var rows=PO_ORDERS.map(function(o){
+      var s=PO_STMAP[o.st];
+      var act=(o.st==='pend'||o.st==='new')
+        ? '<button onclick="poConfirm(\''+o.id+'\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:6px">ยืนยัน</button><a href="#" onclick="return false" style="color:var(--brand);font-weight:600;font-size:.78rem">ดูสลิป</a>'
+        : (o.st==='bad'?'<a href="#" onclick="return false" style="color:var(--bad);font-weight:600;font-size:.78rem">ตรวจสอบ</a>':'<a href="#" onclick="return false" style="color:var(--muted);font-weight:600;font-size:.78rem">รายละเอียด</a>');
+      return '<tr><td style="font-weight:700">'+o.id+'</td><td>'+o.name+'</td><td>'+o.item+'</td><td class="num" style="font-weight:700">฿'+o.amt.toLocaleString('en-US')+'</td><td>'+o.ch+'</td><td>'+o.ref+'</td><td><span class="pill '+s[1]+'">'+s[0]+'</span></td><td style="white-space:nowrap">'+act+'</td></tr>';
+    }).join('');
+    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งจอง</h3><a class="link" href="#" onclick="return false">ส่งออก Excel →</a></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>รายการ</th><th>ยอดรวม</th><th>ช่องทาง</th><th>ผู้แนะนำ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    var prows=PO_PROD.map(function(p){
+      var pct=Math.round(p.left/p.quota*100);
+      var barcol=p.left===0?'var(--bad)':(pct<25?'var(--warn)':'var(--brand)');
+      return '<tr><td style="font-weight:700">'+p.nm+'</td><td class="num">฿'+p.price+'</td><td class="num">'+p.quota+'</td><td style="min-width:150px"><div style="display:flex;align-items:center;gap:10px"><div class="progress" style="flex:1"><b style="width:'+pct+'%;background:'+barcol+'"></b></div><span class="num" style="font-size:.8rem;color:var(--muted);white-space:nowrap">เหลือ '+p.left+'</span></div></td>'
+        +'<td><span class="pill '+(p.on?'ok':'bad')+'">'+(p.on?'เปิดขาย':'ปิด/หมด')+'</span></td></tr>';
+    }).join('');
+    var prodPanel='<div class="panel"><div class="ph"><h3>ตั้งค่าสินค้า / ราคา / สต๊อกพรีออเดอร์</h3><a class="link" href="#" onclick="return false">แก้ไข →</a></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>สินค้า</th><th>ราคา</th><th>โควตา</th><th>คงเหลือ</th><th>สถานะ</th></tr></thead><tbody>'+prows+'</tbody></table></div></div>';
+    gen.innerHTML='<div class="head"><h1>แดชบอร์ด Pre-Order</h1><p>จัดการคำสั่งซื้อล่วงหน้า ตรวจสลิป ยืนยันการชำระเงิน และแจกลิงก์/QR ให้ลูกค้า · ข้อมูลตัวอย่าง (demo)</p></div>'
+      +kpis+linkPanel+ordersPanel+prodPanel;
+  }
+
+  function go(v){
+    var isOv=(v==='overview');
+    document.getElementById('view-overview').classList.toggle('active',isOv);
+    document.getElementById('view-generic').classList.toggle('active',!isOv);
+    if(!isOv){ if(v==='preorder')renderPreorder(); else renderGeneric(v); }
+    // nav active state
+    document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
+    var m=v==='overview'?{t:'Overview'}:META[v];
+    document.getElementById('crumbTitle').textContent=m?m.t:'Overview';
+    window.scrollTo(0,0);
+    if(window.innerWidth<=900){document.getElementById('side').classList.remove('open');document.getElementById('scrim').classList.remove('show');}
+  }
+
+  // nav wiring
+  document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
+  document.querySelectorAll('#nav .item[data-toggle]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');});});
+</script>

@@ -234,7 +234,7 @@
     {th:'ฝ่ายการตลาด',en:'Marketing',d:'วางแผนการตลาด สร้างแบรนด์ และสื่อสารองค์กร',c:'--mkt',ic:'mega'},
     {th:'ฝ่ายขาย',en:'Sales',d:'บริหารงานขาย ลูกค้า และโอกาสทางการขาย',c:'--sales',ic:'pencil'},
     {th:'ฝ่ายเทคโนโลยีสารสนเทศ',en:'Information Technology',d:'ดูแลระบบ IT ระบบสารสนเทศ และความปลอดภัยข้อมูล',c:'--it',ic:'code'},
-    {th:'ฝ่ายปฏิบัติการ',en:'Operations',d:'บริหารจัดการกระบวนการทำงาน และการปฏิบัติงาน',c:'--ops',ic:'gear'}
+    {th:'ฝ่ายปฏิบัติการ',en:'Operations',d:'บริหารจัดการกระบวนการทำงาน และการปฏิบัติงาน',c:'--ops',ic:'gear',link:'operations.html'}
   ];
   document.getElementById('depts').innerHTML=DEPTS.map(function(x){
     var col='var('+x.c+')';
@@ -242,8 +242,8 @@
       +'<div class="top"><div class="ic" style="background:'+col+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+ICON[x.ic]+'</svg></div>'
       +'<div class="tt"><b>'+x.th+'</b><span>'+x.en+'</span></div></div>'
       +'<p>'+x.d+'</p>'
-      +'<button class="btn" style="color:'+col+';border-color:color-mix(in srgb,'+col+' 35%,white);background:color-mix(in srgb,'+col+' 8%,white)">เข้าสู่แผนก'
-      +'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>'
+      +(x.link?'<a href="'+x.link+'" ':'<button ')+'class="btn" style="color:'+col+';border-color:color-mix(in srgb,'+col+' 35%,white);background:color-mix(in srgb,'+col+' 8%,white)'+(x.link?';text-decoration:none':'')+'">เข้าสู่แผนก'
+      +'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'+(x.link?'</a>':'</button>')
       +'</div>';
   }).join('');
 </script>
