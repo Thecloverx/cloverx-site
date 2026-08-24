@@ -141,7 +141,8 @@
 
   /* footer */
   footer{border-top:1px solid var(--line);padding:64px 0 40px}
-  .foot{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:40px}
+  .foot{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:36px}
+  @media(max-width:960px){.foot{grid-template-columns:1fr 1fr;gap:30px}}
   .foot .brand{margin-bottom:16px;cursor:default}
   .foot .desc{color:var(--muted);font-size:.94rem;max-width:34ch}
   .foot h5{font-weight:800;font-size:1.05rem;margin-bottom:16px}
@@ -535,7 +536,8 @@
       <button class="ghost" onclick="location.reload()">สั่งจองรายการใหม่</button>
     </div>
   </div>
-</div>
+  </div>
+</div><!-- /#orderflow -->
 
 <!-- AUTH MODAL -->
 <div class="authov" id="authov">
@@ -568,7 +570,11 @@
       </div>
       <div>
         <h5>ผลิตภัณฑ์</h5>
-        <a href="#products" onclick="goSite()">XIRCLE Band</a><a href="#products" onclick="goSite()">XIRCLE Scale</a><a href="#products" onclick="goSite()">RoutineX</a><a href="#products" onclick="goSite()">HabiX</a>
+        <a href="#products" onclick="goSite()">HabiX</a><a href="#products" onclick="goSite()">RoutineX</a><a href="#products" onclick="goSite()">XIRCLE</a><a href="#products" onclick="goSite()">ผลิตภัณฑ์อื่น ๆ</a>
+      </div>
+      <div>
+        <h5>บริษัท</h5>
+        <a href="#activity" onclick="goSite()">เกี่ยวกับ CloverX</a><a href="#activity" onclick="goSite()">ข่าวสาร</a><a href="#activity" onclick="goSite()">ตัวแทนจำหน่าย</a>
       </div>
       <div>
         <h5>ติดต่อ</h5>

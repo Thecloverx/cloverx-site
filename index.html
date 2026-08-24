@@ -129,7 +129,8 @@
 
   /* footer */
   footer{border-top:1px solid var(--line);padding:64px 0 40px}
-  .foot{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:40px}
+  .foot{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:36px}
+  @media(max-width:960px){.foot{grid-template-columns:1fr 1fr;gap:30px}}
   .foot .brand{margin-bottom:16px}
   .foot .desc{color:var(--muted);font-size:.94rem;max-width:34ch}
   .foot h5{font-weight:800;font-size:1.05rem;margin-bottom:16px}
@@ -312,7 +313,9 @@
       <div>
         <h5>บริษัท</h5>
         <a href="#about">เกี่ยวกับ CloverX</a><a href="#awards">ข่าวสาร</a><a href="#jobs">ตัวแทนจำหน่าย</a>
-        <h5 style="margin-top:22px">ติดต่อ</h5>
+      </div>
+      <div>
+        <h5>ติดต่อ</h5>
         <span class="li">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</span>
         <span class="li">เลขทะเบียน 0105568236410</span>
         <a href="tel:0655146576">+66 6 5514 6576</a>
