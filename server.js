@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +12,75 @@ const DB = path.join(DATA, 'orders.json');
 
 fs.mkdirSync(SLIPS, { recursive: true });
 if (!fs.existsSync(DB)) fs.writeFileSync(DB, '[]');
+
+// ================= STRIPE WEBHOOK (จับคู่การชำระเงินแบบเรียลไทม์) =================
+// ต้องลงทะเบียน "ก่อน" express.json() เพราะการตรวจลายเซ็นต้องใช้ raw body
+// เปิดใช้งานเมื่อกำหนด ENV: STRIPE_WEBHOOK_SECRET (จาก Stripe Dashboard → Webhooks)
+// ตรวจลายเซ็นด้วย HMAC-SHA256 ตามมาตรฐาน Stripe โดยไม่ต้องพึ่งไลบรารี stripe
+function stripeVerify(rawBody, sigHeader, secret) {
+  if (!sigHeader || !secret) return false;
+  const parts = {};
+  String(sigHeader).split(',').forEach(function (kv) {
+    const i = kv.indexOf('=');
+    if (i > 0) { const k = kv.slice(0, i).trim(); const v = kv.slice(i + 1).trim(); (parts[k] = parts[k] || []).push(v); }
+  });
+  const t = parts.t && parts.t[0];
+  const v1 = parts.v1 || [];
+  if (!t || !v1.length) return false;
+  // ป้องกัน replay: ยอมรับ timestamp ภายใน 5 นาที
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - Number(t)) > 300) return false;
+  const signed = t + '.' + rawBody.toString('utf8');
+  const expected = crypto.createHmac('sha256', secret).update(signed, 'utf8').digest('hex');
+  const eb = Buffer.from(expected);
+  return v1.some(function (sig) {
+    try { const sb = Buffer.from(sig); return sb.length === eb.length && crypto.timingSafeEqual(sb, eb); } catch (e) { return false; }
+  });
+}
+
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), function (req, res) {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) return res.status(503).send('stripe webhook not configured');
+  if (!stripeVerify(req.body, req.headers['stripe-signature'], secret)) return res.status(400).send('invalid signature');
+  let evt;
+  try { evt = JSON.parse(req.body.toString('utf8')); } catch (e) { return res.status(400).send('invalid payload'); }
+
+  const type = evt.type;
+  if (type === 'checkout.session.completed' || type === 'checkout.session.async_payment_succeeded') {
+    const s = (evt.data && evt.data.object) || {};
+    const oid = s.client_reference_id;
+    // ชำระผ่านบัตรจะ paid ทันที; หากเป็นวิธีชำระแบบ async ที่ยังไม่ paid ให้รอ event async_payment_succeeded
+    const settled = (s.payment_status === 'paid' || s.payment_status === 'no_payment_required' || type === 'checkout.session.async_payment_succeeded');
+    if (oid && settled) {
+      const list = read();
+      const o = list.find(function (x) { return x.id === oid; });
+      if (o) {
+        const was = o.status;
+        o.status = 'paid';
+        o.stripe = {
+          sessionId: s.id || null,
+          paymentIntent: s.payment_intent || null,
+          amount: (s.amount_total != null ? s.amount_total / 100 : null),
+          currency: s.currency || null,
+          at: new Date().toISOString()
+        };
+        if (s.customer_details && s.customer_details.email && !o.email) o.email = s.customer_details.email;
+        if (!o.invoiceNo) { o.invoiceNo = nextInvoiceNo(); o.invoiceAt = new Date().toISOString(); }
+        write(list);
+        console.log('[stripe] order ' + oid + ' paid via webhook (' + was + '→paid), pi=' + (s.payment_intent || '-'));
+        if (o.email && !o.emailedReceiptAt && emailConfigured()) {
+          const base = process.env.PUBLIC_BASE_URL || ('https://' + req.headers.host);
+          sendReceiptEmail(o, base).then(function (ok) {
+            if (ok) { const l = read(); const x = l.find(function (y) { return y.id === o.id; }); if (x) { x.emailedReceiptAt = new Date().toISOString(); write(l); } }
+          });
+        }
+      } else {
+        console.log('[stripe] webhook: order not found for client_reference_id=' + oid);
+      }
+    }
+  }
+  res.json({ received: true });
+});
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -84,7 +154,9 @@ app.post('/api/orders', (req, res) => {
 
   const rec = {
     seq, id, at: new Date().toISOString(),
-    status: o.pay === 'card' ? 'paid' : 'pending',
+    // บัตรเครดิต: เริ่มที่ 'pending' รอ Stripe ยืนยันจริงผ่าน webhook แล้วค่อยเปลี่ยนเป็น 'paid' อัตโนมัติ
+    // (ตัวแทนยังยืนยันเองจากหน้า Operations ได้ หาก webhook ยังไม่ตั้งค่า)
+    status: 'pending',
     name: o.name || '', phone: o.phone || '', email: o.email || '', addr: o.addr || '',
     ref: o.ref || '', ship: o.ship || 'post', pickup: o.pickup || null,
     pay: o.pay || 'bank', items: Array.isArray(o.items) ? o.items : [], total: Number(o.total) || 0,

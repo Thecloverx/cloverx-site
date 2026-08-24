@@ -935,10 +935,21 @@
     if(!validate()){var b=document.querySelector('.field.bad');b&&b.scrollIntoView({behavior:'smooth',block:'center'});return;}
     var btns=[byId('cta'),byId('ctaDesk')];btns.forEach(function(b){b.disabled=true;});
     state.payUrl=null;
-    if(state.pay==='card'&&(state.main.length+state.fam.length)===1){ var one=mainObjs()[0]||famObjs()[0]; if(one&&one.url)state.payUrl=one.url; }
+    // เตรียมลิงก์ Stripe พื้นฐาน (บัตร + สินค้าชิ้นเดียว) — จะเติม client_reference_id หลังได้เลขคำสั่งซื้อ
+    var payBase=null;
+    if(state.pay==='card'&&(state.main.length+state.fam.length)===1){ var one=mainObjs()[0]||famObjs()[0]; if(one&&one.url)payBase=one.url; }
     fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildOrder())})
       .then(function(r){return r.json();})
-      .then(function(res){ showDone(res&&res.id?res.id:'PO-'+Date.now().toString().slice(-6), !!(res&&res.id)); })
+      .then(function(res){
+        var oid=res&&res.id?res.id:'PO-'+Date.now().toString().slice(-6);
+        if(payBase&&res&&res.id){
+          var sep=payBase.indexOf('?')>=0?'&':'?';
+          var cem=byId('f_cardEmail').value.trim();
+          // client_reference_id = เลขคำสั่งซื้อ → Stripe ส่งกลับใน webhook เพื่อจับคู่แบบเรียลไทม์
+          state.payUrl=payBase+sep+'client_reference_id='+encodeURIComponent(res.id)+(cem?('&prefilled_email='+encodeURIComponent(cem)):'');
+        }
+        showDone(oid, !!(res&&res.id));
+      })
       .catch(function(){ showDone('PO-'+Date.now().toString().slice(-6), false); });
   }
   byId('cta').addEventListener('click',submit);
