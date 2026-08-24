@@ -720,13 +720,20 @@
       +chips+'</div>';
   }
   function toggleVar(arr,id){var i=arr.indexOf(id);if(i>=0)arr.splice(i,1);else arr.push(id);}
+  /* บังคับเลือกสีเดียวต่อ 1 รายการ (radio) — กด 2 สีพร้อมกันในรายการเดียวไม่ได้ */
+  function selectColorVariant(arr,p,vid,fam){
+    p.colors.forEach(function(cv){if(cv.id!==vid){var j=arr.indexOf(cv.id);if(j>=0){arr.splice(j,1);if(fam)delete state.famInfo[cv.id];}}});
+    var i=arr.indexOf(vid);
+    if(i>=0){arr.splice(i,1);if(fam)delete state.famInfo[vid];}
+    else arr.push(vid);
+  }
   function renderMain(){
     byId('prodsMain').innerHTML=MAIN_P.map(function(p){return pcard(p,false,state.main)}).join('');
     byId('prodsMain').querySelectorAll('.prod').forEach(function(c){
       var pid=c.getAttribute('data-pid');var p=MAIN_P.find(function(x){return x.id===pid});
       var after=function(){byId('famWrap').classList.toggle('locked',state.main.length===0);renderMain();update();};
       if(p.colors){c.querySelectorAll('.chip').forEach(function(ch){ch.addEventListener('click',function(e){
-        e.stopPropagation();toggleVar(state.main,ch.getAttribute('data-vid'));after();});});}
+        e.stopPropagation();selectColorVariant(state.main,p,ch.getAttribute('data-vid'),false);after();});});}
       else{c.addEventListener('click',function(){toggleVar(state.main,pid);after();});}
     });
   }
@@ -738,7 +745,7 @@
       var after=function(){renderFam();renderFamInfo();update();};
       var rm=function(id){var i=state.fam.indexOf(id);if(i>=0){state.fam.splice(i,1);delete state.famInfo[id];return true;}return false;};
       if(p.colors){c.querySelectorAll('.chip').forEach(function(ch){ch.addEventListener('click',function(e){
-        e.stopPropagation();if(!state.main.length)return;var id=ch.getAttribute('data-vid');if(!rm(id))state.fam.push(id);after();});});}
+        e.stopPropagation();if(!state.main.length)return;selectColorVariant(state.fam,p,ch.getAttribute('data-vid'),true);after();});});}
       else{c.addEventListener('click',function(){if(!state.main.length)return;if(!rm(pid))state.fam.push(pid);after();});}
     });
   }
