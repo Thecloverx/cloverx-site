@@ -15,6 +15,7 @@
   a{color:inherit;text-decoration:none}
   h1,h2,h3,h4{font-weight:800;letter-spacing:-.01em;line-height:1.2}
   .xmark{width:1em;height:1em;flex:none;display:block;color:var(--brand)}
+  .xlogo{font-style:normal;color:var(--brand);font-weight:800;letter-spacing:-.01em}
   .num{font-variant-numeric:tabular-nums}
 
   .app{display:grid;grid-template-columns:262px 1fr;min-height:100vh}
@@ -141,7 +142,7 @@
 <div class="app">
   <aside class="side" id="side">
     <a class="brand" href="center.html" title="กลับ CloverX Center">
-      <div class="logo">CLOVER<svg class="xmark" viewBox="0 0 100 100"><use href="#xmark-shape" fill="currentColor"/></svg></div>
+      <div class="logo">CLOVER</div>
       <small>One Platform, All Departments</small>
     </a>
     <div class="wsbadge">
@@ -314,6 +315,7 @@
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
   function poSlip(u){if(u)window.open(u,'_blank');}
+  function poInvoice(id){window.open('/invoice/'+id,'_blank');}
   function poSetStatus(id,st){
     fetch('/api/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:st})})
       .then(function(r){return r.json();}).then(function(){poRefresh();}).catch(function(){});
@@ -352,14 +354,15 @@
       rows=PO_ORDERS.map(function(o){
         var s=PO_ST[o.status]||['-','pend'];
         var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
-        var slipBtn=o.slipUrl?'<button onclick="poSlip(\''+o.slipUrl+'\')" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.78rem;cursor:pointer;padding:0">ดูสลิป</button>':'';
+        var slipBtn=o.slipUrl?'<button onclick="poSlip(\''+o.slipUrl+'\')" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.78rem;cursor:pointer;padding:0;margin-right:8px">ดูสลิป</button>':'';
+        var invBtn=(o.status==='confirmed'||o.status==='paid')?'<button onclick="poInvoice(\''+o.id+'\')" style="background:none;border:1px solid var(--brand);color:var(--brand);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;font-size:.74rem;cursor:pointer;margin-right:6px">🧾 ใบเสร็จ/ใบกำกับ'+(o.invoiceNo?' ✓':'')+'</button>':'';
         var act;
         if(poNeeds(o.status)){
           act='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:6px">ยืนยัน</button>'
-             +'<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">ปฏิเสธ</button>'+slipBtn;
+             +'<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">ปฏิเสธ</button>'+invBtn+slipBtn;
         }else if(o.status==='rejected'){
           act='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:none;color:var(--good);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">กู้คืน</button>'+slipBtn;
-        }else{ act=slipBtn||'<span style="color:var(--muted);font-size:.78rem">—</span>'; }
+        }else{ act=invBtn+slipBtn||'<span style="color:var(--muted);font-size:.78rem">—</span>'; }
         var pk=o.ship==='pickup'?' <span class="pill new" style="font-size:.62rem;padding:1px 7px">รับหน้างาน</span>':'';
         return '<tr><td><div style="font-weight:700">'+o.id+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTime(o.at)+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+(o.phone||'')+'</div></td>'
