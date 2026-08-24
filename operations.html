@@ -312,6 +312,12 @@
     {nm:'TWIN SET (ครอบครัว)',price:'11,850',quota:100,left:0,on:false}
   ];
   var PO_ORDERS=[];
+  // Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์) — API ปกติมาสก์ PII ตาม PDPA
+  var OPS_KEY=(function(){try{return sessionStorage.getItem('opsKey')||'';}catch(e){return '';}})();
+  var OPS_KEY_ASKED=false;
+  function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
+  function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
+  function ensureKey(cb){ if(OPS_KEY||OPS_KEY_ASKED){cb();return;} OPS_KEY_ASKED=true; try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}}}catch(e){} cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระผ่านบัตร','new'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad']};
   function poNeeds(s){return s==='pending'||s==='paid';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
@@ -323,7 +329,9 @@
       .then(function(r){return r.json();}).then(function(){poRefresh();}).catch(function(){});
   }
   function poRefresh(){
-    fetch('/api/orders').then(function(r){return r.json();}).then(function(d){PO_ORDERS=Array.isArray(d)?d:[];poDraw();}).catch(function(){poDraw();});
+    ensureKey(function(){
+    fetch(ordersUrl()).then(function(r){return r.json();}).then(function(d){PO_ORDERS=Array.isArray(d)?d:[];poDraw();}).catch(function(){poDraw();});
+    });
   }
   function poItems(o){return (o.items||[]).map(function(i){return i.nm+(i.fam?' <span style="color:var(--muted);font-size:.82em">(ครอบครัว)</span>':'');}).join(' + ')||'-';}
   function poTime(iso){if(!iso)return'';var d=new Date(iso);if(isNaN(d))return'';return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
@@ -404,7 +412,7 @@
   }
   function renderPoDash(){
     gen.innerHTML='<div class="head"><h1>วิเคราะห์ยอดขาย Pre-Order</h1><p>กำลังโหลดข้อมูล…</p></div>';
-    fetch('/api/orders').then(function(r){return r.json();}).then(function(d){pdDraw(Array.isArray(d)?d:[]);}).catch(function(){pdDraw([]);});
+    fetch(ordersUrl()).then(function(r){return r.json();}).then(function(d){pdDraw(Array.isArray(d)?d:[]);}).catch(function(){pdDraw([]);});
   }
   function pdDraw(orders){
     var PAID=['confirmed','paid'];

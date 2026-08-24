@@ -228,8 +228,46 @@ app.post('/api/orders', (req, res) => {
   }
 });
 
-// ---- list orders (for Operations dashboard) ----
-app.get('/api/orders', (req, res) => res.json(read()));
+// ---- PDPA masking: หน้าเว็บ/รายงานต้องไม่มีเบอร์เต็ม อีเมล ที่อยู่เต็ม ----
+function maskName(n){ n=String(n||'').trim(); if(!n)return 'ลูกค้า'; var p=n.split(/\s+/); return p[0]+(p.length>1?(' '+p[p.length-1].charAt(0)+'.'):''); }
+function last4(p){ p=String(p||'').replace(/\D/g,''); return p?p.slice(-4):''; }
+var TH_PROV=["กรุงเทพมหานคร","กรุงเทพ","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ","สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"];
+function provinceOf(a){ a=String(a||''); for(var i=0;i<TH_PROV.length;i++){ if(a.indexOf(TH_PROV[i])>=0)return TH_PROV[i]==='กรุงเทพ'?'กรุงเทพมหานคร':TH_PROV[i]; } return 'ไม่ระบุ'; }
+function maskOrder(o){
+  return {
+    id:o.id, seq:o.seq, at:o.at, status:o.status,
+    name:maskName(o.name), phone:last4(o.phone), addr:provinceOf(o.addr),
+    ref:o.ref||'', pay:o.pay||'bank', items:Array.isArray(o.items)?o.items:[], total:Number(o.total)||0,
+    invoiceNo:o.invoiceNo||null, imported:!!o.imported
+  };
+}
+// ---- list orders — ค่าเริ่มต้นมาสก์ PII (PDPA); ต้องมี ?key=ADMIN_KEY จึงจะเห็นข้อมูลเต็ม (สำหรับจัดส่ง/ยืนยัน) ----
+app.get('/api/orders', (req, res) => {
+  const full = process.env.ADMIN_KEY && req.query.key === process.env.ADMIN_KEY;
+  const data = read();
+  res.json(full ? data : data.map(maskOrder));
+});
+
+// ---- ADMIN: import orders (guarded by ADMIN_KEY) — mode=append (default) หรือ replace ----
+app.post('/api/admin/import', (req, res) => {
+  if (!process.env.ADMIN_KEY || req.query.key !== process.env.ADMIN_KEY) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const incoming = Array.isArray(req.body) ? req.body : (req.body && Array.isArray(req.body.orders) ? req.body.orders : null);
+  if (!incoming) return res.status(400).json({ ok: false, error: 'expected array of orders' });
+  const mode = req.query.mode === 'replace' ? 'replace' : 'append';
+  let list = mode === 'replace' ? [] : read();
+  const existing = {}; list.forEach(function (o) { existing[o.id] = true; });
+  let baseSeq = list.length ? Math.max.apply(null, list.map(function (x) { return x.seq || 0; })) : 0;
+  let added = 0, skipped = 0;
+  incoming.forEach(function (o) {
+    if (!o || !o.id) { skipped++; return; }
+    if (existing[o.id]) { skipped++; return; }
+    baseSeq++;
+    list.push(Object.assign({}, o, { seq: o.seq || baseSeq, imported: true, at: o.at || new Date().toISOString() }));
+    existing[o.id] = true; added++;
+  });
+  write(list);
+  res.json({ ok: true, added: added, skipped: skipped, total: list.length, mode: mode });
+});
 
 // ---- update status (confirm / reject) ----
 app.patch('/api/orders/:id', (req, res) => {
