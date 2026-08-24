@@ -160,6 +160,7 @@
             <div class="children">
               <button class="item" data-view="order"><span class="dot"></span>Order</button>
               <button class="item" data-view="preorder"><span class="dot"></span>Pre-Order</button>
+              <button class="item" data-view="podash"><span class="dot"></span>วิเคราะห์ยอดขาย</button>
             </div>
           </div>
           <div class="group open" id="g-xvisor">
@@ -266,6 +267,7 @@
   var META={
     order:{t:'Order Dashboard',th:'แดชบอร์ดคำสั่งซื้อ',d:'ติดตามคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'dash'},
     preorder:{t:'Pre-Order Dashboard',th:'แดชบอร์ด Pre-Order',d:'จัดการคำสั่งซื้อล่วงหน้าและคิวรอดำเนินการ',kind:'dash'},
+    podash:{t:'Sales Analytics',th:'วิเคราะห์ยอดขาย Pre-Order',d:'ยอดขายรายวัน ตามสินค้า ช่องทางชำระ สถานะ ผู้แนะนำ และจังหวัด',kind:'dash'},
     cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
     activity:{t:'Activity Dashboard',th:'แดชบอร์ดกิจกรรม X-Visor',d:'ติดตามกิจกรรมและความเคลื่อนไหวของทีม X-Visor',kind:'dash'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
@@ -388,11 +390,93 @@
   }
   function renderPreorder(){ poDraw(); poRefresh(); }
 
+  /* ============ SALES ANALYTICS DASHBOARD ============ */
+  var TH_PROVINCES=['กรุงเทพ','กทม','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา','ชลบุรี','ชัยนาท','ชัยภูมิ','ชุมพร','เชียงราย','เชียงใหม่','ตรัง','ตราด','ตาก','นครนายก','นครปฐม','นครพนม','นครราชสีมา','นครศรีธรรมราช','นครสวรรค์','นนทบุรี','นราธิวาส','น่าน','บึงกาฬ','บุรีรัมย์','ปทุมธานี','ประจวบคีรีขันธ์','ปราจีนบุรี','ปัตตานี','พระนครศรีอยุธยา','อยุธยา','พะเยา','พังงา','พัทลุง','พิจิตร','พิษณุโลก','เพชรบุรี','เพชรบูรณ์','แพร่','ภูเก็ต','มหาสารคาม','มุกดาหาร','แม่ฮ่องสอน','ยโสธร','ยะลา','ร้อยเอ็ด','ระนอง','ระยอง','ราชบุรี','ลพบุรี','ลำปาง','ลำพูน','เลย','ศรีสะเกษ','สกลนคร','สงขลา','สตูล','สมุทรปราการ','สมุทรสงคราม','สมุทรสาคร','สระแก้ว','สระบุรี','สิงห์บุรี','สุโขทัย','สุพรรณบุรี','สุราษฎร์ธานี','สุรินทร์','หนองคาย','หนองบัวลำภู','อ่างทอง','อำนาจเจริญ','อุดรธานี','อุตรดิตถ์','อุทัยธานี','อุบลราชธานี'];
+  function pdProvince(addr){var a=String(addr||'');for(var i=0;i<TH_PROVINCES.length;i++){if(a.indexOf(TH_PROVINCES[i])>=0){var p=TH_PROVINCES[i];return (p==='กทม')?'กรุงเทพ':p;}}return 'ไม่ระบุ';}
+  function pdMoney(n){return '฿'+Math.round(n).toLocaleString('en-US');}
+  function pdDateKey(iso){var d=new Date(iso);if(isNaN(d))return null;return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  function pdBars(items,color){
+    if(!items.length)return '<div style="color:var(--muted);font-size:.85rem;padding:18px 0;text-align:center">ยังไม่มีข้อมูล</div>';
+    var max=items.reduce(function(m,x){return Math.max(m,x.value);},0)||1;
+    return items.map(function(x){var pct=Math.max(3,Math.round(x.value/max*100));
+      return '<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:.85rem;margin-bottom:5px"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.label+'</span><span class="num" style="color:var(--muted);white-space:nowrap">'+(x.sub||'')+'</span></div>'
+        +'<div class="progress"><b style="width:'+pct+'%;background:'+(color||'var(--brand)')+'"></b></div></div>';}).join('');
+  }
+  function renderPoDash(){
+    gen.innerHTML='<div class="head"><h1>วิเคราะห์ยอดขาย Pre-Order</h1><p>กำลังโหลดข้อมูล…</p></div>';
+    fetch('/api/orders').then(function(r){return r.json();}).then(function(d){pdDraw(Array.isArray(d)?d:[]);}).catch(function(){pdDraw([]);});
+  }
+  function pdDraw(orders){
+    var PAID=['confirmed','paid'];
+    var rev=orders.filter(function(o){return PAID.indexOf(o.status)>=0;});
+    var totalRev=rev.reduce(function(a,o){return a+(Number(o.total)||0);},0);
+    var nTotal=orders.length, nRev=rev.length;
+    var nPending=orders.filter(function(o){return o.status==='pending';}).length;
+    var aov=nRev?totalRev/nRev:0;
+    var conv=nTotal?Math.round(nRev/nTotal*100):0;
+    // KPI row
+    var kpis='<div class="kpis">'
+      +'<div class="kpi"><div class="top"><div class="lb">ยอดขายรวม (ยืนยันแล้ว)</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="v num">'+pdMoney(totalRev)+'</div><div class="delta up">'+nRev+' ออเดอร์</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">คำสั่งซื้อทั้งหมด</div><div class="ic" style="background:var(--good-tint);color:var(--good)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div></div><div class="v num">'+nTotal+'</div><div class="delta up">อัตราปิดการขาย '+conv+'%</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">มูลค่าเฉลี่ย/ออเดอร์</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg></div></div><div class="v num">'+pdMoney(aov)+'</div><div class="delta up">AOV</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">รอดำเนินการ</div><div class="ic" style="background:var(--warn-tint);color:var(--warn)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div><div class="v num">'+nPending+'</div><div class="delta down">ต้องตรวจสอบ</div></div>'
+      +'</div>';
+    // Daily sales last 14 days (revenue)
+    var days=[];var now=new Date();
+    for(var i=13;i>=0;i--){var d=new Date(now);d.setDate(now.getDate()-i);days.push({key:pdDateKey(d.toISOString()),label:('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2),v:0});}
+    var dmap={};days.forEach(function(x){dmap[x.key]=x;});
+    rev.forEach(function(o){var k=pdDateKey(o.at);if(k&&dmap[k])dmap[k].v+=(Number(o.total)||0);});
+    var dmax=days.reduce(function(m,x){return Math.max(m,x.v);},0)||1;
+    var chart='<div class="chart" style="height:200px">'+days.map(function(x){var h=Math.round(x.v/dmax*100);
+      return '<div class="bar"><div class="val">'+(x.v?('฿'+Math.round(x.v/1000)+'k').replace('฿0k',''):'')+'</div><div class="b" style="height:'+Math.max(2,h)+'%" title="'+x.label+': '+pdMoney(x.v)+'"></div><div class="cap">'+x.label+'</div></div>';}).join('')+'</div>';
+    var dailyPanel='<div class="panel" style="margin-bottom:18px"><div class="ph"><h3>ยอดขายรายวัน (14 วันล่าสุด)</h3><span style="font-size:.78rem;color:var(--muted)">เฉพาะออเดอร์ที่ยืนยันแล้ว</span></div>'+chart+'</div>';
+    // Sales by product
+    var prodMap={};
+    rev.forEach(function(o){(o.items||[]).forEach(function(it){var nm=it.nm||'-';if(!prodMap[nm])prodMap[nm]={q:0,amt:0};prodMap[nm].q++;prodMap[nm].amt+=(Number(it.price)||0);});});
+    var prodArr=Object.keys(prodMap).map(function(k){return {label:k,value:prodMap[k].amt,sub:prodMap[k].q+' ชิ้น · '+pdMoney(prodMap[k].amt)};}).sort(function(a,b){return b.value-a.value;});
+    // Payment channel
+    var payMap={bank:{n:0,amt:0},card:{n:0,amt:0}};
+    rev.forEach(function(o){var k=o.pay==='card'?'card':'bank';payMap[k].n++;payMap[k].amt+=(Number(o.total)||0);});
+    var payArr=[{label:'โอนธนาคาร',value:payMap.bank.amt,sub:payMap.bank.n+' ออเดอร์ · '+pdMoney(payMap.bank.amt)},{label:'บัตรเครดิต',value:payMap.card.amt,sub:payMap.card.n+' ออเดอร์ · '+pdMoney(payMap.card.amt)}];
+    // Status
+    var stOrder=['pending','paid','confirmed','rejected'];
+    var stMap={pending:0,paid:0,confirmed:0,rejected:0};
+    orders.forEach(function(o){if(stMap[o.status]!==undefined)stMap[o.status]++;});
+    var stArr=stOrder.map(function(s){return {label:(PO_ST[s]?PO_ST[s][0]:s),value:stMap[s],sub:stMap[s]+' ออเดอร์'};});
+    var stColors={pending:'var(--warn)',paid:'var(--info)',confirmed:'var(--good)',rejected:'var(--bad)'};
+    var stBars=stArr.map(function(x,i){var max=stArr.reduce(function(m,y){return Math.max(m,y.value);},0)||1;var pct=Math.max(3,Math.round(x.value/max*100));
+      return '<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:5px"><span style="font-weight:600">'+x.label+'</span><span class="num" style="color:var(--muted)">'+x.sub+'</span></div><div class="progress"><b style="width:'+pct+'%;background:'+stColors[stOrder[i]]+'"></b></div></div>';}).join('');
+    // Referrer (ผู้แนะนำ/ทีมโค้ช)
+    var refMap={};
+    rev.forEach(function(o){var r=(o.ref||'ไม่ระบุ').trim()||'ไม่ระบุ';if(!refMap[r])refMap[r]={n:0,amt:0};refMap[r].n++;refMap[r].amt+=(Number(o.total)||0);});
+    var refArr=Object.keys(refMap).map(function(k){return {label:k,value:refMap[k].amt,sub:refMap[k].n+' ออเดอร์ · '+pdMoney(refMap[k].amt)};}).sort(function(a,b){return b.value-a.value;}).slice(0,8);
+    // Province
+    var provMap={};
+    rev.forEach(function(o){var p=pdProvince(o.addr);if(!provMap[p])provMap[p]={n:0,amt:0};provMap[p].n++;provMap[p].amt+=(Number(o.total)||0);});
+    var provArr=Object.keys(provMap).map(function(k){return {label:k,value:provMap[k].amt,sub:provMap[k].n+' ออเดอร์ · '+pdMoney(provMap[k].amt)};}).sort(function(a,b){return b.value-a.value;}).slice(0,8);
+
+    var row1='<div class="row2" style="margin-bottom:18px">'
+      +'<div class="panel"><div class="ph"><h3>ยอดขายตามสินค้า</h3></div>'+pdBars(prodArr,'var(--brand)')+'</div>'
+      +'<div class="panel"><div class="ph"><h3>ช่องทางชำระเงิน</h3></div>'+pdBars(payArr,'var(--good)')+'</div></div>';
+    var row2='<div class="row2" style="margin-bottom:18px">'
+      +'<div class="panel"><div class="ph"><h3>สถานะคำสั่งซื้อ</h3></div>'+stBars+'</div>'
+      +'<div class="panel"><div class="ph"><h3>ยอดขายตามผู้แนะนำ / ทีมโค้ช</h3></div>'+pdBars(refArr,'#8B5CF6')+'</div></div>';
+    var row3='<div class="row2">'
+      +'<div class="panel"><div class="ph"><h3>ยอดขายตามจังหวัด</h3></div>'+pdBars(provArr,'#EC4899')+'</div>'
+      +'<div class="panel"><div class="ph"><h3>สรุป</h3></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--brand-tint);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="t">ยอดขายยืนยันแล้ว</div><div class="s">'+pdMoney(totalRev)+' จาก '+nRev+' ออเดอร์</div></div></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--warn-tint);color:var(--warn)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><div class="t">รอตรวจสอบ</div><div class="s">'+nPending+' ออเดอร์</div></div></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--good-tint);color:var(--good)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg></div><div><div class="t">มูลค่าเฉลี่ยต่อออเดอร์</div><div class="s">'+pdMoney(aov)+'</div></div></div>'
+      +'</div></div>';
+    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>วิเคราะห์ยอดขาย Pre-Order</h1><p>สรุปยอดขาย แนวโน้ม และสัดส่วนจากข้อมูลจริง</p></div><button onclick="renderPoDash()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button></div>'
+      +kpis+dailyPanel+row1+row2+row3;
+  }
+
   function go(v){
     var isOv=(v==='overview');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     var m=v==='overview'?{t:'Overview'}:META[v];

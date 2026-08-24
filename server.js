@@ -120,6 +120,15 @@ app.patch('/api/orders/:id', (req, res) => {
   }
 });
 
+// ---- ADMIN: reset all orders + invoice counter (guarded by ADMIN_KEY) ----
+app.post('/api/admin/reset', (req, res) => {
+  if (!process.env.ADMIN_KEY || req.query.key !== process.env.ADMIN_KEY) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const n = read().length;
+  write([]);
+  try { fs.writeFileSync(CNT, JSON.stringify({})); } catch (e) {}
+  res.json({ ok: true, cleared: n, message: 'orders and invoice counter reset' });
+});
+
 // ---- serve slip images ----
 app.get('/api/slips/:fn', (req, res) => {
   const p = path.join(SLIPS, path.basename(req.params.fn));
