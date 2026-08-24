@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,54 @@ app.use(express.json({ limit: '10mb' }));
 
 function read() { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) { return []; } }
 function write(d) { fs.writeFileSync(DB, JSON.stringify(d, null, 2)); }
+
+// ================= AUTO-EMAIL RECEIPT (ฟรี ผ่าน Resend/Brevo) =================
+// เปิดใช้งานเมื่อกำหนด ENV ใน Railway: EMAIL_API_KEY (จำเป็น), EMAIL_PROVIDER=resend|brevo (ค่าเริ่มต้น resend),
+// EMAIL_FROM=CloverX <receipt@cloverxth.com>, PUBLIC_BASE_URL=https://<โดเมนจริง> (ถ้าไม่ตั้งจะเดาจาก request)
+function emailConfigured() { return !!process.env.EMAIL_API_KEY; }
+function parseFrom(from) {
+  var m = String(from).match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  return m ? { name: m[1] || 'CloverX', email: m[2] } : { name: 'CloverX', email: String(from) };
+}
+function receiptEmailHTML(o, link) {
+  var total = (Number(o.total) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var items = (o.items || []).map(function (it) { return '<li>' + String(it.nm) + (it.fam ? ' (ครอบครัว)' : '') + '</li>'; }).join('');
+  return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#111">'
+    + '<h2 style="color:#2563EB;margin:0 0 4px">CloverX</h2>'
+    + '<p style="color:#374151">เรียนคุณ ' + String(o.name || 'ลูกค้า') + ',</p>'
+    + '<p style="color:#374151">ขอบคุณสำหรับคำสั่งซื้อ <b>' + String(o.id) + '</b> ทางเราได้รับการชำระเงินเรียบร้อยแล้ว</p>'
+    + '<ul style="color:#374151">' + items + '</ul>'
+    + '<p style="color:#111;font-weight:700">ยอดรวมทั้งสิ้น: ฿' + total + '</p>'
+    + '<p style="margin:22px 0"><a href="' + link + '" style="background:#2563EB;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;display:inline-block">ดู/ ดาวน์โหลดใบเสร็จ · ใบกำกับภาษี</a></p>'
+    + '<p style="color:#9ca3af;font-size:12px">หากปุ่มไม่ทำงาน เปิดลิงก์นี้: ' + link + '</p>'
+    + '<hr style="border:none;border-top:1px solid #e5e7eb"><p style="color:#9ca3af;font-size:12px">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด · เลขประจำตัวผู้เสียภาษี 0105568236410 · www.cloverxth.com</p></div>';
+}
+function sendReceiptEmail(o, base) {
+  return new Promise(function (resolve) {
+    if (!emailConfigured() || !o.email) { resolve(false); return; }
+    var provider = (process.env.EMAIL_PROVIDER || 'resend').toLowerCase();
+    var from = process.env.EMAIL_FROM || 'CloverX <onboarding@resend.dev>';
+    var link = base + '/invoice/' + encodeURIComponent(o.id);
+    var subject = 'ใบเสร็จ/ใบกำกับภาษี คำสั่งซื้อ ' + o.id + ' · CloverX';
+    var html = receiptEmailHTML(o, link);
+    var host, urlPath, headers, payload;
+    if (provider === 'brevo') {
+      host = 'api.brevo.com'; urlPath = '/v3/smtp/email';
+      headers = { 'api-key': process.env.EMAIL_API_KEY, 'content-type': 'application/json' };
+      payload = JSON.stringify({ sender: parseFrom(from), to: [{ email: o.email }], subject: subject, htmlContent: html });
+    } else {
+      host = 'api.resend.com'; urlPath = '/emails';
+      headers = { 'Authorization': 'Bearer ' + process.env.EMAIL_API_KEY, 'content-type': 'application/json' };
+      payload = JSON.stringify({ from: from, to: [o.email], subject: subject, html: html });
+    }
+    var r = https.request({ hostname: host, path: urlPath, method: 'POST', headers: headers }, function (resp) {
+      var b = ''; resp.on('data', function (d) { b += d; });
+      resp.on('end', function () { var ok = resp.statusCode >= 200 && resp.statusCode < 300; if (!ok) console.log('[email] fail', resp.statusCode, b.slice(0, 200)); resolve(ok); });
+    });
+    r.on('error', function (e) { console.log('[email] error', e.message); resolve(false); });
+    r.write(payload); r.end();
+  });
+}
 
 // ---- create an order (from customer Pre-Order page) ----
 app.post('/api/orders', (req, res) => {
@@ -57,8 +106,18 @@ app.patch('/api/orders/:id', (req, res) => {
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ ok: false });
   if (req.body && req.body.status) o.status = req.body.status;
+  const nowPaid = (o.status === 'confirmed' || o.status === 'paid');
+  // ยืนยันชำระเงินแล้ว → ออกเลขที่ใบกำกับภาษี
+  if (nowPaid && !o.invoiceNo) { o.invoiceNo = nextInvoiceNo(); o.invoiceAt = new Date().toISOString(); }
   write(list);
   res.json({ ok: true, order: o });
+  // ส่งใบเสร็จทางอีเมลอัตโนมัติ (ครั้งเดียว) เมื่อยืนยันการชำระเงินแล้ว — ทำงานเมื่อกำหนด EMAIL_API_KEY
+  if (nowPaid && o.email && !o.emailedReceiptAt && emailConfigured()) {
+    const base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host);
+    sendReceiptEmail(o, base).then(function (ok) {
+      if (ok) { const l = read(); const x = l.find(y => y.id === o.id); if (x) { x.emailedReceiptAt = new Date().toISOString(); write(l); } }
+    });
+  }
 });
 
 // ---- serve slip images ----
@@ -118,8 +177,12 @@ function invoiceHTML(o) {
     return '<tr><td class="c">' + (i + 1) + '</td><td>' + esc(it.nm) + (it.fam ? ' <span class="fam">(ครอบครัว)</span>' : '') + '</td><td class="c">1</td><td class="r">' + THB2(lineBase) + '</td><td class="r">' + THB2(lineBase) + '</td></tr>';
   }).join('');
   var payLabel = o.pay === 'card' ? 'บัตรเครดิต/เดบิต (Stripe)' : 'โอนเงินผ่านธนาคาร';
+  var official = !!o.invoiceNo;
+  var docTitle = official ? 'ใบเสร็จรับเงิน / ใบกำกับภาษี' : 'ใบยืนยันคำสั่งซื้อ';
+  var docSub = official ? 'RECEIPT / TAX INVOICE (ต้นฉบับ)' : 'ORDER CONFIRMATION · ยังไม่ใช่ใบกำกับภาษี';
+  var noStr = official ? esc(o.invoiceNo) : 'รอออกหลังยืนยันชำระเงิน';
   return '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    + '<title>ใบกำกับภาษี ' + esc(o.invoiceNo || '') + '</title>'
+    + '<title>' + docTitle + ' ' + esc(o.invoiceNo || o.id) + '</title>'
     + '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
     + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">'
     + '<style>'
@@ -146,12 +209,13 @@ function invoiceHTML(o) {
     + '</style></head><body>'
     + '<div class="printbar"><button class="btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button></div>'
     + '<div class="sheet">'
-    + '<div class="top"><div class="co"><div class="brand">clover<svg viewBox="0 0 100 100"><path fill-rule="evenodd" fill="currentColor" d="M8,8 Q50,50 92,8 Q50,50 92,92 Q50,50 8,92 Q50,50 8,8 Z M27,27 Q50,50 73,27 Q50,50 73,73 Q50,50 27,73 Q50,50 27,27 Z"/></svg></div>'
+    + '<div class="top"><div class="co"><div class="brand">Clover</div>'
     + '<h1>บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</h1><div class="en">CLOVERX (THAILAND) CO., LTD. (สำนักงานใหญ่)</div>'
     + '<p>762/84 หมู่บ้านเดอะปาล์ม (ภัสสร 37) ซอยพัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250<br>โทร. 065-514-6576 · info@cloverxth.com</p>'
     + '<p>เลขประจำตัวผู้เสียภาษี: 0105568236410</p></div>'
-    + '<div class="doc"><h2>ใบเสร็จรับเงิน / ใบกำกับภาษี</h2><div class="sub">RECEIPT / TAX INVOICE (ต้นฉบับ)</div>'
-    + '<div class="meta"><div><b>เลขที่</b> ' + esc(o.invoiceNo || '') + '</div><div><b>วันที่</b> ' + esc(dateStr) + '</div><div><b>อ้างอิง</b> ' + esc(o.id) + '</div></div></div></div>'
+    + '<div class="doc"><h2>' + docTitle + '</h2><div class="sub">' + docSub + '</div>'
+    + '<div class="meta"><div><b>เลขที่</b> ' + noStr + '</div><div><b>วันที่</b> ' + esc(dateStr) + '</div><div><b>อ้างอิง</b> ' + esc(o.id) + '</div></div></div></div>'
+    + (official ? '' : '<div style="background:#FFF7E6;border:1px solid #F5D48A;color:#8A5A00;border-radius:8px;padding:10px 14px;margin:16px 0 0;font-size:.82rem;font-weight:600">⏳ เอกสารนี้เป็นการยืนยันคำสั่งซื้อ ยังไม่ใช่ใบกำกับภาษี — ใบกำกับภาษี/ใบเสร็จฉบับสมบูรณ์จะออกให้อัตโนมัติเมื่อยืนยันการชำระเงินเรียบร้อยแล้ว</div>')
     + '<div class="parties"><div class="box"><h3>ลูกค้า / CUSTOMER</h3><div class="nm">' + esc(buyerName) + '</div>'
     + (buyerTax ? '<p>เลขประจำตัวผู้เสียภาษี: ' + esc(buyerTax) + '</p>' : '')
     + '<p>' + esc(buyerAddr) + '</p>' + (o.phone ? '<p>โทร. ' + esc(o.phone) + '</p>' : '') + '</div>'
@@ -174,7 +238,9 @@ app.get('/invoice/:id', (req, res) => {
   const list = read();
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).send('ไม่พบคำสั่งซื้อ');
-  if (!o.invoiceNo) { o.invoiceNo = nextInvoiceNo(); o.invoiceAt = new Date().toISOString(); write(list); }
+  // ออกเลขที่ใบกำกับภาษี (running number) เฉพาะเมื่อชำระเงินยืนยันแล้วเท่านั้น เพื่อรักษาลำดับเลขที่ให้ถูกต้อง
+  const paid = (o.status === 'confirmed' || o.status === 'paid');
+  if (paid && !o.invoiceNo) { o.invoiceNo = nextInvoiceNo(); o.invoiceAt = new Date().toISOString(); write(list); }
   res.set('Content-Type', 'text/html; charset=utf-8');
   res.send(invoiceHTML(o));
 });
