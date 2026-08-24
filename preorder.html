@@ -370,11 +370,11 @@
           <div class="field"><label class="fld">เบอร์โทรศัพท์ <span class="req">*</span></label><input class="in" id="f_phone" inputmode="tel" placeholder="08X-XXX-XXXX"><div class="err">กรุณากรอกเบอร์โทรให้ถูกต้อง</div></div>
           <div class="field"><label class="fld">อีเมล (สำหรับรับใบเสร็จ) <span class="req">*</span></label><input class="in" id="f_email" inputmode="email" placeholder="you@email.com"><div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div></div>
           <div class="field"><label class="fld">ที่อยู่จัดส่ง <span class="req">*</span></label><textarea id="f_addr" placeholder="บ้านเลขที่ / ถนน / ตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์"></textarea><div class="err">กรุณากรอกที่อยู่จัดส่ง</div></div>
-          <div class="field"><label class="fld">ผู้แนะนำ <span class="req">*</span></label>
-            <select id="f_ref"><option value="">— เลือกผู้แนะนำ —</option><option>โค้ชนุ่น</option><option>โค้ชซิง</option><option>โค้ชจา</option><option>โค้ชต๊ะ</option><option value="other">อื่น ๆ (ระบุ)</option></select>
-            <div class="err">กรุณาเลือกผู้แนะนำ</div>
+          <div class="field"><label class="fld">ทีมโค้ช <span class="req">*</span></label>
+            <select id="f_ref"><option value="">— เลือกทีมโค้ช —</option><option>โค้ชนุ่น</option><option>โค้ชซิง</option><option>โค้ชจา</option><option>โค้ชต๊ะ</option><option>CloverX</option></select>
+            <div class="err">กรุณาเลือกทีมโค้ช</div>
           </div>
-          <div class="field" id="refOtherWrap" style="display:none"><label class="fld">ระบุชื่อผู้แนะนำ <span class="req">*</span></label><input class="in" id="f_ref_other" placeholder="ชื่อผู้แนะนำ"><div class="err">กรุณาระบุชื่อผู้แนะนำ</div></div>
+          <div class="field"><label class="fld">ระบุชื่อผู้แนะนำ <span class="req">*</span></label><input class="in" id="f_ref_other" placeholder="ชื่อผู้แนะนำ"><div class="err">กรุณาระบุชื่อผู้แนะนำ</div></div>
         </div>
         <div class="card">
           <div class="step"><span class="n">4</span><h3>การจัดส่ง</h3></div>
@@ -574,7 +574,7 @@
     byId('cardNote').style.display=state.pay==='card'?'block':'none';
     update();
   });});
-  byId('f_ref').addEventListener('change',function(){byId('refOtherWrap').style.display=this.value==='other'?'block':'none';});
+  byId('f_ref').addEventListener('change',function(){this.closest('.field').classList.remove('bad');});
   byId('f_slip').addEventListener('change',function(e){
     var f=e.target.files[0]; if(!f)return; state.slip=f.name;
     var r=new FileReader(); r.onload=function(ev){state.slipData=ev.target.result;byId('slipTxt').innerHTML='✅ '+f.name+'<img src="'+ev.target.result+'" alt="slip">';}; r.readAsDataURL(f);
@@ -617,8 +617,8 @@
     ok=markBad('f_phone',!/^[0-9\-\s]{9,}$/.test(byId('f_phone').value.trim()))&&ok;
     ok=markBad('f_email',!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(byId('f_email').value.trim()))&&ok;
     ok=markBad('f_addr',!byId('f_addr').value.trim())&&ok;
-    var ref=byId('f_ref').value; ok=markBad('f_ref',!ref)&&ok;
-    if(ref==='other')ok=markBad('f_ref_other',!byId('f_ref_other').value.trim())&&ok;
+    ok=markBad('f_ref',!byId('f_ref').value)&&ok;
+    ok=markBad('f_ref_other',!byId('f_ref_other').value.trim())&&ok;
     if(state.ship==='pickup'){
       ok=markBad('p_place',!byId('p_place').value.trim())&&ok;
       ok=markBad('p_date',!byId('p_date').value)&&ok;
@@ -632,7 +632,7 @@
     }
     return ok;
   }
-  function refName(){var r=byId('f_ref').value;return r==='other'?(byId('f_ref_other').value.trim()||'อื่น ๆ'):r;}
+  function refName(){var team=byId('f_ref').value;var nm=byId('f_ref_other').value.trim();return nm+(team?' · '+team:'');}
 
   function showDone(oid){
     var parts=mainObjs().map(function(p){return p.nm+' — '+THB(p.price)});
