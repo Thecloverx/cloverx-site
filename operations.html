@@ -298,17 +298,8 @@
   }
   function kpi(lb,v,bg,fg){return '<div class="kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+bg+';color:'+fg+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg></div></div><div class="v num">'+v+'</div></div>';}
 
-  var PO_LINK='https://claude.ai/code/artifact/e261921a-67e7-4a38-b711-5f837a8bf246';
-  var PO_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUgAAAFIAQMAAAAI2vVwAAAABlBMVEULDhb///8FXNk8AAABzElEQVR42u2bwW7DMAxDif7/P2tobVFM2oOlywqUGTZstrHDGyVKcoY4feCTPvkfJ7Ge5/f7C9ba69dw94HT55dPIuGDf4a1ulDLrnke81xaBBJiEQV3zbPPMzFugpdd8xzwzMTLH6zPef7UtLnJOn9OeCLd/OOH/b3Js0on0ORTt7Jtnp38uYQqsV9kN3TzPI93yZVVKtGS1qd5NvwIgXvPFFuxSdw8Ozx3M5QutEJ+SXTvmed5/oyUYsU/Ipsm+3vb3+/GLqW98+ek/ozsNINWrzHveO/oU2wekPKeS+F4b+kzk6UM6bI5Ygdvnv38iTL3CGnu4fzZ9HeCjZ1M2deTt3ke6/Me8SGdE8J+1PWjCvm0dM7vwNmdeXZ4Vr9eGiVqz5fa9eelNoI08axOzfO8/swo1yF9SKVvf+/WS9AQB6VJkZpna7508SQd4MHz+Wn9eZktZfMezp8DnlWF1s1mDfB8vzntjxBSc96Omee5H2WvySE9Xwajbs2zU3+irKgK0ZBBk3n2/J33RihzChGpebb8SHRYt8eZQl1/jnnW5SbKmzxfmuszV+t1Rc8/p+8nixtpBrA+p+/XxdtqwPdH0/rT/7Xhk1938g8VtE0sEnnF9QAAAABJRU5ErkJggg==';
-  var PO_ORDERS=[
-    {id:'PO-000142',name:'สมชาย ใจดี',item:'TRIPLE SET',amt:12480,ch:'บัตรเครดิต',st:'ok',ref:'โค้ชนุ่น'},
-    {id:'PO-000141',name:'ธนพล วงศ์ทอง',item:'Band + Band(ครอบครัว)',amt:8950,ch:'โอนธนาคาร',st:'pend',ref:'โค้ชซิง'},
-    {id:'PO-000140',name:'ปิยะดา แสงทอง',item:'DUO SET',amt:4990,ch:'โอนธนาคาร',st:'pend',ref:'โค้ชจา'},
-    {id:'PO-000139',name:'อรวรรณ มีสุข',item:'RoutineX',amt:7490,ch:'โอนธนาคาร',st:'new',ref:'โค้ชต๊ะ'},
-    {id:'PO-000138',name:'กิตติ ศรีสมบัติ',item:'TWIN SET',amt:11850,ch:'โอนธนาคาร',st:'ok',ref:'โค้ชนุ่น'},
-    {id:'PO-000137',name:'ณัฐพร ชัยมงคล',item:'Scale',amt:1290,ch:'บัตรเครดิต',st:'ok',ref:'โค้ชซิง'},
-    {id:'PO-000136',name:'วีระ พันธุ์ดี',item:'Band',amt:4590,ch:'โอนธนาคาร',st:'bad',ref:'อื่น ๆ'}
-  ];
+  var PO_LINK='https://cloverx-site-production.up.railway.app/preorder';
+  var PO_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASgAAAEoAQMAAADRyf5aAAAABlBMVEULDhb///8FXNk8AAABfklEQVR42u2awW7DMAxDif3/P2uDI4pSYgfFsNuYoIVRu5cHiaKUID654FM+9dtTuK6fJXD9wH9zJ77wyfUfToFg12Ihu+7I77VjXoNXRlcsWhlsfce8drwyusgrw828zrxANaN+mdeLfiUuorJ+nXipPt5v18cNr5u72HkR85r6tbxWCVj75K553eKL3OgpYtRM8xq85B9SslK6EqR5PXgxAZvq9yAzr1kfmYbRLEYGnf3ETr8g21XJ2KLPvGY+Rusam44JpHk962Oln7SLDt+8bvEly0V+9GTW+4NfZXwBaA7D/uvcb1PmyUwOw7we/SNqEK1JDmpCbV6DlwYUozZG0TSvh97rKUcFl/PxNP+K6CMw2Vbn48v8q9zD6CBdH7f9o3ofTe9l/81rF1/SemCKmnlN/WLzGG2hCb55HfxqL5KhBDWvez80GkfU08hKV/Pa8VJ89d7R+XjgxQZo9Nr2E2/61SRLVtb5eKiPgan1UTzNa+O//OagT/35qW97jTX96F1uSAAAAABJRU5ErkJggg==';
   var PO_PROD=[
     {nm:'Band',price:'4,590',quota:200,left:73,on:true},
     {nm:'Scale',price:'1,290',quota:200,left:141,on:true},
@@ -317,16 +308,32 @@
     {nm:'TRIPLE SET',price:'12,480',quota:80,left:12,on:true},
     {nm:'TWIN SET (ครอบครัว)',price:'11,850',quota:100,left:0,on:false}
   ];
-  var PO_STMAP={ok:['ยืนยันแล้ว','ok'],pend:['รอตรวจสลิป','pend'],new:['ใหม่','new'],bad:['มีปัญหา','bad']};
-  function poCopy(){var t=document.getElementById('poLinkInput');t.select();try{document.execCommand('copy');}catch(e){}
-    var b=document.getElementById('poCopyBtn');var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}
-  function poConfirm(id){var o=PO_ORDERS.find(function(x){return x.id===id});if(o){o.st='ok';renderPreorder();}}
-  function renderPreorder(){
+  var PO_ORDERS=[];
+  var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระผ่านบัตร','new'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad']};
+  function poNeeds(s){return s==='pending'||s==='paid';}
+  function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
+    var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
+  function poSlip(u){if(u)window.open(u,'_blank');}
+  function poSetStatus(id,st){
+    fetch('/api/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:st})})
+      .then(function(r){return r.json();}).then(function(){poRefresh();}).catch(function(){});
+  }
+  function poRefresh(){
+    fetch('/api/orders').then(function(r){return r.json();}).then(function(d){PO_ORDERS=Array.isArray(d)?d:[];poDraw();}).catch(function(){poDraw();});
+  }
+  function poItems(o){return (o.items||[]).map(function(i){return i.nm+(i.fam?' <span style="color:var(--muted);font-size:.82em">(ครอบครัว)</span>':'');}).join(' + ')||'-';}
+  function poTime(iso){if(!iso)return'';var d=new Date(iso);if(isNaN(d))return'';return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+  function poDraw(){
+    var today=new Date().toDateString();
+    var nToday=PO_ORDERS.filter(function(o){var d=new Date(o.at);return !isNaN(d)&&d.toDateString()===today;}).length;
+    var nPend=PO_ORDERS.filter(function(o){return poNeeds(o.status);}).length;
+    var nOk=PO_ORDERS.filter(function(o){return o.status==='confirmed';}).length;
+    var sales=PO_ORDERS.filter(function(o){return o.status==='confirmed';}).reduce(function(a,o){return a+(Number(o.total)||0);},0);
     var kpis='<div class="kpis">'
-      +'<div class="kpi"><div class="top"><div class="lb">คำสั่งจองวันนี้</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div></div><div class="v num">18</div><div class="delta up">▲ 20% <span style="color:var(--muted);font-weight:500">vs เมื่อวาน</span></div></div>'
-      +'<div class="kpi"><div class="top"><div class="lb">รอตรวจสลิป</div><div class="ic" style="background:var(--warn-tint);color:var(--warn)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div><div class="v num">'+PO_ORDERS.filter(function(o){return o.st==='pend'||o.st==='new'}).length+'</div><div class="delta down">ต้องดำเนินการ</div></div>'
-      +'<div class="kpi"><div class="top"><div class="lb">ยืนยันแล้ว</div><div class="ic" style="background:var(--good-tint);color:var(--good)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div></div><div class="v num">'+PO_ORDERS.filter(function(o){return o.st==='ok'}).length+'</div><div class="delta up">พร้อมจัดส่ง</div></div>'
-      +'<div class="kpi"><div class="top"><div class="lb">ยอดขายพรีออเดอร์</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="v num">฿1.24M</div><div class="delta up">▲ 8% <span style="color:var(--muted);font-weight:500">เดือนนี้</span></div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">คำสั่งจองวันนี้</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div></div><div class="v num">'+nToday+'</div><div class="delta up">วันนี้</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">รอดำเนินการ</div><div class="ic" style="background:var(--warn-tint);color:var(--warn)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div><div class="v num">'+nPend+'</div><div class="delta down">ต้องตรวจสอบ</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">ยืนยันแล้ว</div><div class="ic" style="background:var(--good-tint);color:var(--good)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div></div><div class="v num">'+nOk+'</div><div class="delta up">พร้อมจัดส่ง</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">ยอดขายยืนยันแล้ว</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="v num">฿'+sales.toLocaleString("en-US")+'</div><div class="delta up">รวมสะสม</div></div>'
       +'</div>';
     var linkPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3><span style="font-size:.78rem;color:var(--muted)">ทีมส่งให้ลูกค้าเพื่อเปิดหน้าสั่งซื้อ</span></div>'
       +'<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center">'
@@ -336,17 +343,35 @@
       +'<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="poLinkInput" readonly value="'+PO_LINK+'" style="flex:1;min-width:200px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;color:var(--ink);background:var(--soft)">'
       +'<button id="poCopyBtn" onclick="poCopy()" style="background:var(--brand);color:#fff;border:0;border-radius:10px;padding:0 18px;font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer">คัดลอกลิงก์</button>'
       +'<a href="'+PO_LINK+'" target="_blank" style="background:#fff;color:var(--brand);border:1.5px solid var(--brand);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.86rem;text-decoration:none">เปิดหน้า ↗</a></div>'
-      +'<p style="font-size:.78rem;color:var(--muted);margin-top:10px">* สแกน QR หรือส่งลิงก์ให้ลูกค้าได้ทันที — เมื่อขึ้นเว็บโดเมนจริงแล้ว ระบบจะอัปเดตลิงก์นี้ให้อัตโนมัติ</p>'
+      +'<p style="font-size:.78rem;color:var(--muted);margin-top:10px">* สแกน QR หรือส่งลิงก์ให้ลูกค้าได้ทันที — คำสั่งซื้อจะเข้ามาที่ตารางด้านล่างแบบเรียลไทม์</p>'
       +'</div></div></div>';
-    var rows=PO_ORDERS.map(function(o){
-      var s=PO_STMAP[o.st];
-      var act=(o.st==='pend'||o.st==='new')
-        ? '<button onclick="poConfirm(\''+o.id+'\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:6px">ยืนยัน</button><a href="#" onclick="return false" style="color:var(--brand);font-weight:600;font-size:.78rem">ดูสลิป</a>'
-        : (o.st==='bad'?'<a href="#" onclick="return false" style="color:var(--bad);font-weight:600;font-size:.78rem">ตรวจสอบ</a>':'<a href="#" onclick="return false" style="color:var(--muted);font-weight:600;font-size:.78rem">รายละเอียด</a>');
-      return '<tr><td style="font-weight:700">'+o.id+'</td><td>'+o.name+'</td><td>'+o.item+'</td><td class="num" style="font-weight:700">฿'+o.amt.toLocaleString('en-US')+'</td><td>'+o.ch+'</td><td>'+o.ref+'</td><td><span class="pill '+s[1]+'">'+s[0]+'</span></td><td style="white-space:nowrap">'+act+'</td></tr>';
-    }).join('');
-    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งจอง</h3><a class="link" href="#" onclick="return false">ส่งออก Excel →</a></div>'
-      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>รายการ</th><th>ยอดรวม</th><th>ช่องทาง</th><th>ผู้แนะนำ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    var rows;
+    if(!PO_ORDERS.length){
+      rows='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:34px 0">ยังไม่มีคำสั่งจอง — เมื่อลูกค้าสั่งผ่านลิงก์/QR รายการจะขึ้นที่นี่</td></tr>';
+    }else{
+      rows=PO_ORDERS.map(function(o){
+        var s=PO_ST[o.status]||['-','pend'];
+        var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
+        var slipBtn=o.slipUrl?'<button onclick="poSlip(\''+o.slipUrl+'\')" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.78rem;cursor:pointer;padding:0">ดูสลิป</button>':'';
+        var act;
+        if(poNeeds(o.status)){
+          act='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:6px">ยืนยัน</button>'
+             +'<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">ปฏิเสธ</button>'+slipBtn;
+        }else if(o.status==='rejected'){
+          act='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:none;color:var(--good);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">กู้คืน</button>'+slipBtn;
+        }else{ act=slipBtn||'<span style="color:var(--muted);font-size:.78rem">—</span>'; }
+        var pk=o.ship==='pickup'?' <span class="pill new" style="font-size:.62rem;padding:1px 7px">รับหน้างาน</span>':'';
+        return '<tr><td><div style="font-weight:700">'+o.id+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTime(o.at)+'</div></td>'
+          +'<td><div style="font-weight:600">'+(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+(o.phone||'')+'</div></td>'
+          +'<td style="max-width:220px">'+poItems(o)+pk+'</td>'
+          +'<td class="num" style="font-weight:700">฿'+(Number(o.total)||0).toLocaleString("en-US")+'</td>'
+          +'<td>'+ch+'</td><td>'+(o.ref||'-')+'</td>'
+          +'<td><span class="pill '+s[1]+'">'+s[0]+'</span></td>'
+          +'<td style="white-space:nowrap">'+act+'</td></tr>';
+      }).join('');
+    }
+    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งจอง <span style="font-size:.8rem;font-weight:500;color:var(--muted)">('+PO_ORDERS.length+')</span></h3><div style="display:flex;gap:14px;align-items:center"><button onclick="poRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button><a class="link" href="#" onclick="return false">ส่งออก Excel →</a></div></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ / เวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอดรวม</th><th>ช่องทาง</th><th>ผู้แนะนำ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     var prows=PO_PROD.map(function(p){
       var pct=Math.round(p.left/p.quota*100);
       var barcol=p.left===0?'var(--bad)':(pct<25?'var(--warn)':'var(--brand)');
@@ -355,9 +380,10 @@
     }).join('');
     var prodPanel='<div class="panel"><div class="ph"><h3>ตั้งค่าสินค้า / ราคา / สต๊อกพรีออเดอร์</h3><a class="link" href="#" onclick="return false">แก้ไข →</a></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>สินค้า</th><th>ราคา</th><th>โควตา</th><th>คงเหลือ</th><th>สถานะ</th></tr></thead><tbody>'+prows+'</tbody></table></div></div>';
-    gen.innerHTML='<div class="head"><h1>แดชบอร์ด Pre-Order</h1><p>จัดการคำสั่งซื้อล่วงหน้า ตรวจสลิป ยืนยันการชำระเงิน และแจกลิงก์/QR ให้ลูกค้า · ข้อมูลตัวอย่าง (demo)</p></div>'
+    gen.innerHTML='<div class="head"><h1>แดชบอร์ด Pre-Order</h1><p>จัดการคำสั่งซื้อล่วงหน้า ตรวจสลิป ยืนยันการชำระเงิน และแจกลิงก์/QR ให้ลูกค้า</p></div>'
       +kpis+linkPanel+ordersPanel+prodPanel;
   }
+  function renderPreorder(){ poDraw(); poRefresh(); }
 
   function go(v){
     var isOv=(v==='overview');
