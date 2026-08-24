@@ -150,8 +150,12 @@
       <div><b>ฝ่ายปฏิบัติการ</b><span>Operations</span></div>
     </div>
     <nav class="nav" id="nav">
-      <button class="item active" data-view="overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</button>
-      <button class="item" data-view="podash"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>Dashboard</button>
+      <div class="group open" id="g-overview">
+        <button class="item" data-toggle="g-overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>ภาพรวม (Overview)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item active" data-view="podash"><span class="dot"></span>Dashboard</button>
+        </div>
+      </div>
 
       <div class="group open" id="g-manage">
         <button class="item" data-toggle="g-manage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>การจัดการ (Management)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -265,7 +269,7 @@
     order:{t:'Order Management',th:'จัดการคำสั่งซื้อ',d:'ติดตามและจัดการคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'plain'},
     preorder:{t:'Pre-Order Management',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบเสร็จ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
     qr:{t:'QR Code',th:'QR Code สั่งซื้อ Pre-Order',d:'ลิงก์และ QR สำหรับส่งให้ลูกค้าเปิดหน้าสั่งซื้อ',kind:'plain'},
-    podash:{t:'Pre-Order Dashboard',th:'แดชบอร์ด Pre-Order',d:'ตัวเลข ยอดขาย แนวโน้ม และสัดส่วน (ดูอย่างเดียว)',kind:'dash'},
+    podash:{t:'Dashboard',th:'แดชบอร์ด',d:'เลือกหัวข้อแดชบอร์ดจากฟิลเตอร์ด้านบน',kind:'dash'},
     cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
     activity:{t:'Activity Dashboard',th:'แดชบอร์ดกิจกรรม X-Visor',d:'ติดตามกิจกรรมและความเคลื่อนไหวของทีม X-Visor',kind:'dash'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
@@ -523,4 +527,5 @@
   // nav wiring
   document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
   document.querySelectorAll('#nav .item[data-toggle]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');});});
+  go('podash'); // เปิดหน้า Dashboard เป็นค่าเริ่มต้น
 </script>

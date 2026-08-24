@@ -1,0 +1,4992 @@
+[
+  {
+    "id": "PO-260809-R0065",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ชุตินาถ ก.",
+    "phone": "2941",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0111",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "นฤมล พ.",
+    "phone": "5659",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0059",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "วรากร ต.",
+    "phone": "6419",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0116",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ศรินธร ภ.",
+    "phone": "3005",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0117",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ศิริวรรณ ภ.",
+    "phone": "7377",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0101",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "pending",
+    "name": "สุธินี ก.",
+    "phone": "6989",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0119",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "Tanakorn P.",
+    "phone": "4523",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0077",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "กมลรัตน์ พ.",
+    "phone": "4955",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0113",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ช่อทิพย์ พ.",
+    "phone": "2454",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0067",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ฑัญญาพล จ.",
+    "phone": "7218",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0086",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ธนะมินทร์ อ.",
+    "phone": "9962",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0085",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ธิตยา เ.",
+    "phone": "9241",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0056",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "พันตำรวจโทพนม ห.",
+    "phone": "1998",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0121",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "วัฒนา พ.",
+    "phone": "5553",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0058",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ศุภเดช ข.",
+    "phone": "5171",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0089",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สมบัติทวี ถ.",
+    "phone": "9424",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0107",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สริณี พ.",
+    "phone": "2268",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0106",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สุวัฒน์ ม.",
+    "phone": "6614",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0114",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "pending",
+    "name": "อนรรฆพงษ์ บ.",
+    "phone": "3109",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0060",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "จารุวรรณ ล.",
+    "phone": "1984",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0069",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ณัฐกฤตา โ.",
+    "phone": "4287",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0063",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ทัศนี อ.",
+    "phone": "1651",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0082",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "นรินทร์ ล.",
+    "phone": "2552",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0079",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "นวพรรณ อ.",
+    "phone": "6929",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0091",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ประดิฐา จ.",
+    "phone": "5541",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีดำ",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0096",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "รัญญาณี ว.",
+    "phone": "3544",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0062",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "วิล้ยวรรณ์ ห.",
+    "phone": "4651",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0068",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สาโรช อ.",
+    "phone": "4564",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0061",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "อัญญรัชต์ โ.",
+    "phone": "3536",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0115",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "อัมพร ม.",
+    "phone": "5994",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0064",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "กฤษ จ.",
+    "phone": "9641",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0110",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "pending",
+    "name": "กฤษณี จ.",
+    "phone": "5491",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0098",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "pending",
+    "name": "กิตติคุณ ล.",
+    "phone": "8855",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0120",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "คริสตีน่า โ.",
+    "phone": "1988",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0090",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "จักรพล ด.",
+    "phone": "1924",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0103",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "จันทรัสม์ ก.",
+    "phone": "5651",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0105",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "จิตตรา ร.",
+    "phone": "6213",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0102",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ทิวาพร ง.",
+    "phone": "9634",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0081",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "นพคุณ เ.",
+    "phone": "5200",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0057",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "นิตยา ร.",
+    "phone": "5421",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0084",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "พรพรรณ ธ.",
+    "phone": "7930",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0088",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "pending",
+    "name": "พิมาดี ไ.",
+    "phone": "8855",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0099",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "pending",
+    "name": "พิมาดี ไ.",
+    "phone": "8855",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0112",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ภัทรปภา เ.",
+    "phone": "7087",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0076",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ภุมรินทร์ น.",
+    "phone": "6923",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0094",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "มาลีรัตนา น.",
+    "phone": "6164",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0092",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ยิ่งเชษฐ์ ต.",
+    "phone": "7445",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0080",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "วรรณดิษย์ แ.",
+    "phone": "4253",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0109",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "วีรเดช เ.",
+    "phone": "9242",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0072",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "ศราวุธ ศ.",
+    "phone": "7088",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0104",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สินีนาฏ ฮ.",
+    "phone": "4989",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0095",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สุกัลยาพร ศ.",
+    "phone": "5088",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0071",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "สุชาสินันท์ แ.",
+    "phone": "5246",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0083",
+    "at": "2026-08-09T12:00:00+07:00",
+    "status": "paid",
+    "name": "อัชริยา ศ.",
+    "phone": "0761",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0003",
+    "at": "2026-08-09T16:27:00+07:00",
+    "status": "paid",
+    "name": "สุทธิกา ว.",
+    "phone": "9086",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      },
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": true
+      }
+    ],
+    "total": 14980,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0004",
+    "at": "2026-08-09T16:29:00+07:00",
+    "status": "paid",
+    "name": "อลงกรณ์ ป.",
+    "phone": "5452",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0005",
+    "at": "2026-08-09T16:30:00+07:00",
+    "status": "paid",
+    "name": "สุวิมล ส.",
+    "phone": "1708",
+    "addr": "ตราด",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0006",
+    "at": "2026-08-09T16:30:00+07:00",
+    "status": "paid",
+    "name": "ภรณ์สุนีย์ ช.",
+    "phone": "3666",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีครีม",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0007",
+    "at": "2026-08-09T16:31:00+07:00",
+    "status": "paid",
+    "name": "ณัทธา เ.",
+    "phone": "5696",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0008",
+    "at": "2026-08-09T16:32:00+07:00",
+    "status": "paid",
+    "name": "วัชริน เ.",
+    "phone": "9145",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0009",
+    "at": "2026-08-09T16:32:00+07:00",
+    "status": "paid",
+    "name": "โชษิกา จ.",
+    "phone": "2245",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0010",
+    "at": "2026-08-09T16:32:00+07:00",
+    "status": "paid",
+    "name": "อุบลวรรณ ช.",
+    "phone": "5151",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0011",
+    "at": "2026-08-09T16:32:00+07:00",
+    "status": "paid",
+    "name": "ดลทิชา จ.",
+    "phone": "3888",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0012",
+    "at": "2026-08-09T16:32:00+07:00",
+    "status": "paid",
+    "name": "จิราพัชร์ ก.",
+    "phone": "3665",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0013",
+    "at": "2026-08-09T16:32:00+07:00",
+    "status": "paid",
+    "name": "ภัคชุดา อ.",
+    "phone": "9229",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0014",
+    "at": "2026-08-09T16:34:00+07:00",
+    "status": "paid",
+    "name": "ศัลยวิทย์ อ.",
+    "phone": "4566",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0015",
+    "at": "2026-08-09T16:35:00+07:00",
+    "status": "paid",
+    "name": "ธชธร ณ.",
+    "phone": "9997",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0016",
+    "at": "2026-08-09T16:35:00+07:00",
+    "status": "paid",
+    "name": "กมลทิพย์ แ.",
+    "phone": "1669",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0017",
+    "at": "2026-08-09T16:35:00+07:00",
+    "status": "paid",
+    "name": "อภิญญา แ.",
+    "phone": "6354",
+    "addr": "สมุทรปราการ",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0018",
+    "at": "2026-08-09T16:35:00+07:00",
+    "status": "paid",
+    "name": "ศิริพร ศ.",
+    "phone": "4989",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0019",
+    "at": "2026-08-09T16:36:00+07:00",
+    "status": "paid",
+    "name": "นที เ.",
+    "phone": "7939",
+    "addr": "กรุฃเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0020",
+    "at": "2026-08-09T16:36:00+07:00",
+    "status": "rejected",
+    "name": "กฤษณะ ท.",
+    "phone": "0057",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0021",
+    "at": "2026-08-09T16:37:00+07:00",
+    "status": "paid",
+    "name": "ชุตินาถ ก.",
+    "phone": "2941",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0022",
+    "at": "2026-08-09T16:38:00+07:00",
+    "status": "paid",
+    "name": "สุนิสา ธ.",
+    "phone": "5743",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0023",
+    "at": "2026-08-09T16:38:00+07:00",
+    "status": "paid",
+    "name": "สุมาลี เ.",
+    "phone": "5149",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0024",
+    "at": "2026-08-09T16:39:00+07:00",
+    "status": "rejected",
+    "name": "สิริพร ด.",
+    "phone": "2646",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0025",
+    "at": "2026-08-09T16:41:00+07:00",
+    "status": "paid",
+    "name": "ทัชชา ว.",
+    "phone": "8265",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0026",
+    "at": "2026-08-09T16:42:00+07:00",
+    "status": "paid",
+    "name": "นาถฤดี อ.",
+    "phone": "9494",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "ณัฐกฤตา โรจนพชรกุล 0929594287",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0027",
+    "at": "2026-08-09T16:42:00+07:00",
+    "status": "paid",
+    "name": "มนัสวี ผ.",
+    "phone": "0983",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีดำ",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0028",
+    "at": "2026-08-09T16:42:00+07:00",
+    "status": "paid",
+    "name": "รฐวรรณ ว.",
+    "phone": "2651",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0029",
+    "at": "2026-08-09T16:43:00+07:00",
+    "status": "paid",
+    "name": "ณฐวัฒน์ ธ.",
+    "phone": "8889",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0030",
+    "at": "2026-08-09T16:44:00+07:00",
+    "status": "paid",
+    "name": "พัชญ์ชสุทธ์ เ.",
+    "phone": "3962",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "อนัญญา น้อมหน",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0031",
+    "at": "2026-08-09T16:44:00+07:00",
+    "status": "paid",
+    "name": "ชณิชา บ.",
+    "phone": "1464",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีครีม",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 9350,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0032",
+    "at": "2026-08-09T16:45:00+07:00",
+    "status": "paid",
+    "name": "พันตำรวจโทพนม ห.",
+    "phone": "1998",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0033",
+    "at": "2026-08-09T16:45:00+07:00",
+    "status": "paid",
+    "name": "กฤช แ.",
+    "phone": "4184",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0034",
+    "at": "2026-08-09T16:45:00+07:00",
+    "status": "paid",
+    "name": "นิธิภัทร์ โ.",
+    "phone": "7888",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0035",
+    "at": "2026-08-09T16:46:00+07:00",
+    "status": "paid",
+    "name": "ปธิตา ค.",
+    "phone": "8118",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0036",
+    "at": "2026-08-09T16:48:00+07:00",
+    "status": "paid",
+    "name": "เอกชัย ก.",
+    "phone": "5565",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "สุธินี กิตติวรรธนกุล",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0037",
+    "at": "2026-08-09T16:48:00+07:00",
+    "status": "paid",
+    "name": "ธัญญธร อ.",
+    "phone": "2646",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0038",
+    "at": "2026-08-09T16:49:00+07:00",
+    "status": "paid",
+    "name": "ศิริพงษ์ ศ.",
+    "phone": "2465",
+    "addr": "กทใ",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0039",
+    "at": "2026-08-09T16:51:00+07:00",
+    "status": "pending",
+    "name": "บังอร จ.",
+    "phone": "8772",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีดำ",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0040",
+    "at": "2026-08-09T16:51:00+07:00",
+    "status": "paid",
+    "name": "พีรกร ค.",
+    "phone": "1646",
+    "addr": "สมุทรปราการ",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีครีม",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0041",
+    "at": "2026-08-09T16:52:00+07:00",
+    "status": "paid",
+    "name": "นุชนภา พ.",
+    "phone": "9465",
+    "addr": "สุราษฎร์ธานี",
+    "email": "",
+    "ref": "สุกัญญา กนกอรรจน์",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0042",
+    "at": "2026-08-09T16:55:00+07:00",
+    "status": "paid",
+    "name": "ณัฐชา ป.",
+    "phone": "8916",
+    "addr": "ยโสธร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0043",
+    "at": "2026-08-09T16:56:00+07:00",
+    "status": "rejected",
+    "name": "พิมพ์ณิกา ล.",
+    "phone": "1649",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0044",
+    "at": "2026-08-09T16:56:00+07:00",
+    "status": "paid",
+    "name": "จันทนา เ.",
+    "phone": "8095",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0045",
+    "at": "2026-08-09T16:58:00+07:00",
+    "status": "paid",
+    "name": "กิตติศักดิ์ เ.",
+    "phone": "9509",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "โค้ชจา",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0046",
+    "at": "2026-08-09T17:00:00+07:00",
+    "status": "paid",
+    "name": "คุณสุพัตรา พ.",
+    "phone": "1998",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0047",
+    "at": "2026-08-09T17:01:00+07:00",
+    "status": "paid",
+    "name": "ธนัทเมศร์ ไ.",
+    "phone": "0085",
+    "addr": "เพชรบุรี",
+    "email": "",
+    "ref": "นันทพงศ์ นิติทัศนาลักษณ์",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0048",
+    "at": "2026-08-09T17:02:00+07:00",
+    "status": "paid",
+    "name": "ปิยมาส โ.",
+    "phone": "8622",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0049",
+    "at": "2026-08-09T17:03:00+07:00",
+    "status": "paid",
+    "name": "นที เ.",
+    "phone": "7939",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0050",
+    "at": "2026-08-09T17:04:00+07:00",
+    "status": "paid",
+    "name": "สุภารัตน์ บ.",
+    "phone": "1909",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "พิมาดี ไพบูลย์วงศ์",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0051",
+    "at": "2026-08-09T17:04:00+07:00",
+    "status": "paid",
+    "name": "บุษรินทร์ บ.",
+    "phone": "0344",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "คุณมด พิมาดี",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0052",
+    "at": "2026-08-09T17:06:00+07:00",
+    "status": "paid",
+    "name": "อนัญญา น.",
+    "phone": "3962",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0053",
+    "at": "2026-08-09T17:07:00+07:00",
+    "status": "paid",
+    "name": "จุฑามาศ ศ.",
+    "phone": "4442",
+    "addr": "ลพบุรี",
+    "email": "",
+    "ref": "จักรพล ดาบโฉมศรี 06-1245-1924",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0054",
+    "at": "2026-08-09T17:07:00+07:00",
+    "status": "pending",
+    "name": "สุวิมล ช.",
+    "phone": "2811",
+    "addr": "สมุทสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260809-R0055",
+    "at": "2026-08-09T17:09:00+07:00",
+    "status": "paid",
+    "name": "ปกิตต์ โ.",
+    "phone": "2636",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "สิรินันท์ โสภณธรรมคุณ",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0135",
+    "at": "2026-08-10T11:05:00+07:00",
+    "status": "paid",
+    "name": "พชร ส.",
+    "phone": "9622",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0136",
+    "at": "2026-08-10T11:11:00+07:00",
+    "status": "rejected",
+    "name": "รัชดา น.",
+    "phone": "7360",
+    "addr": "ร้อยเอ็ด",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0137",
+    "at": "2026-08-10T11:44:00+07:00",
+    "status": "paid",
+    "name": "ปกิตต์ โ.",
+    "phone": "2636",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 9350,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0131",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "paid",
+    "name": "ฉวีวรรณ โ.",
+    "phone": "6354",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0127",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "paid",
+    "name": "ปภาวรินทร์ เ.",
+    "phone": "9469",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0128",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "pending",
+    "name": "เจษฎา เ.",
+    "phone": "9789",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0129",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "paid",
+    "name": "นายธีรวัฒน์ บ.",
+    "phone": "9975",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0133",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "paid",
+    "name": "คุณ ส.",
+    "phone": "9659",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0130",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "paid",
+    "name": "ฐากร ว.",
+    "phone": "6424",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0125",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "pending",
+    "name": "พิมรัตน์ ว.",
+    "phone": "3965",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0132",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "pending",
+    "name": "กฤษณะ ท.",
+    "phone": "0057",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0122",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "paid",
+    "name": "จารีนันท์ เ.",
+    "phone": "5978",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0126",
+    "at": "2026-08-10T12:00:00+07:00",
+    "status": "pending",
+    "name": "พรศิริ ช.",
+    "phone": "3965",
+    "addr": "",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0138",
+    "at": "2026-08-10T12:03:00+07:00",
+    "status": "paid",
+    "name": "เอกชัย เ.",
+    "phone": "4676",
+    "addr": "เชียงราย",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0139",
+    "at": "2026-08-10T12:33:00+07:00",
+    "status": "paid",
+    "name": "Pongsatron W.",
+    "phone": "4244",
+    "addr": "สมุทรปราการ",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0140",
+    "at": "2026-08-10T12:34:00+07:00",
+    "status": "paid",
+    "name": "ประยุทธ ฉ.",
+    "phone": "4142",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0141",
+    "at": "2026-08-10T12:39:00+07:00",
+    "status": "paid",
+    "name": "บุษบา ว.",
+    "phone": "5963",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0142",
+    "at": "2026-08-10T12:51:00+07:00",
+    "status": "paid",
+    "name": "Chonladda T.",
+    "phone": "6365",
+    "addr": "ระยอง",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0143",
+    "at": "2026-08-10T13:03:00+07:00",
+    "status": "paid",
+    "name": "พี่เล็ก แ.",
+    "phone": "1998",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0144",
+    "at": "2026-08-10T13:08:00+07:00",
+    "status": "paid",
+    "name": "วนิดา จ.",
+    "phone": "4515",
+    "addr": "ประจวบ",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0145",
+    "at": "2026-08-10T14:12:00+07:00",
+    "status": "paid",
+    "name": "ศศิวิมล ล.",
+    "phone": "4514",
+    "addr": "ระยอง",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0146",
+    "at": "2026-08-10T15:11:00+07:00",
+    "status": "paid",
+    "name": "รดาภัค ว.",
+    "phone": "6245",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0147",
+    "at": "2026-08-10T15:23:00+07:00",
+    "status": "paid",
+    "name": "วรลักษณ์ แ.",
+    "phone": "2978",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0148",
+    "at": "2026-08-10T16:21:00+07:00",
+    "status": "paid",
+    "name": "กมลทิพย์ แ.",
+    "phone": "1669",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0149",
+    "at": "2026-08-10T16:27:00+07:00",
+    "status": "paid",
+    "name": "ศุพานันท์ พ.",
+    "phone": "5442",
+    "addr": "อุบลราชธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0150",
+    "at": "2026-08-10T16:30:00+07:00",
+    "status": "paid",
+    "name": "รัชดา ท.",
+    "phone": "7360",
+    "addr": "ร้อยเอ็ด",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0152",
+    "at": "2026-08-10T16:43:00+07:00",
+    "status": "paid",
+    "name": "รจนา ร.",
+    "phone": "4044",
+    "addr": "พะเยา",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0151",
+    "at": "2026-08-10T16:43:00+07:00",
+    "status": "rejected",
+    "name": "อารีวรรณ ต.",
+    "phone": "4989",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0153",
+    "at": "2026-08-10T16:52:00+07:00",
+    "status": "paid",
+    "name": "บังอร จ.",
+    "phone": "8772",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0154",
+    "at": "2026-08-10T17:00:00+07:00",
+    "status": "paid",
+    "name": "รุ่งนพนันท์ บ.",
+    "phone": "1464",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0155",
+    "at": "2026-08-10T17:05:00+07:00",
+    "status": "paid",
+    "name": "ณัฐฐิกุณฑ์ ณ.",
+    "phone": "3494",
+    "addr": "พังงา",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0156",
+    "at": "2026-08-10T17:54:00+07:00",
+    "status": "paid",
+    "name": "สุธี ภ.",
+    "phone": "1988",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0157",
+    "at": "2026-08-10T18:05:00+07:00",
+    "status": "paid",
+    "name": "ปิลันธนา ล.",
+    "phone": "4944",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0158",
+    "at": "2026-08-10T18:07:00+07:00",
+    "status": "paid",
+    "name": "พัชรีญา ล.",
+    "phone": "6262",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0159",
+    "at": "2026-08-10T18:10:00+07:00",
+    "status": "paid",
+    "name": "ชัญญกร แ.",
+    "phone": "6351",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0160",
+    "at": "2026-08-10T19:45:00+07:00",
+    "status": "paid",
+    "name": "อรัญญา จ.",
+    "phone": "9866",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0161",
+    "at": "2026-08-10T20:17:00+07:00",
+    "status": "paid",
+    "name": "โชติมา โ.",
+    "phone": "6992",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "Xircle Scale",
+        "price": 1290,
+        "fam": false
+      }
+    ],
+    "total": 1290,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0162",
+    "at": "2026-08-10T20:48:00+07:00",
+    "status": "paid",
+    "name": "นิสารัตน์ น.",
+    "phone": "3965",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0163",
+    "at": "2026-08-10T21:29:00+07:00",
+    "status": "paid",
+    "name": "ศรัณย์ เ.",
+    "phone": "8974",
+    "addr": "สงขลา",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0164",
+    "at": "2026-08-10T21:47:00+07:00",
+    "status": "pending",
+    "name": "ชมชญาณ์ภัสส์ ส.",
+    "phone": "3692",
+    "addr": "ฉะเชิงเทรา",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0165",
+    "at": "2026-08-10T21:54:00+07:00",
+    "status": "paid",
+    "name": "รมนปวีร์ ร.",
+    "phone": "8247",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260810-R0166",
+    "at": "2026-08-10T22:04:00+07:00",
+    "status": "paid",
+    "name": "พัลลภ ม.",
+    "phone": "2456",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีครีม",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0167",
+    "at": "2026-08-11T08:27:00+07:00",
+    "status": "pending",
+    "name": "Somroek A.",
+    "phone": "6419",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0168",
+    "at": "2026-08-11T11:59:00+07:00",
+    "status": "paid",
+    "name": "คุณปรานี ป.",
+    "phone": "6215",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0169",
+    "at": "2026-08-11T12:50:00+07:00",
+    "status": "paid",
+    "name": "อินท์ธีรา ช.",
+    "phone": "5514",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0170",
+    "at": "2026-08-11T13:01:00+07:00",
+    "status": "paid",
+    "name": "ณัฐพล ฉ.",
+    "phone": "2529",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0171",
+    "at": "2026-08-11T13:19:00+07:00",
+    "status": "paid",
+    "name": "ธัญญลักษณ์ ล.",
+    "phone": "3542",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0172",
+    "at": "2026-08-11T13:39:00+07:00",
+    "status": "paid",
+    "name": "ดวงใจ ก.",
+    "phone": "4991",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0173",
+    "at": "2026-08-11T15:33:00+07:00",
+    "status": "rejected",
+    "name": "พีรวัฒน์ ร.",
+    "phone": "9291",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0174",
+    "at": "2026-08-11T17:03:00+07:00",
+    "status": "paid",
+    "name": "สวโรตม์ ว.",
+    "phone": "1942",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0175",
+    "at": "2026-08-11T19:01:00+07:00",
+    "status": "paid",
+    "name": "รสรินทร์ ศ.",
+    "phone": "9296",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0176",
+    "at": "2026-08-11T19:03:00+07:00",
+    "status": "paid",
+    "name": "ณภัค ว.",
+    "phone": "5195",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": true
+      }
+    ],
+    "total": 19970,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0177",
+    "at": "2026-08-11T19:13:00+07:00",
+    "status": "paid",
+    "name": "นงลักษณ์ ร.",
+    "phone": "6142",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0178",
+    "at": "2026-08-11T19:55:00+07:00",
+    "status": "paid",
+    "name": "รัญจวน พ.",
+    "phone": "8581",
+    "addr": "บุรีรัมย์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0179",
+    "at": "2026-08-11T20:12:00+07:00",
+    "status": "paid",
+    "name": "สุกัญญา ท.",
+    "phone": "6877",
+    "addr": "อุบลราชธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0180",
+    "at": "2026-08-11T20:22:00+07:00",
+    "status": "paid",
+    "name": "น.ส.สุภาวรรณ ก.",
+    "phone": "6169",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0181",
+    "at": "2026-08-11T21:04:00+07:00",
+    "status": "paid",
+    "name": "วลัญช์ชยา ช.",
+    "phone": "6829",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0182",
+    "at": "2026-08-11T21:32:00+07:00",
+    "status": "paid",
+    "name": "นายกิตติธัช ว.",
+    "phone": "1965",
+    "addr": "ยะลา",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "Xircle Band · สีดำ",
+        "price": 4590,
+        "fam": false
+      }
+    ],
+    "total": 4590,
+    "imported": true
+  },
+  {
+    "id": "PO-260811-R0183",
+    "at": "2026-08-11T21:57:00+07:00",
+    "status": "paid",
+    "name": "กวิน บ.",
+    "phone": "8312",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0184",
+    "at": "2026-08-12T07:46:00+07:00",
+    "status": "rejected",
+    "name": "อารีวรรณ ต.",
+    "phone": "4989",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0185",
+    "at": "2026-08-12T09:44:00+07:00",
+    "status": "paid",
+    "name": "ศิริเกศ ก.",
+    "phone": "7811",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0186",
+    "at": "2026-08-12T11:21:00+07:00",
+    "status": "paid",
+    "name": "พีรวัฒน์ ร.",
+    "phone": "9291",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0187",
+    "at": "2026-08-12T11:50:00+07:00",
+    "status": "pending",
+    "name": "สิริภา ไ.",
+    "phone": "5249",
+    "addr": "ฉะเชิงเทรา",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      },
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": true
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0188",
+    "at": "2026-08-12T12:02:00+07:00",
+    "status": "rejected",
+    "name": "Suppanut W.",
+    "phone": "3639",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0189",
+    "at": "2026-08-12T12:40:00+07:00",
+    "status": "paid",
+    "name": "ชุติมา ข.",
+    "phone": "9395",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0190",
+    "at": "2026-08-12T12:43:00+07:00",
+    "status": "paid",
+    "name": "วรรณพร ส.",
+    "phone": "7215",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0191",
+    "at": "2026-08-12T13:43:00+07:00",
+    "status": "paid",
+    "name": "ริลรฎา ภ.",
+    "phone": "6946",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีครีม",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0192",
+    "at": "2026-08-12T14:44:00+07:00",
+    "status": "paid",
+    "name": "พงศ์วิทย์ พ.",
+    "phone": "5598",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0193",
+    "at": "2026-08-12T16:52:00+07:00",
+    "status": "paid",
+    "name": "สมนึก อ.",
+    "phone": "5789",
+    "addr": "ชัยนาท",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0194",
+    "at": "2026-08-12T19:32:00+07:00",
+    "status": "paid",
+    "name": "ปนัดดา ค.",
+    "phone": "9541",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 9350,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0195",
+    "at": "2026-08-12T19:58:00+07:00",
+    "status": "paid",
+    "name": "Suppanut W.",
+    "phone": "4442",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0196",
+    "at": "2026-08-12T20:04:00+07:00",
+    "status": "paid",
+    "name": "สิริพร แ.",
+    "phone": "1697",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0197",
+    "at": "2026-08-12T21:16:00+07:00",
+    "status": "paid",
+    "name": "ธนวัฒน์ อ.",
+    "phone": "5425",
+    "addr": "พระนครศรีอยุธยา",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0198",
+    "at": "2026-08-12T22:09:00+07:00",
+    "status": "paid",
+    "name": "สุปรียา ว.",
+    "phone": "5445",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260812-R0199",
+    "at": "2026-08-12T22:27:00+07:00",
+    "status": "paid",
+    "name": "สมร เ.",
+    "phone": "6561",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0200",
+    "at": "2026-08-13T12:16:00+07:00",
+    "status": "paid",
+    "name": "ธัญญภัสร์ อ.",
+    "phone": "2956",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0201",
+    "at": "2026-08-13T12:49:00+07:00",
+    "status": "pending",
+    "name": "ชีวาวัชญ์ จ.",
+    "phone": "5697",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 11850,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0202",
+    "at": "2026-08-13T16:44:00+07:00",
+    "status": "paid",
+    "name": "กชพร เ.",
+    "phone": "9351",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0203",
+    "at": "2026-08-13T16:47:00+07:00",
+    "status": "paid",
+    "name": "ลักษณา เ.",
+    "phone": "6192",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0204",
+    "at": "2026-08-13T17:32:00+07:00",
+    "status": "paid",
+    "name": "ปิติณัตต์ ต.",
+    "phone": "5516",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "TWIN SET (Band+RoutineX) · สีดำ",
+        "price": 11850,
+        "fam": true
+      }
+    ],
+    "total": 24330,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0205",
+    "at": "2026-08-13T17:36:00+07:00",
+    "status": "paid",
+    "name": "พิทูร ภ.",
+    "phone": "5262",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0206",
+    "at": "2026-08-13T18:34:00+07:00",
+    "status": "paid",
+    "name": "กฤษณะ ท.",
+    "phone": "0057",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0207",
+    "at": "2026-08-13T20:02:00+07:00",
+    "status": "paid",
+    "name": "พิมพ์ณิกา ล.",
+    "phone": "1649",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "Xircle Band · สีครีม",
+        "price": 4590,
+        "fam": false
+      }
+    ],
+    "total": 4590,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0208",
+    "at": "2026-08-13T20:05:00+07:00",
+    "status": "paid",
+    "name": "สิริพร ด.",
+    "phone": "2646",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0209",
+    "at": "2026-08-13T20:08:00+07:00",
+    "status": "paid",
+    "name": "วิมลพัฒน์ น.",
+    "phone": "9594",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-R0210",
+    "at": "2026-08-13T20:14:00+07:00",
+    "status": "paid",
+    "name": "บี่บี๋ ป.",
+    "phone": "5697",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260813-212029-195",
+    "at": "2026-08-13T21:20:00+07:00",
+    "status": "paid",
+    "name": "วาสนา ศ.",
+    "phone": "6530",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": true
+      }
+    ],
+    "total": 19970,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-093556-820",
+    "at": "2026-08-14T09:35:00+07:00",
+    "status": "paid",
+    "name": "โสภิดา ส.",
+    "phone": "7954",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-111337-896",
+    "at": "2026-08-14T11:13:00+07:00",
+    "status": "paid",
+    "name": "นิษฐ์ธนา ป.",
+    "phone": "5144",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-111830-560",
+    "at": "2026-08-14T11:18:00+07:00",
+    "status": "paid",
+    "name": "กฤตชกา แ.",
+    "phone": "4666",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-143530-R0215",
+    "at": "2026-08-14T14:35:00+07:00",
+    "status": "paid",
+    "name": "กฤษกร พ.",
+    "phone": "2118",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีครีม",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 9350,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-154156-R0216",
+    "at": "2026-08-14T15:41:00+07:00",
+    "status": "paid",
+    "name": "นุสบา ไ.",
+    "phone": "2979",
+    "addr": "เลย",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-181423-339",
+    "at": "2026-08-14T18:14:00+07:00",
+    "status": "rejected",
+    "name": "อารีวรรณ ต.",
+    "phone": "4989",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-184423-773",
+    "at": "2026-08-14T18:44:00+07:00",
+    "status": "paid",
+    "name": "เกรียงไกร ก.",
+    "phone": "8562",
+    "addr": "เชียงราย",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-190026-563",
+    "at": "2026-08-14T19:00:00+07:00",
+    "status": "paid",
+    "name": "บุญมี ส.",
+    "phone": "5353",
+    "addr": "พังงา",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260814-190417-437",
+    "at": "2026-08-14T19:04:00+07:00",
+    "status": "paid",
+    "name": "อุมารินทร์ เ.",
+    "phone": "6591",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260815-134220-711",
+    "at": "2026-08-15T13:42:00+07:00",
+    "status": "paid",
+    "name": "พรพรรณ ก.",
+    "phone": "6888",
+    "addr": "สมุทรสาคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260815-200001-137",
+    "at": "2026-08-15T20:00:00+07:00",
+    "status": "paid",
+    "name": "ปราณี ป.",
+    "phone": "9915",
+    "addr": "บึงกาฬ",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260815-210228-925",
+    "at": "2026-08-15T21:02:00+07:00",
+    "status": "paid",
+    "name": "พัฒนภาส ล.",
+    "phone": "6645",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260816-114041-775",
+    "at": "2026-08-16T11:40:00+07:00",
+    "status": "pending",
+    "name": "วิชญุตร์ แ.",
+    "phone": "3562",
+    "addr": "จันทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260816-160914-525",
+    "at": "2026-08-16T16:09:00+07:00",
+    "status": "paid",
+    "name": "อารีวรรณ ต.",
+    "phone": "4989",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260816-163637-676",
+    "at": "2026-08-16T16:36:00+07:00",
+    "status": "paid",
+    "name": "ศศิฉัฐ บ.",
+    "phone": "6546",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260816-202627-575",
+    "at": "2026-08-16T20:26:00+07:00",
+    "status": "paid",
+    "name": "ธิดาภรณ์ ล.",
+    "phone": "2601",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260816-214312-950",
+    "at": "2026-08-16T21:43:00+07:00",
+    "status": "paid",
+    "name": "ศิวภรณ์ ต.",
+    "phone": "5196",
+    "addr": "สมุทรปราการ",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260817-075518-207",
+    "at": "2026-08-17T07:55:00+07:00",
+    "status": "paid",
+    "name": "ศีลวลี ส.",
+    "phone": "9545",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260817-111530-986",
+    "at": "2026-08-17T11:15:00+07:00",
+    "status": "paid",
+    "name": "วดี ไ.",
+    "phone": "0618",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260817-163615-R0232",
+    "at": "2026-08-17T16:36:00+07:00",
+    "status": "paid",
+    "name": "ศุภศิริ ว.",
+    "phone": "3005",
+    "addr": "จึงจับคู่ให้แล้ว",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "Xircle Band · สีครีม",
+        "price": 4590,
+        "fam": false
+      }
+    ],
+    "total": 4590,
+    "imported": true
+  },
+  {
+    "id": "PO-260817-204834-970",
+    "at": "2026-08-17T20:48:00+07:00",
+    "status": "paid",
+    "name": "ณัชพัณณ์ โ.",
+    "phone": "4655",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260817-210721-630",
+    "at": "2026-08-17T21:07:00+07:00",
+    "status": "paid",
+    "name": "อภิรัตน์ อ.",
+    "phone": "5991",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260817-230027-611",
+    "at": "2026-08-17T23:00:00+07:00",
+    "status": "paid",
+    "name": "ปราณี ป.",
+    "phone": "9915",
+    "addr": "บึงกาฬ",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-102552-146",
+    "at": "2026-08-18T10:25:00+07:00",
+    "status": "paid",
+    "name": "ปภัสสร บ.",
+    "phone": "7248",
+    "addr": "กาญจนบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-132455-982",
+    "at": "2026-08-18T13:24:00+07:00",
+    "status": "paid",
+    "name": "ปณิธาน จ.",
+    "phone": "6566",
+    "addr": "ตรง",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-153421-912",
+    "at": "2026-08-18T15:34:00+07:00",
+    "status": "paid",
+    "name": "ศินาท ย.",
+    "phone": "6769",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-182005-316",
+    "at": "2026-08-18T18:20:00+07:00",
+    "status": "paid",
+    "name": "วิลาทอง ส.",
+    "phone": "8865",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-182547-768",
+    "at": "2026-08-18T18:25:00+07:00",
+    "status": "paid",
+    "name": "ณัฐพนธ์ ส.",
+    "phone": "9798",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-182547-R0239",
+    "at": "2026-08-18T18:25:00+07:00",
+    "status": "pending",
+    "name": "ณัฐพนธ์ ส.",
+    "phone": "9798",
+    "addr": "นาที:",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-201744-736",
+    "at": "2026-08-18T20:17:00+07:00",
+    "status": "paid",
+    "name": "ธัญญารัตน์ ว.",
+    "phone": "4784",
+    "addr": "ระยอง",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-202252-797",
+    "at": "2026-08-18T20:22:00+07:00",
+    "status": "paid",
+    "name": "อสมาภรณ์ น.",
+    "phone": "9226",
+    "addr": "ชลบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260818-203601-571",
+    "at": "2026-08-18T20:36:00+07:00",
+    "status": "paid",
+    "name": "วิลาวัลย์ ค.",
+    "phone": "4234",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260819-135720-912",
+    "at": "2026-08-19T13:57:00+07:00",
+    "status": "paid",
+    "name": "ทิพย์ภิการ์ จ.",
+    "phone": "8391",
+    "addr": "นนทบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260819-201656-559",
+    "at": "2026-08-19T20:16:00+07:00",
+    "status": "pending",
+    "name": "ปรียนัฎ แ.",
+    "phone": "2290",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 11850,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-105716-437",
+    "at": "2026-08-20T10:57:00+07:00",
+    "status": "paid",
+    "name": "วิกุลพร ศ.",
+    "phone": "9456",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-110402-740",
+    "at": "2026-08-20T11:04:00+07:00",
+    "status": "paid",
+    "name": "ศร อ.",
+    "phone": "6414",
+    "addr": "รับอุดมสุข",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-144825-830",
+    "at": "2026-08-20T14:48:00+07:00",
+    "status": "paid",
+    "name": "อังคณา น.",
+    "phone": "0032",
+    "addr": "ระนอง",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-155127-138",
+    "at": "2026-08-20T15:51:00+07:00",
+    "status": "paid",
+    "name": "กัลยา ส.",
+    "phone": "0328",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      },
+      {
+        "nm": "Band ครอบครัว · สีดำ",
+        "price": 4360,
+        "fam": true
+      }
+    ],
+    "total": 16840,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-210117-462",
+    "at": "2026-08-20T21:01:00+07:00",
+    "status": "paid",
+    "name": "ทินภัสร์ เ.",
+    "phone": "4964",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-210504-927",
+    "at": "2026-08-20T21:05:00+07:00",
+    "status": "paid",
+    "name": "ภัทรนันท์ ส.",
+    "phone": "5664",
+    "addr": "ลพบุรี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีครีม",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-212055-164",
+    "at": "2026-08-20T21:20:00+07:00",
+    "status": "paid",
+    "name": "เมศิณี พ.",
+    "phone": "9363",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "bank",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีดำ",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260820-222032-105",
+    "at": "2026-08-20T22:20:00+07:00",
+    "status": "pending",
+    "name": "ธนะวัฒน์ พ.",
+    "phone": "6989",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "Xircle Band · สีดำ",
+        "price": 4590,
+        "fam": false
+      }
+    ],
+    "total": 4590,
+    "imported": true
+  },
+  {
+    "id": "PO-260821-114433-195",
+    "at": "2026-08-21T11:44:00+07:00",
+    "status": "paid",
+    "name": "น้ำอ้อย อ.",
+    "phone": "1719",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "TRIPLE SET (Band+Scale+RoutineX) · สีครีม",
+        "price": 12480,
+        "fam": false
+      }
+    ],
+    "total": 12480,
+    "imported": true
+  },
+  {
+    "id": "PO-260821-122528-621",
+    "at": "2026-08-21T12:25:00+07:00",
+    "status": "paid",
+    "name": "กัญญาพัฒน์ โ.",
+    "phone": "3924",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260821-205928-868",
+    "at": "2026-08-21T20:59:00+07:00",
+    "status": "paid",
+    "name": "ปนัดดา ค.",
+    "phone": "9541",
+    "addr": "ประจวบคีรีขันธ์",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "RoutineX",
+        "price": 7490,
+        "fam": false
+      }
+    ],
+    "total": 7490,
+    "imported": true
+  },
+  {
+    "id": "PO-260822-082223-944",
+    "at": "2026-08-22T08:22:00+07:00",
+    "status": "paid",
+    "name": "นภัสวรรณ ศ.",
+    "phone": "2287",
+    "addr": "ปทุมธานี",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  },
+  {
+    "id": "PO-260822-112657-246",
+    "at": "2026-08-22T11:26:00+07:00",
+    "status": "pending",
+    "name": "สโรชา ต.",
+    "phone": "2459",
+    "addr": "กรุงเทพมหานคร",
+    "email": "",
+    "ref": "",
+    "pay": "card",
+    "items": [
+      {
+        "nm": "DUO SET (Band+Scale) · สีดำ",
+        "price": 4990,
+        "fam": false
+      }
+    ],
+    "total": 4990,
+    "imported": true
+  }
+]
