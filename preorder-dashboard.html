@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>พรีออเดอร์ · CloverX</title>
+<style>
+:root{
+ --bg:#EEF3FA;--card:#FFFFFF;--ink:#0F1B2D;--sub:#64748B;--mut:#94A3B8;--line:#E4EAF2;
+ --brand:#2563EB;--brand2:#1D4ED8;--tint:#EAF1FE;
+ --good:#16A34A;--goodbg:#DCFCE7;--goodtint:#ECFDF3;
+ --warn:#B45309;--warnbg:#FEF3C7;--warntint:#FFFBEB;
+ --info:#0EA5E9;--infobg:#E0F2FE;--bad:#DC2626;--badbg:#FEE2E2;
+ --violet:#7C3AED;--pink:#EC4899;--teal:#0D9488;
+ --shadow:0 1px 3px rgba(16,27,45,.05),0 8px 24px rgba(16,27,45,.05);
+ --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;font-size:14px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+/* header */
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.head .title{display:flex;align-items:center;gap:10px}
+.head h1{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
+.head .sub{margin:4px 0 0;color:var(--sub);font-size:.85rem}
+.head .badge{display:inline-flex;align-items:center;gap:5px;background:var(--goodtint);color:var(--good);border:1px solid #BBF7D0;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px}
+.hbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hbtn{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 13px;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--brand);cursor:pointer;white-space:nowrap;transition:.15s}
+.hbtn:hover{background:var(--tint)}
+.hbtn.solid{background:var(--brand);color:#fff;border-color:var(--brand)}
+.hbtn.solid:hover{background:var(--brand2)}
+/* filter chips */
+.filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 14px;font-family:inherit;font-size:.83rem;font-weight:600;color:var(--sub);cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filters .note{margin-left:auto;color:var(--mut);font-size:.8rem}
+/* grids */
+.grid{display:grid;gap:14px}
+.g6{grid-template-columns:repeat(6,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:1fr 1fr}
+.mb{margin-bottom:16px}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.kpi{padding:16px 16px 14px;position:relative;overflow:hidden}
+.kpi .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.kpi .lb{color:var(--sub);font-size:.8rem;font-weight:600}
+.kpi .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.kpi .v{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi .d{margin-top:5px;font-size:.78rem;color:var(--sub)}
+.kpi .d.up{color:var(--good)}.kpi .d.down{color:var(--bad)}.kpi .d.warn{color:var(--warn)}
+/* section */
+.sec{margin-top:22px}
+.sec>h2{font-size:1.05rem;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:9px}
+.sec .stamp{margin-left:auto;font-size:.74rem;color:var(--mut);font-weight:400}
+.panel{padding:18px}
+.ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.ph h3{margin:0;font-size:.98rem;font-weight:700}
+.ph .meta{font-size:.78rem;color:var(--mut)}
+/* action cards */
+.act{padding:16px;border-radius:14px;border:1px solid var(--line)}
+.act .lb{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--sub);margin-bottom:7px}
+.act .v{font-size:1.35rem;font-weight:800}
+.act .s{font-size:.78rem;color:var(--sub);margin-top:3px}
+.act.good{background:var(--goodtint);border-color:#BBF7D0}.act.good .v{color:var(--good)}
+.act.warn{background:var(--warntint);border-color:#FDE68A}.act.warn .v{color:var(--warn)}
+.act.info{background:#F0F9FF;border-color:#BAE6FD}.act.info .v{color:var(--info)}
+.act.brand{background:var(--tint);border-color:#C7DBFE}.act.brand .v{color:var(--brand)}
+/* hero block */
+.herowrap{display:grid;grid-template-columns:300px 1fr;gap:14px}
+.donut{display:flex;align-items:center;gap:20px}
+.ring{--p:0;width:132px;height:132px;border-radius:50%;flex:none;background:conic-gradient(var(--brand) calc(var(--p)*1%),#E5EEFB 0);display:flex;align-items:center;justify-content:center}
+.ring .inner{width:104px;height:104px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .inner b{font-size:1.5rem;font-weight:800;line-height:1}
+.ring .inner small{color:var(--mut);font-size:.68rem;margin-top:2px}
+.herostat .big{font-size:1.4rem;font-weight:800}
+.herostat .lb{color:var(--sub);font-size:.82rem}
+.herostat p{margin:3px 0 0;color:var(--sub);font-size:.8rem}
+.herocards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hc{border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.hc .ic{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;margin-bottom:26px}
+.hc .v{font-size:1.6rem;font-weight:800}
+.hc .lb{font-size:.8rem;opacity:.92;margin-top:2px}
+.hc.blue{background:linear-gradient(135deg,#2E7DF6,#1B54C7);color:#fff}
+.hc.plain{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.hc.plain .ic{background:var(--tint);color:var(--brand)}
+.hc.plain .lb{color:var(--sub);opacity:1}
+.hc .corner{position:absolute;top:14px;right:16px;font-size:.8rem;font-weight:700;color:var(--good)}
+/* tables */
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:11px 10px;font-size:.85rem;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600;font-size:.76rem;text-transform:none}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.pname{font-weight:700}.psub{color:var(--mut);font-size:.76rem;font-weight:400}
+.twrap{overflow-x:auto}
+/* bars */
+.barrow{margin-bottom:13px}
+.barrow:last-child{margin-bottom:0}
+.barrow .l{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:5px}
+.barrow .l b{font-weight:700}.barrow .l span{color:var(--sub)}
+.track{height:9px;background:#EEF2F8;border-radius:99px;overflow:hidden}
+.track b{display:block;height:100%;border-radius:99px}
+/* list rows */
+.li{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:none}
+.rank{width:24px;height:24px;border-radius:7px;background:var(--tint);color:var(--brand);font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex:none}
+.li .body{flex:1;min-width:0}
+.li .t{font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .s{color:var(--mut);font-size:.76rem}
+.li .amt{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.li .amt small{display:block;color:var(--mut);font-weight:400;font-size:.72rem}
+/* status pills */
+.st{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.st.paid{background:var(--goodbg);color:var(--good)}
+.st.pending{background:var(--warnbg);color:var(--warn)}
+.st.cancel{background:var(--badbg);color:var(--bad)}
+.st.multi{background:#EDE9FE;color:var(--violet)}
+/* chart */
+.chart{width:100%;height:220px;display:block}
+.legend{display:flex;gap:16px;font-size:.8rem;color:var(--sub);margin-bottom:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* pager + selects */
+.pager{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;flex-wrap:wrap}
+.pager button{min-width:32px;height:32px;border:1px solid var(--line);background:var(--card);border-radius:8px;font-family:inherit;font-size:.82rem;cursor:pointer;color:var(--sub)}
+.pager button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.pager button:disabled{opacity:.4;cursor:default}
+.selrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+select.f{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 10px;font-family:inherit;font-size:.82rem;color:var(--ink)}
+.priv{color:var(--mut);font-size:.74rem;margin-top:10px;line-height:1.5}
+.center{text-align:center;color:var(--mut);padding:40px 0}
+.loading{text-align:center;padding:80px 0;color:var(--mut)}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* responsive */
+@media(max-width:960px){
+ .g6{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}
+ .herowrap{grid-template-columns:1fr}.g2{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+ .wrap{padding:16px 13px 50px}.g6{grid-template-columns:1fr 1fr}.g4{grid-template-columns:1fr 1fr}
+ .herocards{grid-template-columns:1fr}.head h1{font-size:1.25rem}.kpi .v{font-size:1.45rem}
+ .donut{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="head">
+  <div>
+   <div class="title"><h1>พรีออเดอร์</h1><span class="badge" id="liveBadge">● สด</span></div>
+   <p class="sub" id="subLine">กำลังโหลดข้อมูล…</p>
+  </div>
+  <div class="hbtns">
+   <button class="hbtn" onclick="location.href='/operations.html'">← Operations</button>
+   <button class="hbtn solid" onclick="loadData()">รีเฟรช ⟳</button>
+  </div>
+ </div>
+ <div class="filters" id="filters"></div>
+ <div id="app"><div class="loading"><div class="spin"></div>กำลังดึงข้อมูลพรีออเดอร์…</div></div>
+</div>
+
+<script>
+"use strict";
+/* ================= CONFIG ================= */
+var GOAL_AMOUNT = 2500000;   // เป้ายอดขาย (บาท)
+var GOAL_SETS   = 200;       // เป้าจำนวนชุด
+var CLOSE_RATE  = 0.93;      // อัตราปิดการขายโดยประมาณ (สำหรับยอดที่มีโอกาสปิด)
+var PAGE_CUST=5, PAGE_REF=5, PAGE_PROV=10;
+
+/* ================= HELPERS ================= */
+function baht(n){return '฿'+Math.round(Number(n)||0).toLocaleString('en-US');}
+function bahtK(n){n=Number(n)||0;return n>=1000?('฿'+Math.round(n/1000)+'k'):('฿'+Math.round(n));}
+function num(n){return (Number(n)||0).toLocaleString('en-US');}
+function pct(a,b){return b?Math.round(a/b*100):0;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function el(id){return document.getElementById(id);}
+/* status mapping: cloverx-site -> reference buckets */
+function bucket(s){ if(s==='paid'||s==='confirmed')return 'paid'; if(s==='rejected'||s==='cancelled')return 'cancel'; return 'pending'; }
+var ST_LABEL={paid:'ชำระแล้ว',pending:'รอตรวจสอบ',cancel:'ยกเลิก'};
+/* Thai provinces for address matching */
+var PROVINCES=["กรุงเทพมหานคร","กรุงเทพ","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ","สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"];
+function findProvince(addr){ addr=String(addr||''); for(var i=0;i<PROVINCES.length;i++){ if(addr.indexOf(PROVINCES[i])>=0){ return PROVINCES[i]==='กรุงเทพ'?'กรุงเทพมหานคร':PROVINCES[i]; } } return 'ไม่ระบุ'; }
+/* decompose an item into atomic components for "นับชิ้นจริง" */
+function components(nm){
+ nm=String(nm||''); var color = nm.indexOf('ครีม')>=0?'สีครีม':(nm.indexOf('ดำ')>=0?'สีดำ':'');
+ var band=function(){return 'Xircle Band'+(color?(' '+color):'');};
+ if(/TRIPLE/i.test(nm))return [band(),'Xircle Scale','RoutineX'];
+ if(/DUO/i.test(nm))return [band(),'Xircle Scale'];
+ if(/TWIN/i.test(nm))return [band(),'RoutineX'];
+ if(/Band/i.test(nm))return [band()];
+ if(/Scale/i.test(nm))return ['Xircle Scale'];
+ if(/RoutineX/i.test(nm))return ['RoutineX'];
+ return [nm];
+}
+/* referrer commission tier by cumulative sales */
+function tier(amt){ if(amt>=150000)return {r:0.25,t:'25%'}; if(amt>=80000)return {r:0.23,t:'23%'}; return {r:0.20,t:'20%'}; }
+function maskPhone(p){ p=String(p||'').replace(/\D/g,''); return p?('••••'+p.slice(-4)):'—'; }
+function maskName(n){ n=String(n||'').trim(); if(!n)return 'ลูกค้า'; var parts=n.split(/\s+/); var first=parts[0]; var last=parts.length>1?(parts[parts.length-1][0]+'.'):''; return first+(last?(' '+last):''); }
+
+/* ================= STATE ================= */
+var ALL=[], VIEW=[], RANGE='all';
+var custPage=1, refPage=1, provPage=1;
+var custFilters={team:'',status:'',product:''};
+
+/* ================= LOAD ================= */
+function loadData(){
+ el('app').innerHTML='<div class="loading"><div class="spin"></div>กำลังดึงข้อมูลพรีออเดอร์…</div>';
+ fetch('/api/orders').then(function(r){return r.json();}).then(function(d){
+  ALL=Array.isArray(d)?d:[]; applyRange();
+ }).catch(function(){ el('app').innerHTML='<div class="center">โหลดข้อมูลไม่สำเร็จ</div>'; });
+}
+function inRange(o){
+ if(RANGE==='all')return true;
+ var t=new Date(o.at).getTime(); if(isNaN(t))return true; var now=Date.now(), day=86400000;
+ if(RANGE==='today'){var d=new Date();d.setHours(0,0,0,0);return t>=d.getTime();}
+ if(RANGE==='7')return t>=now-7*day;
+ if(RANGE==='30')return t>=now-30*day;
+ if(RANGE==='year'){return new Date(o.at).getFullYear()===new Date().getFullYear();}
+ return true;
+}
+function applyRange(){ VIEW=ALL.filter(inRange); custPage=refPage=provPage=1; render(); }
+
+/* ================= FILTER CHIPS ================= */
+function renderFilters(){
+ var opts=[['today','วันนี้'],['7','7 วัน'],['30','30 วัน'],['year','ปีนี้'],['all','ทั้งหมด']];
+ el('filters').innerHTML=opts.map(function(o){return '<button class="chip'+(RANGE===o[0]?' on':'')+'" onclick="RANGE=\''+o[0]+'\';applyRange()">'+o[1]+'</button>';}).join('')
+  +'<span class="note">· '+(RANGE==='all'?'ทุกช่วงเวลา':'ช่วง '+({today:'วันนี้','7':'7 วันล่าสุด','30':'30 วันล่าสุด',year:'ปีนี้'}[RANGE]))+'</span>';
+}
+
+/* ================= AGG ================= */
+function agg(list){
+ var a={n:list.length,sales:0,paidN:0,paidAmt:0,pendN:0,pendAmt:0,cancN:0,cancAmt:0,pieces:0,
+   byBucket:{paid:0,pending:0,cancel:0}, buyers:{}, byPay:{card:{n:0,amt:0},bank:{n:0,amt:0}},
+   prod:{}, comp:{}, sets:0, family:0, familyMap:{}, ref:{}, prov:{} };
+ list.forEach(function(o){
+  var b=bucket(o.status), tot=Number(o.total)||0;
+  a.byBucket[b]++;
+  if(b==='paid'){a.paidN++;a.paidAmt+=tot;}
+  else if(b==='pending'){a.pendN++;a.pendAmt+=tot;}
+  else {a.cancN++;a.cancAmt+=tot;}
+  if(b!=='cancel'){ a.sales+=tot; a.sets++;
+   var key=(o.phone||o.name||o.id); a.buyers[key]=(a.buyers[key]||0)+1;
+   var pk=o.pay==='card'?'card':'bank'; a.byPay[pk].n++; a.byPay[pk].amt+=tot;
+   var pv=findProvince(o.addr); a.prov[pv]=(a.prov[pv]||0)+1;
+   var rf=(o.ref||'').trim(); if(rf){ if(!a.ref[rf])a.ref[rf]={n:0,amt:0}; a.ref[rf].n++; a.ref[rf].amt+=tot; }
+  }
+  (o.items||[]).forEach(function(it){
+   var nm=String(it.nm||'-'); a.pieces++;
+   if(!a.prod[nm])a.prod[nm]={paid:0,pending:0,cancel:0};
+   a.prod[nm][b]++;
+   if(it.fam){ a.family++; if(!a.familyMap[nm])a.familyMap[nm]={n:0,amt:0}; a.familyMap[nm].n++; a.familyMap[nm].amt+=(Number(it.price)||0); }
+   if(b!=='cancel'){ components(nm).forEach(function(c){ if(!a.comp[c])a.comp[c]={paid:0,pending:0}; a.comp[c][b==='paid'?'paid':'pending']++; }); }
+  });
+ });
+ a.uniqueBuyers=Object.keys(a.buyers).length;
+ a.repeatBuyers=Object.keys(a.buyers).filter(function(k){return a.buyers[k]>1;}).length;
+ return a;
+}
+
+/* ================= RENDER ================= */
+function render(){
+ renderFilters();
+ var A=agg(VIEW);
+ var stamp=new Date().toLocaleString('th-TH',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+ el('subLine').innerHTML='ข้อมูลรวมระบบพรีออเดอร์ · อัปเดต '+stamp+' · '+num(A.n)+' ออเดอร์';
+ if(!VIEW.length){ el('app').innerHTML='<div class="card panel"><div class="center">ยังไม่มีข้อมูลออเดอร์ในช่วงเวลานี้</div></div>'; return; }
+ var h='';
+ h+=kpiRow(A);
+ h+=stockRow(A);
+ h+=perProductTable(A);
+ h+=actionCards(A);
+ h+=heroBlock(A);
+ h+=paymentBlocks(A);
+ h+=itemsAndFamily(A);
+ h+=dailyChart();
+ h+=customerSection();
+ h+=referrerSection(A);
+ h+=provinceSection(A);
+ el('app').innerHTML=h;
+ drawChart();
+}
+
+function kpiRow(A){
+ var goalPct=(A.sales/GOAL_AMOUNT*100);
+ var setsPct=pct(A.sets,GOAL_SETS);
+ function k(lb,ic,icbg,iccol,v,d,dc){return '<div class="card kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+icbg+';color:'+iccol+'">'+ic+'</div></div><div class="v num">'+v+'</div><div class="d '+(dc||'')+'">'+d+'</div></div>';}
+ var I={money:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  bag:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>',
+  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>',
+  clock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  user:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  target:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>'};
+ return '<div class="grid g6 mb">'
+  +k('ยอดขายรวม',I.money,'var(--tint)','var(--brand)',baht(A.sales),goalPct.toFixed(1)+'% ของเป้า '+baht(GOAL_AMOUNT),goalPct>=100?'up':'')
+  +k('ออเดอร์รวม',I.bag,'var(--goodbg)','var(--good)',num(A.n),num(A.pieces)+' ชิ้น (รวม Family)')
+  +k('ชำระสำเร็จ',I.check,'var(--goodbg)','var(--good)',num(A.paidN),baht(A.paidAmt),'up')
+  +k('รอตรวจสอบ',I.clock,'var(--warnbg)','var(--warn)',num(A.pendN),baht(A.pendAmt),'warn')
+  +k('ผู้ซื้อไม่ซ้ำ',I.user,'var(--infobg)','var(--info)',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
+  +k('ถึงเป้าจำนวน',I.target,'var(--tint)','var(--brand)',setsPct+'%',num(A.sets)+' จาก '+num(GOAL_SETS)+' ชุด',setsPct>=100?'up':'')
+  +'</div>';
+}
+
+function stockRow(A){
+ function comp(name){return A.comp[name]||{paid:0,pending:0};}
+ var band=0,scale=0,rx=0;
+ Object.keys(A.comp).forEach(function(c){var v=A.comp[c],t=v.paid+v.pending; if(/Band/.test(c))band+=t; else if(/Scale/.test(c))scale+=t; else if(/RoutineX/.test(c))rx+=t;});
+ function bandPaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Band/.test(c))s+=A.comp[c].paid;});return s;}
+ function scalePaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Scale/.test(c))s+=A.comp[c].paid;});return s;}
+ function rxPaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/RoutineX/.test(c))s+=A.comp[c].paid;});return s;}
+ function bandPend(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Band/.test(c))s+=A.comp[c].pending;});return s;}
+ function card(lb,big,sub){return '<div class="card kpi"><div class="lb" style="margin-bottom:6px">'+lb+'</div><div class="v num">'+big+'</div><div class="d">'+sub+'</div></div>';}
+ return '<div class="grid g3 mb">'
+  +card('Band ขายแล้ว',num(band),num(bandPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(bandPend()))
+  +card('Scale ขายแล้ว',num(scale),num(scalePaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(scale-scalePaid()))
+  +card('RoutineX ขายแล้ว',num(rx),num(rxPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(rx-rxPaid()))
+  +'</div>';
+}
+
+function perProductTable(A){
+ var rows=Object.keys(A.prod).map(function(nm){var v=A.prod[nm];return {nm:nm,paid:v.paid,pending:v.pending,cancel:v.cancel,alive:v.paid+v.pending};})
+  .sort(function(a,b){return b.alive-a.alive;});
+ var body=rows.map(function(r){return '<tr><td><div class="pname">'+esc(r.nm)+'</div></td><td class="n" style="color:var(--good)">'+num(r.paid)+'</td><td class="n" style="color:var(--warn)">'+num(r.pending)+'</td><td class="n" style="color:var(--bad)">'+num(r.cancel)+'</td><td class="n"><b>'+num(r.alive)+'</b></td></tr>';}).join('');
+ return '<div class="sec"><h2>ยอดรวมรายสินค้า <span class="stamp">นับตามรายการที่สั่งจริง</span></h2>'
+  +'<div class="card panel"><div class="twrap"><table><thead><tr><th>สินค้า / เซต</th><th class="n">ชำระแล้ว</th><th class="n">รอตรวจสอบ</th><th class="n">ยกเลิก</th><th class="n">รวมที่ยังอยู่</th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="center">—</td></tr>')+'</tbody></table></div>'
+  +'<p class="priv">“รวมที่ยังอยู่” = ชำระแล้ว + รอตรวจสอบ (ไม่รวมที่ยกเลิก) — ใช้ตัวเลขนี้อ้างอิงการสั่งผลิต</p></div></div>';
+}
+
+function actionCards(A){
+ var gap=A.sales-GOAL_AMOUNT;
+ var over=gap>=0;
+ var potential=A.pendAmt*CLOSE_RATE;
+ var pend24=A.pendN, pend24amt=A.pendAmt;
+ var setsLeft=GOAL_SETS-A.sets;
+ return '<div class="sec"><h2>สิ่งที่ต้องลงมือ</h2><div class="grid g4">'
+  +'<div class="act '+(over?'good':'warn')+'"><div class="lb">🎯 Gap ถึงเป้ายอดขาย</div><div class="v">'+(over?'ถึงเป้าแล้ว':baht(-gap))+'</div><div class="s">'+(over?('เกินเป้า '+baht(gap)):'ยังขาดอีกถึงเป้า '+baht(GOAL_AMOUNT))+'</div></div>'
+  +'<div class="act warn"><div class="lb">⏰ รอตรวจสอบ</div><div class="v">'+num(pend24)+' ออเดอร์</div><div class="s">'+baht(pend24amt)+' · ควรติดตามให้ชำระ</div></div>'
+  +'<div class="act info"><div class="lb">💠 ยอดที่มีโอกาสปิด</div><div class="v">'+baht(potential)+'</div><div class="s">จากรอตรวจสอบ '+baht(A.pendAmt)+' × อัตราปิด '+Math.round(CLOSE_RATE*100)+'%</div></div>'
+  +'<div class="act '+(setsLeft<=0?'good':'brand')+'"><div class="lb">📦 เป้า '+num(GOAL_SETS)+' ชุด</div><div class="v">'+(setsLeft<=0?'ครบแล้ว':num(setsLeft)+' ชุด')+'</div><div class="s">'+(setsLeft<=0?'ปิดการขายได้':'เหลือถึงเป้าจำนวน')+'</div></div>'
+  +'</div></div>';
+}
+
+function heroBlock(A){
+ var setsPct=Math.min(100,A.sets/GOAL_SETS*100);
+ var aov=A.sets?A.sales/A.sets:0;
+ var paidPct=pct(A.paidN,A.n);
+ var cart='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>';
+ var chart='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>';
+ var user='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+ var repeat='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+ return '<div class="sec"><div class="herowrap">'
+  +'<div class="card panel"><div class="donut"><div class="ring" style="--p:'+setsPct.toFixed(1)+'"><div class="inner"><b class="num">'+num(A.sets)+'</b><small>จาก '+num(GOAL_SETS)+' ชุด</small></div></div>'
+    +'<div class="herostat"><div class="lb">ยอดสั่งจองสะสม</div><div class="big num">'+ (A.sets/GOAL_SETS*100).toFixed(1) +'%</div><p>'+(GOAL_SETS-A.sets>0?('เหลืออีก '+num(GOAL_SETS-A.sets)+' ชุด'):'ครบเป้าแล้ว')+'</p><p>จาก '+num(A.n)+' ออเดอร์ · สิทธิ์ Family '+num(A.family)+' รายการ</p></div></div></div>'
+  +'<div class="herocards">'
+    +'<div class="hc blue"><div class="ic">'+cart+'</div><div class="v num">'+num(A.sets)+'</div><div class="lb">ชุดที่สั่งจองแล้ว</div></div>'
+    +'<div class="hc plain"><div class="ic">'+chart+'</div><div class="v num">'+baht(A.sales)+'</div><div class="lb">มูลค่าสั่งจองรวม</div></div>'
+    +'<div class="hc plain"><div class="ic">'+user+'</div><div class="v num">'+baht(aov)+'</div><div class="lb">เฉลี่ยต่อออเดอร์</div></div>'
+    +'<div class="hc plain"><div class="corner">'+paidPct+'%</div><div class="ic">'+repeat+'</div><div class="v num">'+num(A.paidN)+'</div><div class="lb">ออเดอร์ที่ชำระแล้ว</div></div>'
+  +'</div></div></div>';
+}
+
+function paymentBlocks(A){
+ var totalPay=A.byPay.card.amt+A.byPay.bank.amt;
+ function bar(lb,n,amt,col){var p=totalPay?Math.max(3,Math.round(amt/totalPay*100)):0;return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
+ var pay='<div class="card panel"><div class="ph"><h3>ยอดชำระเงินแยกช่องทาง</h3><span class="meta num">'+baht(totalPay)+'</span></div>'
+   +bar('บัตรเครดิต (Stripe)',A.byPay.card.n,A.byPay.card.amt,'var(--brand)')
+   +bar('โอนเงินผ่านธนาคาร',A.byPay.bank.n,A.byPay.bank.amt,'var(--good)')
+   +'<p class="priv">ออเดอร์บัตรจับคู่การชำระเงินแบบเรียลไทม์ผ่าน Stripe Webhook · โอนธนาคารยืนยันจากสลิปในหน้า Operations</p></div>';
+ var stmax=Math.max(A.byBucket.paid,A.byBucket.pending,A.byBucket.cancel,1);
+ function stbar(lb,n,amt,col){var p=Math.max(3,Math.round(n/stmax*100));return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
+ var refPctN=0; VIEW.forEach(function(o){if(bucket(o.status)!=='cancel'&&(o.ref||'').trim())refPctN++;});
+ var status='<div class="card panel"><div class="ph"><h3>สถานะการชำระเงิน</h3></div>'
+   +stbar('ชำระสำเร็จแล้ว',A.paidN,A.paidAmt,'var(--good)')
+   +stbar('รอตรวจสอบ',A.pendN,A.pendAmt,'var(--warn)')
+   +stbar('ยกเลิก',A.cancN,A.cancAmt,'var(--bad)')
+   +'<p class="priv">มาจากผู้แนะนำ '+num(refPctN)+' ออเดอร์ ('+pct(refPctN,A.sets)+'%)</p></div>';
+ return '<div class="sec"><div class="grid g2">'+pay+status+'</div></div>';
+}
+
+function itemsAndFamily(A){
+ var rows=Object.keys(A.prod).map(function(nm){var v=A.prod[nm];var alive=v.paid+v.pending;var amt=0;
+   VIEW.forEach(function(o){if(bucket(o.status)!=='cancel')(o.items||[]).forEach(function(it){if(String(it.nm)===nm)amt+=(Number(it.price)||0);});});
+   return {nm:nm,qty:alive,amt:amt};}).filter(function(r){return r.qty>0;}).sort(function(a,b){return b.amt-a.amt;});
+ var totQ=rows.reduce(function(s,r){return s+r.qty;},0), totA=rows.reduce(function(s,r){return s+r.amt;},0);
+ var body=rows.map(function(r,i){return '<tr><td><span class="rank" style="display:inline-flex;margin-right:8px">'+(i+1)+'</span>'+esc(r.nm)+'</td><td class="n">'+num(r.qty)+'</td><td class="n"><b>'+baht(r.amt)+'</b></td><td class="n">'+pct(r.qty,totQ)+'%</td></tr>';}).join('');
+ var items='<div class="card panel"><div class="ph"><h3>รายการที่สั่งจอง</h3><span class="meta">'+num(rows.length)+' รายการ · '+num(totQ)+' ชิ้น · '+baht(totA)+'</span></div><div class="twrap"><table><thead><tr><th>รายการ</th><th class="n">จำนวน</th><th class="n">มูลค่า</th><th class="n">สัดส่วน</th></tr></thead><tbody>'+(body||'<tr><td colspan=4 class=center>—</td></tr>')+'</tbody></table></div></div>';
+ var fam=Object.keys(A.familyMap).map(function(nm){return {nm:nm,n:A.familyMap[nm].n,amt:A.familyMap[nm].amt};}).sort(function(a,b){return b.amt-a.amt;});
+ var famTotN=fam.reduce(function(s,r){return s+r.n;},0), famTotA=fam.reduce(function(s,r){return s+r.amt;},0);
+ var famBody=fam.slice(0,6).map(function(r,i){return '<div class="li"><div class="rank">'+(i+1)+'</div><div class="body"><div class="t">'+esc(r.nm)+'</div></div><div class="amt">'+num(r.n)+'<small>'+baht(r.amt)+'</small></div></div>';}).join('');
+ var famCard='<div class="card panel"><div class="ph"><h3>สิทธิ์ Family</h3><span class="meta">'+num(famTotN)+' สิทธิ์ · '+baht(famTotA)+'</span></div>'+(famBody||'<div class="center">ยังไม่มีการใช้สิทธิ์ Family</div>')+'<p class="priv">สิทธิ์ Family เป็นรายการเสริม ยังไม่นับรวมในเป้า '+num(GOAL_SETS)+' ชุด</p></div>';
+ return '<div class="sec"><div class="grid g2">'+items+famCard+'</div></div>';
+}
+
+function dailyChart(){
+ return '<div class="sec"><h2>ยอดสั่งจองรายวัน</h2><div class="card panel"><div class="legend"><span><i style="background:var(--brand)"></i>สะสม (ชุด)</span><span><i style="background:#93C5FD"></i>ต่อวัน (ออเดอร์)</span></div><svg class="chart" id="dchart" preserveAspectRatio="none"></svg><div id="dchartx" style="display:flex;justify-content:space-between;color:var(--mut);font-size:.72rem;margin-top:6px"></div></div></div>';
+}
+function drawChart(){
+ var svg=el('dchart'); if(!svg)return;
+ var days=[]; var map={};
+ VIEW.forEach(function(o){ if(bucket(o.status)==='cancel')return; var d=new Date(o.at); if(isNaN(d))return; var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); map[k]=(map[k]||0)+1; });
+ var keys=Object.keys(map).sort(); if(!keys.length){svg.innerHTML='';return;}
+ var start=new Date(keys[0]), end=new Date(keys[keys.length-1]);
+ var cum=0, series=[];
+ for(var d=new Date(start); d<=end; d.setDate(d.getDate()+1)){ var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); var per=map[k]||0; cum+=per; series.push({k:k,per:per,cum:cum,label:('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)}); }
+ var W=800,H=220,pad=10,bottom=8;
+ var maxCum=series[series.length-1].cum||1, maxPer=Math.max.apply(null,series.map(function(s){return s.per;}))||1;
+ var n=series.length, bw=Math.max(2,(W-pad*2)/n*0.55);
+ var bars='', line='', area='', pts=[];
+ series.forEach(function(s,i){
+  var x=pad+(W-pad*2)*(n===1?0.5:i/(n-1));
+  var bh=(H-pad-bottom)*(s.per/maxPer);
+  var bx=x-bw/2;
+  bars+='<rect x="'+bx.toFixed(1)+'" y="'+(H-bottom-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="#93C5FD"/>';
+  var y=(H-bottom)-(H-pad-bottom)*(s.cum/maxCum);
+  pts.push([x,y]);
+ });
+ line=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ');
+ area='M'+pts[0][0].toFixed(1)+' '+(H-bottom)+' '+pts.map(function(p){return 'L'+p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' ')+' L'+pts[pts.length-1][0].toFixed(1)+' '+(H-bottom)+' Z';
+ svg.setAttribute('viewBox','0 0 '+W+' '+H);
+ svg.innerHTML='<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563EB" stop-opacity=".18"/><stop offset="1" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>'
+  +bars+'<path d="'+area+'" fill="url(#ag)"/><path d="'+line+'" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"/>'
+  +pts.map(function(p){return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.5" fill="#fff" stroke="var(--brand)" stroke-width="1.5"/>';}).join('');
+ // x labels (max ~8)
+ var step=Math.ceil(n/8), xl='';
+ series.forEach(function(s,i){ if(i%step===0||i===n-1) xl+='<span>'+s.label+'</span>'; });
+ el('dchartx').innerHTML=xl;
+}
+
+/* ================= CUSTOMERS ================= */
+function custData(){
+ var map={};
+ VIEW.forEach(function(o){
+  var b=bucket(o.status); var key=(o.phone||o.name||o.id);
+  if(!map[key])map[key]={name:o.name,phone:o.phone,prov:findProvince(o.addr),team:(o.ref||'').trim(),items:{},pieces:0,orders:0,amt:0,st:{}};
+  var c=map[key]; c.orders++; if(b!=='cancel')c.amt+=(Number(o.total)||0);
+  c.st[b]=(c.st[b]||0)+1;
+  (o.items||[]).forEach(function(it){c.pieces++;var nm=String(it.nm);c.items[nm]=(c.items[nm]||0)+1;});
+ });
+ return Object.keys(map).map(function(k){var c=map[k];
+  var stk=Object.keys(c.st); var status=stk.length>1?'multi':(stk[0]||'pending');
+  return {name:c.name,phone:c.phone,prov:c.prov,team:c.team,items:c.items,pieces:c.pieces,orders:c.orders,amt:c.amt,status:status};
+ }).sort(function(a,b){return b.amt-a.amt;});
+}
+function customerSection(){
+ var data=custData();
+ var teams={},prods={};
+ data.forEach(function(c){ teams[c.team||'ไม่มีทีม']=1; Object.keys(c.items).forEach(function(p){prods[p]=1;}); });
+ var teamOpts='<option value="">ทุกทีม</option>'+Object.keys(teams).sort().map(function(t){return '<option value="'+esc(t)+'">'+esc(t||'ไม่มีทีม')+'</option>';}).join('');
+ var statusOpts='<option value="">ทุกสถานะ</option><option value="paid">ชำระแล้ว</option><option value="pending">รอตรวจสอบ</option><option value="cancel">ยกเลิก</option><option value="multi">มีหลายสถานะ</option>';
+ var prodOpts='<option value="">ทุกรายการสินค้า</option>'+Object.keys(prods).sort().map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
+ // filter
+ var f=custFilters;
+ var filtered=data.filter(function(c){
+  if(f.team && (c.team||'ไม่มีทีม')!==f.team)return false;
+  if(f.status && c.status!==f.status)return false;
+  if(f.product && !c.items[f.product])return false;
+  return true;
+ });
+ var totPieces=filtered.reduce(function(s,c){return s+c.pieces;},0), totAmt=filtered.reduce(function(s,c){return s+c.amt;},0);
+ var pages=Math.max(1,Math.ceil(filtered.length/PAGE_CUST));
+ if(custPage>pages)custPage=pages;
+ var slice=filtered.slice((custPage-1)*PAGE_CUST, custPage*PAGE_CUST);
+ var body=slice.map(function(c,i){
+  var idx=(custPage-1)*PAGE_CUST+i+1;
+  var itemKeys=Object.keys(c.items);
+  var itxt=itemKeys.slice(0,2).map(function(p){return esc(shortItem(p))+(c.items[p]>1?(' ×'+c.items[p]):'');}).join('<br>');
+  if(itemKeys.length>2)itxt+='<br><span class="psub">+'+(itemKeys.length-2)+'</span>';
+  return '<tr><td class="n">'+idx+'</td><td><div class="pname">'+esc(maskName(c.name))+'</div><div class="psub">'+maskPhone(c.phone)+' · '+esc(c.prov)+'</div></td><td><span class="psub">'+esc(c.team||'ไม่มีทีม')+'</span></td><td style="font-size:.8rem">'+itxt+'</td><td class="n">'+num(c.pieces)+'</td><td class="n">'+num(c.orders)+'</td><td class="n"><b>'+baht(c.amt)+'</b></td><td><span class="st '+c.status+'">'+(ST_LABEL[c.status]||'หลายสถานะ')+'</span></td></tr>';
+ }).join('');
+ return '<div class="sec"><h2>รายชื่อลูกค้าทั้งหมด <span class="stamp">'+num(data.length)+' คน</span></h2>'
+  +'<div class="card panel">'
+  +'<div class="selrow">'
+   +'<select class="f" onchange="custFilters.team=this.value;custPage=1;render()">'+teamOpts+'</select>'
+   +'<select class="f" onchange="custFilters.status=this.value;custPage=1;render()">'+statusOpts+'</select>'
+   +'<select class="f" onchange="custFilters.product=this.value;custPage=1;render()">'+prodOpts+'</select>'
+  +'</div>'
+  +'<div style="color:var(--sub);font-size:.83rem;margin-bottom:6px">แสดง '+num(filtered.length)+' คน · '+num(totPieces)+' ชิ้น · มูลค่ารวม '+baht(totAmt)+'</div>'
+  +'<div class="twrap"><table><thead><tr><th class="n">#</th><th>ลูกค้า</th><th>ทีม</th><th>รายการที่ซื้อ</th><th class="n">ชิ้น</th><th class="n">ออเดอร์</th><th class="n">มูลค่า</th><th>สถานะ</th></tr></thead><tbody>'+(body||'<tr><td colspan=8 class=center>ไม่พบลูกค้าตามเงื่อนไข</td></tr>')+'</tbody></table></div>'
+  +pager(custPage,pages,'custPage')
+  +'<p class="priv">แสดงชื่อย่อและเบอร์ 4 ตัวท้ายเพื่อคุ้มครองข้อมูลส่วนบุคคล (PDPA) · ทีมดึงจากช่อง “ผู้แนะนำ/ทีมโค้ช” ในออเดอร์</p></div></div>';
+}
+function shortItem(nm){ return String(nm).replace('TRIPLE SET','Triple').replace('DUO SET','Duo').replace('TWIN SET','Twin').replace('Xircle Band','Band').replace('Xircle Scale','Scale').replace(' · ',' '); }
+
+/* ================= REFERRERS ================= */
+function referrerSection(A){
+ var refs=Object.keys(A.ref).map(function(name){var v=A.ref[name];var ti=tier(v.amt);return {name:name,n:v.n,amt:v.amt,tier:ti.t,comm:v.amt*ti.r};}).sort(function(a,b){return b.amt-a.amt;});
+ var totComm=refs.reduce(function(s,r){return s+r.comm;},0);
+ var totOrders=refs.reduce(function(s,r){return s+r.n;},0);
+ var pages=Math.max(1,Math.ceil(refs.length/PAGE_REF)); if(refPage>pages)refPage=pages;
+ var slice=refs.slice((refPage-1)*PAGE_REF, refPage*PAGE_REF);
+ var body=slice.map(function(r,i){var idx=(refPage-1)*PAGE_REF+i+1;
+  return '<div class="li"><div class="rank">'+idx+'</div><div class="body"><div class="t">'+esc(r.name)+'</div><div class="s">Tier '+r.tier+'</div></div>'
+   +'<div class="amt" style="min-width:70px">'+num(r.n)+'<small>ออเดอร์</small></div>'
+   +'<div class="amt" style="min-width:96px">'+baht(r.amt)+'<small>ยอดขาย</small></div>'
+   +'<div class="amt" style="min-width:90px;color:var(--good)">'+baht(r.comm)+'<small>ค่าคอม</small></div></div>';
+ }).join('');
+ return '<div class="sec"><h2>ผู้แนะนำทั้งหมด <span class="stamp">'+num(refs.length)+' คน · '+num(totOrders)+' ออเดอร์</span></h2>'
+  +'<div class="card panel">'+(body||'<div class="center">ยังไม่มีข้อมูลผู้แนะนำ</div>')+pager(refPage,pages,'refPage')
+  +'<p class="priv">ประมาณการค่าคอมรวม '+baht(totComm)+' · คำนวณตามขั้นบันได 20/23/25% จากยอดสะสมของแต่ละคน (ค่าประมาณ) · แสดงเฉพาะออเดอร์ที่มีผู้แนะนำ</p></div></div>';
+}
+
+/* ================= PROVINCES ================= */
+function provinceSection(A){
+ var arr=Object.keys(A.prov).map(function(p){return {p:p,n:A.prov[p]};}).sort(function(a,b){return b.n-a.n;});
+ var pages=Math.max(1,Math.ceil(arr.length/PAGE_PROV)); if(provPage>pages)provPage=pages;
+ var slice=arr.slice((provPage-1)*PAGE_PROV, provPage*PAGE_PROV);
+ var max=arr.length?arr[0].n:1;
+ var body=slice.map(function(r,i){var idx=(provPage-1)*PAGE_PROV+i+1;var p=Math.max(4,Math.round(r.n/max*100));
+  return '<div class="li"><div class="rank">'+idx+'</div><div class="body"><div class="t">'+esc(r.p)+'</div><div class="track" style="margin-top:6px"><b style="width:'+p+'%;background:var(--pink)"></b></div></div><div class="amt">'+num(r.n)+'<small>ราย</small></div></div>';
+ }).join('');
+ return '<div class="sec"><h2>ปลายทางจัดส่ง <span class="stamp">'+num(arr.length)+' จังหวัด</span></h2><div class="card panel">'+(body||'<div class="center">—</div>')+pager(provPage,pages,'provPage')+'</div></div>';
+}
+
+/* ================= PAGER ================= */
+function pager(cur,pages,varName){
+ if(pages<=1)return '';
+ var h='<div class="pager"><button '+(cur<=1?'disabled':'')+' onclick="'+varName+'=Math.max(1,'+varName+'-1);render()">‹</button>';
+ var show=[]; for(var i=1;i<=pages;i++){ if(i<=2||i>pages-2||Math.abs(i-cur)<=1)show.push(i); else if(show[show.length-1]!=='…')show.push('…'); }
+ show.forEach(function(i){ if(i==='…')h+='<button disabled>…</button>'; else h+='<button class="'+(i===cur?'on':'')+'" onclick="'+varName+'='+i+';render()">'+i+'</button>'; });
+ h+='<button '+(cur>=pages?'disabled':'')+' onclick="'+varName+'=Math.min('+pages+','+varName+'+1);render()">›</button></div>';
+ return h;
+}
+
+loadData();
+</script>
+</body>
+</html>
