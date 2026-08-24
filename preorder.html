@@ -148,7 +148,11 @@
   .prod{border:2px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s;position:relative;background:#fff}
   .prod:hover{transform:translateY(-3px);box-shadow:0 20px 40px -26px rgba(11,20,50,.4)}
   .prod.on{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-tint),0 20px 40px -26px rgba(37,99,235,.5)}
-  .prod .pic{aspect-ratio:1/1;border-radius:13px;background:linear-gradient(150deg,#EEF4FF,#DCE8FF);display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--accent)}
+  .prod .pic{position:relative;aspect-ratio:1/1;border-radius:13px;background:linear-gradient(150deg,#EEF4FF,#DCE8FF);display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--accent)}
+  .prod .swatch{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 9px 3px 4px;font-size:.64rem;font-weight:700;color:var(--ink);box-shadow:0 3px 8px -4px rgba(11,20,50,.4)}
+  .prod .swatch i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .prod .swatch i.black{background:#22262e;border:1px solid #0b0e16}
+  .prod .swatch i.cream{background:#E9E0CC;border:1px solid #cdbf9f}
   .prod .pic svg{width:46px;height:46px}
   .prod .nm{font-weight:700;font-size:.94rem;line-height:1.3;min-height:2.4em}
   .prod .desc{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.35;min-height:2em}
@@ -472,17 +476,23 @@
 </div>
 
 <script>
+  // ราคาตามรูปโปรโมชัน · แยกสี สีดำ/สีครีม ตามข้อมูล Excel · ลิงก์ Stripe เป็นค่าเริ่มต้นตามชนิดสินค้า (รอสลับตาม SKU จริง)
   var MAIN=[
-    {id:'band',nm:'Band',desc:'สายรัดข้อมืออัจฉริยะ',price:4590,url:'https://buy.stripe.com/4gM8wRbYs0fC02ig2T93y02',ic:'band'},
-    {id:'scale',nm:'Scale',desc:'เครื่องชั่งวิเคราะห์ร่างกาย',price:1290,url:'https://buy.stripe.com/eVq14paUobYkg1g17Z93y03',ic:'scale'},
+    {id:'triple-black',nm:'TRIPLE SET · สีดำ',color:'ดำ',desc:'Band สีดำ + Scale + RoutineX',price:12480,url:'https://buy.stripe.com/28E28t9Qk2nK16maIz93y06',ic:'triple',hot:true},
+    {id:'triple-cream',nm:'TRIPLE SET · สีครีม',color:'ครีม',desc:'Band สีครีม + Scale + RoutineX',price:12480,url:'https://buy.stripe.com/28E28t9Qk2nK16maIz93y06',ic:'triple',hot:true},
+    {id:'duo-black',nm:'DUO SET · สีดำ',color:'ดำ',desc:'Band สีดำ + Scale',price:4990,url:'https://buy.stripe.com/dRmdRb7Ic1jG7uK17Z93y05',ic:'duo'},
+    {id:'duo-cream',nm:'DUO SET · สีครีม',color:'ครีม',desc:'Band สีครีม + Scale',price:4990,url:'https://buy.stripe.com/dRmdRb7Ic1jG7uK17Z93y05',ic:'duo'},
+    {id:'band-black',nm:'Xircle Band · สีดำ',color:'ดำ',desc:'สายรัดข้อมืออัจฉริยะ',price:4590,url:'https://buy.stripe.com/4gM8wRbYs0fC02ig2T93y02',ic:'band'},
+    {id:'band-cream',nm:'Xircle Band · สีครีม',color:'ครีม',desc:'สายรัดข้อมืออัจฉริยะ',price:4590,url:'https://buy.stripe.com/4gM8wRbYs0fC02ig2T93y02',ic:'band'},
     {id:'routinex',nm:'RoutineX',desc:'ชุดโภชนาการประจำวัน',price:7490,url:'https://buy.stripe.com/5kQeVfd2waUg5mC4kb93y04',ic:'routine'},
-    {id:'duo',nm:'DUO SET',desc:'Band + Scale',price:4990,url:'https://buy.stripe.com/dRmdRb7Ic1jG7uK17Z93y05',ic:'duo'},
-    {id:'triple',nm:'TRIPLE SET',desc:'Band + Scale + RoutineX',price:12480,url:'https://buy.stripe.com/28E28t9Qk2nK16maIz93y06',ic:'triple',hot:true}
+    {id:'scale',nm:'Xircle Scale',desc:'เครื่องชั่งวิเคราะห์ร่างกาย',price:1290,url:'https://buy.stripe.com/eVq14paUobYkg1g17Z93y03',ic:'scale'}
   ];
   var FAM=[
-    {id:'fam-band',nm:'Band (ครอบครัว)',desc:'รับส่วนลด 5%',price:4360,was:4590,url:'https://buy.stripe.com/7sY00l0fKaUgbL0cQH93y07',ic:'band',save:true},
-    {id:'fam-routinex',nm:'RoutineX',desc:'ชุดโภชนาการประจำวัน',price:7490,url:'https://buy.stripe.com/5kQeVfd2waUg5mC4kb93y04',ic:'routine'},
-    {id:'fam-twin',nm:'TWIN SET',desc:'Band + RoutineX',price:11850,url:'https://buy.stripe.com/fZucN7bYs8M8cP45of93y08',ic:'duo',hot:true}
+    {id:'fam-band-black',nm:'Band ครอบครัว · สีดำ',color:'ดำ',desc:'รับส่วนลด 5%',price:4360,was:4590,url:'https://buy.stripe.com/7sY00l0fKaUgbL0cQH93y07',ic:'band',save:true},
+    {id:'fam-band-cream',nm:'Band ครอบครัว · สีครีม',color:'ครีม',desc:'รับส่วนลด 5%',price:4360,was:4590,url:'https://buy.stripe.com/7sY00l0fKaUgbL0cQH93y07',ic:'band',save:true},
+    {id:'fam-twin-black',nm:'TWIN SET · สีดำ',color:'ดำ',desc:'Band สีดำ + RoutineX',price:11850,url:'https://buy.stripe.com/fZucN7bYs8M8cP45of93y08',ic:'duo',hot:true},
+    {id:'fam-twin-cream',nm:'TWIN SET · สีครีม',color:'ครีม',desc:'Band สีครีม + RoutineX',price:11850,url:'https://buy.stripe.com/fZucN7bYs8M8cP45of93y08',ic:'duo',hot:true},
+    {id:'fam-routinex',nm:'RoutineX',desc:'ชุดโภชนาการประจำวัน',price:7490,url:'https://buy.stripe.com/5kQeVfd2waUg5mC4kb93y04',ic:'routine'}
   ];
   var ICONS={
     band:'<path d="M8 7V4h8v3M8 17v3h8v-3M6 7h12v10H6z" fill="none" stroke="currentColor" stroke-width="2"/>',
@@ -538,7 +548,7 @@
     var badge=p.save?'<div class="save">ลด 5%</div>':(p.hot?'<div class="ribbon">★ ยอดนิยม</div>':'');
     return '<div class="prod'+(multi?' multi':'')+(on?' on':'')+'" data-id="'+p.id+'">'+badge
       +'<div class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>'
-      +'<div class="pic"><svg viewBox="0 0 24 24">'+ICONS[p.ic]+'</svg></div>'
+      +'<div class="pic"><svg viewBox="0 0 24 24">'+ICONS[p.ic]+'</svg>'+(p.color?'<span class="swatch"><i class="'+(p.color==='ครีม'?'cream':'black')+'"></i>สี'+p.color+'</span>':'')+'</div>'
       +'<div class="nm">'+p.nm+'</div><div class="desc">'+p.desc+'</div>'
       +'<div class="pr">'+THB(p.price)+(p.was?'<span class="was">'+THB(p.was)+'</span>':'')+'</div></div>';
   }
