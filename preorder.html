@@ -638,8 +638,9 @@
       {c:'ครีม',id:'fam-twin-cream',url:'https://buy.stripe.com/fZucN7bYs8M8cP45of93y08'}]},
     {id:'fam-routinex',nm:'RoutineX',desc:'ชุดโภชนาการประจำวัน',price:7490,url:'https://buy.stripe.com/5kQeVfd2waUg5mC4kb93y04',ic:'routine'}
   ];
-  // เรียงสินค้าจากถูก -> แพง (ทั้งเซตหลักและเซตครอบครัว)
-  MAIN_P.sort(function(a,b){return a.price-b.price;});
+  // เซตหลัก: เรียงตามลำดับที่กำหนดเอง | เซตครอบครัว: เรียงถูก -> แพง
+  var MAIN_ORDER=['band','scale','routinex','duo','triple'];
+  MAIN_P.sort(function(a,b){return MAIN_ORDER.indexOf(a.id)-MAIN_ORDER.indexOf(b.id);});
   FAM_P.sort(function(a,b){return a.price-b.price;});
   // แปลง Parent -> map ของ variant (Sub SKU) เพื่อให้ตะกร้า/สรุป/ลิงก์ชำระเงินทำงานต่อได้เหมือนเดิม
   function buildVariants(parents){var m={};parents.forEach(function(p){
