@@ -231,7 +231,7 @@
   .in::placeholder,textarea::placeholder{color:#AAB2C4}
   .in:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-tint)}
   textarea{resize:vertical;min-height:78px}
-  .rowg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .rowg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
   @media(max-width:440px){.rowg{grid-template-columns:1fr}}
   .err{color:var(--bad);font-size:.78rem;margin-top:6px;display:none}
   .field.bad .in,.field.bad select,.field.bad textarea{border-color:var(--bad);box-shadow:0 0 0 4px #FDECEC}
@@ -252,7 +252,7 @@
   .bankbox .r b{font-weight:800;text-align:right}
   .note{font-size:.78rem;color:var(--muted);margin-top:6px}
   .note.warn{color:#9a6a00;background:#FFF6E4;border:1px solid #FCE4B5;border-radius:10px;padding:9px 12px;display:flex;gap:7px;align-items:flex-start}
-  .slip{border:2px dashed #C9D6F5;border-radius:13px;padding:20px;text-align:center;cursor:pointer;color:var(--muted);font-size:.86rem;transition:.15s;background:#fff}
+  .slip{display:block;border:2px dashed #C9D6F5;border-radius:13px;padding:20px;text-align:center;cursor:pointer;color:var(--muted);font-size:.86rem;transition:.15s;background:#fff}
   .slip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
   .slip img{max-width:100%;border-radius:11px;margin-top:10px}
   .rail{display:none}
@@ -434,7 +434,7 @@
     </div>
     <div class="formhead">
       <h2>กรอกข้อมูลสั่งจอง</h2>
-      <p>เลือกสินค้า กรอกข้อมูล และชำระเงิน — ใช้เวลาไม่ถึง 2 นาที</p>
+      <p>เลือกรายการสินค้า กรอกข้อมูล ดำเนินการชำระเงิน<br>ตรวจสอบความถูกต้องเรียบร้อยก่อนกดยืนยัน</p>
     </div>
 
     <div class="formgrid">
@@ -827,7 +827,7 @@
       document.querySelector('.opt[data-pay="bank"]').classList.add('on');
       byId('bankFields').style.display='block';byId('cardNote').style.display='none';byId('cardEmailWrap').style.display='none';}
     var t=total();
-    byId('totVal').textContent=THB(t);
+    byId('totVal').innerHTML=THB(t);
     var mo=mainObjs(),fo=famObjs();
     var first=mo[0]||fo[0];
     byId('selName').textContent=count?(first.nm+(count>1?' +'+(count-1):'')):'—';
@@ -837,7 +837,7 @@
       mo.forEach(function(p){h+='<div class="sum-line"><span class="l">'+p.nm+'</span><b class="num">'+THB(p.price)+'</b></div>';});
       fo.forEach(function(p){h+='<div class="sum-line badge"><span class="l">'+p.nm+' <span class="tagx">ครอบครัว</span></span><b class="num">'+THB(p.price)+'</b></div>';});
       lines.innerHTML=h;}
-    byId('sumTotal').textContent=THB(t);
+    byId('sumTotal').innerHTML=THB(t);
     var can=state.main.length>0;
     var label=can?(state.pay==='card'?'ชำระด้วยบัตร':'ยืนยันคำสั่งจอง'):'เลือกเซตหลักก่อน';
     var ic=state.pay==='card'
