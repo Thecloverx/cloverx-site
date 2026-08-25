@@ -79,6 +79,38 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
       }
     }
   }
+  // คืนเงิน — Stripe ส่ง charge.refunded เมื่อมีการคืนเงิน (จับคู่ด้วย payment_intent)
+  if (type === 'charge.refunded') {
+    const c = (evt.data && evt.data.object) || {};
+    const pi = c.payment_intent || null;
+    if (pi) {
+      const list = read();
+      const o = list.find(function (x) { return x.stripe && x.stripe.paymentIntent === pi; });
+      if (o) {
+        o.status = 'refunded';
+        o.refund = { at: new Date().toISOString(), amount: (c.amount_refunded != null ? c.amount_refunded / 100 : null), full: (c.amount_refunded === c.amount) };
+        write(list);
+        console.log('[stripe] order ' + o.id + ' refunded via webhook, pi=' + pi);
+      }
+    }
+  }
+  // ยกเลิก — ลูกค้าไม่ชำระจน checkout session หมดอายุ
+  if (type === 'checkout.session.expired') {
+    const s = (evt.data && evt.data.object) || {};
+    const oid = s.client_reference_id;
+    if (oid) {
+      const list = read();
+      const o = list.find(function (x) { return x.id === oid; });
+      if (o && o.status === 'pending') { o.status = 'cancelled'; o.cancelledAt = new Date().toISOString(); write(list); console.log('[stripe] order ' + oid + ' cancelled (checkout expired)'); }
+    }
+  }
+  // ชำระไม่สำเร็จ
+  if (type === 'payment_intent.payment_failed') {
+    const piObj = (evt.data && evt.data.object) || {};
+    const list = read();
+    const o = list.find(function (x) { return x.stripe && x.stripe.paymentIntent === piObj.id; });
+    if (o && o.status === 'pending') { o.status = 'failed'; o.failedAt = new Date().toISOString(); write(list); console.log('[stripe] order ' + o.id + ' payment_failed'); }
+  }
   res.json({ received: true });
 });
 
@@ -387,7 +419,7 @@ function invoiceHTML(o) {
     + '</style></head><body>'
     + '<div class="printbar"><button class="btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button></div>'
     + '<div class="sheet">'
-    + '<div class="top"><div class="co"><div class="brand">Clover</div>'
+    + '<div class="top"><div class="co">'
     + '<h1>บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</h1><div class="en">CLOVERX (THAILAND) CO., LTD. (สำนักงานใหญ่)</div>'
     + '<p>762/84 หมู่บ้านเดอะปาล์ม (ภัสสร 37) ซอยพัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250<br>โทร. 065-514-6576 · info@cloverxth.com</p>'
     + '<p>เลขประจำตัวผู้เสียภาษี: 0105568236410</p></div>'

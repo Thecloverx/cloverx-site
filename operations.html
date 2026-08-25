@@ -320,7 +320,7 @@
   function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
   function ensureKey(cb){ if(OPS_KEY||OPS_KEY_ASKED){cb();return;} OPS_KEY_ASKED=true; try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}}}catch(e){} cb(); }
-  var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระผ่านบัตร','new'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad']};
+  var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],failed:['ชำระไม่สำเร็จ','bad']};
   function poNeeds(s){return s==='pending'||s==='paid';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
@@ -368,13 +368,22 @@
         var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
         var slipBtn=o.slipUrl?'<button onclick="poSlip(\''+o.slipUrl+'\')" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.78rem;cursor:pointer;padding:0;margin-right:8px">ดูสลิป</button>':'';
         var invBtn=(o.status==='confirmed'||o.status==='paid')?'<button onclick="poInvoice(\''+o.id+'\')" style="background:none;border:1px solid var(--brand);color:var(--brand);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;font-size:.74rem;cursor:pointer;margin-right:6px">🧾 ใบเสร็จ/ใบกำกับ'+(o.invoiceNo?' ✓':'')+'</button>':'';
-        var act;
-        if(poNeeds(o.status)){
-          act='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:6px">ยืนยัน</button>'
-             +'<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">ปฏิเสธ</button>'+invBtn+slipBtn;
-        }else if(o.status==='rejected'){
-          act='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:none;color:var(--good);border:0;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px">กู้คืน</button>'+slipBtn;
-        }else{ act=invBtn+slipBtn||'<span style="color:var(--muted);font-size:.78rem">—</span>'; }
+        var isSettled=(o.status==='paid'||o.status==='confirmed');
+        var bC='font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px';
+        var confirmBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;'+bC+'">ยืนยัน</button>';
+        var rejectBtn='<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;'+bC+'">ปฏิเสธ</button>';
+        var cancelBtn='<button onclick="if(confirm(\'ยกเลิกออเดอร์ '+o.id+' ?\'))poSetStatus(\''+o.id+'\',\'cancelled\')" style="background:none;color:var(--bad);border:0;'+bC+'">ยกเลิก</button>';
+        var refundBtn='<button onclick="if(confirm(\'ทำเครื่องหมายว่าคืนเงินแล้วสำหรับ '+o.id+' ?\'))poSetStatus(\''+o.id+'\',\'refunded\')" style="background:none;color:var(--bad);border:0;'+bC+'">คืนเงิน</button>';
+        var restoreBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:none;color:var(--good);border:0;'+bC+'">กู้คืน</button>';
+        var waitNote='<span style="color:var(--muted);font-size:.72rem;margin-right:8px">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</span>';
+        var act='';
+        if(o.pay==='bank'&&o.status==='pending'){ act=confirmBtn+rejectBtn; }           // โอนธนาคาร: ตรวจสลิปแล้วยืนยัน/ปฏิเสธ
+        else if(isSettled){ act=refundBtn+cancelBtn; }                                  // ชำระแล้ว: คืนเงิน/ยกเลิก
+        else if(o.status==='pending'){ act=waitNote+cancelBtn; }                        // บัตรเครดิต รอชำระ: ยกเลิกได้ (webhook สลับให้อัตโนมัติ)
+        else if(o.status==='rejected'){ act=restoreBtn; }                              // ปฏิเสธ: กู้คืน
+        // cancelled / refunded / failed = สถานะสิ้นสุด ไม่มีปุ่ม
+        act+=invBtn+slipBtn;
+        if(!act.replace(/\s/g,'')) act='<span style="color:var(--muted);font-size:.78rem">—</span>';
         var pk=o.ship==='pickup'?' <span class="pill new" style="font-size:.62rem;padding:1px 7px">รับหน้างาน</span>':'';
         return '<tr><td><div style="font-weight:700">'+o.id+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTime(o.at)+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+(o.phone||'')+'</div></td>'
