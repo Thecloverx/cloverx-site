@@ -267,7 +267,7 @@
   // view meta for non-overview pages
   var META={
     order:{t:'Order Management',th:'จัดการคำสั่งซื้อ',d:'ติดตามและจัดการคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'plain'},
-    preorder:{t:'Pre-Order Management',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบเสร็จ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
+    preorder:{t:'Pre-Order Management',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบรับเงินมัดจำ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
     qr:{t:'QR Code',th:'QR Code สั่งซื้อ Pre-Order',d:'ลิงก์และ QR สำหรับส่งให้ลูกค้าเปิดหน้าสั่งซื้อ',kind:'plain'},
     podash:{t:'Dashboard',th:'แดชบอร์ด',d:'เลือกหัวข้อแดชบอร์ดจากฟิลเตอร์ด้านบน',kind:'dash'},
     cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
@@ -367,7 +367,7 @@
         var s=PO_ST[o.status]||['-','pend'];
         var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
         var slipBtn=o.slipUrl?'<button onclick="poSlip(\''+o.slipUrl+'\')" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.78rem;cursor:pointer;padding:0;margin-right:8px">ดูสลิป</button>':'';
-        var invBtn=(o.status==='confirmed'||o.status==='paid')?'<button onclick="poInvoice(\''+o.id+'\')" style="background:none;border:1px solid var(--brand);color:var(--brand);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;font-size:.74rem;cursor:pointer;margin-right:6px">🧾 ใบเสร็จ/ใบกำกับ'+(o.invoiceNo?' ✓':'')+'</button>':'';
+        var invBtn=(o.status==='confirmed'||o.status==='paid')?'<button onclick="poInvoice(\''+o.id+'\')" style="background:none;border:1px solid var(--brand);color:var(--brand);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;font-size:.74rem;cursor:pointer;margin-right:6px">🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':'')+'</button>':'';
         var isSettled=(o.status==='paid'||o.status==='confirmed');
         var bC='font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px';
         var confirmBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;'+bC+'">ยืนยัน</button>';
@@ -404,7 +404,7 @@
     }).join('');
     var prodPanel='<div class="panel"><div class="ph"><h3>ตั้งค่าสินค้า / ราคา / สต๊อกพรีออเดอร์</h3><a class="link" href="#" onclick="return false">แก้ไข →</a></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>สินค้า</th><th>ราคา</th><th>โควตา</th><th>คงเหลือ</th><th>สถานะ</th></tr></thead><tbody>'+prows+'</tbody></table></div></div>';
-    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>จัดการ Pre-Order</h1><p>ตรวจสลิป ยืนยันการชำระเงิน ออกใบเสร็จ และจัดคิวคำสั่งซื้อ</p></div><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button></div>'
+    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>จัดการ Pre-Order</h1><p>ตรวจสลิป ยืนยันการชำระเงิน ออกใบรับเงินมัดจำ และจัดคิวคำสั่งซื้อ</p></div><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button></div>'
       +kpis+ordersPanel+prodPanel;
   }
   function renderQR(){

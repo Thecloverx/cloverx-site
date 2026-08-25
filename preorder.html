@@ -361,7 +361,7 @@
       <div class="center">
         <h2 class="kick">สั่งซื้อสินค้าแบบ<span class="accent">พรีออเดอร์</span></h2>
         <p class="lead">กรุณากรอกข้อมูลให้ครบถ้วนและตรวจสอบความถูกต้องก่อนยืนยันสั่งซื้อ<br>เลือกสินค้าเซตหลักได้มากกว่า 1 รายการ และเพิ่มเซตครอบครัวได้</p>
-        <p class="fine">การส่งแบบฟอร์มยังไม่ถือว่าการสั่งจองเสร็จสมบูรณ์<br>การสั่งจองจะสมบูรณ์เมื่อบริษัทตรวจสอบการชำระเงินเรียบร้อย และท่านได้รับใบเสร็จรับเงินทางอีเมลที่แจ้งไว้</p>
+        <p class="fine">การส่งแบบฟอร์มยังไม่ถือว่าการสั่งจองเสร็จสมบูรณ์<br>การสั่งจองจะสมบูรณ์เมื่อบริษัทตรวจสอบการชำระเงินเรียบร้อย และท่านได้รับใบรับเงินมัดจำทางอีเมลที่แจ้งไว้</p>
       </div>
 
 
@@ -474,7 +474,7 @@
           <div class="step"><span class="n">3</span><h3>ข้อมูลผู้สั่งซื้อ</h3></div>
           <div class="field"><label class="fld">ชื่อ-นามสกุล <span class="req">*</span></label><input class="in" id="f_name" placeholder="เช่น สมชาย ใจดี"><div class="err">กรุณากรอกชื่อ-นามสกุล</div></div>
           <div class="field"><label class="fld">เบอร์โทรศัพท์ <span class="req">*</span></label><input class="in" id="f_phone" inputmode="tel" placeholder="08X-XXX-XXXX"><div class="err">กรุณากรอกเบอร์โทรให้ถูกต้อง</div></div>
-          <div class="field"><label class="fld">อีเมล (สำหรับรับใบเสร็จ) <span class="req">*</span></label><input class="in" id="f_email" inputmode="email" placeholder="you@email.com"><div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div></div>
+          <div class="field"><label class="fld">อีเมล (สำหรับรับใบรับเงินมัดจำ) <span class="req">*</span></label><input class="in" id="f_email" inputmode="email" placeholder="you@email.com"><div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div></div>
           <div class="field"><label class="fld">ที่อยู่จัดส่ง <span class="req">*</span></label><textarea id="f_addr" placeholder="บ้านเลขที่ / ถนน / ตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์"></textarea><div class="err">กรุณากรอกที่อยู่จัดส่ง</div></div>
           <div class="field"><label class="fld">ทีมโค้ช <span class="req">*</span></label>
             <select id="f_ref"><option value="">— เลือกทีมโค้ช —</option><option>โค้ชนุ่น</option><option>โค้ชซิง</option><option>โค้ชจา</option><option>โค้ชต๊ะ</option><option>CloverX</option></select>
@@ -523,15 +523,15 @@
           </div>
         </div>
         <div class="card">
-          <div class="step"><span class="n">6</span><h3>ใบเสร็จ / ใบกำกับภาษี</h3><span class="hint opt">ไม่บังคับ</span></div>
-          <label class="opt" id="taxToggle" style="cursor:pointer"><span class="rd" id="taxRd"></span><div class="ot"><b>ต้องการใบกำกับภาษี / ใบเสร็จรับเงินแบบเต็มรูป</b><span>ออกเอกสารตามข้อมูลที่ระบุด้านล่าง</span></div></label>
+          <div class="step"><span class="n">6</span><h3>ออกเอกสารในนามนิติบุคคล</h3><span class="hint opt">ไม่บังคับ</span></div>
+          <label class="opt" id="taxToggle" style="cursor:pointer"><span class="rd" id="taxRd"></span><div class="ot"><b>ต้องการระบุข้อมูลนิติบุคคลบนใบรับเงินมัดจำ</b><span>ออกใบรับเงินมัดจำตามข้อมูลที่ระบุด้านล่าง</span></div></label>
           <div class="subfields" id="taxFields" style="display:none">
             <div class="field"><label class="fld">ประเภทผู้เสียภาษี <span class="req">*</span></label>
               <select class="in" id="tax_type"><option value="บุคคลธรรมดา">บุคคลธรรมดา</option><option value="นิติบุคคล">นิติบุคคล (บริษัท/ห้างหุ้นส่วน)</option></select>
             </div>
             <div class="field"><label class="fld">ชื่อผู้เสียภาษี / ชื่อบริษัท <span class="req">*</span></label><input class="in" id="tax_name" placeholder="เช่น บริษัท ตัวอย่าง จำกัด"><div class="err">กรุณากรอกชื่อผู้เสียภาษี</div></div>
             <div class="field"><label class="fld">เลขประจำตัวผู้เสียภาษี (13 หลัก) <span class="req">*</span></label><input class="in num" id="tax_id" inputmode="numeric" maxlength="13" placeholder="0000000000000"><div class="err">กรอกเลขผู้เสียภาษีให้ครบ 13 หลัก</div></div>
-            <div class="field"><label class="fld">ที่อยู่สำหรับออกใบกำกับภาษี <span class="req">*</span></label><textarea id="tax_addr" placeholder="ที่อยู่ตามที่ต้องการให้ปรากฏบนใบกำกับภาษี"></textarea><div class="err">กรุณากรอกที่อยู่</div></div>
+            <div class="field"><label class="fld">ที่อยู่นิติบุคคล (แสดงบนใบรับเงินมัดจำ) <span class="req">*</span></label><textarea id="tax_addr" placeholder="ที่อยู่ตามที่ต้องการให้ปรากฏบนใบรับเงินมัดจำ"></textarea><div class="err">กรุณากรอกที่อยู่</div></div>
           </div>
       </div>
 
@@ -554,7 +554,7 @@
       <div class="donebtns">
         <a id="dlInvoice" href="#" target="_blank" rel="noopener" class="dlbtn" style="display:none">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
-          ดาวน์โหลด / พิมพ์ใบเสร็จ
+          ดาวน์โหลด / พิมพ์ใบรับเงินมัดจำ
         </a>
         <button class="ghost" onclick="location.reload()">สั่งจองรายการใหม่</button>
       </div>
