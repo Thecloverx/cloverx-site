@@ -343,6 +343,28 @@ app.post('/api/admin/reset', (req, res) => {
   res.json({ ok: true, cleared: n, message: 'orders and invoice counter reset' });
 });
 
+// ---- DIAGNOSTIC: email config + test send (guarded by ADMIN_KEY) — ชั่วคราวสำหรับตรวจสอบ ----
+app.get('/api/admin/emailtest', function (req, res) {
+  if (!process.env.ADMIN_KEY || req.query.key !== process.env.ADMIN_KEY) return res.status(403).json({ ok: false, error: 'forbidden' });
+  var cfg = { configured: emailConfigured(), provider: (process.env.EMAIL_PROVIDER || 'resend'), fromSet: !!process.env.EMAIL_FROM, from: (process.env.EMAIL_FROM || '(default) onboarding@resend.dev') };
+  if (!cfg.configured) return res.json({ ok: false, cfg: cfg, error: 'EMAIL_API_KEY not set on server' });
+  var to = req.query.to;
+  if (!to) return res.json({ ok: true, cfg: cfg, note: 'add &to=email to send a real test email' });
+  var provider = cfg.provider.toLowerCase();
+  var from = process.env.EMAIL_FROM || 'CloverX <onboarding@resend.dev>';
+  var subject = 'ทดสอบระบบอีเมล · CloverX';
+  var html = '<p>ทดสอบการส่งอีเมลจากระบบ CloverX สำเร็จ ✓</p>';
+  var host, urlPath, headers, payload;
+  if (provider === 'brevo') { host = 'api.brevo.com'; urlPath = '/v3/smtp/email'; headers = { 'api-key': process.env.EMAIL_API_KEY, 'content-type': 'application/json' }; payload = JSON.stringify({ sender: parseFrom(from), to: [{ email: to }], subject: subject, htmlContent: html }); }
+  else { host = 'api.resend.com'; urlPath = '/emails'; headers = { 'Authorization': 'Bearer ' + process.env.EMAIL_API_KEY, 'content-type': 'application/json' }; payload = JSON.stringify({ from: from, to: [to], subject: subject, html: html }); }
+  var rq = https.request({ hostname: host, path: urlPath, method: 'POST', headers: headers }, function (resp) {
+    var b = ''; resp.on('data', function (d) { b += d; });
+    resp.on('end', function () { res.json({ ok: resp.statusCode >= 200 && resp.statusCode < 300, cfg: cfg, providerStatus: resp.statusCode, providerResponse: b.slice(0, 600), sentTo: to }); });
+  });
+  rq.on('error', function (e) { res.json({ ok: false, cfg: cfg, error: e.message }); });
+  rq.write(payload); rq.end();
+});
+
 // ---- serve slip images ----
 app.get('/api/slips/:fn', (req, res) => {
   const p = path.join(SLIPS, path.basename(req.params.fn));
