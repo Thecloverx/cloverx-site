@@ -247,6 +247,8 @@
   .opt .ot b{font-size:.96rem}.opt .ot span{display:block;font-size:.8rem;color:var(--muted)}
   .subfields{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:16px;margin:2px 0 12px}
   .subfields .field:first-of-type label.fld{margin-top:0}
+  /* ในแถวคู่ (.rowg) label ช่องซ้าย/ขวาต้องเสมอกัน — กัน :first-of-type ไปรีเซ็ตช่องซ้ายจนเยื้อง/ติดขอบบน */
+  .rowg .field:first-of-type label.fld{margin-top:16px}
   .bankbox{background:linear-gradient(150deg,#F3F7FF,#EAF1FF);border:1px solid #DCE8FF;border-radius:14px;padding:16px;margin:4px 0 6px}
   .bankbox .r{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:.9rem}
   .bankbox .r b{font-weight:800;text-align:right}
