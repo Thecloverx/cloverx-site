@@ -1233,7 +1233,7 @@
   <div class="m-nav" id="mnav">
     <button class="t on" data-nav="home" onclick="MX.go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>หน้าแรก</button>
     <button class="t" data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>ค้นหา</button>
-    <button class="t" data-nav="cart" onclick="MX.go('cart')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5h11l.75 10.2a1.8 1.8 0 0 1-1.8 1.9H7.55a1.8 1.8 0 0 1-1.8-1.9z"/><path d="M9 8.5V7.2a3 3 0 0 1 6 0v1.3"/></svg><span class="bdg" id="navBdg" style="display:none">0</span>ตะกร้า</button>
+    <button class="t" data-nav="cart" onclick="MX.go('cart')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg><span class="bdg" id="navBdg" style="display:none">0</span>ตะกร้า</button>
     <button class="t" data-nav="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>บัญชี</button>
   </div>
 </div>
@@ -1271,7 +1271,7 @@
       var act=p.fam?('MX.quickAdd(\''+id+'\')'):('MX.open(\''+id+'\')');
       return '<div class="m-row" onclick="'+act+'"><div class="th"><img src="'+TH[id]+'" alt="'+p.nm+'"></div>'
       +'<div class="mid">'+badge+'<h3>'+p.nm+'</h3><div class="d">'+p.desc+'</div><div class="pr">'+price+'</div></div>'
-      +'<button class="cb" onclick="event.stopPropagation();MX.quickAdd(\''+id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5h11l.75 10.2a1.8 1.8 0 0 1-1.8 1.9H7.55a1.8 1.8 0 0 1-1.8-1.9z"/><path d="M9 8.5V7.2a3 3 0 0 1 6 0v1.3"/><path d="M12 12.2v4M10 14.2h4"/></svg></button></div>';
+      +'<button class="cb" onclick="event.stopPropagation();MX.quickAdd(\''+id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg></button></div>';
     }).join('');
   }
   function famUnlocked(){return cart.some(function(l){return !P[l.pid].fam;});}
@@ -1288,7 +1288,7 @@
   // CART
   function renderCart(){
     updateBadges();var body=byId('cbody'),sum=byId('csum');
-    if(!cart.length){body.innerHTML='<div class="c-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5h11l.75 10.2a1.8 1.8 0 0 1-1.8 1.9H7.55a1.8 1.8 0 0 1-1.8-1.9z"/><path d="M9 8.5V7.2a3 3 0 0 1 6 0v1.3"/></svg><b>ยังไม่มีสินค้าในตะกร้า</b>เลือกสินค้าที่ต้องการจองได้เลย</div>';sum.style.display='none';return;}
+    if(!cart.length){body.innerHTML='<div class="c-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg><b>ยังไม่มีสินค้าในตะกร้า</b>เลือกสินค้าที่ต้องการจองได้เลย</div>';sum.style.display='none';return;}
     sum.style.display='block';
     body.innerHTML=cart.map(function(l,idx){var p=P[l.pid];var max=p.max||1;
       var qctrl = max>1
