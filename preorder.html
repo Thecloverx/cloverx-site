@@ -192,6 +192,7 @@
   .prod .swatch i.black{background:#22262e;border:1px solid #0b0e16}
   .prod .swatch i.cream{background:#E9E0CC;border:1px solid #cdbf9f}
   .prod .pic svg{width:46px;height:46px}
+  .prod .pic .pimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:13px;z-index:1}
   .prod .nm{font-weight:700;font-size:.94rem;line-height:1.3;min-height:2.4em}
   .prod .desc{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.35;min-height:2em}
   .prod .pr{font-weight:800;font-size:1.12rem;margin-top:6px;color:var(--ink)}
@@ -201,6 +202,9 @@
   .prod.on .chk{display:flex}
   .prod .ribbon{position:absolute;top:12px;left:12px;background:linear-gradient(90deg,var(--gold),#F5B95C);color:#5a3d00;font-size:.62rem;font-weight:800;padding:4px 9px;border-radius:999px;letter-spacing:.03em}
   .prod .save{position:absolute;top:12px;left:12px;background:linear-gradient(90deg,var(--green),#38C79A);color:#fff;font-size:.62rem;font-weight:800;padding:4px 9px;border-radius:999px}
+  /* ป้าย badge ต้องอยู่เหนือรูป (.pic) ไม่งั้นจะโดนรูปทับจนโผล่แค่เสี้ยวมุม */
+  .prod .ribbon,.prod .save,.prod .chk,.prod .swatch{z-index:3}
+  .prod .pic{z-index:0}
   .prod.multi.on{border-color:var(--green);box-shadow:0 0 0 4px var(--green-tint),0 20px 40px -26px rgba(18,185,129,.45)}
   .prod.multi.on .chk{background:var(--green);box-shadow:0 4px 10px -3px var(--green)}
   /* Shopee-style color sub-SKU chooser */
@@ -728,7 +732,7 @@
     } else { on=arr.indexOf(p.id)>=0; }
     return '<div class="prod'+(multi?' multi':'')+(on?' on':'')+(p.colors?' hascolor':'')+'" data-pid="'+p.id+'">'+badge
       +'<div class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>'
-      +'<div class="pic"><svg viewBox="0 0 24 24">'+ICONS[p.ic]+'</svg></div>'
+      +'<div class="pic"><svg viewBox="0 0 24 24">'+ICONS[p.ic]+'</svg>'+(p.img?'<img class="pimg" src="'+p.img+'" alt="'+p.nm+'" loading="lazy" onerror="this.remove()">':'')+'</div>'
       +'<div class="nm">'+p.nm+'</div><div class="desc">'+p.desc+'</div>'
       +'<div class="pr">'+THB(p.price)+(p.was?'<span class="was">'+THB(p.was)+'</span>':'')+'</div>'
       +chips+'</div>';
