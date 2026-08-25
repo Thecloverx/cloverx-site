@@ -215,6 +215,8 @@
   .prod .chip i.black{background:#22262e;border:1px solid #0b0e16}
   .prod .chip i.cream{background:#E9E0CC;border:1px solid #cdbf9f}
   .prod .chip:hover{border-color:var(--accent)}
+  /* มือถือ: เพิ่มพื้นที่แตะให้ชิปเลือกสี (touch target ~40px) */
+  @media(max-width:600px){.prod .chip{padding:9px 14px 9px 10px}}
   .prod .chip.sel{border-color:var(--accent);background:var(--accent-tint);box-shadow:0 0 0 1.5px var(--accent) inset}
   .prod.multi .chip.sel{border-color:var(--green);background:var(--green-tint);box-shadow:0 0 0 1.5px var(--green) inset}
   .prod.hascolor{cursor:default}
@@ -268,16 +270,16 @@
   .sum-line .l{color:var(--ink)}.sum-line.badge .l{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .sum-line .tagx{font-size:.64rem;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--green-tint);color:var(--green)}
   .sum-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:16px;border-top:2px solid var(--line)}
-  .sum-total span{color:var(--muted);font-size:.86rem}
+  .sum-total > span{color:var(--muted);font-size:.86rem}
   .sum-total b{font-size:1.8rem;font-weight:800}
   .cta{width:100%;margin-top:18px;padding:16px;font-size:1rem;justify-content:center}
   .cta:disabled{background:#C3CAD8;color:#fff;cursor:not-allowed;box-shadow:none;transform:none}
   .cta:disabled:hover{transform:none}
   .bar{position:fixed;left:0;right:0;bottom:0;z-index:55;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -12px 34px -20px rgba(11,20,50,.4);padding-bottom:env(safe-area-inset-bottom)}
   .bar .in-b{max-width:var(--maxw);margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px}
-  .bar .tot span{font-size:.72rem;color:var(--muted);display:block}
+  .bar .tot > span{font-size:.72rem;color:var(--muted);display:block}
   .bar .tot .nmsel{font-size:.78rem;font-weight:700;color:var(--ink);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .bar .tot b{font-size:1.4rem;font-weight:800}
+  .bar .tot b{font-size:1.4rem;font-weight:800;white-space:nowrap;display:block;line-height:1.15}
   .bar .cta{width:auto;margin-top:0;margin-left:auto;flex:1;max-width:340px}
   @media(min-width:960px){.bar{display:none}}
   .done{display:none;text-align:center;padding:60px 10px;max-width:620px;margin:0 auto;grid-column:1/-1}
@@ -286,7 +288,7 @@
   .done h2{font-size:1.7rem}.done p{color:var(--muted);margin-top:6px}
   .sumbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;text-align:left;margin-top:22px;box-shadow:0 18px 44px -34px rgba(11,20,50,.4)}
   .sumbox .r{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:.9rem}
-  .sumbox .r:first-child{border-top:0}.sumbox .r span{color:var(--muted)}.sumbox .r b{text-align:right}
+  .sumbox .r:first-child{border-top:0}.sumbox .r > span{color:var(--muted)}.sumbox .r b{text-align:right}
   .ghost{display:inline-block;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:13px 26px;font-weight:700;cursor:pointer;font-family:inherit}
   .donebtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
   .dlbtn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:13px 26px;font-weight:800;cursor:pointer;font-family:inherit;text-decoration:none;box-shadow:0 12px 26px -12px var(--accent);transition:filter .15s}
