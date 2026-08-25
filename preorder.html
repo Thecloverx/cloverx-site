@@ -169,6 +169,12 @@
   .step h3{font-size:1.16rem}
   .step .hint{margin-left:auto;font-size:.74rem;font-weight:700;color:var(--muted);background:var(--soft);padding:6px 12px;border-radius:999px}
   .step .hint.opt{color:var(--accent);background:var(--accent-tint)}
+  /* มือถือ: ให้ชื่อขั้นตอนอยู่บรรทัดเดียว แล้วป้าย hint ลงมาบรรทัดใหม่ (จัดใต้ชื่อ) ไม่ให้คำแตก */
+  @media(max-width:600px){
+    .step{flex-wrap:wrap;gap:10px 12px}
+    .step h3{font-size:1.06rem;flex:1 1 auto;min-width:0}
+    .step .hint{margin-left:44px;font-size:.72rem;padding:5px 11px;white-space:nowrap}
+  }
   .prods{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   @media(min-width:560px){.prods{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:380px){.prods{grid-template-columns:1fr}}
@@ -513,6 +519,7 @@
           <div id="cardWarn" class="note warn" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>คำสั่งซื้อมากกว่า 1 รายการ กรุณาชำระผ่านการโอนเงิน (บัตรเครดิตรองรับ 1 รายการ)</span></div>
           <div id="cardEmailWrap" style="display:none;margin-top:12px">
             <div class="field"><label class="fld">อีเมลที่ใช้ตอนชำระเงิน <span class="req">*</span></label><input class="in" id="f_cardEmail" inputmode="email" placeholder="อีเมลเดียวกับที่กรอกใน Stripe"><div class="err">กรุณากรอกอีเมลที่ใช้ชำระเงิน</div><div class="note">* ใช้จับคู่รายการชำระเงิน (transaction) บน Stripe</div></div>
+            <div class="field"><label class="fld">วันที่สั่งซื้อ <span class="req">*</span></label><input class="in" id="f_cardDate" type="date"><div class="err">เลือกวันที่สั่งซื้อ</div><div class="note">* วันที่ลง PO / วันที่ชำระเงิน (ตั้งค่าเริ่มต้นเป็นวันนี้ แก้ไขได้)</div></div>
           </div>
         </div>
         <div class="card">
@@ -660,6 +667,7 @@
   var state={main:[],fam:[],ship:'post',pay:'bank',slip:null,famInfo:{},payUrl:null};
   var THB=function(n){return '<span class="cur">฿</span>'+Number(n).toLocaleString('en-US')};
   var byId=function(id){return document.getElementById(id)};
+  var todayISO=function(){var d=new Date(),z=function(n){return(n<10?'0':'')+n;};return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());};
   function scrollTop(){window.scrollTo(0,0)}
   function copyAcct(){
     var no='231-1-71119-1';
@@ -805,6 +813,7 @@
     byId('bankFields').style.display=state.pay==='bank'?'block':'none';
     byId('cardNote').style.display=state.pay==='card'?'block':'none';
     byId('cardEmailWrap').style.display=state.pay==='card'?'block':'none';
+    if(state.pay==='card'&&byId('f_cardDate')&&!byId('f_cardDate').value)byId('f_cardDate').value=todayISO();
     update();
   });});
   byId('taxToggle').addEventListener('click',function(){
@@ -876,6 +885,7 @@
     }
     if(state.pay==='card'){
       ok=markBad('f_cardEmail',!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(byId('f_cardEmail').value.trim()))&&ok;
+      ok=markBad('f_cardDate',!byId('f_cardDate').value)&&ok;
     }
     if(byId('taxFields').style.display==='block'){
       ok=markBad('tax_name',!byId('tax_name').value.trim())&&ok;
@@ -901,7 +911,7 @@
     if(state.ship==='pickup'){rows.push(['รับที่','นัดรับหน้างาน']);rows.push(['สถานที่',byId('p_place').value.trim()]);
       rows.push(['วัน/เวลารับ',byId('p_date').value+' '+byId('p_time').value]);}
     else rows.push(['จัดส่ง','ส่งไปรษณีย์']);
-    if(state.pay==='card'){rows.push(['ชำระเงิน','บัตรเครดิต / เดบิต (Stripe)']);rows.push(['อีเมลชำระเงิน',byId('f_cardEmail').value.trim()]);}
+    if(state.pay==='card'){rows.push(['ชำระเงิน','บัตรเครดิต / เดบิต (Stripe)']);rows.push(['วันที่สั่งซื้อ',byId('f_cardDate').value||'-']);rows.push(['อีเมลชำระเงิน',byId('f_cardEmail').value.trim()]);}
     else{rows.push(['ชำระเงิน','โอนธนาคาร']);
       rows.push(['ยอดโอน',THB(parseFloat(byId('f_amt').value||0))]);
       rows.push(['วัน/เวลาโอน',byId('f_date').value+' '+byId('f_time').value]);
@@ -937,7 +947,7 @@
     if(state.fam.length){o.famMembers=famObjs().map(function(p){var v=state.famInfo[p.id]||{};return {item:p.nm,name:v.name||'',phone:v.phone||''};});}
     if(state.ship==='pickup')o.pickup={place:byId('p_place').value.trim(),date:byId('p_date').value,time:byId('p_time').value};
     if(state.pay==='bank'){o.transfer={amt:parseFloat(byId('f_amt').value||0),date:byId('f_date').value,time:byId('f_time').value};o.slip=state.slipData||null;}
-    if(state.pay==='card')o.payEmail=byId('f_cardEmail').value.trim();
+    if(state.pay==='card'){o.payEmail=byId('f_cardEmail').value.trim();o.orderDate=byId('f_cardDate').value||'';}
     if(byId('taxFields').style.display==='block'){o.tax={want:true,type:byId('tax_type').value,name:byId('tax_name').value.trim(),taxId:byId('tax_id').value.trim(),addr:byId('tax_addr').value.trim()};}
     return o;
   }
