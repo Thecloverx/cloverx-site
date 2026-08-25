@@ -196,6 +196,7 @@
   .prod .desc{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.35;min-height:2em}
   .prod .pr{font-weight:800;font-size:1.12rem;margin-top:6px;color:var(--ink)}
   .prod .pr .was{font-size:.74rem;color:var(--muted);text-decoration:line-through;margin-left:5px;font-weight:600}
+  .cur{display:inline-block;margin-right:.14em}
   .prod .chk{position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 4px 10px -3px var(--accent)}
   .prod.on .chk{display:flex}
   .prod .ribbon{position:absolute;top:12px;left:12px;background:linear-gradient(90deg,var(--gold),#F5B95C);color:#5a3d00;font-size:.62rem;font-weight:800;padding:4px 9px;border-radius:999px;letter-spacing:.03em}
@@ -525,7 +526,7 @@
         <div class="summary">
           <h4><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg> สรุปคำสั่งซื้อ</h4>
           <div class="sum-lines" id="sumLines"><div class="sum-empty">ยังไม่ได้เลือกสินค้า</div></div>
-          <div class="sum-total"><span>ยอดรวมทั้งสิ้น</span><b class="num" id="sumTotal">฿0</b></div>
+          <div class="sum-total"><span>ยอดรวมทั้งสิ้น</span><b class="num" id="sumTotal"><span class="cur">฿</span>0</b></div>
           <button class="btn primary cta" id="ctaDesk" disabled>เลือกเซตหลักก่อน</button>
         </div>
       </aside>
@@ -604,7 +605,7 @@
 <!-- mobile sticky bar (form only) -->
 <div class="bar" id="bar" style="display:none">
   <div class="in-b">
-    <div class="tot"><span>ยอดรวม</span><div class="nmsel num" id="selName">—</div><b class="num" id="totVal">฿0</b></div>
+    <div class="tot"><span>ยอดรวม</span><div class="nmsel num" id="selName">—</div><b class="num" id="totVal"><span class="cur">฿</span>0</b></div>
     <button class="btn primary cta" id="cta" disabled>เลือกเซตหลักก่อน</button>
   </div>
 </div>
@@ -633,6 +634,9 @@
       {c:'ครีม',id:'fam-twin-cream',url:'https://buy.stripe.com/fZucN7bYs8M8cP45of93y08'}]},
     {id:'fam-routinex',nm:'RoutineX',desc:'ชุดโภชนาการประจำวัน',price:7490,url:'https://buy.stripe.com/5kQeVfd2waUg5mC4kb93y04',ic:'routine'}
   ];
+  // เรียงสินค้าจากถูก -> แพง (ทั้งเซตหลักและเซตครอบครัว)
+  MAIN_P.sort(function(a,b){return a.price-b.price;});
+  FAM_P.sort(function(a,b){return a.price-b.price;});
   // แปลง Parent -> map ของ variant (Sub SKU) เพื่อให้ตะกร้า/สรุป/ลิงก์ชำระเงินทำงานต่อได้เหมือนเดิม
   function buildVariants(parents){var m={};parents.forEach(function(p){
     if(p.colors){p.colors.forEach(function(cv){m[cv.id]={id:cv.id,parent:p.id,nm:p.nm+' · สี'+cv.c,color:cv.c,desc:p.desc,price:p.price,was:p.was,url:cv.url,ic:p.ic};});}
@@ -647,7 +651,7 @@
     triple:'<path d="M12 2 2 7l10 5 10-5-10-5ZM2 12l10 5 10-5M2 17l10 5 10-5" fill="none" stroke="currentColor" stroke-width="2"/>'
   };
   var state={main:[],fam:[],ship:'post',pay:'bank',slip:null,famInfo:{},payUrl:null};
-  var THB=function(n){return '฿'+Number(n).toLocaleString('en-US')};
+  var THB=function(n){return '<span class="cur">฿</span>'+Number(n).toLocaleString('en-US')};
   var byId=function(id){return document.getElementById(id)};
   function scrollTop(){window.scrollTo(0,0)}
   function copyAcct(){
