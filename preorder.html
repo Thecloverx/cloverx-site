@@ -1180,6 +1180,30 @@
 #mapp .c-sum{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
 #mapp .m-buy{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
 #mapp .m-nav{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+#mapp .co-body textarea{width:100%;border:1.5px solid #e6ebf5;border-radius:14px;padding:13px 15px;font-family:inherit;font-size:1rem;color:var(--ink);background:#fff;resize:none;box-sizing:border-box}
+#mapp .co-body textarea:focus{outline:none;border-color:var(--accent)}
+#mapp .geo-pick{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px solid #e6ebf5;border-radius:14px;padding:13px 15px;background:#fff;font-family:inherit;font-size:1rem;color:var(--ink);text-align:left;cursor:pointer}
+#mapp .geo-pick.bad{border-color:#e11d48}
+#mapp .geo-pick svg{width:20px;height:20px;color:#9aa6c0;flex:none}
+#mapp .geo-pick .ph{color:#9aa6c0}
+#mapp .geo-sheet{position:fixed;inset:0;z-index:120;display:none}
+#mapp .geo-sheet.on{display:block}
+#mapp .geo-back{position:absolute;inset:0;background:rgba(14,37,71,.45)}
+#mapp .geo-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;height:82vh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;padding:16px 16px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -20px 50px -20px rgba(0,0,0,.4)}
+#mapp .geo-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+#mapp .geo-h b{font-size:1.08rem;color:var(--ink)}
+#mapp .geo-x{width:34px;height:34px;border-radius:50%;border:0;background:#f0f3fa;color:#5b6b86;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#mapp .geo-x svg{width:18px;height:18px}
+#mapp .geo-sb{display:flex;align-items:center;gap:9px;border:1.5px solid #e6ebf5;border-radius:12px;padding:10px 13px;margin-bottom:8px}
+#mapp .geo-sb svg{width:19px;height:19px;color:#9aa6c0;flex:none}
+#mapp .geo-search{border:0;outline:none;flex:1;font-family:inherit;font-size:1rem;color:var(--ink);background:none}
+#mapp .geo-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#mapp .geo-row{padding:12px 6px;border-bottom:1px solid #f1f4fa;cursor:pointer}
+#mapp .geo-row:active{background:#f6f9ff}
+#mapp .geo-row b{font-weight:700;color:var(--ink);font-size:.98rem}
+#mapp .geo-row small{display:block;color:#8291aa;font-size:.82rem;margin-top:2px}
+#mapp .geo-hint{padding:26px 10px;text-align:center;color:#9aa6c0;font-size:.9rem}
+#mapp .c-item .mini .q.gray{color:#b3c0d6}
 #mapp .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;background:#0E2547;color:#fff;font-size:.86rem;font-weight:700;padding:12px 20px;border-radius:999px;z-index:80;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;box-shadow:0 12px 30px -10px rgba(0,0,0,.4)}
 #mapp .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
@@ -1219,13 +1243,15 @@
       <div class="fld"><label>ชื่อผู้ซื้อ *</label><input id="mf_name" placeholder="ชื่อ นามสกุล"></div>
       <div class="g2"><div class="fld"><label>เบอร์โทรผู้ซื้อ *</label><input id="mf_phone" inputmode="tel" placeholder="08x-xxx-xxxx"></div>
         <div class="fld"><label>อีเมล *</label><input id="mf_email" inputmode="email" placeholder="email@…"></div></div>
-      <div class="seclbl">ข้อมูลผู้รับ / จัดส่ง <label class="samechk"><input type="checkbox" id="mf_same" onclick="MX.sameRecv(this.checked)"> ผู้รับคนเดียวกับผู้ซื้อ</label></div>
-      <div class="fld"><label>ชื่อผู้รับ *</label><input id="mf_rname" placeholder="ชื่อผู้รับปลายทาง"></div>
-      <div class="fld"><label>เบอร์โทรผู้รับ *</label><input id="mf_rphone" inputmode="tel" placeholder="08x-xxx-xxxx"></div>
-      <div class="fld"><label>ที่อยู่จัดส่ง *</label><input id="mf_addr" placeholder="บ้านเลขที่ ถนน แขวง เขต จังหวัด รหัสไปรษณีย์"></div>
       <div class="seclbl">ทีม / ผู้แนะนำ</div>
       <div class="g2"><div class="fld"><label>ทีม / โค้ช</label><input id="mf_team" placeholder="ชื่อทีม/โค้ช (ถ้ามี)"></div>
         <div class="fld"><label>ผู้แนะนำ</label><input id="mf_ref" placeholder="ชื่อผู้แนะนำ (ถ้ามี)"></div></div>
+      <div class="seclbl">ข้อมูลผู้รับ / จัดส่ง</div>
+      <div class="fld"><label>ชื่อผู้รับ *</label><input id="mf_rname" placeholder="ชื่อ นามสกุล"></div>
+      <div class="fld"><label>เบอร์โทรผู้รับ *</label><input id="mf_rphone" inputmode="tel" placeholder="หมายเลขโทรศัพท์"></div>
+      <div class="fld"><label>ที่อยู่ *</label><input id="mf_addr1" placeholder="บ้านเลขที่, หมู่บ้าน/อาคาร, ซอย, หมู่, ถนน"></div>
+      <div class="fld"><label>จังหวัด / เขต-อำเภอ / แขวง-ตำบล / รหัสไปรษณีย์ *</label><button type="button" class="geo-pick" id="mf_geoBtn" onclick="MX.openGeo()"><span id="mf_geoTxt" class="ph">จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+      <div class="fld"><label>หมายเหตุถึงแบรนด์ (ถ้ามี)</label><textarea id="mf_note" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม เช่น เวลาที่สะดวกรับสินค้า"></textarea></div>
       <div class="seclbl">วิธีชำระเงิน</div>
       <div class="pay">
         <div class="paopt on" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ตัดผ่าน Stripe · ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
@@ -1237,6 +1263,14 @@
   </div>
 
   <div class="scr" id="m-done"></div>
+  <div class="geo-sheet" id="geoSheet">
+    <div class="geo-back" onclick="MX.closeGeo()"></div>
+    <div class="geo-panel">
+      <div class="geo-h"><b>เลือกที่อยู่จัดส่ง</b><button type="button" class="geo-x" onclick="MX.closeGeo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="geo-sb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input class="geo-search" id="geoSearch" placeholder="ค้นหา ตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์" autocomplete="off"></div>
+      <div class="geo-list" id="geoList"></div>
+    </div>
+  </div>
   <div class="toast" id="mtoast"></div>
 
   <div class="m-nav" id="mnav">
@@ -1263,7 +1297,7 @@
   var FAM_ORDER=['fam-band'];var curTab='main';TH['fam-band']=TH.band;
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
-  var cart=[],pay='card',curPid=null,detailQty=1;
+  var cart=[],pay='card',curPid=null,detailQty=1;var geoSel=null,geoData=null;
 
   function toast(m){var t=byId('mtoast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1600);}
   function cartQty(){var n=0;cart.forEach(function(l){n+=l.qty;});return n;}
@@ -1291,9 +1325,9 @@
   function renderDetailSpots(){var el=byId('detailSpots');el.innerHTML=DSPOTS.map(function(s){return '<button class="hs" style="left:'+s.l+'%;top:'+s.t+'%;width:'+s.w+'%;height:'+s.h+'%" data-a="'+s.a+'"></button>';}).join('');
     el.querySelectorAll('.hs').forEach(function(b){b.addEventListener('click',function(){var a=b.getAttribute('data-a');if(a==='home')go('home');else buyDetail();});});}
   function open(pid){curPid=pid;detailQty=1;byId('dImg').src=SCREEN[pid];byId('dPrice').innerHTML=THB(P[pid].price);var qc=byId('dQtyCtrl');if(pid==='routinex'){qc.style.display='block';byId('dQtyNum').textContent='1';}else{qc.style.display='none';}renderDetailSpots();go('detail');}
-  function dq(d){if(curPid!=='routinex')return;detailQty=Math.max(1,Math.min(2,detailQty+d));byId('dQtyNum').textContent=detailQty;byId('dPrice').innerHTML=THB(P.routinex.price*detailQty);}
-  function buyDetail(){var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':(p.nm+' เพิ่มได้สูงสุด '+p.max+' ชิ้น'));go('cart');}
-  function quickAdd(pid){var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):(p.nm+' เพิ่มได้สูงสุด '+p.max+' ชิ้น'));}
+  function dq(d){if(curPid!=='routinex')return;var nv=Math.max(1,Math.min(2,detailQty+d));if(d>0&&nv===detailQty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}detailQty=nv;byId('dQtyNum').textContent=detailQty;byId('dPrice').innerHTML=THB(P.routinex.price*detailQty);}
+  function buyDetail(){var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));go('cart');}
+  function quickAdd(pid){var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));}
 
   // CART
   function renderCart(){
@@ -1301,9 +1335,7 @@
     if(!cart.length){body.innerHTML='<div class="c-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg><b>ยังไม่มีสินค้าในตะกร้า</b>เลือกสินค้าที่ต้องการจองได้เลย</div>';sum.style.display='none';return;}
     sum.style.display='block';
     body.innerHTML=cart.map(function(l,idx){var p=P[l.pid];var max=p.max||1;
-      var qctrl = max>1
-        ? '<div class="mini"><button onclick="MX.cq('+idx+',-1)"'+(l.qty<=1?' disabled':'')+'>−</button><span class="q">'+l.qty+'</span><button class="plus" onclick="MX.cq('+idx+',1)"'+(l.qty>=max?' disabled':'')+'>+</button></div>'
-        : '<div class="qtyfix">จำนวน 1</div>';
+      var qctrl='<div class="mini"><button onclick="MX.cq('+idx+',-1)"'+(l.qty<=1?' disabled':'')+'>−</button><span class="q'+(max<=1?' gray':'')+'">'+l.qty+'</span><button class="plus" onclick="MX.cq('+idx+',1)">+</button></div>';
       return '<div class="c-item"><div class="th"><img src="'+TH[l.pid]+'"></div><div class="mid"><h4>'+p.nm+'</h4><div class="v">'+(p.color?('สี: '+p.color):(max>1?('สูงสุด '+max+' ชิ้น'):'จอง'))+'</div><div class="b">'+qctrl+'<div class="price">'+THB(p.price*l.qty)+'</div></div></div><button class="mini" style="align-self:flex-start;background:none;padding:6px" onclick="MX.rm('+idx+')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3c0d6" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
     }).join('');
     sum.innerHTML='<div class="sline">ยอดสินค้า ('+cartQty()+' ชิ้น) <b>'+THB(cartTotal())+'</b></div><div class="sline">ค่าจัดส่ง <b style="color:var(--accent-2)">ฟรี</b></div><div class="depnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> ชำระเพื่อจอง — เมื่อสำเร็จ ระบบส่งใบรับเงินมัดจำทางอีเมล</div><div class="sline total">ยอดชำระวันนี้ <span class="amt">'+THB(cartTotal())+'</span></div><button class="cta" style="margin-top:14px;width:100%" onclick="MX.go(\'checkout\')">ดำเนินการชำระเงิน <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
@@ -1313,9 +1345,11 @@
   function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());}
   function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
-  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});return ok;}
+  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
+  function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
   function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+(p.color?(' · สี'+p.color):''),price:p.price,fam:false});});
-    return {name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:byId('mf_addr').value.trim(),recipient:{name:byId('mf_rname').value.trim(),phone:byId('mf_rphone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};}
+    var note=byId('mf_note').value.trim();
+    return {name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_rname').value.trim(),phone:byId('mf_rphone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};}
   function submit(){
     if(!cart.length)return toast('ตะกร้าว่าง');
     if(!validate()){toast('กรอกข้อมูลให้ครบ');var b=document.querySelector('#m-checkout .bad');b&&b.scrollIntoView({behavior:'smooth',block:'center'});return;}
@@ -1335,12 +1369,31 @@
     var showNav=(scr==='home'||scr==='cart');byId('mnav').style.display=showNav?'flex':'none';
     document.querySelectorAll('#mnav .t').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-nav')===scr);});
     if(scr==='cart')renderCart();if(scr==='checkout')renderCheckout();window.scrollTo(0,0);}
-  function reset(){cart=[];updateBadges();setPay('card');['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr','mf_team','mf_ref'].forEach(function(id){byId(id).value='';});var s=byId('mf_same');if(s)s.checked=false;sameRecv(false);go('home');}
+  function reset(){cart=[];updateBadges();setPay('card');['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_note','mf_team','mf_ref'].forEach(function(id){var e=byId(id);if(e)e.value='';});geoSel=null;var gt=byId('mf_geoTxt');if(gt){gt.textContent='จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์';gt.className='ph';}go('home');}
 
-  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,
-    cq:function(idx,d){var l=cart[idx];var max=P[l.pid].max||1;l.qty=Math.max(1,Math.min(max,l.qty+d));renderCart();},
+  function loadGeo(cb){
+    if(geoData){cb();return;}
+    if(window.__GEO){geoData=window.__GEO;cb();return;}
+    byId('geoList').innerHTML='<div class="geo-hint">กำลังโหลดข้อมูลที่อยู่…</div>';
+    fetch('/thai-geo.json').then(function(r){return r.json();}).then(function(d){geoData=d;cb();}).catch(function(){byId('geoList').innerHTML='<div class="geo-hint">โหลดข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง</div>';});
+  }
+  function normG(s){return (s||'').toString().toLowerCase();}
+  function renderGeo(q){
+    var list=byId('geoList');if(!geoData){return;}
+    q=normG(q).trim();
+    if(!q){list.innerHTML='<div class="geo-hint">พิมพ์เพื่อค้นหา ตำบล อำเภอ จังหวัด หรือรหัสไปรษณีย์</div>';return;}
+    var res=[];for(var i=0;i<geoData.length&&res.length<40;i++){var e=geoData[i];if(normG(e[0]).indexOf(q)>=0||normG(e[1]).indexOf(q)>=0||normG(e[2]).indexOf(q)>=0||String(e[3]).indexOf(q)>=0){res.push(i);}}
+    if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+q+'”</div>';return;}
+    list.innerHTML=res.map(function(i){var e=geoData[i];return '<div class="geo-row" onclick="MX.pickGeo('+i+')"><b>'+e[0]+' » '+e[1]+'</b><small>'+e[2]+' '+e[3]+'</small></div>';}).join('');
+  }
+  function openGeo(){byId('geoSheet').classList.add('on');var s=byId('geoSearch');loadGeo(function(){renderGeo(s.value);});setTimeout(function(){s.focus();},60);}
+  function closeGeo(){byId('geoSheet').classList.remove('on');}
+  function pickGeo(i){var e=geoData[i];geoSel=[e[0],e[1],e[2],String(e[3])];var t=byId('mf_geoTxt');t.textContent=e[2]+' · '+e[1]+' · '+e[0]+' · '+e[3];t.className='';byId('mf_geoBtn').classList.remove('bad');closeGeo();}
+  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
+    cq:function(idx,d){var l=cart[idx];var max=P[l.pid].max||1;var nv=Math.max(1,Math.min(max,l.qty+d));if(d>0&&nv===l.qty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}l.qty=nv;renderCart();},
     rm:function(idx){cart.splice(idx,1);renderCart();}};
   renderHome();updateBadges();
+  (function(){var s=byId('geoSearch');if(s)s.addEventListener('input',function(){renderGeo(this.value);});})();
   var m=location.search.match(/[?&]paid=([^&]+)/);if(m){try{showDone(decodeURIComponent(m[1]),true,'card');}catch(e){}}
 })();
 </script>
