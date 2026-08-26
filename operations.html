@@ -133,6 +133,36 @@
     .scrim.show{display:block}
   }
   .scrim{display:none}
+
+  /* ===== Refund modal ===== */
+  .rf-modal{position:fixed;inset:0;z-index:2000;display:none}
+  .rf-modal.on{display:block}
+  .rf-back{position:absolute;inset:0;background:rgba(20,30,55,.5)}
+  .rf-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 36px);max-width:440px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
+  .rf-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .rf-h h3{font-size:1.15rem}
+  .rf-x{border:0;background:#f0f3fa;width:32px;height:32px;border-radius:50%;color:#5b6b86;font-size:1rem;cursor:pointer}
+  .rf-oid{font-size:.82rem;color:var(--muted);margin-bottom:14px}
+  .rf-lb{display:block;font-size:.8rem;font-weight:700;color:var(--ink);margin:12px 0 6px}
+  .rf-seg{display:flex;gap:8px}
+  .rf-opt{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:11px;font-family:inherit;font-weight:700;font-size:.88rem;color:var(--ink);cursor:pointer}
+  .rf-opt.on{border-color:var(--brand);background:var(--brand-tint);color:var(--brand)}
+  .rf-in{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-family:inherit;font-size:.9rem;color:var(--ink);background:#fff;box-sizing:border-box}
+  .rf-in:focus{outline:0;border-color:var(--brand)}
+  .rf-hint{font-size:.74rem;color:var(--muted);margin-top:5px}
+  .rf-err{color:var(--bad);font-size:.8rem;margin-top:10px;min-height:1em;font-weight:600}
+  .rf-btn{width:100%;margin-top:16px;border:0;border-radius:12px;background:var(--brand);color:#fff;padding:13px;font-family:inherit;font-weight:800;font-size:.95rem;cursor:pointer}
+  .rf-btn.ghost{background:#f0f3fa;color:var(--ink)}
+  .rf-btn.danger{background:var(--bad)}
+  .rf-btn:disabled{opacity:.5}
+  .rf-row{display:flex;gap:10px;margin-top:16px}
+  .rf-row .rf-btn{margin-top:0}
+  .rf-warn{background:var(--bad-tint);border:1px solid #FADCD9;color:#B42318;border-radius:12px;padding:12px;font-size:.84rem;font-weight:600;margin-bottom:14px}
+  .rf-sum{background:var(--soft);border-radius:12px;padding:14px}
+  .rf-sr{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:.86rem}
+  .rf-sr span{color:var(--muted);flex:none}
+  .rf-sr b{color:var(--ink);text-align:right}
+  .rf-method{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px;line-height:1.5}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -261,6 +291,32 @@
   </div>
 </div>
 
+<div id="rfModal" class="rf-modal">
+  <div class="rf-back" onclick="poRefundClose()"></div>
+  <div class="rf-card">
+    <div class="rf-h"><h3>คืนเงินลูกค้า</h3><button class="rf-x" onclick="poRefundClose()">&times;</button></div>
+    <div class="rf-oid" id="rfOid"></div>
+    <div id="rfStep1">
+      <label class="rf-lb">รูปแบบการคืนเงิน</label>
+      <div class="rf-seg"><button type="button" class="rf-opt on" id="rfFull" onclick="poRefundMode(true)">คืนเต็มจำนวน</button><button type="button" class="rf-opt" id="rfPart" onclick="poRefundMode(false)">คืนบางส่วน</button></div>
+      <div id="rfAmtWrap"><label class="rf-lb">ยอดที่คืน (บาท)</label><input id="rfAmt" inputmode="decimal" class="rf-in"><div class="rf-hint" id="rfAmtHint"></div></div>
+      <label class="rf-lb">เหตุผลการคืนเงิน</label>
+      <select id="rfCat" class="rf-in" onchange="poRefundCat()"><option value="">— เลือกเหตุผล —</option><option value="ลูกค้าคืนสินค้า">ลูกค้าคืนสินค้า</option><option value="ลูกค้ายกเลิกคำสั่งซื้อ">ลูกค้ายกเลิกคำสั่งซื้อ</option><option value="ระบบมีปัญหา">ระบบมีปัญหา</option><option value="อื่น ๆ">อื่น ๆ</option></select>
+      <div id="rfSubWrap" style="display:none"><label class="rf-lb">รายละเอียด</label><select id="rfSub" class="rf-in"></select></div>
+      <div id="rfOtherWrap" style="display:none"><label class="rf-lb">ระบุเหตุผล</label><input id="rfOther" class="rf-in" placeholder="ระบุเหตุผลการคืนเงิน"></div>
+      <label class="rf-lb">หมายเหตุ (ภายใน)</label>
+      <textarea id="rfNote" class="rf-in" rows="2" placeholder="บันทึกเพิ่มเติมสำหรับการคืนเงินนี้ (ถ้ามี)"></textarea>
+      <div class="rf-err" id="rfErr"></div>
+      <button class="rf-btn" onclick="poRefundNext()">ถัดไป</button>
+    </div>
+    <div id="rfStep2" style="display:none">
+      <div class="rf-warn">⚠️ ยืนยันการคืนเงิน — เมื่อยืนยันแล้วจะคืนเงินให้ลูกค้าทันทีและไม่สามารถย้อนกลับได้</div>
+      <div class="rf-sum" id="rfSum"></div>
+      <div class="rf-err" id="rfErr2"></div>
+      <div class="rf-row"><button class="rf-btn ghost" onclick="poRefundBack()">ย้อนกลับ</button><button class="rf-btn danger" id="rfConfirmBtn" onclick="poRefundSubmit()">ยืนยันคืนเงิน</button></div>
+    </div>
+  </div>
+</div>
 <script>
   function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
 
@@ -320,7 +376,7 @@
   function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
   function ensureKey(cb){ if(OPS_KEY||OPS_KEY_ASKED){cb();return;} OPS_KEY_ASKED=true; try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}}}catch(e){} cb(); }
-  var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],failed:['ชำระไม่สำเร็จ','bad']};
+  var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
   function poNeeds(s){return s==='pending'||s==='paid';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
@@ -373,16 +429,18 @@
         var confirmBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;'+bC+'">ยืนยัน</button>';
         var rejectBtn='<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;'+bC+'">ปฏิเสธ</button>';
         var cancelBtn='<button onclick="if(confirm(\'ยกเลิกออเดอร์ '+o.id+' ?\'))poSetStatus(\''+o.id+'\',\'cancelled\')" style="background:none;color:var(--bad);border:0;'+bC+'">ยกเลิก</button>';
-        var refundBtn='<button onclick="if(confirm(\'ทำเครื่องหมายว่าคืนเงินแล้วสำหรับ '+o.id+' ?\'))poSetStatus(\''+o.id+'\',\'refunded\')" style="background:none;color:var(--bad);border:0;'+bC+'">คืนเงิน</button>';
+        var refundBtn='<button onclick="poRefundOpen(\''+o.id+'\','+(Number(o.total)||0)+',\''+(o.pay||'')+'\','+(Number(o.refundedTotal)||0)+')" style="background:none;color:var(--bad);border:0;'+bC+'">คืนเงิน</button>';
         var restoreBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:none;color:var(--good);border:0;'+bC+'">กู้คืน</button>';
+        var deleteBtn='<button onclick="poDelete(\''+o.id+'\')" style="background:none;color:var(--muted);border:0;'+bC+'">ลบ</button>';
         var waitNote='<span style="color:var(--muted);font-size:.72rem;margin-right:8px">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</span>';
         var act='';
         if(o.pay==='bank'&&o.status==='pending'){ act=confirmBtn+rejectBtn; }           // โอนธนาคาร: ตรวจสลิปแล้วยืนยัน/ปฏิเสธ
-        else if(isSettled){ act=refundBtn+cancelBtn; }                                  // ชำระแล้ว: คืนเงิน/ยกเลิก
+        else if(isSettled){ act=refundBtn+cancelBtn; }
+        else if(o.status==='partially_refunded'){ act=refundBtn; }                                  // ชำระแล้ว: คืนเงิน/ยกเลิก
         else if(o.status==='pending'){ act=waitNote+cancelBtn; }                        // บัตรเครดิต รอชำระ: ยกเลิกได้ (webhook สลับให้อัตโนมัติ)
         else if(o.status==='rejected'){ act=restoreBtn; }                              // ปฏิเสธ: กู้คืน
         // cancelled / refunded / failed = สถานะสิ้นสุด ไม่มีปุ่ม
-        act+=invBtn+slipBtn;
+        act+=invBtn+slipBtn+deleteBtn;
         if(!act.replace(/\s/g,'')) act='<span style="color:var(--muted);font-size:.78rem">—</span>';
         var pk=o.ship==='pickup'?' <span class="pill new" style="font-size:.62rem;padding:1px 7px">รับหน้างาน</span>':'';
         return '<tr><td><div style="font-weight:700">'+o.id+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTime(o.at)+'</div></td>'
@@ -536,5 +594,57 @@
   // nav wiring
   document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
   document.querySelectorAll('#nav .item[data-toggle]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');});});
+  function poDelete(id){if(!OPS_KEY){opsUnlock();return;}if(!confirm('ลบออเดอร์ '+id+' ออกจากระบบถาวร?\n(ลบเฉพาะรายการในระบบ ไม่กระทบการเงินฝั่ง Stripe)'))return;fetch('/api/orders/'+id+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){poRefresh();}else{alert('ลบไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='forbidden')?' (ต้องใส่ Admin Key)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
+  // ===== Refund flow =====
+  var RF_SUB={'ลูกค้าคืนสินค้า':['สินค้าชำรุด/เสียหาย','ได้รับสินค้าผิด','เปลี่ยนใจ'],'ลูกค้ายกเลิกคำสั่งซื้อ':['เปลี่ยนสินค้า','เปลี่ยนใจ'],'ระบบมีปัญหา':['ราคาสินค้าผิด']};
+  var RF={id:'',total:0,pay:'',refunded:0,full:true};
+  function poRefundOpen(id,total,pay,refunded){
+    if(!OPS_KEY){opsUnlock();return;}
+    RF={id:id,total:Number(total)||0,pay:pay||'',refunded:Number(refunded)||0,full:true};
+    var remain=RF.total-RF.refunded;
+    document.getElementById('rfOid').textContent='ออเดอร์ '+id+' · ยอดรวม ฿'+RF.total.toLocaleString('en-US')+(RF.refunded>0?(' · คืนแล้ว ฿'+RF.refunded.toLocaleString('en-US')):'');
+    document.getElementById('rfCat').value='';document.getElementById('rfSubWrap').style.display='none';document.getElementById('rfOtherWrap').style.display='none';
+    var ot=document.getElementById('rfOther');if(ot)ot.value='';document.getElementById('rfNote').value='';
+    document.getElementById('rfErr').textContent='';document.getElementById('rfErr2').textContent='';
+    document.getElementById('rfStep1').style.display='block';document.getElementById('rfStep2').style.display='none';
+    poRefundMode(true);
+    document.getElementById('rfModal').classList.add('on');
+  }
+  function poRefundClose(){document.getElementById('rfModal').classList.remove('on');}
+  function poRefundMode(full){RF.full=full;
+    document.getElementById('rfFull').classList.toggle('on',full);document.getElementById('rfPart').classList.toggle('on',!full);
+    var remain=RF.total-RF.refunded;var amt=document.getElementById('rfAmt');var wrap=document.getElementById('rfAmtWrap');
+    if(full){amt.value=remain;amt.readOnly=true;wrap.style.opacity='.6';}else{if(amt.value==''||amt.readOnly)amt.value='';amt.readOnly=false;wrap.style.opacity='1';}
+    document.getElementById('rfAmtHint').textContent='คืนได้สูงสุด ฿'+remain.toLocaleString('en-US');
+  }
+  function poRefundCat(){var c=document.getElementById('rfCat').value;var subs=RF_SUB[c];
+    if(subs){document.getElementById('rfSub').innerHTML=subs.map(function(x){return '<option>'+x+'</option>';}).join('');document.getElementById('rfSubWrap').style.display='block';}else{document.getElementById('rfSubWrap').style.display='none';}
+    document.getElementById('rfOtherWrap').style.display=(c==='อื่น ๆ')?'block':'none';
+  }
+  function poRefundNext(){
+    var c=document.getElementById('rfCat').value;var amt=parseFloat(document.getElementById('rfAmt').value||0);var remain=RF.total-RF.refunded;
+    var e=document.getElementById('rfErr');
+    if(!(amt>0)){e.textContent='กรุณากรอกยอดคืน';return;}
+    if(amt>remain+0.001){e.textContent='ยอดคืนเกินยอดที่คืนได้ (สูงสุด ฿'+remain.toLocaleString('en-US')+')';return;}
+    if(!c){e.textContent='กรุณาเลือกเหตุผลการคืนเงิน';return;}
+    if(c==='อื่น ๆ'&&!document.getElementById('rfOther').value.trim()){e.textContent='กรุณาระบุเหตุผล';return;}
+    e.textContent='';
+    var sub=(c==='อื่น ๆ')?document.getElementById('rfOther').value.trim():(RF_SUB[c]?document.getElementById('rfSub').value:'');
+    RF.amount=amt;RF.category=c;RF.subReason=sub;RF.note=document.getElementById('rfNote').value.trim();
+    var methodNote=(RF.pay==='card')?'💳 จะคืนเงินผ่าน Stripe ให้ลูกค้าอัตโนมัติ':'🏦 ออเดอร์นี้ชำระโดยโอนธนาคาร — ระบบจะบันทึกการคืนเงิน แต่ต้องโอนคืนให้ลูกค้าเอง';
+    document.getElementById('rfSum').innerHTML='<div class="rf-sr"><span>ออเดอร์</span><b>'+RF.id+'</b></div><div class="rf-sr"><span>ยอดคืน</span><b>฿'+amt.toLocaleString('en-US')+(RF.full?' (เต็มจำนวน)':' (บางส่วน)')+'</b></div><div class="rf-sr"><span>เหตุผล</span><b>'+c+(sub?(' · '+sub):'')+'</b></div>'+(RF.note?('<div class="rf-sr"><span>หมายเหตุ</span><b>'+RF.note+'</b></div>'):'')+'<div class="rf-method">'+methodNote+'</div>';
+    document.getElementById('rfStep1').style.display='none';document.getElementById('rfStep2').style.display='block';
+  }
+  function poRefundBack(){document.getElementById('rfStep2').style.display='none';document.getElementById('rfStep1').style.display='block';}
+  function poRefundSubmit(){
+    var btn=document.getElementById('rfConfirmBtn');btn.disabled=true;btn.textContent='กำลังคืนเงิน…';
+    var payload={full:RF.full,amount:RF.amount,category:RF.category,subReason:RF.subReason,note:RF.note};if(OPS_KEY)payload.key=OPS_KEY;
+    fetch('/api/orders/'+RF.id+'/refund'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+      .then(function(res){btn.disabled=false;btn.textContent='ยืนยันคืนเงิน';
+        if(res.ok&&res.j&&res.j.ok){poRefundClose();poRefresh();alert('คืนเงินสำเร็จ '+(res.j.method==='stripe'?'(ผ่าน Stripe เรียบร้อย)':'(บันทึกการคืนเงินแล้ว — โอนคืนเอง)'));}
+        else{var er=(res.j&&res.j.error)||'ไม่สำเร็จ';if(er==='forbidden')er='ต้องใส่ Admin Key ที่ถูกต้อง';document.getElementById('rfErr2').textContent='ผิดพลาด: '+er;}
+      }).catch(function(){btn.disabled=false;btn.textContent='ยืนยันคืนเงิน';document.getElementById('rfErr2').textContent='เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง';});
+  }
   go('podash'); // เปิดหน้า Dashboard เป็นค่าเริ่มต้น
 </script>

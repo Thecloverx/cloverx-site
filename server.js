@@ -334,6 +334,75 @@ app.patch('/api/orders/:id', (req, res) => {
   }
 });
 
+// ---- Stripe refund helper ----
+function createRefund(pi, amountSatang, meta) {
+  return new Promise(function (resolve) {
+    if (!stripeConfigured()) { resolve({ ok: false, error: 'stripe_not_configured' }); return; }
+    var params = [['payment_intent', pi]];
+    if (amountSatang != null) params.push(['amount', String(amountSatang)]);
+    params.push(['reason', 'requested_by_customer']);
+    if (meta) { Object.keys(meta).forEach(function (k) { if (meta[k] != null && meta[k] !== '') params.push(['metadata[' + k + ']', String(meta[k])]); }); }
+    var body = params.map(function (p) { return encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1]); }).join('&');
+    var rq = https.request({
+      hostname: 'api.stripe.com', path: '/v1/refunds', method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) }
+    }, function (resp) {
+      var b = ''; resp.on('data', function (d) { b += d; });
+      resp.on('end', function () {
+        try { var j = JSON.parse(b); if (resp.statusCode >= 200 && resp.statusCode < 300) { resolve({ ok: true, refund: j }); } else { resolve({ ok: false, error: (j.error && j.error.message) || ('http ' + resp.statusCode) }); } }
+        catch (e) { resolve({ ok: false, error: e.message }); }
+      });
+    });
+    rq.on('error', function (e) { resolve({ ok: false, error: e.message }); });
+    rq.write(body); rq.end();
+  });
+}
+
+// ---- ADMIN: refund an order (guarded by ADMIN_KEY) — full or partial via Stripe ----
+app.post('/api/orders/:id/refund', (req, res) => {
+  var body = req.body || {};
+  if (!process.env.ADMIN_KEY || (req.query.key !== process.env.ADMIN_KEY && body.key !== process.env.ADMIN_KEY)) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const list = read();
+  const o = list.find(x => x.id === req.params.id);
+  if (!o) return res.status(404).json({ ok: false, error: 'not_found' });
+  const total = Number(o.total) || 0;
+  const already = Number(o.refundedTotal) || 0;
+  const full = !!body.full;
+  const amount = full ? (total - already) : (Number(body.amount) || 0);
+  if (amount <= 0) return res.status(400).json({ ok: false, error: 'invalid_amount' });
+  if (already + amount > total + 0.001) return res.status(400).json({ ok: false, error: 'exceeds_total' });
+  function record(method, stripeRefundId) {
+    o.refunds = Array.isArray(o.refunds) ? o.refunds : [];
+    const rec = { amount: amount, full: full, category: body.category || '', subReason: body.subReason || '', note: body.note || '', at: new Date().toISOString(), method: method, stripeRefundId: stripeRefundId || null };
+    o.refunds.push(rec); o.refund = rec;
+    o.refundedTotal = already + amount;
+    o.status = (o.refundedTotal >= total - 0.001) ? 'refunded' : 'partially_refunded';
+    write(list);
+  }
+  const pi = o.stripe && o.stripe.paymentIntent;
+  if (o.pay === 'card' && pi) {
+    createRefund(pi, Math.round(amount * 100), { order_id: o.id, category: body.category || '', sub: body.subReason || '', note: body.note || '' }).then(function (r) {
+      if (r.ok) { record('stripe', r.refund && r.refund.id); res.json({ ok: true, method: 'stripe', order: o }); }
+      else { res.status(502).json({ ok: false, error: r.error || 'stripe_refund_failed' }); }
+    });
+  } else {
+    record('manual', null);
+    res.json({ ok: true, method: 'manual', order: o });
+  }
+});
+
+// ---- ADMIN: delete an order (guarded by ADMIN_KEY) ----
+app.delete("/api/orders/:id", (req, res) => {
+  const body = req.body || {};
+  if (!process.env.ADMIN_KEY || (req.query.key !== process.env.ADMIN_KEY && body.key !== process.env.ADMIN_KEY)) return res.status(403).json({ ok: false, error: "forbidden" });
+  const list = read();
+  const i = list.findIndex(x => x.id === req.params.id);
+  if (i < 0) return res.status(404).json({ ok: false, error: "not_found" });
+  const removed = list.splice(i, 1)[0];
+  write(list);
+  res.json({ ok: true, id: removed.id });
+});
+
 // ---- ADMIN: reset all orders + invoice counter (guarded by ADMIN_KEY) ----
 app.post('/api/admin/reset', (req, res) => {
   if (!process.env.ADMIN_KEY || req.query.key !== process.env.ADMIN_KEY) return res.status(403).json({ ok: false, error: 'forbidden' });
