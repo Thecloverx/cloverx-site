@@ -1407,6 +1407,7 @@
       showDone(oid,!!(res&&res.id),'bank');
     }).catch(function(){showDone('PO-'+Date.now().toString().slice(-6),false,'bank');});
   }
+  function showPaidConfirm(oid){var url='/invoice/'+encodeURIComponent(oid);byId('m-done').innerHTML='<div class="done"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ชำระเงินเรียบร้อยแล้ว!</h2><p>คุณทำรายการชำระเงินเรียบร้อยแล้ว<br>คำสั่งซื้อ <span class="oid">'+oid+'</span><br>กำลังพาไปดูรายการสั่งซื้อของคุณ…</p><div class="spin"></div><p style="font-size:.82rem;margin-top:14px"><a href="'+url+'" style="color:var(--accent);font-weight:800">ดูคำสั่งซื้อของฉัน ↗</a></p></div>';cart=[];updateBadges();go('done');setTimeout(function(){location.href=url;},2200);}
   function showRedirect(oid,url){byId('m-done').innerHTML='<div class="done"><div class="big" style="background:#EAF1FC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="color:var(--accent)"><path d="M20 6 9 17l-5-5"/></svg></div><h2>บันทึกคำสั่งซื้อแล้ว</h2><p>เลขที่ <span class="oid">'+oid+'</span><br>กำลังพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe…</p><div class="spin"></div><p style="font-size:.8rem">ถ้าไม่เด้ง <a href="'+url+'" style="color:var(--accent);font-weight:800">กดที่นี่ ↗</a></p></div>';go('done');}
   function showDone(oid,saved,mode){var msg=mode==='bank'?'คำสั่งจอง <span class="oid">'+oid+'</span> ถูกบันทึกแล้ว<br>โอนเงินแล้วแนบสลิปเพื่อยืนยัน เมื่อยืนยันสำเร็จ ระบบจะส่งใบรับเงินมัดจำทางอีเมล':'คำสั่งซื้อ <span class="oid">'+oid+'</span> ได้รับการชำระเงินแล้ว<br>เราได้ส่งใบรับเงินมัดจำไปที่อีเมลของคุณแล้ว';
     byId('m-done').innerHTML='<div class="done"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div><h2>สั่งจองสำเร็จ ขอบคุณครับ!</h2><p>'+msg+'</p><div class="btns">'+(saved?'<a class="b1" href="/invoice/'+encodeURIComponent(oid)+'" target="_blank"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> ดูใบรับเงินมัดจำ</a>':'')+'<button class="b2" onclick="MX.reset()">กลับหน้าสั่งจอง</button></div></div>';
@@ -1452,6 +1453,6 @@
     rm:function(idx){cart.splice(idx,1);renderCart();}};
   renderHome();updateBadges();
   (function(){var s=byId('geoSearch');if(s)s.addEventListener('input',function(){renderGeo(this.value);});var sl=byId('mf_slip');if(sl)sl.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){mSlipData=ev.target.result;byId('mf_slipTxt').textContent='✅ '+f.name;byId('mf_slipBox').classList.add('has');byId('mf_slipBox').classList.remove('bad');};r.readAsDataURL(f);});})();
-  var m=location.search.match(/[?&]paid=([^&]+)/);if(m){try{showDone(decodeURIComponent(m[1]),true,'card');}catch(e){}}
+  var m=location.search.match(/[?&]paid=([^&]+)/);if(m){try{showPaidConfirm(decodeURIComponent(m[1]));}catch(e){}}
 })();
 </script>
