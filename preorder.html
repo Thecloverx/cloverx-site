@@ -1250,7 +1250,7 @@
         <div class="fld"><label>อีเมล *</label><input id="mf_email" inputmode="email" placeholder="email@…"></div></div>
       <div class="seclbl">ทีม / ผู้แนะนำ</div>
       <div class="fld"><label>ทีมโค้ช *</label><select id="mf_team"><option value="">— เลือกทีมโค้ช —</option><option>โค้ชนุ่น</option><option>โค้ชซิง</option><option>โค้ชจา</option><option>โค้ชต๊ะ</option><option>CloverX</option></select></div>
-      <div class="fld"><label>ผู้แนะนำ</label><input id="mf_ref" placeholder="ชื่อผู้แนะนำ (ถ้ามี)"></div>
+      <div class="fld"><label>ผู้แนะนำ *</label><input id="mf_ref" placeholder="ชื่อผู้แนะนำ (ถ้าไม่มีใส่ &quot;-&quot;)"></div>
       <div class="seclbl">ข้อมูลผู้รับ / จัดส่ง</div>
       <div class="fld"><label>ชื่อผู้รับ *</label><input id="mf_rname" placeholder="ชื่อ นามสกุล"></div>
       <div class="fld"><label>เบอร์โทรผู้รับ *</label><input id="mf_rphone" inputmode="tel" placeholder="หมายเลขโทรศัพท์"></div>
@@ -1351,7 +1351,7 @@
   function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());}
   function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
-  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_team'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
+  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
   function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+(p.color?(' · สี'+p.color):''),price:p.price,fam:false});});
     var note=byId('mf_note').value.trim();
