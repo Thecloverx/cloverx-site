@@ -1191,6 +1191,18 @@
 #mapp .geo-pick.bad{border-color:#e11d48}
 #mapp .geo-pick svg{width:20px;height:20px;color:#9aa6c0;flex:none}
 #mapp .geo-pick .ph{color:#9aa6c0}
+#mapp .col-sheet{position:fixed;inset:0;z-index:130;display:none}
+#mapp .col-sheet.on{display:block}
+#mapp .col-back{position:absolute;inset:0;background:rgba(14,37,71,.45)}
+#mapp .col-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:#fff;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -20px 50px -20px rgba(0,0,0,.4)}
+#mapp .col-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+#mapp .col-h b{font-size:1.05rem;color:var(--ink)}
+#mapp .col-opts{display:flex;gap:12px;margin-bottom:16px}
+#mapp .col-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;border:1.6px solid #e5ebf5;border-radius:14px;padding:14px;background:#fff;font-family:inherit;font-size:1rem;font-weight:700;color:var(--ink);cursor:pointer}
+#mapp .col-opt.on{border-color:var(--accent);background:#F2F6FF;box-shadow:0 0 0 3px rgba(47,111,237,.12)}
+#mapp .col-opt .sw{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(0,0,0,.12);flex:none}
+#mapp #colConfirm{width:100%;padding:15px}
+#mapp #colConfirm:disabled{opacity:.45}
 #mapp .geo-sheet{position:fixed;inset:0;z-index:120;display:none}
 #mapp .geo-sheet.on{display:block}
 #mapp .geo-back{position:absolute;inset:0;background:rgba(14,37,71,.45)}
@@ -1268,6 +1280,14 @@
   </div>
 
   <div class="scr" id="m-done"></div>
+  <div class="col-sheet" id="colSheet">
+    <div class="col-back" onclick="MX.closeCol()"></div>
+    <div class="col-panel">
+      <div class="col-h"><b>เลือกสี — <span id="colProd"></span></b><button type="button" class="geo-x" onclick="MX.closeCol()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="col-opts" id="colOpts"></div>
+      <button type="button" class="cta" id="colConfirm" onclick="MX.confirmCol()" disabled>เพิ่มลงตะกร้า</button>
+    </div>
+  </div>
   <div class="geo-sheet" id="geoSheet">
     <div class="geo-back" onclick="MX.closeGeo()"></div>
     <div class="geo-panel">
@@ -1309,7 +1329,7 @@
   function cartQty(){var n=0;cart.forEach(function(l){n+=l.qty;});return n;}
   function cartTotal(){var t=0;cart.forEach(function(l){t+=P[l.pid].price*l.qty;});return t;}
   function updateBadges(){var q=cartQty();byId('cartCnt').textContent=q;var b=byId('navBdg');b.textContent=q;b.style.display=q?'flex':'none';var tf=byId('tabFam');if(tf){var u=famUnlocked();tf.classList.toggle('lock',!u);if(!u&&curTab==='fam'){curTab='main';byId('tabMain').classList.add('on');tf.classList.remove('on');renderHome();}}}
-  function addToCart(pid,q){var max=P[pid].max||1;for(var i=0;i<cart.length;i++){if(cart[i].pid===pid){var nv=Math.min(max,cart[i].qty+q);var changed=nv!==cart[i].qty;cart[i].qty=nv;updateBadges();return changed;}}cart.push({pid:pid,qty:Math.min(max,q)});updateBadges();return true;}
+  function addToCart(pid,q,color){var max=P[pid].max||1;for(var i=0;i<cart.length;i++){if(cart[i].pid===pid){var nv=Math.min(max,cart[i].qty+q);var changed=nv!==cart[i].qty;cart[i].qty=nv;if(color)cart[i].color=color;updateBadges();return changed;}}cart.push({pid:pid,qty:Math.min(max,q),color:color||''});updateBadges();return true;}
 
   // HOME
   function renderHome(){
@@ -1332,8 +1352,8 @@
     el.querySelectorAll('.hs').forEach(function(b){b.addEventListener('click',function(){var a=b.getAttribute('data-a');if(a==='home')go('home');else buyDetail();});});}
   function open(pid){curPid=pid;detailQty=1;byId('dImg').src=SCREEN[pid];byId('dPrice').innerHTML=THB(P[pid].price);var qc=byId('dQtyCtrl');var pl=byId('dPlusLock');if(pid==='routinex'){qc.style.display='block';byId('dQtyNum').textContent='1';pl.style.display='none';}else{qc.style.display='none';if(DPLUS[pid]){var s=DPLUS[pid],bx=byId('dPlusBox');bx.style.left=s.l+'%';bx.style.top=s.t+'%';bx.style.width=s.w+'%';bx.style.height=s.h+'%';pl.style.display='block';}else{pl.style.display='none';}}renderDetailSpots();go('detail');}
   function dq(d){if(curPid!=='routinex')return;var nv=Math.max(1,Math.min(2,detailQty+d));if(d>0&&nv===detailQty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}detailQty=nv;byId('dQtyNum').textContent=detailQty;byId('dPrice').innerHTML=THB(P.routinex.price*detailQty);}
-  function buyDetail(){var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));go('cart');}
-  function quickAdd(pid){var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));}
+  function buyDetail(){if(COLORS[curPid]){openCol(curPid,'buy');return;}var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));go('cart');}
+  function quickAdd(pid){if(COLORS[pid]){openCol(pid,'add');return;}var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));}
 
   // CART
   function renderCart(){
@@ -1342,7 +1362,7 @@
     sum.style.display='block';
     body.innerHTML=cart.map(function(l,idx){var p=P[l.pid];var max=p.max||1;
       var qctrl='<div class="mini"><button onclick="MX.cq('+idx+',-1)"'+(l.qty<=1?' disabled':'')+'>−</button><span class="q'+(max<=1?' gray':'')+'">'+l.qty+'</span><button class="plus'+(l.qty>=max?' pmax':'')+'" onclick="MX.cq('+idx+',1)">+</button></div>';
-      return '<div class="c-item"><div class="th"><img src="'+TH[l.pid]+'"></div><div class="mid"><h4>'+p.nm+'</h4><div class="v">'+(p.color?('สี: '+p.color):(max>1?('สูงสุด '+max+' ชิ้น'):'จอง'))+'</div><div class="b">'+qctrl+'<div class="price">'+THB(p.price*l.qty)+'</div></div></div><button class="mini" style="align-self:flex-start;background:none;padding:6px" onclick="MX.rm('+idx+')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3c0d6" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
+      return '<div class="c-item"><div class="th"><img src="'+TH[l.pid]+'"></div><div class="mid"><h4>'+p.nm+'</h4><div class="v">'+((l.color||p.color)?('สี: '+(l.color||p.color)):(max>1?('สูงสุด '+max+' ชิ้น'):'จอง'))+'</div><div class="b">'+qctrl+'<div class="price">'+THB(p.price*l.qty)+'</div></div></div><button class="mini" style="align-self:flex-start;background:none;padding:6px" onclick="MX.rm('+idx+')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3c0d6" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
     }).join('');
     sum.innerHTML='<div class="sline">ยอดสินค้า ('+cartQty()+' ชิ้น) <b>'+THB(cartTotal())+'</b></div><div class="sline">ค่าจัดส่ง <b style="color:var(--accent-2)">ฟรี</b></div><div class="depnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> ชำระเพื่อจอง — เมื่อสำเร็จ ระบบส่งใบรับเงินมัดจำทางอีเมล</div><div class="sline total">ยอดชำระวันนี้ <span class="amt">'+THB(cartTotal())+'</span></div><button class="cta" style="margin-top:14px;width:100%" onclick="MX.go(\'checkout\')">ดำเนินการชำระเงิน <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
   }
@@ -1353,7 +1373,7 @@
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
   function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
-  function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+(p.color?(' · สี'+p.color):''),price:p.price,fam:false});});
+  function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+((l.color||p.color)?(' · สี'+(l.color||p.color)):''),price:p.price,fam:false});});
     var note=byId('mf_note').value.trim();
     return {name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_rname').value.trim(),phone:byId('mf_rphone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};}
   function submit(){
@@ -1392,11 +1412,20 @@
     if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+q+'”</div>';return;}
     list.innerHTML=res.map(function(i){var e=geoData[i];return '<div class="geo-row" onclick="MX.pickGeo('+i+')"><b>'+e[0]+' » '+e[1]+'</b><small>'+e[2]+' '+e[3]+'</small></div>';}).join('');
   }
+  var COLORS={band:['ดำ','ครีม'],'fam-band':['ดำ','ครีม']};
+  var SW={'ดำ':'#1c2433','ครีม':'#E7DBC4'};
+  var colPid=null,colMode='add',colSel='';
+  function openCol(pid,mode){colPid=pid;colMode=mode;colSel='';byId('colProd').textContent=P[pid].nm;
+    byId('colOpts').innerHTML=COLORS[pid].map(function(c){return '<button type="button" class="col-opt" onclick="MX.pickCol(this,\''+c+'\')"><span class="sw" style="background:'+SW[c]+'"></span>'+c+'</button>';}).join('');
+    byId('colConfirm').disabled=true;byId('colSheet').classList.add('on');}
+  function pickCol(el,c){colSel=c;Array.prototype.forEach.call(document.querySelectorAll('#colOpts .col-opt'),function(b){b.classList.remove('on');});el.classList.add('on');byId('colConfirm').disabled=false;}
+  function closeCol(){byId('colSheet').classList.remove('on');}
+  function confirmCol(){if(!colSel)return;addToCart(colPid,1,colSel);closeCol();if(colMode==='buy'){go('cart');}else{toast(P[colPid].nm+' ('+colSel+') · เพิ่มลงตะกร้าแล้ว');}}
   function plusMax(){toast('คุณเพิ่มจำนวนสูงสุดแล้ว');}
   function openGeo(){byId('geoSheet').classList.add('on');var s=byId('geoSearch');loadGeo(function(){renderGeo(s.value);});setTimeout(function(){s.focus();},60);}
   function closeGeo(){byId('geoSheet').classList.remove('on');}
   function pickGeo(i){var e=geoData[i];geoSel=[e[0],e[1],e[2],String(e[3])];var t=byId('mf_geoTxt');t.textContent=e[2]+' · '+e[1]+' · '+e[0]+' · '+e[3];t.className='';byId('mf_geoBtn').classList.remove('bad');closeGeo();}
-  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,plusMax:plusMax,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
+  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,plusMax:plusMax,openCol:openCol,pickCol:pickCol,closeCol:closeCol,confirmCol:confirmCol,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
     cq:function(idx,d){var l=cart[idx];var max=P[l.pid].max||1;var nv=Math.max(1,Math.min(max,l.qty+d));if(d>0&&nv===l.qty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}l.qty=nv;renderCart();},
     rm:function(idx){cart.splice(idx,1);renderCart();}};
   renderHome();updateBadges();
