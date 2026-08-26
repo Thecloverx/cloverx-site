@@ -1146,6 +1146,9 @@
 #mapp .samechk input{vertical-align:-2px;margin-right:4px}
 #mapp .fld label{display:block;font-size:.76rem;font-weight:700;color:#586686;margin-bottom:6px}
 #mapp .fld input{width:100%;background:#fff;border:1.5px solid #e5ebf5;border-radius:13px;padding:13px 14px;font-size:.9rem;color:var(--ink);font-family:inherit}
+#mapp .fld select{width:100%;background:#fff;border:1.5px solid #e5ebf5;border-radius:13px;padding:13px 40px 13px 14px;font-size:.9rem;color:var(--ink);font-family:inherit;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%239aa6c0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>');background-repeat:no-repeat;background-position:right 14px center}
+#mapp .fld select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
+#mapp .fld select.bad{border-color:#E5484D;background-color:#FEF2F2}
 #mapp .fld input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
 #mapp .fld input.bad{border-color:#E5484D;background:#FEF2F2}
 #mapp .g2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -1246,8 +1249,8 @@
       <div class="g2"><div class="fld"><label>เบอร์โทรผู้ซื้อ *</label><input id="mf_phone" inputmode="tel" placeholder="08x-xxx-xxxx"></div>
         <div class="fld"><label>อีเมล *</label><input id="mf_email" inputmode="email" placeholder="email@…"></div></div>
       <div class="seclbl">ทีม / ผู้แนะนำ</div>
-      <div class="g2"><div class="fld"><label>ทีม / โค้ช</label><input id="mf_team" placeholder="ชื่อทีม/โค้ช (ถ้ามี)"></div>
-        <div class="fld"><label>ผู้แนะนำ</label><input id="mf_ref" placeholder="ชื่อผู้แนะนำ (ถ้ามี)"></div></div>
+      <div class="fld"><label>ทีมโค้ช *</label><select id="mf_team"><option value="">— เลือกทีมโค้ช —</option><option>โค้ชนุ่น</option><option>โค้ชซิง</option><option>โค้ชจา</option><option>โค้ชต๊ะ</option><option>CloverX</option></select></div>
+      <div class="fld"><label>ผู้แนะนำ</label><input id="mf_ref" placeholder="ชื่อผู้แนะนำ (ถ้ามี)"></div>
       <div class="seclbl">ข้อมูลผู้รับ / จัดส่ง</div>
       <div class="fld"><label>ชื่อผู้รับ *</label><input id="mf_rname" placeholder="ชื่อ นามสกุล"></div>
       <div class="fld"><label>เบอร์โทรผู้รับ *</label><input id="mf_rphone" inputmode="tel" placeholder="หมายเลขโทรศัพท์"></div>
@@ -1256,7 +1259,7 @@
       <div class="fld"><label>หมายเหตุถึงแบรนด์ (ถ้ามี)</label><textarea id="mf_note" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม เช่น เวลาที่สะดวกรับสินค้า"></textarea></div>
       <div class="seclbl">วิธีชำระเงิน</div>
       <div class="pay">
-        <div class="paopt on" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ตัดผ่าน Stripe · ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
+        <div class="paopt on" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
         <div class="paopt" id="payBank" onclick="MX.setPay('bank')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg></div><div class="pt"><b>โอนผ่านธนาคาร</b><small>KBank · แนบสลิปภายหลัง</small></div><div class="rad"></div></div>
       </div>
     </div>
@@ -1348,7 +1351,7 @@
   function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());}
   function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
-  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
+  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_team'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
   function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+(p.color?(' · สี'+p.color):''),price:p.price,fam:false});});
     var note=byId('mf_note').value.trim();
