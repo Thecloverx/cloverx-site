@@ -1172,6 +1172,7 @@
 #mapp .done button.b2{background:#fff;color:var(--brand);border:1.5px solid #d3e0f7}
 #mapp .spin{width:38px;height:38px;border:3px solid #e5ebf5;border-top-color:var(--accent);border-radius:50%;animation:mspin .8s linear infinite;margin:22px auto 0}
 @keyframes mspin{to{transform:rotate(360deg)}}
+#mapp #dPlusBox{position:absolute;background:#fff;border:0;display:flex;align-items:center;justify-content:center;color:#c3ccdb;font-weight:800;font-size:1.7rem;font-family:"Manrope",sans-serif;cursor:pointer;padding:0;line-height:1;border-radius:8px}
 #mapp #dQtyNum{position:absolute;background:#fff;display:flex;align-items:center;justify-content:center;font-family:"Manrope",sans-serif;font-weight:800;font-size:1.15rem;color:#0E2547;border-radius:6px}
 #mapp .d-buybar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:#fff;border-top:1px solid #eef1f8;padding:14px 16px calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;box-shadow:0 -10px 30px -20px rgba(0,0,0,.3);z-index:50}
 #mapp .d-buybar .pr{font-family:"Manrope",sans-serif;font-weight:800;font-size:1.5rem;color:var(--ink);flex:none}
@@ -1227,7 +1228,7 @@
   </div>
 
   <!-- DETAIL (ref image) -->
-  <div class="scr" id="m-detail"><div class="imgscr"><img id="dImg" src="" alt=""><div id="detailSpots"></div><div id="dQtyCtrl" style="display:none"><button class="hs" style="left:61%;top:77%;width:12%;height:6.5%" onclick="MX.dq(-1)"></button><div class="dq-num" id="dQtyNum" style="left:72%;top:77.6%;width:9%;height:3.3%">1</div><button class="hs" style="left:84%;top:77%;width:12%;height:6.5%" onclick="MX.dq(1)"></button></div></div><div style="height:100px"></div><div class="d-buybar"><div class="pr" id="dPrice"></div><button class="cta" onclick="MX.buyNow()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg> สั่งซื้อเลย</button></div></div>
+  <div class="scr" id="m-detail"><div class="imgscr"><img id="dImg" src="" alt=""><div id="detailSpots"></div><div id="dPlusLock" style="display:none"><button class="dplus" id="dPlusBox" onclick="MX.plusMax()">+</button></div><div id="dQtyCtrl" style="display:none"><button class="hs" style="left:61%;top:77%;width:12%;height:6.5%" onclick="MX.dq(-1)"></button><div class="dq-num" id="dQtyNum" style="left:72%;top:77.6%;width:9%;height:3.3%">1</div><button class="hs" style="left:84%;top:77%;width:12%;height:6.5%" onclick="MX.dq(1)"></button></div></div><div style="height:100px"></div><div class="d-buybar"><div class="pr" id="dPrice"></div><button class="cta" onclick="MX.buyNow()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg> สั่งซื้อเลย</button></div></div>
 
   <!-- CART -->
   <div class="scr" id="m-cart">
@@ -1299,6 +1300,7 @@
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
   var cart=[],pay='card',curPid=null,detailQty=1;var geoSel=null,geoData=null;
+  var DPLUS={band:{l:83,t:77.3,w:9,h:3.9},scale:{l:83,t:77.3,w:9,h:3.9},duo:{l:83,t:77.3,w:9,h:3.9},triple:{l:83,t:72.4,w:9,h:3.9}};
 
   function toast(m){var t=byId('mtoast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1600);}
   function cartQty(){var n=0;cart.forEach(function(l){n+=l.qty;});return n;}
@@ -1325,7 +1327,7 @@
   var DSPOTS=[{l:3,t:2.6,w:12,h:5.5,a:'home'}];
   function renderDetailSpots(){var el=byId('detailSpots');el.innerHTML=DSPOTS.map(function(s){return '<button class="hs" style="left:'+s.l+'%;top:'+s.t+'%;width:'+s.w+'%;height:'+s.h+'%" data-a="'+s.a+'"></button>';}).join('');
     el.querySelectorAll('.hs').forEach(function(b){b.addEventListener('click',function(){var a=b.getAttribute('data-a');if(a==='home')go('home');else buyDetail();});});}
-  function open(pid){curPid=pid;detailQty=1;byId('dImg').src=SCREEN[pid];byId('dPrice').innerHTML=THB(P[pid].price);var qc=byId('dQtyCtrl');if(pid==='routinex'){qc.style.display='block';byId('dQtyNum').textContent='1';}else{qc.style.display='none';}renderDetailSpots();go('detail');}
+  function open(pid){curPid=pid;detailQty=1;byId('dImg').src=SCREEN[pid];byId('dPrice').innerHTML=THB(P[pid].price);var qc=byId('dQtyCtrl');var pl=byId('dPlusLock');if(pid==='routinex'){qc.style.display='block';byId('dQtyNum').textContent='1';pl.style.display='none';}else{qc.style.display='none';if(DPLUS[pid]){var s=DPLUS[pid],bx=byId('dPlusBox');bx.style.left=s.l+'%';bx.style.top=s.t+'%';bx.style.width=s.w+'%';bx.style.height=s.h+'%';pl.style.display='block';}else{pl.style.display='none';}}renderDetailSpots();go('detail');}
   function dq(d){if(curPid!=='routinex')return;var nv=Math.max(1,Math.min(2,detailQty+d));if(d>0&&nv===detailQty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}detailQty=nv;byId('dQtyNum').textContent=detailQty;byId('dPrice').innerHTML=THB(P.routinex.price*detailQty);}
   function buyDetail(){var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));go('cart');}
   function quickAdd(pid){var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));}
@@ -1387,10 +1389,11 @@
     if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+q+'”</div>';return;}
     list.innerHTML=res.map(function(i){var e=geoData[i];return '<div class="geo-row" onclick="MX.pickGeo('+i+')"><b>'+e[0]+' » '+e[1]+'</b><small>'+e[2]+' '+e[3]+'</small></div>';}).join('');
   }
+  function plusMax(){toast('คุณเพิ่มจำนวนสูงสุดแล้ว');}
   function openGeo(){byId('geoSheet').classList.add('on');var s=byId('geoSearch');loadGeo(function(){renderGeo(s.value);});setTimeout(function(){s.focus();},60);}
   function closeGeo(){byId('geoSheet').classList.remove('on');}
   function pickGeo(i){var e=geoData[i];geoSel=[e[0],e[1],e[2],String(e[3])];var t=byId('mf_geoTxt');t.textContent=e[2]+' · '+e[1]+' · '+e[0]+' · '+e[3];t.className='';byId('mf_geoBtn').classList.remove('bad');closeGeo();}
-  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
+  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,plusMax:plusMax,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
     cq:function(idx,d){var l=cart[idx];var max=P[l.pid].max||1;var nv=Math.max(1,Math.min(max,l.qty+d));if(d>0&&nv===l.qty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}l.qty=nv;renderCart();},
     rm:function(idx){cart.splice(idx,1);renderCart();}};
   renderHome();updateBadges();
