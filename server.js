@@ -359,20 +359,6 @@ function createRefund(pi, amountSatang, meta) {
 }
 
 // ---- ADMIN: refund an order (guarded by ADMIN_KEY) — full or partial via Stripe ----
-// ---- TEMP diagnostic: read-only Stripe PI status (no refund) ----
-app.get("/api/_pi/:pi", (req, res) => {
-  if (!process.env.STRIPE_SECRET_KEY) return res.json({ ok:false, error:"no_stripe_key" });
-  var rq = https.request({ hostname:"api.stripe.com", path:"/v1/payment_intents/"+encodeURIComponent(req.params.pi), method:"GET", headers:{ "Authorization":"Bearer "+process.env.STRIPE_SECRET_KEY } }, function(resp){
-    var b=""; resp.on("data",function(d){b+=d;}); resp.on("end",function(){
-      try{ var j=JSON.parse(b);
-        res.json({ ok: resp.statusCode>=200&&resp.statusCode<300, http:resp.statusCode, keyMode:(process.env.STRIPE_SECRET_KEY||"").slice(0,7), pi:j.id||null, piStatus:j.status||null, livemode:(typeof j.livemode!=="undefined")?j.livemode:null, amount:j.amount||null, currency:j.currency||null, latest_charge:j.latest_charge||null, error:(j.error&&j.error.message)||null, errType:(j.error&&j.error.type)||null });
-      }catch(e){ res.json({ ok:false, error:e.message, raw:b.slice(0,300) }); }
-    });
-  });
-  rq.on("error",function(e){ res.json({ ok:false, error:e.message }); });
-  rq.end();
-});
-
 app.post('/api/orders/:id/refund', (req, res) => {
   var body = req.body || {};
   const list = read();
