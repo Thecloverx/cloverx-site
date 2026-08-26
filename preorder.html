@@ -1221,6 +1221,17 @@
 #mapp .geo-row small{display:block;color:#8291aa;font-size:.82rem;margin-top:2px}
 #mapp .geo-hint{padding:26px 10px;text-align:center;color:#9aa6c0;font-size:.9rem}
 #mapp .c-item .mini .q.gray{color:#b3c0d6}
+#mapp #bankBox{display:none;margin:4px 0 2px}
+#mapp .bankinfo{background:#F2F6FF;border:1px solid #dbe6fb;border-radius:14px;padding:14px;margin-bottom:12px}
+#mapp .bankinfo .br{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;font-size:.9rem}
+#mapp .bankinfo .br span{color:#6b7a95}
+#mapp .bankinfo .br b{color:var(--ink);font-weight:800}
+#mapp .bankinfo .acct{display:inline-flex;align-items:center;gap:8px}
+#mapp .bankinfo .acctcopy{border:1.4px solid var(--accent);color:var(--accent);background:#fff;border-radius:8px;padding:5px 7px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+#mapp .bankinfo .bnote{color:#8291aa;font-size:.78rem;margin-top:8px;line-height:1.4}
+#mapp .slipbox{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:1.6px dashed #c3d0e6;border-radius:14px;background:#fff;color:#6b7a95;font-size:.9rem;cursor:pointer;padding:12px;box-sizing:border-box;text-align:center}
+#mapp .slipbox.has{border-style:solid;border-color:#16a34a;color:var(--ink);font-weight:700}
+#mapp .slipbox.bad{border-color:#E5484D;background:#FEF2F2}
 #mapp .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;background:#0E2547;color:#fff;font-size:.82rem;font-weight:700;white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis;padding:11px 20px;border-radius:999px;z-index:80;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;box-shadow:0 12px 30px -10px rgba(0,0,0,.4)}
 #mapp .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
@@ -1263,16 +1274,26 @@
       <div class="seclbl">ทีม / ผู้แนะนำ</div>
       <div class="fld"><label>ทีมโค้ช *</label><select id="mf_team"><option value="">— เลือกทีมโค้ช —</option><option>โค้ชนุ่น</option><option>โค้ชซิง</option><option>โค้ชจา</option><option>โค้ชต๊ะ</option><option>CloverX</option></select></div>
       <div class="fld"><label>ผู้แนะนำ *</label><input id="mf_ref" placeholder="ชื่อผู้แนะนำ (ถ้าไม่มีใส่ &quot;-&quot;)"></div>
-      <div class="seclbl">ข้อมูลผู้รับ / จัดส่ง</div>
-      <div class="fld"><label>ชื่อผู้รับ *</label><input id="mf_rname" placeholder="ชื่อ นามสกุล"></div>
-      <div class="fld"><label>เบอร์โทรผู้รับ *</label><input id="mf_rphone" inputmode="tel" placeholder="หมายเลขโทรศัพท์"></div>
+      <div class="seclbl">ข้อมูลการจัดส่งสินค้า</div>
       <div class="fld"><label>ที่อยู่ *</label><input id="mf_addr1" placeholder="บ้านเลขที่, หมู่บ้าน/อาคาร, ซอย, หมู่, ถนน"></div>
       <div class="fld"><label>จังหวัด / เขต-อำเภอ / แขวง-ตำบล / รหัสไปรษณีย์ *</label><button type="button" class="geo-pick" id="mf_geoBtn" onclick="MX.openGeo()"><span id="mf_geoTxt" class="ph">จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
       <div class="fld"><label>หมายเหตุถึงแบรนด์ (ถ้ามี)</label><textarea id="mf_note" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม เช่น การ์ดอวยพรวันเกิด"></textarea></div>
       <div class="seclbl">วิธีชำระเงิน</div>
       <div class="pay">
-        <div class="paopt on" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
-        <div class="paopt" id="payBank" onclick="MX.setPay('bank')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg></div><div class="pt"><b>โอนผ่านธนาคาร</b><small>KBank · แนบสลิปภายหลัง</small></div><div class="rad"></div></div>
+        <div class="paopt on" id="payBank" onclick="MX.setPay('bank')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg></div><div class="pt"><b>โอนผ่านธนาคาร</b><small>แนบสลิป + ระบุยอด/วัน/เวลา</small></div><div class="rad"></div></div>
+        <div id="bankBox">
+          <div class="bankinfo">
+            <div class="br"><span>ธนาคาร</span><b>กสิกรไทย (KBank)</b></div>
+            <div class="br"><span>เลขที่บัญชี</span><span class="acct"><b id="mAcctNo">231-1-71119-1</b><button type="button" class="acctcopy" onclick="MX.copyAcct()" aria-label="คัดลอกเลขบัญชี"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span></div>
+            <div class="br"><span>ชื่อบัญชี</span><b>บจก. โคลเวอร์เอ็กซ์ (ไทยแลนด์)</b></div>
+            <div class="bnote">* โอนตามยอดที่สั่งซื้อ แล้วแนบสลิปยืนยันการชำระเงิน</div>
+          </div>
+          <div class="fld"><label>ยอดที่โอน (บาท) *</label><input id="mf_amt" inputmode="decimal" placeholder="0.00"></div>
+          <div class="g2"><div class="fld"><label>วันที่โอน *</label><input id="mf_date" type="date"></div>
+            <div class="fld"><label>เวลาที่โอน *</label><input id="mf_time" type="time"></div></div>
+          <div class="fld"><label>แนบสลิป *</label><label class="slipbox" id="mf_slipBox"><span id="mf_slipTxt">📎 แตะเพื่อแนบสลิปโอนเงิน</span><input type="file" id="mf_slip" accept="image/*" hidden></label></div>
+        </div>
+        <div class="paopt" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
       </div>
     </div>
     <div class="m-buy"><div class="pr" id="coTotal"><span class="thb">฿</span>0</div>
@@ -1322,7 +1343,7 @@
   var FAM_ORDER=['fam-band'];var curTab='main';TH['fam-band']=TH.band;
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
-  var cart=[],pay='card',curPid=null,detailQty=1;var geoSel=null,geoData=null;
+  var cart=[],pay='bank',curPid=null,detailQty=1;var geoSel=null,geoData=null,mSlipData=null;
   var DPLUS={band:{l:83,t:77.3,w:9,h:3.9},scale:{l:83,t:77.3,w:9,h:3.9},duo:{l:83,t:77.3,w:9,h:3.9},triple:{l:83,t:72.4,w:9,h:3.9}};
 
   function toast(m){var t=byId('mtoast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},1600);}
@@ -1368,14 +1389,14 @@
   }
 
   // CHECKOUT / SUBMIT
-  function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());}
-  function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');}
+  function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());var a=byId('mf_amt');if(a&&!a.value)a.value=cartTotal();setPay(pay);}
+  function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');var bb=byId('bankBox');if(bb)bb.style.display=(p==='bank')?'block':'none';}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
-  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;return ok;}
+  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;if(pay==='bank'){['mf_amt','mf_date','mf_time'].forEach(function(id){var el=byId(id),bad=!el.value.trim();el.classList.toggle('bad',bad);if(bad)ok=false;});var sb=byId('mf_slipBox'),sbad=!mSlipData;sb.classList.toggle('bad',sbad);if(sbad)ok=false;}return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
   function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+((l.color||p.color)?(' · สี'+(l.color||p.color)):''),price:p.price,fam:false});});
     var note=byId('mf_note').value.trim();
-    return {name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_rname').value.trim(),phone:byId('mf_rphone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};}
+    var o={name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};if(pay==='bank'){o.transfer={amt:parseFloat(byId('mf_amt').value||0),date:byId('mf_date').value,time:byId('mf_time').value};o.slip=mSlipData||null;}return o;}
   function submit(){
     if(!cart.length)return toast('ตะกร้าว่าง');
     if(!validate()){toast('กรอกข้อมูลให้ครบ');var b=document.querySelector('#m-checkout .bad');b&&b.scrollIntoView({behavior:'smooth',block:'center'});return;}
@@ -1395,7 +1416,7 @@
     var showNav=(scr==='home'||scr==='cart');byId('mnav').style.display=showNav?'flex':'none';
     document.querySelectorAll('#mnav .t').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-nav')===scr);});
     if(scr==='cart')renderCart();if(scr==='checkout')renderCheckout();window.scrollTo(0,0);}
-  function reset(){cart=[];updateBadges();setPay('card');['mf_name','mf_phone','mf_email','mf_rname','mf_rphone','mf_addr1','mf_note','mf_team','mf_ref'].forEach(function(id){var e=byId(id);if(e)e.value='';});geoSel=null;var gt=byId('mf_geoTxt');if(gt){gt.textContent='จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์';gt.className='ph';}go('home');}
+  function reset(){cart=[];updateBadges();setPay('bank');['mf_name','mf_phone','mf_email','mf_addr1','mf_note','mf_team','mf_ref','mf_amt','mf_date','mf_time'].forEach(function(id){var e=byId(id);if(e)e.value='';});mSlipData=null;var st=byId('mf_slipTxt');if(st)st.textContent='📎 แตะเพื่อแนบสลิปโอนเงิน';var sb=byId('mf_slipBox');if(sb)sb.classList.remove('has');geoSel=null;var gt=byId('mf_geoTxt');if(gt){gt.textContent='จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์';gt.className='ph';}go('home');}
 
   function loadGeo(cb){
     if(geoData){cb();return;}
@@ -1421,15 +1442,16 @@
   function pickCol(el,c){colSel=c;Array.prototype.forEach.call(document.querySelectorAll('#colOpts .col-opt'),function(b){b.classList.remove('on');});el.classList.add('on');byId('colConfirm').disabled=false;}
   function closeCol(){byId('colSheet').classList.remove('on');}
   function confirmCol(){if(!colSel)return;addToCart(colPid,1,colSel);closeCol();if(colMode==='buy'){go('cart');}else{toast(P[colPid].nm+' ('+colSel+') · เพิ่มลงตะกร้าแล้ว');}}
+  function copyAcct(){try{navigator.clipboard.writeText('231-1-71119-1');toast('คัดลอกเลขบัญชีแล้ว');}catch(e){}}
   function plusMax(){toast('คุณเพิ่มจำนวนสูงสุดแล้ว');}
   function openGeo(){byId('geoSheet').classList.add('on');var s=byId('geoSearch');loadGeo(function(){renderGeo(s.value);});setTimeout(function(){s.focus();},60);}
   function closeGeo(){byId('geoSheet').classList.remove('on');}
   function pickGeo(i){var e=geoData[i];geoSel=[e[0],e[1],e[2],String(e[3])];var t=byId('mf_geoTxt');t.textContent=e[2]+' · '+e[1]+' · '+e[0]+' · '+e[3];t.className='';byId('mf_geoBtn').classList.remove('bad');closeGeo();}
-  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,plusMax:plusMax,openCol:openCol,pickCol:pickCol,closeCol:closeCol,confirmCol:confirmCol,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
+  window.MX={go:go,open:open,quickAdd:quickAdd,tab:tab,buyNow:buyDetail,dq:dq,plusMax:plusMax,copyAcct:copyAcct,openCol:openCol,pickCol:pickCol,closeCol:closeCol,confirmCol:confirmCol,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
     cq:function(idx,d){var l=cart[idx];var max=P[l.pid].max||1;var nv=Math.max(1,Math.min(max,l.qty+d));if(d>0&&nv===l.qty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}l.qty=nv;renderCart();},
     rm:function(idx){cart.splice(idx,1);renderCart();}};
   renderHome();updateBadges();
-  (function(){var s=byId('geoSearch');if(s)s.addEventListener('input',function(){renderGeo(this.value);});})();
+  (function(){var s=byId('geoSearch');if(s)s.addEventListener('input',function(){renderGeo(this.value);});var sl=byId('mf_slip');if(sl)sl.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){mSlipData=ev.target.result;byId('mf_slipTxt').textContent='✅ '+f.name;byId('mf_slipBox').classList.add('has');byId('mf_slipBox').classList.remove('bad');};r.readAsDataURL(f);});})();
   var m=location.search.match(/[?&]paid=([^&]+)/);if(m){try{showDone(decodeURIComponent(m[1]),true,'card');}catch(e){}}
 })();
 </script>
