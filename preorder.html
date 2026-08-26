@@ -1412,10 +1412,10 @@
     if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+q+'”</div>';return;}
     list.innerHTML=res.map(function(i){var e=geoData[i];return '<div class="geo-row" onclick="MX.pickGeo('+i+')"><b>'+e[0]+' » '+e[1]+'</b><small>'+e[2]+' '+e[3]+'</small></div>';}).join('');
   }
-  var COLORS={band:['ดำ','ครีม'],'fam-band':['ดำ','ครีม']};
+  var COLORS={triple:['ดำ','ครีม'],duo:['ดำ','ครีม'],band:['ดำ','ครีม'],'fam-band':['ดำ','ครีม']};
   var SW={'ดำ':'#1c2433','ครีม':'#E7DBC4'};
   var colPid=null,colMode='add',colSel='';
-  function openCol(pid,mode){colPid=pid;colMode=mode;colSel='';byId('colProd').textContent=P[pid].nm;
+  function openCol(pid,mode){colPid=pid;colMode=mode;colSel='';byId('colProd').textContent=(pid==='band'||pid==='fam-band')?P[pid].nm:('Xircle Band · '+P[pid].nm);
     byId('colOpts').innerHTML=COLORS[pid].map(function(c){return '<button type="button" class="col-opt" onclick="MX.pickCol(this,\''+c+'\')"><span class="sw" style="background:'+SW[c]+'"></span>'+c+'</button>';}).join('');
     byId('colConfirm').disabled=true;byId('colSheet').classList.add('on');}
   function pickCol(el,c){colSel=c;Array.prototype.forEach.call(document.querySelectorAll('#colOpts .col-opt'),function(b){b.classList.remove('on');});el.classList.add('on');byId('colConfirm').disabled=false;}
