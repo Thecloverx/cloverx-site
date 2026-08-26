@@ -375,7 +375,7 @@
   var OPS_KEY_ASKED=false;
   function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
-  function ensureKey(cb){ if(OPS_KEY||OPS_KEY_ASKED){cb();return;} OPS_KEY_ASKED=true; try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}}}catch(e){} cb(); }
+  function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
   function poNeeds(s){return s==='pending'||s==='paid';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
@@ -594,12 +594,11 @@
   // nav wiring
   document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
   document.querySelectorAll('#nav .item[data-toggle]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');});});
-  function poDelete(id){if(!OPS_KEY){opsUnlock();return;}if(!confirm('ลบออเดอร์ '+id+' ออกจากระบบถาวร?\n(ลบเฉพาะรายการในระบบ ไม่กระทบการเงินฝั่ง Stripe)'))return;fetch('/api/orders/'+id+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){poRefresh();}else{alert('ลบไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='forbidden')?' (ต้องใส่ Admin Key)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
+  function poDelete(id){if(!confirm('ลบออเดอร์ '+id+' ออกจากระบบถาวร?\n(ลบเฉพาะรายการในระบบ ไม่กระทบการเงินฝั่ง Stripe)'))return;fetch('/api/orders/'+id+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){poRefresh();}else{alert('ลบไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='forbidden')?' (ต้องใส่ Admin Key)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
   // ===== Refund flow =====
   var RF_SUB={'ลูกค้าคืนสินค้า':['สินค้าชำรุด/เสียหาย','ได้รับสินค้าผิด','เปลี่ยนใจ'],'ลูกค้ายกเลิกคำสั่งซื้อ':['เปลี่ยนสินค้า','เปลี่ยนใจ'],'ระบบมีปัญหา':['ราคาสินค้าผิด']};
   var RF={id:'',total:0,pay:'',refunded:0,full:true};
   function poRefundOpen(id,total,pay,refunded){
-    if(!OPS_KEY){opsUnlock();return;}
     RF={id:id,total:Number(total)||0,pay:pay||'',refunded:Number(refunded)||0,full:true};
     var remain=RF.total-RF.refunded;
     document.getElementById('rfOid').textContent='ออเดอร์ '+id+' · ยอดรวม ฿'+RF.total.toLocaleString('en-US')+(RF.refunded>0?(' · คืนแล้ว ฿'+RF.refunded.toLocaleString('en-US')):'');
