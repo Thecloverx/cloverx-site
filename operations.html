@@ -102,6 +102,7 @@
   .pill.pend{background:var(--warn-tint);color:var(--warn)}
   .pill.new{background:var(--brand-tint);color:var(--brand)}
   .pill.bad{background:var(--bad-tint);color:var(--bad)}
+  .pill.wait{background:#EEF1F6;color:#6B7793}
 
   /* list */
   .li{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
@@ -425,7 +426,10 @@
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
   function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
-  function poNeeds(s){return s==='pending';}
+  // "ต้องตรวจสอบ" = pending ที่ต้องให้เจ้าหน้าที่ตรวจ (โอนธนาคาร) — ไม่รวมบัตรที่ลูกค้ายังไม่จ่าย
+  function poNeeds(o){return o.status==='pending' && o.pay!=='card';}
+  // บัตรที่ยังไม่ชำระ (รอลูกค้าจ่าย)
+  function poAwaitPay(o){return o.pay==='card' && o.status==='pending';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
   function poSlip(u){if(u)window.open(u,'_blank');}
@@ -468,7 +472,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function poDraw(){
     var today=new Date().toDateString();
     var nToday=PO_ORDERS.filter(function(o){var d=new Date(o.at);return !isNaN(d)&&d.toDateString()===today;}).length;
-    var nPend=PO_ORDERS.filter(function(o){return poNeeds(o.status);}).length;
+    var nPend=PO_ORDERS.filter(function(o){return poNeeds(o);}).length;
     var nOk=PO_ORDERS.filter(function(o){return o.status==='confirmed';}).length;
     var sales=PO_ORDERS.filter(function(o){return o.status==='confirmed';}).reduce(function(a,o){return a+(Number(o.total)||0);},0);
     var kpis='<div class="kpis">'
@@ -493,6 +497,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     }else{
       rows=PO_ORDERS.map(function(o){
         var s=PO_ST[o.status]||['-','pend'];
+        if(poAwaitPay(o)) s=['รอลูกค้าชำระ','wait'];
         var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
         var isSettled=(o.status==='paid'||o.status==='confirmed');
         var cardCaptured=(o.pay==='card'&&o.stripe&&o.stripe.paymentIntent);
@@ -509,7 +514,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
           // คืนเงิน — โผล่ทุกครั้งที่มีเงินค้างต้องคืน (รวมออเดอร์บัตรที่จ่ายแล้วถูกยกเลิก)
           if(canRefund){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); }
           if(isSettled){ mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
-          else if(o.status==='pending'){ mItems.push('<div class="kebab-note">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</div>'); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+          else if(o.status==='pending'){ mItems.push('<div class="kebab-note">รอลูกค้าชำระผ่านบัตร · ชำระแล้วสลับเป็น "ชำระแล้ว" อัตโนมัติ · ค้างเกิน 3 วันระบบยกเลิกให้เอง</div>'); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
           else if(o.status==='rejected'){ mItems.push(mI('↺ กู้คืน',"poSetStatus('"+o.id+"','confirmed')",'good')); }
         }
         if(isSettled){ mItems.push(mI('🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':''),"poInvoice('"+o.id+"')",'brand')); }
@@ -592,7 +597,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var rev=orders.filter(function(o){return PAID.indexOf(o.status)>=0;});
     var totalRev=rev.reduce(function(a,o){return a+(Number(o.total)||0);},0);
     var nTotal=orders.length, nRev=rev.length;
-    var nPending=orders.filter(function(o){return o.status==='pending';}).length;
+    var nPending=orders.filter(function(o){return o.status==='pending'&&o.pay!=='card';}).length;
     var aov=nRev?totalRev/nRev:0;
     var conv=nTotal?Math.round(nRev/nTotal*100):0;
     // KPI row

@@ -363,9 +363,28 @@ function maskOrder(o){
   };
 }
 // ---- list orders — ค่าเริ่มต้นมาสก์ PII (PDPA); ต้องมี ?key=ADMIN_KEY จึงจะเห็นข้อมูลเต็ม (สำหรับจัดส่ง/ยืนยัน) ----
+// ยกเลิกอัตโนมัติ: ออเดอร์บัตรที่ลูกค้ายังไม่จ่าย (pending, ไม่มี paymentIntent) เกิน 3 วัน
+function sweepExpiredCard(list) {
+  var now = Date.now(), MS = 3 * 24 * 3600 * 1000, changed = false;
+  list.forEach(function (o) {
+    if (o.pay === 'card' && o.status === 'pending' && !(o.stripe && o.stripe.paymentIntent)) {
+      var t = new Date(o.at).getTime();
+      if (!isNaN(t) && (now - t) > MS) {
+        o.status = 'cancelled';
+        o.cancelledAt = new Date().toISOString();
+        o.cancelReason = 'payment_timeout';
+        changed = true;
+        console.log('[sweep] order ' + o.id + ' auto-cancelled (card unpaid > 3 days)');
+      }
+    }
+  });
+  if (changed) write(list);
+  return list;
+}
+
 app.get('/api/orders', (req, res) => {
   const full = true; // admin key removed (temporary)
-  const data = read();
+  const data = sweepExpiredCard(read());
   res.json(full ? data : data.map(maskOrder));
 });
 

@@ -181,8 +181,9 @@ function pct(a,b){return b?Math.round(a/b*100):0;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function el(id){return document.getElementById(id);}
 /* status mapping: cloverx-site -> reference buckets */
-function bucket(s){ if(s==='paid'||s==='confirmed')return 'paid'; if(s==='rejected'||s==='cancelled')return 'cancel'; return 'pending'; }
-var ST_LABEL={paid:'ชำระแล้ว',pending:'รอตรวจสอบ',cancel:'ยกเลิก'};
+function bucket(o){ var s=o.status; if(s==='paid'||s==='confirmed')return 'paid'; if(s==='rejected'||s==='cancelled')return 'cancel'; if(o.pay==='card'&&s==='pending')return 'awaitpay'; return 'pending'; }
+function isLive(b){ return b==='paid'||b==='pending'; }
+var ST_LABEL={paid:'ชำระแล้ว',pending:'รอตรวจสอบ',awaitpay:'รอลูกค้าชำระ',cancel:'ยกเลิก'};
 /* Thai provinces for address matching */
 var PROVINCES=["กรุงเทพมหานคร","กรุงเทพ","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ","สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"];
 function findProvince(addr){ addr=String(addr||''); for(var i=0;i<PROVINCES.length;i++){ if(addr.indexOf(PROVINCES[i])>=0){ return PROVINCES[i]==='กรุงเทพ'?'กรุงเทพมหานคร':PROVINCES[i]; } } return 'ไม่ระบุ'; }
@@ -237,16 +238,17 @@ function renderFilters(){
 
 /* ================= AGG ================= */
 function agg(list){
- var a={n:list.length,sales:0,paidN:0,paidAmt:0,pendN:0,pendAmt:0,cancN:0,cancAmt:0,pieces:0,
-   byBucket:{paid:0,pending:0,cancel:0}, buyers:{}, byPay:{card:{n:0,amt:0},bank:{n:0,amt:0}},
+ var a={n:list.length,sales:0,paidN:0,paidAmt:0,pendN:0,pendAmt:0,awaitN:0,awaitAmt:0,cancN:0,cancAmt:0,pieces:0,
+   byBucket:{paid:0,pending:0,awaitpay:0,cancel:0}, buyers:{}, byPay:{card:{n:0,amt:0},bank:{n:0,amt:0}},
    prod:{}, comp:{}, sets:0, family:0, familyMap:{}, ref:{}, prov:{} };
  list.forEach(function(o){
-  var b=bucket(o.status), tot=Number(o.total)||0;
+  var b=bucket(o), tot=Number(o.total)||0;
   a.byBucket[b]++;
   if(b==='paid'){a.paidN++;a.paidAmt+=tot;}
   else if(b==='pending'){a.pendN++;a.pendAmt+=tot;}
+  else if(b==='awaitpay'){a.awaitN++;a.awaitAmt+=tot;}
   else {a.cancN++;a.cancAmt+=tot;}
-  if(b!=='cancel'){ a.sales+=tot; a.sets++;
+  if(b==='paid'||b==='pending'){ a.sales+=tot; a.sets++;
    var key=(o.phone||o.name||o.id); a.buyers[key]=(a.buyers[key]||0)+1;
    var pk=o.pay==='card'?'card':'bank'; a.byPay[pk].n++; a.byPay[pk].amt+=tot;
    var pv=findProvince(o.addr); a.prov[pv]=(a.prov[pv]||0)+1;
@@ -254,10 +256,10 @@ function agg(list){
   }
   (o.items||[]).forEach(function(it){
    var nm=String(it.nm||'-'); a.pieces++;
-   if(!a.prod[nm])a.prod[nm]={paid:0,pending:0,cancel:0};
+   if(!a.prod[nm])a.prod[nm]={paid:0,pending:0,awaitpay:0,cancel:0};
    a.prod[nm][b]++;
    if(it.fam){ a.family++; if(!a.familyMap[nm])a.familyMap[nm]={n:0,amt:0}; a.familyMap[nm].n++; a.familyMap[nm].amt+=(Number(it.price)||0); }
-   if(b!=='cancel'){ components(nm).forEach(function(c){ if(!a.comp[c])a.comp[c]={paid:0,pending:0}; a.comp[c][b==='paid'?'paid':'pending']++; }); }
+   if(b==='paid'||b==='pending'){ components(nm).forEach(function(c){ if(!a.comp[c])a.comp[c]={paid:0,pending:0}; a.comp[c][b==='paid'?'paid':'pending']++; }); }
   });
  });
  a.uniqueBuyers=Object.keys(a.buyers).length;
@@ -303,7 +305,7 @@ function kpiRow(A){
   +k('ยอดขายรวม',I.money,'var(--tint)','var(--brand)',baht(A.sales),goalPct.toFixed(1)+'% ของเป้า '+baht(GOAL_AMOUNT),goalPct>=100?'up':'')
   +k('ออเดอร์รวม',I.bag,'var(--goodbg)','var(--good)',num(A.n),num(A.pieces)+' ชิ้น (รวม Family)')
   +k('ชำระสำเร็จ',I.check,'var(--goodbg)','var(--good)',num(A.paidN),baht(A.paidAmt),'up')
-  +k('รอตรวจสอบ',I.clock,'var(--warnbg)','var(--warn)',num(A.pendN),baht(A.pendAmt),'warn')
+  +k('รอตรวจสอบ',I.clock,'var(--warnbg)','var(--warn)',num(A.pendN),baht(A.pendAmt)+(A.awaitN?(' · +รอชำระ '+num(A.awaitN)):''),'warn')
   +k('ผู้ซื้อไม่ซ้ำ',I.user,'var(--infobg)','var(--info)',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
   +k('ถึงเป้าจำนวน',I.target,'var(--tint)','var(--brand)',setsPct+'%',num(A.sets)+' จาก '+num(GOAL_SETS)+' ชุด',setsPct>=100?'up':'')
   +'</div>';
@@ -376,7 +378,7 @@ function paymentBlocks(A){
    +'<p class="priv">ออเดอร์บัตรจับคู่การชำระเงินแบบเรียลไทม์ผ่าน Stripe Webhook · โอนธนาคารยืนยันจากสลิปในหน้า Operations</p></div>';
  var stmax=Math.max(A.byBucket.paid,A.byBucket.pending,A.byBucket.cancel,1);
  function stbar(lb,n,amt,col){var p=Math.max(3,Math.round(n/stmax*100));return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
- var refPctN=0; VIEW.forEach(function(o){if(bucket(o.status)!=='cancel'&&(o.ref||'').trim())refPctN++;});
+ var refPctN=0; VIEW.forEach(function(o){if(isLive(bucket(o))&&(o.ref||'').trim())refPctN++;});
  var status='<div class="card panel"><div class="ph"><h3>สถานะการชำระเงิน</h3></div>'
    +stbar('ชำระสำเร็จแล้ว',A.paidN,A.paidAmt,'var(--good)')
    +stbar('รอตรวจสอบ',A.pendN,A.pendAmt,'var(--warn)')
@@ -387,7 +389,7 @@ function paymentBlocks(A){
 
 function itemsAndFamily(A){
  var rows=Object.keys(A.prod).map(function(nm){var v=A.prod[nm];var alive=v.paid+v.pending;var amt=0;
-   VIEW.forEach(function(o){if(bucket(o.status)!=='cancel')(o.items||[]).forEach(function(it){if(String(it.nm)===nm)amt+=(Number(it.price)||0);});});
+   VIEW.forEach(function(o){if(isLive(bucket(o)))(o.items||[]).forEach(function(it){if(String(it.nm)===nm)amt+=(Number(it.price)||0);});});
    return {nm:nm,qty:alive,amt:amt};}).filter(function(r){return r.qty>0;}).sort(function(a,b){return b.amt-a.amt;});
  var totQ=rows.reduce(function(s,r){return s+r.qty;},0), totA=rows.reduce(function(s,r){return s+r.amt;},0);
  var body=rows.map(function(r,i){return '<tr><td><span class="rank" style="display:inline-flex;margin-right:8px">'+(i+1)+'</span>'+esc(r.nm)+'</td><td class="n">'+num(r.qty)+'</td><td class="n"><b>'+baht(r.amt)+'</b></td><td class="n">'+pct(r.qty,totQ)+'%</td></tr>';}).join('');
@@ -405,7 +407,7 @@ function dailyChart(){
 function drawChart(){
  var svg=el('dchart'); if(!svg)return;
  var days=[]; var map={};
- VIEW.forEach(function(o){ if(bucket(o.status)==='cancel')return; var d=new Date(o.at); if(isNaN(d))return; var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); map[k]=(map[k]||0)+1; });
+ VIEW.forEach(function(o){ if(!isLive(bucket(o)))return; var d=new Date(o.at); if(isNaN(d))return; var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); map[k]=(map[k]||0)+1; });
  var keys=Object.keys(map).sort(); if(!keys.length){svg.innerHTML='';return;}
  var start=new Date(keys[0]), end=new Date(keys[keys.length-1]);
  var cum=0, series=[];
@@ -438,9 +440,9 @@ function drawChart(){
 function custData(){
  var map={};
  VIEW.forEach(function(o){
-  var b=bucket(o.status); var key=(o.phone||o.name||o.id);
+  var b=bucket(o); var key=(o.phone||o.name||o.id);
   if(!map[key])map[key]={name:o.name,phone:o.phone,prov:findProvince(o.addr),team:(o.ref||'').trim(),items:{},pieces:0,orders:0,amt:0,st:{}};
-  var c=map[key]; c.orders++; if(b!=='cancel')c.amt+=(Number(o.total)||0);
+  var c=map[key]; c.orders++; if(b==='paid'||b==='pending')c.amt+=(Number(o.total)||0);
   c.st[b]=(c.st[b]||0)+1;
   (o.items||[]).forEach(function(it){c.pieces++;var nm=String(it.nm);c.items[nm]=(c.items[nm]||0)+1;});
  });
@@ -548,8 +550,8 @@ function ceoSection(A){
  var picker='<select class="f" onchange="setSeg(this.value)" style="font-weight:700;color:var(--brand)">'+dims.map(function(d){return '<option value="'+d[0]+'"'+(SEG===d[0]?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select>';
  var groups={};
  VIEW.forEach(function(o){ var k=segValue(o); if(!groups[k])groups[k]={orders:0,cust:{},rev:0,deliv:0,cancel:0,refund:0}; var g=groups[k];
-   var b=bucket(o.status); g.orders++; g.cust[o.phone||o.name||o.id]=1;
-   if(b!=='cancel')g.rev+=(Number(o.total)||0);
+   var b=bucket(o); g.orders++; g.cust[o.phone||o.name||o.id]=1;
+   if(b==='paid'||b==='pending')g.rev+=(Number(o.total)||0);
    if(isDelivered(o))g.deliv++; if(b==='cancel')g.cancel++; if(isRefund(o))g.refund++;
  });
  var keys=Object.keys(groups);
