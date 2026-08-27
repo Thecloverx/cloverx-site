@@ -432,15 +432,23 @@
         var s=PO_ST[o.status]||['-','pend'];
         var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
         var isSettled=(o.status==='paid'||o.status==='confirmed');
+        var cardCaptured=(o.pay==='card'&&o.stripe&&o.stripe.paymentIntent);
+        var refundedTot=Number(o.refundedTotal)||0, totalAmt=Number(o.total)||0;
+        // เคยเก็บเงินจริง (ยืนยัน/ชำระ/คืนบางส่วน หรือมี invoice หรือมี Stripe PI) — ใช้ตัดสินว่าคืนเงินได้ไหม
+        var everSettled=(!!o.invoiceNo||isSettled||o.status==='partially_refunded'||cardCaptured);
+        var canRefund=(everSettled&&o.status!=='refunded'&&refundedTot<totalAmt-0.001);
         function mI(label,onc,col){return '<button class="kebab-item'+(col?(' k-'+col):'')+'" onclick="poMenuClose(this);'+onc+'">'+label+'</button>';}
-        var refArgs="'"+o.id+"',"+(Number(o.total)||0)+",'"+(o.pay||'')+"',"+(Number(o.refundedTotal)||0);
+        var refArgs="'"+o.id+"',"+totalAmt+",'"+(o.pay||'')+"',"+refundedTot;
         var cancelJS="if(confirm('ยกเลิกออเดอร์ "+o.id+" ?'))poSetStatus('"+o.id+"','cancelled')";
         var mItems=[];
         if(o.pay==='bank'&&o.status==='pending'){ mItems.push(mI('✓ ยืนยันการชำระ',"poSetStatus('"+o.id+"','confirmed')",'good')); mItems.push(mI('✕ ปฏิเสธ',"poSetStatus('"+o.id+"','rejected')",'bad')); }
-        else if(isSettled){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
-        else if(o.status==='partially_refunded'){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); }
-        else if(o.status==='pending'){ mItems.push('<div class="kebab-note">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</div>'); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
-        else if(o.status==='rejected'){ mItems.push(mI('↺ กู้คืน',"poSetStatus('"+o.id+"','confirmed')",'good')); }
+        else {
+          // คืนเงิน — โผล่ทุกครั้งที่มีเงินค้างต้องคืน (รวมออเดอร์บัตรที่จ่ายแล้วถูกยกเลิก)
+          if(canRefund){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); }
+          if(isSettled){ mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+          else if(o.status==='pending'){ mItems.push('<div class="kebab-note">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</div>'); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+          else if(o.status==='rejected'){ mItems.push(mI('↺ กู้คืน',"poSetStatus('"+o.id+"','confirmed')",'good')); }
+        }
         if(isSettled){ mItems.push(mI('🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':''),"poInvoice('"+o.id+"')",'brand')); }
         if(o.slipUrl){ mItems.push(mI('📄 ดูสลิป',"poSlip('"+o.slipUrl+"')",'brand')); }
         mItems.push(mI('🗑 ลบ',"poDelete('"+o.id+"')",'muted'));
