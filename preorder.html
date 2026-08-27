@@ -1032,6 +1032,14 @@
     if(m){} /* handled by #paidScreen */
   })();
 
+  // ===== เดสก์ท็อป: เปิดลิงก์ /preorder แล้วเข้าหน้าสั่งซื้อสินค้าเลย (ข้ามหน้าเว็บแนะนำ) เหมือนมือถือ =====
+  (function(){
+    if(window.innerWidth<=820) return;                 /* มือถือใช้แอป #mapp อยู่แล้ว */
+    if(/[?&]paid=/.test(location.search)) return;       /* กลับจาก Stripe → หน้าชำระเงินสำเร็จ */
+    if(/[?&]site=1/.test(location.search) || location.hash==='#home' || location.hash==='#top') return; /* ทางออกไว้ดูหน้าเว็บแนะนำ */
+    try{ if(typeof goForm==='function') goForm(); }catch(e){}
+  })();
+
   // ===== ป้ายบอก "โหมดตัวแทน" (เมื่อเปิดด้วย ?agent=1) =====
   if(AGENT_MODE){
     var badge=document.createElement('div');
@@ -1285,10 +1293,9 @@
 #mapp .bd-buy:active{background:#003c8f}
 #mapp #m-done .done{display:block}
 
-/* ===== app-for-everyone: mobile app column shown on ALL viewports (desktop too) ===== */
-body>*:not(#mapp):not(#paidScreen):not(#bankScreen):not(script):not(style):not(link){display:none!important}
-#mapp{display:block!important}
-@media(min-width:821px){body{background:#E9ECF7}#mapp{box-shadow:0 0 0 1px rgba(20,30,60,.06),0 30px 80px -40px rgba(20,30,60,.55)}}
+/* ===== viewport switch: mobile app vs desktop form ===== */
+#mapp{display:none}
+@media(max-width:820px){body>*:not(#mapp):not(#paidScreen):not(#bankScreen):not(script):not(style):not(link){display:none!important}#mapp{display:block!important}}
 </style>
 <div id="mapp">
   <!-- HOME (live) -->
