@@ -157,6 +157,15 @@
   .rf-btn:disabled{opacity:.5}
   .rf-row{display:flex;gap:10px;margin-top:16px}
   .rf-row .rf-btn{margin-top:0}
+  .kebab-wrap{position:relative;display:inline-block}
+  .kebab-btn{background:none;border:1px solid var(--line);border-radius:9px;width:36px;height:32px;font-size:1.2rem;line-height:1;color:var(--muted);cursor:pointer;font-weight:700}
+  .kebab-btn:hover{background:var(--soft);color:var(--ink)}
+  .kebab-menu{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 38px -12px rgba(20,30,60,.30);padding:6px;min-width:200px;z-index:200;display:none}
+  .kebab-menu.on{display:block}
+  .kebab-item{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 13px;border-radius:8px;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--ink);white-space:nowrap}
+  .kebab-item:hover{background:var(--soft)}
+  .kebab-item.k-good{color:var(--good)} .kebab-item.k-bad{color:var(--bad)} .kebab-item.k-brand{color:var(--brand)} .kebab-item.k-muted{color:var(--muted)}
+  .kebab-note{padding:8px 13px;font-size:.75rem;color:var(--muted)}
   .rf-warn{background:var(--bad-tint);border:1px solid #FADCD9;color:#B42318;border-radius:12px;padding:12px;font-size:.84rem;font-weight:600;margin-bottom:14px}
   .rf-sum{background:var(--soft);border-radius:12px;padding:14px}
   .rf-sr{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:.86rem}
@@ -422,26 +431,21 @@
       rows=PO_ORDERS.map(function(o){
         var s=PO_ST[o.status]||['-','pend'];
         var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
-        var slipBtn=o.slipUrl?'<button onclick="poSlip(\''+o.slipUrl+'\')" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.78rem;cursor:pointer;padding:0;margin-right:8px">ดูสลิป</button>':'';
-        var invBtn=(o.status==='confirmed'||o.status==='paid')?'<button onclick="poInvoice(\''+o.id+'\')" style="background:none;border:1px solid var(--brand);color:var(--brand);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;font-size:.74rem;cursor:pointer;margin-right:6px">🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':'')+'</button>':'';
         var isSettled=(o.status==='paid'||o.status==='confirmed');
-        var bC='font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin-right:8px';
-        var confirmBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:var(--good);color:#fff;border:0;border-radius:8px;padding:6px 12px;'+bC+'">ยืนยัน</button>';
-        var rejectBtn='<button onclick="poSetStatus(\''+o.id+'\',\'rejected\')" style="background:none;color:var(--bad);border:0;'+bC+'">ปฏิเสธ</button>';
-        var cancelBtn='<button onclick="if(confirm(\'ยกเลิกออเดอร์ '+o.id+' ?\'))poSetStatus(\''+o.id+'\',\'cancelled\')" style="background:none;color:var(--bad);border:0;'+bC+'">ยกเลิก</button>';
-        var refundBtn='<button onclick="poRefundOpen(\''+o.id+'\','+(Number(o.total)||0)+',\''+(o.pay||'')+'\','+(Number(o.refundedTotal)||0)+')" style="background:none;color:var(--bad);border:0;'+bC+'">คืนเงิน</button>';
-        var restoreBtn='<button onclick="poSetStatus(\''+o.id+'\',\'confirmed\')" style="background:none;color:var(--good);border:0;'+bC+'">กู้คืน</button>';
-        var deleteBtn='<button onclick="poDelete(\''+o.id+'\')" style="background:none;color:var(--muted);border:0;'+bC+'">ลบ</button>';
-        var waitNote='<span style="color:var(--muted);font-size:.72rem;margin-right:8px">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</span>';
-        var act='';
-        if(o.pay==='bank'&&o.status==='pending'){ act=confirmBtn+rejectBtn; }           // โอนธนาคาร: ตรวจสลิปแล้วยืนยัน/ปฏิเสธ
-        else if(isSettled){ act=refundBtn+cancelBtn; }
-        else if(o.status==='partially_refunded'){ act=refundBtn; }                                  // ชำระแล้ว: คืนเงิน/ยกเลิก
-        else if(o.status==='pending'){ act=waitNote+cancelBtn; }                        // บัตรเครดิต รอชำระ: ยกเลิกได้ (webhook สลับให้อัตโนมัติ)
-        else if(o.status==='rejected'){ act=restoreBtn; }                              // ปฏิเสธ: กู้คืน
-        // cancelled / refunded / failed = สถานะสิ้นสุด ไม่มีปุ่ม
-        act+=invBtn+slipBtn+deleteBtn;
-        if(!act.replace(/\s/g,'')) act='<span style="color:var(--muted);font-size:.78rem">—</span>';
+        function mI(label,onc,col){return '<button class="kebab-item'+(col?(' k-'+col):'')+'" onclick="poMenuClose(this);'+onc+'">'+label+'</button>';}
+        var refArgs="'"+o.id+"',"+(Number(o.total)||0)+",'"+(o.pay||'')+"',"+(Number(o.refundedTotal)||0);
+        var cancelJS="if(confirm('ยกเลิกออเดอร์ "+o.id+" ?'))poSetStatus('"+o.id+"','cancelled')";
+        var mItems=[];
+        if(o.pay==='bank'&&o.status==='pending'){ mItems.push(mI('✓ ยืนยันการชำระ',"poSetStatus('"+o.id+"','confirmed')",'good')); mItems.push(mI('✕ ปฏิเสธ',"poSetStatus('"+o.id+"','rejected')",'bad')); }
+        else if(isSettled){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+        else if(o.status==='partially_refunded'){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); }
+        else if(o.status==='pending'){ mItems.push('<div class="kebab-note">รอชำระผ่าน Stripe (สลับอัตโนมัติ)</div>'); mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+        else if(o.status==='rejected'){ mItems.push(mI('↺ กู้คืน',"poSetStatus('"+o.id+"','confirmed')",'good')); }
+        if(isSettled){ mItems.push(mI('🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':''),"poInvoice('"+o.id+"')",'brand')); }
+        if(o.slipUrl){ mItems.push(mI('📄 ดูสลิป',"poSlip('"+o.slipUrl+"')",'brand')); }
+        mItems.push(mI('🗑 ลบ',"poDelete('"+o.id+"')",'muted'));
+        var act='<div class="kebab-wrap"><button class="kebab-btn" onclick="poMenu(this)" aria-label="เมนู">⋮</button><div class="kebab-menu">'+mItems.join('')+'</div></div>';
+
         var pk=o.ship==='pickup'?' <span class="pill new" style="font-size:.62rem;padding:1px 7px">รับหน้างาน</span>':'';
         return '<tr><td><div style="font-weight:700">'+o.id+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTime(o.at)+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+(o.phone||'')+'</div></td>'
@@ -597,6 +601,12 @@
   function poDelete(id){if(!confirm('ลบออเดอร์ '+id+' ออกจากระบบถาวร?\n(ลบเฉพาะรายการในระบบ ไม่กระทบการเงินฝั่ง Stripe)'))return;fetch('/api/orders/'+id+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){poRefresh();}else{alert('ลบไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='forbidden')?' (ต้องใส่ Admin Key)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
   // ===== Refund flow =====
   var RF_SUB={'ลูกค้าคืนสินค้า':['สินค้าชำรุด/เสียหาย','ได้รับสินค้าผิด','เปลี่ยนใจ'],'ลูกค้ายกเลิกคำสั่งซื้อ':['เปลี่ยนสินค้า','เปลี่ยนใจ'],'ระบบมีปัญหา':['ราคาสินค้าผิด']};
+  function poMenuCloseAll(){document.querySelectorAll('.kebab-menu.on').forEach(function(x){x.classList.remove('on');});}
+  function poMenu(btn){var m=btn.nextElementSibling;var wasOpen=m.classList.contains('on');poMenuCloseAll();if(wasOpen)return;var r=btn.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';var left=r.right-Math.max(200,m.offsetWidth||200);m.style.left=Math.max(8,left)+'px';m.classList.add('on');var r2=r.right-(m.offsetWidth||200);m.style.left=Math.max(8,r2)+'px';}
+  function poMenuClose(el){var m=el.closest('.kebab-menu');if(m)m.classList.remove('on');}
+  document.addEventListener('click',function(e){if(!e.target.closest('.kebab-wrap'))poMenuCloseAll();});
+  window.addEventListener('scroll',function(){poMenuCloseAll();},true);
+  window.addEventListener('resize',function(){poMenuCloseAll();});
   var RF={id:'',total:0,pay:'',refunded:0,full:true};
   function poRefundOpen(id,total,pay,refunded){
     RF={id:id,total:Number(total)||0,pay:pay||'',refunded:Number(refunded)||0,full:true};
