@@ -225,6 +225,76 @@ function createCheckoutSession(o, base) {
 }
 
 // ---- create an order (from customer Pre-Order page) ----
+// ---- EasySlip auto-verification for bank-transfer slips (opt-in via EASYSLIP_API_KEY) ----
+function easyslipConfigured() { return !!process.env.EASYSLIP_API_KEY; }
+function esDigits(x) { return String(x == null ? '' : x).replace(/[^0-9]/g, ''); }
+function verifyEasySlip(base64raw) {
+  return new Promise(function (resolve) {
+    if (!easyslipConfigured()) { resolve({ ok: false, error: 'not_configured' }); return; }
+    var urlStr = process.env.EASYSLIP_VERIFY_URL || 'https://developer.easyslip.com/api/v1/verify';
+    var u; try { u = new URL(urlStr); } catch (e) { resolve({ ok: false, error: 'bad_url' }); return; }
+    var body = JSON.stringify({ image: base64raw });
+    var rq = https.request({
+      hostname: u.hostname, path: u.pathname + (u.search || ''), method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.EASYSLIP_API_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    }, function (resp) {
+      var b = ''; resp.on('data', function (d) { b += d; });
+      resp.on('end', function () {
+        try { var j = JSON.parse(b); resolve({ ok: resp.statusCode >= 200 && resp.statusCode < 300, http: resp.statusCode, body: j }); }
+        catch (e) { resolve({ ok: false, error: 'parse', http: resp.statusCode, raw: b.slice(0, 300) }); }
+      });
+    });
+    rq.on('error', function (e) { resolve({ ok: false, error: e.message }); });
+    rq.setTimeout(15000, function () { rq.destroy(); resolve({ ok: false, error: 'timeout' }); });
+    rq.write(body); rq.end();
+  });
+}
+function esExtract(j) {
+  var d = (j && j.data) ? j.data : j; if (!d) return null;
+  var amount = null;
+  if (d.amount != null) { amount = (typeof d.amount === 'object') ? Number(d.amount.amount != null ? d.amount.amount : (d.amount.local && d.amount.local.amount)) : Number(d.amount); }
+  var recv = d.receiver || {}; var acc = recv.account || {};
+  var recvName = '';
+  if (acc.name) { recvName = acc.name.th || acc.name.en || (typeof acc.name === 'string' ? acc.name : ''); }
+  var recvNum = (acc.bank && acc.bank.account) || acc.account || acc.number || (recv.bank && recv.bank.account) || '';
+  var ref = d.transRef || d.transactionId || d.transaction_id || d.ref1 || d.payload || '';
+  return { amount: amount, recvName: String(recvName || ''), recvNum: String(recvNum || ''), ref: String(ref || ''), raw: d };
+}
+function autoVerifyBank(orderId, base64raw, base) {
+  verifyEasySlip(base64raw).then(function (r) {
+    var l = read(); var x = l.find(function (y) { return y.id === orderId; }); if (!x) return;
+    x.easyslip = { at: new Date().toISOString(), ok: r.ok, http: r.http || null };
+    if (!r.ok || !r.body) { x.easyslip.result = 'error'; x.easyslip.error = r.error || ('http ' + r.http); write(l); return; }
+    var sD = esExtract(r.body);
+    if (!sD) { x.easyslip.result = 'no_data'; write(l); return; }
+    x.easyslip.amount = sD.amount; x.easyslip.recvName = sD.recvName; x.easyslip.recvNum = sD.recvNum; x.easyslip.ref = sD.ref;
+    var total = Number(x.total) || 0;
+    var amtOk = (sD.amount != null && !isNaN(sD.amount)) && Math.abs(sD.amount - total) < 1;
+    var want = esDigits(process.env.EASYSLIP_RECV_ACCOUNT || '2311711191');
+    var last4 = want.slice(-4); var recvDigits = esDigits(sD.recvNum);
+    var acctOk = !!(recvDigits && last4 && recvDigits.indexOf(last4) >= 0);
+    var nameKey = process.env.EASYSLIP_RECV_NAME || 'โคลเวอร์เอ็กซ์';
+    var nameOk = !!(sD.recvName && sD.recvName.indexOf(nameKey) >= 0);
+    var dup = !!(sD.ref && l.some(function (y) { return y.id !== x.id && y.easyslip && y.easyslip.ref && y.easyslip.ref === sD.ref; }));
+    var pass = amtOk && (acctOk || nameOk) && !dup;
+    x.easyslip.amtOk = amtOk; x.easyslip.acctOk = acctOk; x.easyslip.nameOk = nameOk; x.easyslip.dup = dup;
+    var autoOff = process.env.EASYSLIP_AUTOCONFIRM === '0';
+    if (pass && !autoOff) {
+      x.status = 'confirmed';
+      if (!x.invoiceNo) { x.invoiceNo = nextInvoiceNo(); x.invoiceAt = new Date().toISOString(); }
+      x.confirmedAt = new Date().toISOString();
+      x.easyslip.result = 'confirmed';
+      write(l);
+      if (x.email && !x.emailedReceiptAt && emailConfigured()) {
+        sendReceiptEmail(x, base).then(function (ok) { if (ok) { var l2 = read(); var x2 = l2.find(function (y) { return y.id === orderId; }); if (x2) { x2.emailedReceiptAt = new Date().toISOString(); write(l2); } } });
+      }
+    } else {
+      x.easyslip.result = pass ? 'verified' : (dup ? 'duplicate' : 'mismatch');
+      write(l);
+    }
+  });
+}
+
 app.post('/api/orders', (req, res) => {
   const o = req.body || {};
   const list = read();
@@ -255,6 +325,12 @@ app.post('/api/orders', (req, res) => {
   };
   list.unshift(rec);
   write(list);
+
+  // โอนเงิน: ตรวจสลิปอัตโนมัติผ่าน EasySlip (ถ้าตั้งค่า EASYSLIP_API_KEY) แล้ว auto-confirm เมื่อยอด+บัญชีตรง
+  if (rec.pay === 'bank' && easyslipConfigured() && typeof o.slip === 'string') {
+    var _m = o.slip.match(/^data:image\/[^;]+;base64,(.*)$/);
+    if (_m) { var _base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host); try { autoVerifyBank(rec.id, _m[1], _base); } catch (e) {} }
+  }
 
   // บัตรเครดิต: สร้างลิงก์ชำระเงิน Stripe รวมยอดทั้งออเดอร์ (ทุกชิ้น) เป็นลิงก์เดียวอัตโนมัติ
   if (rec.pay === 'card' && stripeConfigured()) {
