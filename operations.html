@@ -157,6 +157,34 @@
   .rf-btn:disabled{opacity:.5}
   .rf-row{display:flex;gap:10px;margin-top:16px}
   .rf-row .rf-btn{margin-top:0}
+  /* ===== สินค้า: compact cell + product popup ===== */
+  .itembtn{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:6px 10px 6px 7px;cursor:pointer;font-family:inherit;max-width:100%}
+  .itembtn:hover{border-color:var(--brand);background:var(--soft)}
+  .itembtn .ib-thumb{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#EEF3FB,#E2E9F6);display:flex;align-items:center;justify-content:center;color:var(--brand);flex:none}
+  .itembtn .ib-thumb svg{width:18px;height:18px}
+  .itembtn .ib-txt{font-weight:700;font-size:.85rem;color:var(--ink);white-space:nowrap}
+  .itembtn .ib-cv{color:var(--muted);flex:none;transition:transform .15s}
+  .it-modal{position:fixed;inset:0;z-index:2000;display:none}
+  .it-modal.on{display:block}
+  .it-back{position:absolute;inset:0;background:rgba(20,30,55,.5)}
+  .it-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(100% - 36px);max-width:460px;max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:20px 20px 22px;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
+  .it-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .it-h h3{font-size:1.1rem}
+  .it-h h3 span{font-size:.8rem;font-weight:600;color:var(--muted)}
+  .it-x{border:0;background:#f0f3fa;width:32px;height:32px;border-radius:50%;color:#5b6b86;font-size:1rem;cursor:pointer}
+  .it-row{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+  .it-row:first-child{border-top:0}
+  .it-thumb{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#EEF3FB,#E2E9F6);display:flex;align-items:center;justify-content:center;color:var(--brand);flex:none}
+  .it-thumb svg{width:26px;height:26px}
+  .it-info{flex:1;min-width:0}
+  .it-nm{font-weight:700;font-size:.92rem;color:var(--ink);display:flex;justify-content:space-between;gap:10px}
+  .it-nm .qx{color:var(--muted);font-weight:600;flex:none}
+  .it-sub{font-size:.8rem;color:var(--muted);margin-top:3px}
+  .it-sku{font-size:.78rem;color:var(--muted);margin-top:3px}
+  .it-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .it-chip{font-size:.8rem;font-weight:600;padding:6px 11px;border-radius:8px}
+  .it-chip.coach{background:#E7F0FF;color:#1D55BE}
+  .it-chip.ref{background:#EEF1F6;color:#5b6b86}
   .kebab-wrap{position:relative;display:inline-block}
   .kebab-btn{background:none;border:1px solid var(--line);border-radius:9px;width:36px;height:32px;font-size:1.2rem;line-height:1;color:var(--muted);cursor:pointer;font-weight:700}
   .kebab-btn:hover{background:var(--soft);color:var(--ink)}
@@ -326,6 +354,13 @@
     </div>
   </div>
 </div>
+<div id="itModal" class="it-modal">
+  <div class="it-back" onclick="poItemsClose()"></div>
+  <div class="it-card">
+    <div class="it-h"><h3>รายการสินค้า <span id="itCount"></span></h3><button class="it-x" onclick="poItemsClose()">&times;</button></div>
+    <div id="itBody"></div>
+  </div>
+</div>
 <script>
   function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
 
@@ -400,6 +435,25 @@
     fetch(ordersUrl()).then(function(r){return r.json();}).then(function(d){PO_ORDERS=Array.isArray(d)?d:[];poDraw();}).catch(function(){poDraw();});
     });
   }
+  function poEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  var PO_BOX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>';
+  function poGroup(o){var g={},ord=[];(o.items||[]).forEach(function(it){var nm=it.nm||'-';if(!g[nm]){g[nm]={nm:nm,qty:0,fam:!!it.fam};ord.push(nm);}g[nm].qty++;});return ord.map(function(nm){return g[nm];});}
+  function poItemsCell(o){var n=poGroup(o).length;if(!n)return '<span style="color:var(--muted)">-</span>';
+    return '<button class="itembtn" onclick="poItemsOpen(\''+o.id+'\')"><span class="ib-thumb">'+PO_BOX+'</span><span class="ib-txt">'+n+' รายการ</span><svg class="ib-cv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';}
+  function poItemsOpen(id){var o=null;for(var i=0;i<PO_ORDERS.length;i++){if(PO_ORDERS[i].id===id){o=PO_ORDERS[i];break;}}if(!o)return;
+    var gs=poGroup(o);
+    document.getElementById('itCount').textContent='· '+o.id+' · '+gs.length+' รายการ';
+    var rows=gs.map(function(g){
+      return '<div class="it-row"><div class="it-thumb">'+PO_BOX+'</div><div class="it-info">'
+        +'<div class="it-nm"><span>'+poEsc(g.nm)+(g.fam?' <span style="color:var(--muted);font-weight:600;font-size:.85em">(ครอบครัว)</span>':'')+'</span><span class="qx">× '+g.qty+'</span></div>'
+        +'<div class="it-sub">Pre-Order · '+g.qty+' ชิ้น</div>'
+        +'<div class="it-sku">SKU ผู้ขาย: -</div></div></div>';
+    }).join('');
+    var chips='<div class="it-chips"><span class="it-chip coach">โค้ชผู้แนะนำ : '+poEsc(o.team||'-')+'</span><span class="it-chip ref">ผู้แนะนำ : '+poEsc(o.ref||'-')+'</span></div>';
+    document.getElementById('itBody').innerHTML=rows+chips;
+    document.getElementById('itModal').classList.add('on');
+  }
+  function poItemsClose(){document.getElementById('itModal').classList.remove('on');}
   function poItems(o){return (o.items||[]).map(function(i){return i.nm+(i.fam?' <span style="color:var(--muted);font-size:.82em">(ครอบครัว)</span>':'');}).join(' + ')||'-';}
   function poTime(iso){if(!iso)return'';var d=new Date(iso);if(isNaN(d))return'';return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
   function poDraw(){
@@ -426,7 +480,7 @@
       +'</div></div></div>';
     var rows;
     if(!PO_ORDERS.length){
-      rows='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:34px 0">ยังไม่มีคำสั่งจอง — เมื่อลูกค้าสั่งผ่านลิงก์/QR รายการจะขึ้นที่นี่</td></tr>';
+      rows='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:34px 0">ยังไม่มีคำสั่งซื้อ — เมื่อลูกค้าสั่งผ่านลิงก์/QR รายการจะขึ้นที่นี่</td></tr>';
     }else{
       rows=PO_ORDERS.map(function(o){
         var s=PO_ST[o.status]||['-','pend'];
@@ -457,15 +511,15 @@
         var pk=o.ship==='pickup'?' <span class="pill new" style="font-size:.62rem;padding:1px 7px">รับหน้างาน</span>':'';
         return '<tr><td><div style="font-weight:700">'+o.id+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTime(o.at)+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+(o.phone||'')+'</div></td>'
-          +'<td style="max-width:220px">'+poItems(o)+pk+'</td>'
-          +'<td class="num" style="font-weight:700">฿'+(Number(o.total)||0).toLocaleString("en-US")+'</td>'
-          +'<td>'+ch+'</td><td>'+(o.ref||'-')+'</td>'
+          +'<td>'+poItemsCell(o)+pk+'</td>'
           +'<td><span class="pill '+s[1]+'">'+s[0]+'</span></td>'
+          +'<td class="num" style="font-weight:700">฿'+(Number(o.total)||0).toLocaleString("en-US")+'<div style="font-size:.7rem;font-weight:500;color:var(--muted)">'+ch+'</div></td>'
+          +'<td>'+(o.team||'-')+'</td><td>'+(o.ref||'-')+'</td>'
           +'<td style="white-space:nowrap">'+act+'</td></tr>';
       }).join('');
     }
-    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งจอง <span style="font-size:.8rem;font-weight:500;color:var(--muted)">('+PO_ORDERS.length+')</span></h3><div style="display:flex;gap:14px;align-items:center"><button onclick="poRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button><a class="link" href="#" onclick="return false">ส่งออก Excel →</a></div></div>'
-      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ / เวลา</th><th>ลูกค้า</th><th>รายการ</th><th>ยอดรวม</th><th>ช่องทาง</th><th>ผู้แนะนำ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งซื้อ <span style="font-size:.8rem;font-weight:500;color:var(--muted)">('+PO_ORDERS.length+')</span></h3><div style="display:flex;gap:14px;align-items:center"><button onclick="poRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button><a class="link" href="#" onclick="return false">ส่งออก Excel →</a></div></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่คำสั่งซื้อ</th><th>ลูกค้า</th><th>สินค้า</th><th>สถานะคำสั่งซื้อ</th><th>ทั้งหมด</th><th>ทีมโค้ช</th><th>ผู้แนะนำ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     var prows=PO_PROD.map(function(p){
       var pct=Math.round(p.left/p.quota*100);
       var barcol=p.left===0?'var(--bad)':(pct<25?'var(--warn)':'var(--brand)');
