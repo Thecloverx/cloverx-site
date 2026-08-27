@@ -160,8 +160,10 @@
   /* ===== สินค้า: compact cell + product popup ===== */
   .itembtn{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:6px 10px 6px 7px;cursor:pointer;font-family:inherit;max-width:100%}
   .itembtn:hover{border-color:var(--brand);background:var(--soft)}
-  .itembtn .ib-thumb{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#EEF3FB,#E2E9F6);display:flex;align-items:center;justify-content:center;color:var(--brand);flex:none}
-  .itembtn .ib-thumb svg{width:18px;height:18px}
+  .itembtn .ib-thumbs{display:inline-flex;gap:4px;flex:none}
+  .itembtn .ib-thumb{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#EEF3FB,#E2E9F6);display:flex;align-items:center;justify-content:center;color:var(--brand);flex:none}
+  .itembtn .ib-thumb svg{width:17px;height:17px}
+  .itembtn .ib-more{align-self:center;font-size:.72rem;font-weight:700;color:var(--muted)}
   .itembtn .ib-txt{font-weight:700;font-size:.85rem;color:var(--ink);white-space:nowrap}
   .itembtn .ib-cv{color:var(--muted);flex:none;transition:transform .15s}
   .it-modal{position:fixed;inset:0;z-index:2000;display:none}
@@ -438,11 +440,13 @@
   function poEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   var PO_BOX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>';
   function poGroup(o){var g={},ord=[];(o.items||[]).forEach(function(it){var nm=it.nm||'-';if(!g[nm]){g[nm]={nm:nm,qty:0,fam:!!it.fam};ord.push(nm);}g[nm].qty++;});return ord.map(function(nm){return g[nm];});}
-  function poItemsCell(o){var n=poGroup(o).length;if(!n)return '<span style="color:var(--muted)">-</span>';
-    return '<button class="itembtn" onclick="poItemsOpen(\''+o.id+'\')"><span class="ib-thumb">'+PO_BOX+'</span><span class="ib-txt">'+n+' รายการ</span><svg class="ib-cv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';}
+  function poItemsCell(o){var units=(o.items||[]).length;if(!units)return '<span style="color:var(--muted)">-</span>';
+    var gs=poGroup(o);var extra=gs.length>3?('<span class="ib-more">+'+(gs.length-3)+'</span>'):'';
+    var thumbs='<span class="ib-thumbs">'+gs.slice(0,3).map(function(){return '<span class="ib-thumb">'+PO_BOX+'</span>';}).join('')+extra+'</span>';
+    return '<button class="itembtn" onclick="poItemsOpen(\''+o.id+'\')">'+thumbs+'<span class="ib-txt">'+units+' รายการ</span><svg class="ib-cv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';}
   function poItemsOpen(id){var o=null;for(var i=0;i<PO_ORDERS.length;i++){if(PO_ORDERS[i].id===id){o=PO_ORDERS[i];break;}}if(!o)return;
     var gs=poGroup(o);
-    document.getElementById('itCount').textContent='· '+o.id+' · '+gs.length+' รายการ';
+    document.getElementById('itCount').textContent='· '+o.id+' · '+(o.items||[]).length+' รายการ';
     var rows=gs.map(function(g){
       return '<div class="it-row"><div class="it-thumb">'+PO_BOX+'</div><div class="it-info">'
         +'<div class="it-nm"><span>'+poEsc(g.nm)+(g.fam?' <span style="color:var(--muted);font-weight:600;font-size:.85em">(ครอบครัว)</span>':'')+'</span><span class="qx">× '+g.qty+'</span></div>'
