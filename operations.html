@@ -310,7 +310,7 @@
       <button class="rf-btn" onclick="poRefundNext()">ถัดไป</button>
     </div>
     <div id="rfStep2" style="display:none">
-      <div class="rf-warn">⚠️ ยืนยันการคืนเงิน — เมื่อยืนยันแล้วจะคืนเงินให้ลูกค้าทันทีและไม่สามารถย้อนกลับได้</div>
+      <div class="rf-warn" id="rfWarn">⚠️ ยืนยันการคืนเงิน</div>
       <div class="rf-sum" id="rfSum"></div>
       <div class="rf-err" id="rfErr2"></div>
       <div class="rf-row"><button class="rf-btn ghost" onclick="poRefundBack()">ย้อนกลับ</button><button class="rf-btn danger" id="rfConfirmBtn" onclick="poRefundSubmit()">ยืนยันคืนเงิน</button></div>
@@ -632,6 +632,7 @@
     RF.amount=amt;RF.category=c;RF.subReason=sub;RF.note=document.getElementById('rfNote').value.trim();
     var methodNote=(RF.pay==='card')?'💳 จะคืนเงินผ่าน Stripe ให้ลูกค้าอัตโนมัติ':'🏦 ออเดอร์นี้ชำระโดยโอนธนาคาร — ระบบจะบันทึกการคืนเงิน แต่ต้องโอนคืนให้ลูกค้าเอง';
     document.getElementById('rfSum').innerHTML='<div class="rf-sr"><span>ออเดอร์</span><b>'+RF.id+'</b></div><div class="rf-sr"><span>ยอดคืน</span><b>฿'+amt.toLocaleString('en-US')+(RF.full?' (เต็มจำนวน)':' (บางส่วน)')+'</b></div><div class="rf-sr"><span>เหตุผล</span><b>'+c+(sub?(' · '+sub):'')+'</b></div>'+(RF.note?('<div class="rf-sr"><span>หมายเหตุ</span><b>'+RF.note+'</b></div>'):'')+'<div class="rf-method">'+methodNote+'</div>';
+    document.getElementById('rfWarn').textContent=(RF.pay==='card')?'⚠️ ยืนยันการคืนเงิน — เมื่อยืนยันแล้วระบบจะคืนเงินผ่าน Stripe ให้ลูกค้าทันที และย้อนกลับไม่ได้':'⚠️ ยืนยันการคืนเงิน — ระบบจะบันทึกว่าคืนเงินแล้วเท่านั้น (ไม่ได้โอนคืนอัตโนมัติ) กรุณาโอนเงินคืนลูกค้าผ่านธนาคารเอง · ย้อนกลับไม่ได้';
     document.getElementById('rfStep1').style.display='none';document.getElementById('rfStep2').style.display='block';
   }
   function poRefundBack(){document.getElementById('rfStep2').style.display='none';document.getElementById('rfStep1').style.display='block';}
