@@ -377,7 +377,7 @@
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
   function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
-  function poNeeds(s){return s==='pending'||s==='paid';}
+  function poNeeds(s){return s==='pending';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
   function poSlip(u){if(u)window.open(u,'_blank');}
