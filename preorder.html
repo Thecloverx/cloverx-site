@@ -1285,9 +1285,10 @@
 #mapp .bd-buy:active{background:#003c8f}
 #mapp #m-done .done{display:block}
 
-/* ===== viewport switch: mobile app vs desktop form ===== */
-#mapp{display:none}
-@media(max-width:820px){body>*:not(#mapp):not(#paidScreen):not(#bankScreen):not(script):not(style):not(link){display:none!important}#mapp{display:block!important}}
+/* ===== app-for-everyone: mobile app column shown on ALL viewports (desktop too) ===== */
+body>*:not(#mapp):not(#paidScreen):not(#bankScreen):not(script):not(style):not(link){display:none!important}
+#mapp{display:block!important}
+@media(min-width:821px){body{background:#E9ECF7}#mapp{box-shadow:0 0 0 1px rgba(20,30,60,.06),0 30px 80px -40px rgba(20,30,60,.55)}}
 </style>
 <div id="mapp">
   <!-- HOME (live) -->
