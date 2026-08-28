@@ -433,6 +433,7 @@
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
   function poSlip(u){if(u)window.open(u,'_blank');}
+  function poReverify(id){fetch('/api/orders/'+id+'/reverify',{method:'POST'}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){setTimeout(poRefresh,2500);}else{alert('ตรวจสลิปไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='easyslip_not_configured')?' (ยังไม่ได้ตั้ง EASYSLIP_API_KEY)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
   function poInvoice(id){window.open('/invoice/'+id,'_blank');}
   function poSetStatus(id,st){
     fetch('/api/orders/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:st})})
@@ -509,7 +510,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
         var refArgs="'"+o.id+"',"+totalAmt+",'"+(o.pay||'')+"',"+refundedTot;
         var cancelJS="if(confirm('ยกเลิกออเดอร์ "+o.id+" ?'))poSetStatus('"+o.id+"','cancelled')";
         var mItems=[];
-        if(o.pay==='bank'&&o.status==='pending'){ mItems.push(mI('✓ ยืนยันการชำระ',"poSetStatus('"+o.id+"','confirmed')",'good')); mItems.push(mI('✕ ปฏิเสธ',"poSetStatus('"+o.id+"','rejected')",'bad')); }
+        if(o.pay==='bank'&&o.status==='pending'){ mItems.push(mI('✓ ยืนยันการชำระ',"poSetStatus('"+o.id+"','confirmed')",'good')); if(o.slipUrl){ mItems.push(mI('🔄 ตรวจสลิปอีกครั้ง (EasySlip)',"poReverify('"+o.id+"')",'brand')); } mItems.push(mI('✕ ปฏิเสธ',"poSetStatus('"+o.id+"','rejected')",'bad')); }
         else {
           // คืนเงิน — โผล่ทุกครั้งที่มีเงินค้างต้องคืน (รวมออเดอร์บัตรที่จ่ายแล้วถูกยกเลิก)
           if(canRefund){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); }

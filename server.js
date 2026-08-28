@@ -272,9 +272,14 @@ function autoVerifyBank(orderId, base64raw, base) {
     var amtOk = (sD.amount != null && !isNaN(sD.amount)) && Math.abs(sD.amount - total) < 1;
     var want = esDigits(process.env.EASYSLIP_RECV_ACCOUNT || '2311711191');
     var last4 = want.slice(-4); var recvDigits = esDigits(sD.recvNum);
-    var acctOk = !!(recvDigits && last4 && recvDigits.indexOf(last4) >= 0);
-    var nameKey = process.env.EASYSLIP_RECV_NAME || 'โคลเวอร์เอ็กซ์';
-    var nameOk = !!(sD.recvName && sD.recvName.indexOf(nameKey) >= 0);
+    // รองรับเลขบัญชีแบบปิดบัง (เช่น xxx-x-x1119-x โชว์แค่บางหลัก): ถือว่าตรงถ้าหลักที่โชว์เป็นส่วนหนึ่งของบัญชีจริง
+    var acctOk = !!(recvDigits && recvDigits.length >= 4 && want && (want.indexOf(recvDigits) >= 0 || recvDigits.indexOf(last4) >= 0));
+    // ชื่อผู้รับ: ตัดช่องว่าง/อักขระซ่อน แล้วเทียบแบบยืดหยุ่น (รองรับชื่อย่อ "บจก." + ชื่อถูกตัดท้าย) + คีย์เวิร์ดแบรนด์
+    var esNorm = function (s) { return String(s || '').replace(/[\s​-‏ ().]/g, '').normalize('NFC'); };
+    var rn = esNorm(sD.recvName);
+    var nk = esNorm(process.env.EASYSLIP_RECV_NAME || 'โคลเวอร์เอ็กซ์');
+    var core = esNorm(process.env.EASYSLIP_RECV_NAMECORE || 'โคลเวอร์');
+    var nameOk = !!(rn && ((nk && (rn.indexOf(nk) >= 0 || nk.indexOf(rn) >= 0)) || (core && rn.indexOf(core) >= 0)));
     var dup = !!(sD.ref && l.some(function (y) { return y.id !== x.id && y.easyslip && y.easyslip.ref && y.easyslip.ref === sD.ref; }));
     var pass = amtOk && (acctOk || nameOk) && !dup;
     x.easyslip.amtOk = amtOk; x.easyslip.acctOk = acctOk; x.easyslip.nameOk = nameOk; x.easyslip.dup = dup;
@@ -527,6 +532,22 @@ app.get('/api/admin/emailtest', function (req, res) {
 });
 
 // ---- serve slip images ----
+// ตรวจสลิปอีกครั้งด้วย EasySlip (ออเดอร์โอนที่แนบสลิปแล้วแต่ยังไม่ยืนยัน) — ใช้ตอนแก้ตรรกะจับคู่แล้วอยากเช็กซ้ำ
+app.post('/api/orders/:id/reverify', (req, res) => {
+  const list = read();
+  const o = list.find(x => x.id === req.params.id);
+  if (!o) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (o.pay !== 'bank' || !o.slipUrl) return res.status(400).json({ ok: false, error: 'no_slip' });
+  if (!easyslipConfigured()) return res.status(400).json({ ok: false, error: 'easyslip_not_configured' });
+  const fn = path.basename(String(o.slipUrl));
+  fs.readFile(path.join(SLIPS, fn), function (err, buf) {
+    if (err) return res.status(404).json({ ok: false, error: 'slip_file_missing' });
+    const base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host);
+    try { autoVerifyBank(o.id, buf.toString('base64'), base); } catch (e) {}
+    res.json({ ok: true, message: 'reverifying' });
+  });
+});
+
 app.get('/api/slips/:fn', (req, res) => {
   const p = path.join(SLIPS, path.basename(req.params.fn));
   if (!fs.existsSync(p)) return res.status(404).end();
