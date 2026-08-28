@@ -1,5 +1,6 @@
 <!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CloverX · XIRCLE</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#fff}
@@ -8,16 +9,27 @@ body{background:#fff}
 .xsec img{width:100%;display:block}
 #brands,#features{margin-top:52px}
 #membership{margin:30px 0}
-/* พื้นที่คลิกทั้งการ์ด/เมนู — โปร่งใส ไม่ทับดีไซน์เดิม */
 .hot{position:absolute;display:block;background:transparent;border:0;cursor:pointer;padding:0;z-index:2}
-/* ปุ่มในรูป (Explore / Shop / About Us) — โปร่งใสวางทับปุ่มจริงในภาพพอดี
-   ให้ความรู้สึก "มีมิติ" เวลาชี้/กด โดยไม่วาดปุ่มซ้อนใหม่ */
+/* ===== ปุ่มจริง มีมิติแบบ Oura: มีเงานุ่มตั้งแต่ตอนวางอยู่ · hover ยกตัว · กดแล้วยุบ ===== */
+.btn3d{position:absolute;z-index:5;display:inline-flex;align-items:center;justify-content:center;
+  border:0;border-radius:999px;color:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif;
+  font-weight:700;letter-spacing:.2px;cursor:pointer;text-decoration:none;line-height:1;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .17s cubic-bezier(.34,1.4,.5,1),box-shadow .17s cubic-bezier(.4,0,.2,1),filter .17s ease;
+  will-change:transform}
+/* น้ำเงิน (Explore hero · Shop · About Us) */
+.btn3d.blue{background:linear-gradient(180deg,#3D8CEC 0%,#1E6FD4 100%);
+  box-shadow:0 8px 20px -5px rgba(20,85,190,.55),0 2px 5px -1px rgba(20,85,190,.35),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 5px rgba(10,55,140,.35)}
+.btn3d.blue:hover{transform:translateY(-3px) scale(1.035);
+  box-shadow:0 18px 34px -8px rgba(20,85,190,.6),0 4px 10px -2px rgba(20,85,190,.4),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 5px rgba(10,55,140,.35);filter:brightness(1.04)}
+.btn3d.blue:active{transform:translateY(2px) scale(.975);
+  box-shadow:0 3px 8px -3px rgba(20,85,190,.55),inset 0 2px 6px rgba(8,45,120,.45)}
+/* ปุ่มเทา "Explore" — คงดีไซน์ใส ๆ เดิมในภาพไว้ (ไม่ทับสีทึบ) แค่ใส่จังหวะกด/ชี้เบา ๆ */
 .pbtn{position:absolute;z-index:5;border:0;padding:0;cursor:pointer;background:transparent;
   border-radius:999px;-webkit-tap-highlight-color:transparent;
-  transition:transform .14s cubic-bezier(.4,0,.2,1),box-shadow .14s cubic-bezier(.4,0,.2,1);
-  will-change:transform}
-.pbtn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 12px 26px -8px rgba(0,0,0,.38)}
-.pbtn:active{transform:translateY(1px) scale(.965);box-shadow:inset 0 0 0 120px rgba(0,0,0,.10)}
+  transition:transform .16s cubic-bezier(.4,0,.2,1),box-shadow .16s cubic-bezier(.4,0,.2,1);will-change:transform}
+.pbtn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 12px 24px -8px rgba(0,0,0,.45)}
+.pbtn:active{transform:translateY(1px) scale(.965);box-shadow:inset 0 0 0 120px rgba(0,0,0,.12)}
 </style></head>
 <body>
 <div class="xwrap">
@@ -27,7 +39,7 @@ body{background:#fff}
     <img src="hero.jpg" alt="XIRCLE">
     <a class="hot" href="/preorder" style="left:12.5%;top:1.5%;width:7%;height:7%" aria-label="Shop"></a>
     <a class="hot" href="/preorder" style="left:93%;top:2%;width:4.5%;height:8%" aria-label="ตะกร้า"></a>
-    <a class="pbtn" href="/preorder" style="left:45%;top:81.4%;width:10%;height:7.4%" aria-label="Explore"></a>
+    <a class="btn3d blue" href="/preorder" style="left:45%;top:81.4%;width:10%;height:7.4%;font-size:clamp(16px,2vw,29px)">Explore</a>
   </div>
 
   <!-- BRAND CARDS -->
@@ -35,16 +47,16 @@ body{background:#fff}
     <img src="brands.jpg" alt="Xircle Brand">
     <a class="hot" href="/preorder" style="left:0.5%;top:1%;width:49%;height:84%" aria-label="Xircle Brand Stainless"></a>
     <a class="hot" href="/preorder" style="left:50.5%;top:1%;width:49%;height:84%" aria-label="Xircle Brand Nylon"></a>
-    <a class="pbtn" href="/preorder" style="left:33.3%;top:87.6%;width:6.9%;height:7.6%" aria-label="Explore Stainless"></a>
-    <a class="pbtn" href="/preorder" style="left:40.5%;top:87.6%;width:7.6%;height:7.6%" aria-label="Shop Stainless"></a>
-    <a class="pbtn" href="/preorder" style="left:84.6%;top:87.6%;width:6.2%;height:7.6%" aria-label="Explore Nylon"></a>
-    <a class="pbtn" href="/preorder" style="left:91.7%;top:87.6%;width:7.5%;height:7.6%" aria-label="Shop Nylon"></a>
+    <a class="pbtn" href="/preorder" style="left:33.6%;top:88.1%;width:6.3%;height:6.7%" aria-label="Explore Stainless"></a>
+    <a class="btn3d blue" href="/preorder" style="left:40.5%;top:87.6%;width:7.6%;height:7.6%;font-size:clamp(11px,1.35vw,20px)">Shop</a>
+    <a class="pbtn" href="/preorder" style="left:85%;top:88.2%;width:5.2%;height:6%" aria-label="Explore Nylon"></a>
+    <a class="btn3d blue" href="/preorder" style="left:91.7%;top:87.6%;width:7.5%;height:7.6%;font-size:clamp(11px,1.35vw,20px)">Shop</a>
   </div>
 
   <!-- MEMBERSHIP -->
   <div class="xsec" id="membership">
     <img src="membership.jpg" alt="The Membership">
-    <a class="pbtn" href="#about" style="left:42.3%;top:71%;width:15.2%;height:22%" aria-label="About Us"></a>
+    <a class="btn3d blue" href="#about" style="left:42.3%;top:71%;width:15.4%;height:21%;font-size:clamp(18px,2.4vw,34px)">About Us</a>
   </div>
 
   <!-- FEATURE CARDS -->
