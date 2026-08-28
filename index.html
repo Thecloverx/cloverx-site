@@ -4,11 +4,9 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif}
-.xwrap{max-width:1440px;margin:0 auto}
+.xwrap{max-width:1760px;margin:0 auto}
 .xsec{position:relative;font-size:0;line-height:0}
 .xsec img{width:100%;display:block}
-/* Hero พอดีจอตอนเข้าเว็บ (เห็นเต็มไม่ตัดปุ่ม/จุด) — จำกัดความกว้างตามความสูงจอ */
-#hero{max-width:min(1440px,164vh);margin:0 auto}
 #brands,#features{margin-top:52px}
 #membership{margin:30px 0}
 .hot{position:absolute;display:block;background:transparent;border:0;cursor:pointer;padding:0;z-index:2}
@@ -20,12 +18,12 @@ body{background:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif}
   transition:transform .17s cubic-bezier(.34,1.4,.5,1),box-shadow .17s cubic-bezier(.4,0,.2,1),filter .17s ease;
   will-change:transform}
 /* น้ำเงิน (Explore hero · Shop · About Us) */
-.btn3d.blue{background:linear-gradient(180deg,#3D8CEC 0%,#1E6FD4 100%);
-  box-shadow:0 8px 20px -5px rgba(20,85,190,.55),0 2px 5px -1px rgba(20,85,190,.35),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 5px rgba(10,55,140,.35)}
-.btn3d.blue:hover{transform:translateY(-3px) scale(1.035);
-  box-shadow:0 18px 34px -8px rgba(20,85,190,.6),0 4px 10px -2px rgba(20,85,190,.4),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 5px rgba(10,55,140,.35);filter:brightness(1.04)}
-.btn3d.blue:active{transform:translateY(2px) scale(.975);
-  box-shadow:0 3px 8px -3px rgba(20,85,190,.55),inset 0 2px 6px rgba(8,45,120,.45)}
+.btn3d.blue{background:linear-gradient(180deg,#3D8CEC 0%,#2472D8 100%);
+  box-shadow:0 5px 14px -5px rgba(20,85,190,.45),inset 0 1px 0 rgba(255,255,255,.22)}
+.btn3d.blue:hover{transform:translateY(-2px) scale(1.03);
+  box-shadow:0 12px 24px -8px rgba(20,85,190,.5),inset 0 1px 0 rgba(255,255,255,.28);filter:brightness(1.04)}
+.btn3d.blue:active{transform:translateY(1px) scale(.98);
+  box-shadow:0 2px 6px -3px rgba(20,85,190,.45)}
 /* ปุ่มเทา "Explore" — คงดีไซน์ใส ๆ เดิมในภาพไว้ (ไม่ทับสีทึบ) แค่ใส่จังหวะกด/ชี้เบา ๆ */
 .pbtn{position:absolute;z-index:5;border:0;padding:0;cursor:pointer;background:transparent;
   border-radius:999px;-webkit-tap-highlight-color:transparent;
@@ -51,11 +49,11 @@ body{background:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif}
 .mmem h2{font-size:27px;font-weight:800;color:#3a3f44;margin-top:12px}
 .mmem p{font-size:15px;color:#7a8290;margin-top:8px;font-weight:500}
 .mabout{margin-top:22px;display:inline-flex;align-items:center;justify-content:center;
-  background:linear-gradient(180deg,#3D8CEC 0%,#1E6FD4 100%);color:#fff;border:0;border-radius:999px;
-  padding:14px 44px;font-family:inherit;font-weight:700;font-size:17px;cursor:pointer;text-decoration:none;
-  box-shadow:0 8px 20px -5px rgba(20,85,190,.55),0 2px 5px -1px rgba(20,85,190,.35),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 5px rgba(10,55,140,.35);
+  background:linear-gradient(180deg,#3D8CEC 0%,#2472D8 100%);color:#fff;border:0;border-radius:999px;
+  padding:10px 34px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none;
+  box-shadow:0 5px 14px -5px rgba(20,85,190,.45),inset 0 1px 0 rgba(255,255,255,.22);
   transition:transform .17s cubic-bezier(.34,1.4,.5,1),box-shadow .17s cubic-bezier(.4,0,.2,1)}
-.mabout:active{transform:translateY(2px) scale(.975);box-shadow:0 3px 8px -3px rgba(20,85,190,.55),inset 0 2px 6px rgba(8,45,120,.45)}
+.mabout:active{transform:translateY(1px) scale(.98);box-shadow:0 2px 6px -3px rgba(20,85,190,.45)}
 
 @media(max-width:820px){
   .desk{display:none}
@@ -72,7 +70,7 @@ body{background:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif}
     <img src="hero.jpg" alt="XIRCLE">
     <a class="hot" href="/preorder" style="left:12.5%;top:1.5%;width:7%;height:7%" aria-label="Shop"></a>
     <a class="hot" href="/preorder" style="left:93%;top:2%;width:4.5%;height:8%" aria-label="ตะกร้า"></a>
-    <a class="btn3d blue" href="/preorder" style="left:46.2%;top:82.2%;width:7.6%;height:5.6%;font-size:clamp(11px,1.15vw,16px)">Explore</a>
+    <a class="btn3d blue" href="/preorder" style="left:46%;top:82.9%;width:8%;height:4.6%;font-size:clamp(10px,1.05vw,15px)">Explore</a>
   </div>
 
   <!-- BRAND CARDS -->
@@ -89,7 +87,7 @@ body{background:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif}
   <!-- MEMBERSHIP -->
   <div class="xsec" id="membership">
     <img src="membership.jpg" alt="The Membership">
-    <a class="btn3d blue" href="#about" style="left:42.3%;top:71%;width:15.4%;height:21%;font-size:clamp(14px,1.75vw,25px)">About Us</a>
+    <a class="btn3d blue" href="#about" style="left:44.3%;top:76.5%;width:11.4%;height:11.5%;font-size:clamp(11px,1.3vw,18px)">About Us</a>
   </div>
 
   <!-- FEATURE CARDS -->
