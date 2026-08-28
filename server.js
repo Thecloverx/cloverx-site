@@ -13,6 +13,24 @@ const DB = path.join(DATA, 'orders.json');
 fs.mkdirSync(SLIPS, { recursive: true });
 if (!fs.existsSync(DB)) fs.writeFileSync(DB, '[]');
 
+// ================= ตั้งค่าระบบ (เปิด/ปิดรับ Pre-Order) =================
+const SETTINGS = path.join(DATA, 'settings.json');
+const DEFAULT_SETTINGS = {
+  preorderOpen: true,
+  closedTitle: 'ปิดรับพรีออเดอร์ชั่วคราว',
+  closedMsg: 'ขณะนี้สินค้าใกล้หมด เราปิดรับคำสั่งซื้อล่วงหน้าไว้ชั่วคราว ขอบคุณสำหรับความสนใจ 💙 โปรดติดตามรอบถัดไปเร็ว ๆ นี้'
+};
+function readSettings() {
+  try { return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(fs.readFileSync(SETTINGS, 'utf8'))); }
+  catch (e) { return Object.assign({}, DEFAULT_SETTINGS); }
+}
+function writeSettings(s) {
+  var cur = readSettings();
+  var next = Object.assign({}, cur, s);
+  try { fs.writeFileSync(SETTINGS, JSON.stringify(next, null, 2)); } catch (e) {}
+  return next;
+}
+
 // ================= STRIPE WEBHOOK (จับคู่การชำระเงินแบบเรียลไทม์) =================
 // ต้องลงทะเบียน "ก่อน" express.json() เพราะการตรวจลายเซ็นต้องใช้ raw body
 // เปิดใช้งานเมื่อกำหนด ENV: STRIPE_WEBHOOK_SECRET (จาก Stripe Dashboard → Webhooks)
@@ -301,6 +319,10 @@ function autoVerifyBank(orderId, base64raw, base) {
 }
 
 app.post('/api/orders', (req, res) => {
+  // ปิดรับพรีออเดอร์: ปฏิเสธคำสั่งซื้อใหม่ (กันออเดอร์หลุดเข้ามาระหว่างปิดรับ)
+  if (!readSettings().preorderOpen) {
+    return res.status(403).json({ ok: false, error: 'preorder_closed', message: readSettings().closedMsg });
+  }
   const o = req.body || {};
   const list = read();
   const seq = (list.length ? Math.max.apply(null, list.map(x => x.seq || 0)) : 0) + 1;
@@ -683,6 +705,57 @@ app.post('/api/orders/:id/invoice', (req, res) => {
   if (!o) return res.status(404).json({ ok: false });
   if (!o.invoiceNo) { o.invoiceNo = nextInvoiceNo(); o.invoiceAt = new Date().toISOString(); write(list); }
   res.json({ ok: true, invoiceNo: o.invoiceNo });
+});
+
+// ---- ตั้งค่า: เปิด/ปิดรับ Pre-Order ----
+app.get('/api/settings', (req, res) => {
+  var s = readSettings();
+  res.json({ preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg });
+});
+app.post('/api/settings', (req, res) => {
+  var b = req.body || {};
+  var patch = {};
+  if (typeof b.preorderOpen === 'boolean') patch.preorderOpen = b.preorderOpen;
+  if (typeof b.closedTitle === 'string') patch.closedTitle = b.closedTitle.slice(0, 120);
+  if (typeof b.closedMsg === 'string') patch.closedMsg = b.closedMsg.slice(0, 500);
+  var s = writeSettings(patch);
+  console.log('[settings] preorderOpen = ' + s.preorderOpen);
+  res.json({ ok: true, preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg });
+});
+
+// ---- หน้า Pre-Order: ถ้าปิดรับ ให้แสดงหน้า "ปิดรับชั่วคราว" แทนฟอร์มสั่งซื้อ ----
+function closedPage(s) {
+  var title = (s.closedTitle || 'ปิดรับพรีออเดอร์ชั่วคราว');
+  var msg = (s.closedMsg || '');
+  var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  return '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>' + esc(title) + ' · XIRCLE</title>'
+    + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">'
+    + '<style>*{margin:0;padding:0;box-sizing:border-box}'
+    + 'body{font-family:"Noto Sans Thai",system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;'
+    + 'background:radial-gradient(1200px 600px at 50% -10%,#EAF2FF 0%,#F6F8FC 45%,#F1F3F7 100%);color:#1a2230;padding:24px}'
+    + '.card{max-width:460px;width:100%;background:#fff;border:1px solid #E7ECF3;border-radius:24px;padding:44px 34px;text-align:center;'
+    + 'box-shadow:0 30px 70px -30px rgba(30,80,160,.28)}'
+    + '.logo{font-size:13px;letter-spacing:4px;font-weight:800;color:#2a2f3a}'
+    + '.mark{font-size:40px;font-weight:800;letter-spacing:3px;color:#33383d;margin:2px 0 22px}.mark b{color:#2E7FE4}'
+    + '.ic{width:74px;height:74px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;'
+    + 'background:linear-gradient(180deg,#EAF2FF,#DCEAFF);color:#2E7FE4}'
+    + 'h1{font-size:23px;font-weight:700;color:#1c2431;margin-bottom:12px}'
+    + 'p{font-size:15.5px;line-height:1.7;color:#5b6675;font-weight:500}'
+    + '.foot{margin-top:26px;font-size:13px;color:#98a2b3}</style></head><body>'
+    + '<div class="card"><div class="logo">CLOVER ✕</div><div class="mark">✕IRCLE</div>'
+    + '<div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg></div>'
+    + '<h1>' + esc(title) + '</h1><p>' + esc(msg) + '</p>'
+    + '<div class="foot">CloverX · Xircle Pre-Order</div></div></body></html>';
+}
+app.get('/preorder', (req, res, next) => {
+  var s = readSettings();
+  // อนุญาตให้ทีมงานพรีวิวฟอร์มได้แม้ปิดรับ ด้วย ?preview=1
+  if (!s.preorderOpen && req.query.preview !== '1') {
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).send(closedPage(s));
+  }
+  next();
 });
 
 // ---- static site (index.html, center.html, operations.html, preorder.html) ----

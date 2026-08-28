@@ -6,12 +6,18 @@ body{background:#fff}
 .xwrap{max-width:1440px;margin:0 auto}
 .xsec{position:relative;font-size:0;line-height:0}
 .xsec img{width:100%;display:block}
-/* ระยะห่างระหว่างเซกชัน (พื้นขาว) */
 #brands,#features{margin-top:52px}
 #membership{margin:30px 0}
-.hot{position:absolute;display:block;background:transparent;border:0;cursor:pointer;padding:0}
-/* DEBUG outlines (remove for production) */
-.dbg .hot{background:rgba(0,120,255,.28);outline:1px solid #06c}
+/* พื้นที่คลิกทั้งการ์ด/เมนู — โปร่งใส ไม่ทับดีไซน์เดิม */
+.hot{position:absolute;display:block;background:transparent;border:0;cursor:pointer;padding:0;z-index:2}
+/* ปุ่มในรูป (Explore / Shop / About Us) — โปร่งใสวางทับปุ่มจริงในภาพพอดี
+   ให้ความรู้สึก "มีมิติ" เวลาชี้/กด โดยไม่วาดปุ่มซ้อนใหม่ */
+.pbtn{position:absolute;z-index:5;border:0;padding:0;cursor:pointer;background:transparent;
+  border-radius:999px;-webkit-tap-highlight-color:transparent;
+  transition:transform .14s cubic-bezier(.4,0,.2,1),box-shadow .14s cubic-bezier(.4,0,.2,1);
+  will-change:transform}
+.pbtn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 12px 26px -8px rgba(0,0,0,.38)}
+.pbtn:active{transform:translateY(1px) scale(.965);box-shadow:inset 0 0 0 120px rgba(0,0,0,.10)}
 </style></head>
 <body>
 <div class="xwrap">
@@ -21,20 +27,24 @@ body{background:#fff}
     <img src="hero.jpg" alt="XIRCLE">
     <a class="hot" href="/preorder" style="left:12.5%;top:1.5%;width:7%;height:7%" aria-label="Shop"></a>
     <a class="hot" href="/preorder" style="left:93%;top:2%;width:4.5%;height:8%" aria-label="ตะกร้า"></a>
-    <a class="hot" href="/preorder" style="left:44%;top:81%;width:12%;height:8.5%" aria-label="Explore"></a>
+    <a class="pbtn" href="/preorder" style="left:45%;top:81.4%;width:10%;height:7.4%" aria-label="Explore"></a>
   </div>
 
   <!-- BRAND CARDS -->
   <div class="xsec" id="brands">
     <img src="brands.jpg" alt="Xircle Brand">
-    <a class="hot" href="/preorder" style="left:0.5%;top:1%;width:49%;height:98%" aria-label="Xircle Brand Stainless"></a>
-    <a class="hot" href="/preorder" style="left:50.5%;top:1%;width:49%;height:98%" aria-label="Xircle Brand Nylon"></a>
+    <a class="hot" href="/preorder" style="left:0.5%;top:1%;width:49%;height:84%" aria-label="Xircle Brand Stainless"></a>
+    <a class="hot" href="/preorder" style="left:50.5%;top:1%;width:49%;height:84%" aria-label="Xircle Brand Nylon"></a>
+    <a class="pbtn" href="/preorder" style="left:33.3%;top:87.6%;width:6.9%;height:7.6%" aria-label="Explore Stainless"></a>
+    <a class="pbtn" href="/preorder" style="left:40.5%;top:87.6%;width:7.6%;height:7.6%" aria-label="Shop Stainless"></a>
+    <a class="pbtn" href="/preorder" style="left:84.6%;top:87.6%;width:6.2%;height:7.6%" aria-label="Explore Nylon"></a>
+    <a class="pbtn" href="/preorder" style="left:91.7%;top:87.6%;width:7.5%;height:7.6%" aria-label="Shop Nylon"></a>
   </div>
 
   <!-- MEMBERSHIP -->
   <div class="xsec" id="membership">
     <img src="membership.jpg" alt="The Membership">
-    <a class="hot" href="#about" style="left:43%;top:74%;width:14%;height:20%" aria-label="About Us"></a>
+    <a class="pbtn" href="#about" style="left:42.3%;top:71%;width:15.2%;height:22%" aria-label="About Us"></a>
   </div>
 
   <!-- FEATURE CARDS -->

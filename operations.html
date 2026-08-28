@@ -433,6 +433,36 @@
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
   function poSlip(u){if(u)window.open(u,'_blank');}
+  /* ===== เปิด/ปิดรับ Pre-Order ===== */
+  var PO_OPEN=true;
+  function poRenderToggle(){
+    var wrap=document.getElementById('poToggleWrap');if(!wrap)return;
+    var on=PO_OPEN;
+    wrap.innerHTML=
+      '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+      +'<div style="display:flex;align-items:center;gap:9px">'
+        +'<span style="width:10px;height:10px;border-radius:50%;background:'+(on?'#16a34a':'#9aa4b2')+';box-shadow:0 0 0 4px '+(on?'rgba(22,163,74,.15)':'rgba(154,164,178,.15)')+'"></span>'
+        +'<span style="font-weight:800;font-size:1rem;color:'+(on?'#15803d':'#64748b')+'">'+(on?'กำลังเปิดรับพรีออเดอร์':'ปิดรับพรีออเดอร์ชั่วคราว')+'</span>'
+      +'</div>'
+      +'<button onclick="poToggleOpen()" role="switch" aria-checked="'+on+'" style="margin-left:auto;position:relative;width:58px;height:32px;border:0;border-radius:999px;cursor:pointer;background:'+(on?'#16a34a':'#cbd5e1')+';transition:background .2s">'
+        +'<span style="position:absolute;top:3px;left:'+(on?'29px':'3px')+';width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .2s"></span>'
+      +'</button></div>'
+      +'<p style="font-size:.8rem;color:var(--muted);margin-top:12px;line-height:1.6">'
+      +(on
+        ? 'ลูกค้าเปิดลิงก์/สแกน QR แล้วสั่งซื้อได้ตามปกติ — กดปุ่มเพื่อ<b>ปิดรับ</b>เมื่อสินค้าใกล้หมด'
+        : 'ลูกค้าที่เปิดลิงก์/สแกน QR จะเห็นหน้า “ปิดรับพรีออเดอร์ชั่วคราว” และสั่งซื้อไม่ได้ — ทีมงานยังพรีวิวฟอร์มได้ที่ <code style="background:var(--soft);padding:1px 5px;border-radius:5px">'+PO_LINK+'?preview=1</code>')
+      +'</p>';
+  }
+  function poLoadToggle(){
+    fetch('/api/settings').then(function(r){return r.json();}).then(function(s){PO_OPEN=!!s.preorderOpen;poRenderToggle();}).catch(function(){poRenderToggle();});
+  }
+  function poToggleOpen(){
+    var next=!PO_OPEN;
+    if(!next && !confirm('ปิดรับพรีออเดอร์?\n\nลูกค้าจะสั่งซื้อผ่านลิงก์/QR ไม่ได้จนกว่าจะเปิดรับอีกครั้ง')) return;
+    fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({preorderOpen:next})})
+      .then(function(r){return r.json();}).then(function(j){PO_OPEN=!!j.preorderOpen;poRenderToggle();})
+      .catch(function(){alert('อัปเดตไม่สำเร็จ — ลองใหม่อีกครั้ง');});
+  }
   function poReverify(id){fetch('/api/orders/'+id+'/reverify',{method:'POST'}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){setTimeout(poRefresh,2500);}else{alert('ตรวจสลิปไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='easyslip_not_configured')?' (ยังไม่ได้ตั้ง EASYSLIP_API_KEY)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
   function poInvoice(id){window.open('/invoice/'+id,'_blank');}
   function poSetStatus(id,st){
@@ -548,6 +578,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   function renderQR(){
     gen.innerHTML='<div class="head"><h1>QR Code สั่งซื้อ Pre-Order</h1><p>ส่ง QR หรือลิงก์นี้ให้ลูกค้าเพื่อเปิดหน้าสั่งซื้อ — คำสั่งซื้อจะเข้ามาที่หน้า "จัดการ Pre-Order" อัตโนมัติ</p></div>'
+      +'<div class="panel" style="max-width:640px;margin-bottom:20px"><div class="ph"><h3>สถานะการรับพรีออเดอร์</h3><span style="font-size:.78rem;color:var(--muted)">เปิด/ปิดรับคำสั่งซื้อจากลูกค้า</span></div><div id="poToggleWrap"><div style="color:var(--muted);font-size:.85rem;padding:6px 0">กำลังโหลด…</div></div></div>'
       +'<div class="panel" style="max-width:640px"><div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3></div>'
       +'<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">'
       +'<div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;flex:none;text-align:center"><img src="'+PO_QR+'" alt="QR Pre-Order" style="width:190px;height:190px;display:block;image-rendering:pixelated"><a href="'+PO_QR+'" download="cloverx-preorder-qr.png" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--brand);font-weight:700;text-decoration:none">ดาวน์โหลด QR ⤓</a></div>'
@@ -561,6 +592,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<a href="'+PO_LINK+'?agent=1" target="_blank" style="background:#fff;color:var(--brand);border:1.5px solid var(--brand);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.86rem;text-decoration:none">เปิดโหมดตัวแทน ↗</a></div>'
       +'<p style="font-size:.78rem;color:var(--muted);margin-top:12px">* ลูกค้าสั่งเอง = เด้งไปหน้าชำระเงินอัตโนมัติ · ตัวแทน = ได้ลิงก์ชำระเงินไว้ส่งต่อให้ลูกค้า</p>'
       +'</div></div></div>';
+    poLoadToggle();
   }
   function renderPreorder(){ poDraw(); poRefresh(); }
 
