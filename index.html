@@ -52,22 +52,35 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdro
 .burger span::before{position:absolute;top:-6px}.burger span::after{position:absolute;top:6px}
 
 /* ============ HERO ============ */
-.hero{position:relative;max-width:var(--maxw);margin:0 auto;padding:0 24px;min-height:calc(100vh - 72px);display:flex;align-items:center}
-.hero .xmark{position:absolute;left:-70px;top:50%;transform:translateY(-50%);width:520px;height:520px;pointer-events:none;opacity:.09;z-index:0}
-.hleft{position:relative;z-index:2;width:50%;max-width:560px}
-.htitle{font-family:"Manrope";font-weight:800;letter-spacing:-.02em;line-height:1.03;font-size:clamp(38px,5vw,70px);color:var(--ink)}
-.htitle .b{color:var(--blue)}
-.hsub{margin-top:20px;font-size:clamp(15px,1.3vw,19px);line-height:1.7;color:var(--ink2);font-weight:500;max-width:28em}
-.search{margin-top:28px;display:flex;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 7px 6px 22px;max-width:440px;box-shadow:0 18px 40px -26px rgba(20,60,130,.5)}
-.search input{flex:1;border:0;outline:0;font-family:"Noto Sans Thai","Manrope";font-size:16px;color:var(--ink);background:transparent}
-.search input::placeholder{color:#9aa4b3}
-.search button{flex:none;width:48px;height:48px;border:0;border-radius:50%;background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -8px rgba(20,90,200,.7);transition:transform .15s}
-.search button:hover{transform:scale(1.06)}
-/* right photo — blends like the design: soft left fade, bleeds to viewport right, keeps Eat/Move/Sleep */
-.hphoto{position:absolute;top:50%;transform:translateY(-50%);right:calc(50% - 50vw);width:min(56vw,1060px);z-index:1;pointer-events:none}
-.hphoto img{width:100%;height:auto;display:block;
-  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 22%);
-  mask-image:linear-gradient(to right,transparent 0,#000 22%)}
+/* ===== DESKTOP HERO — original design image (nav cropped off) + HTML search box ===== */
+.dhero{position:relative;width:100%;min-height:calc(100vh - 72px)}
+.dhero .herowrap{position:relative;width:100%;font-size:0}
+.dhero .herobase{width:100%;height:auto;display:block}
+.hsearchbox{position:absolute;z-index:3;display:flex;align-items:center;
+  background:#fff;border:1.5px solid var(--line);border-radius:999px;
+  padding:0 0.9% 0 2.6%;box-shadow:0 20px 44px -26px rgba(20,60,130,.5)}
+.hsearchbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;
+  font-family:"Noto Sans Thai","Manrope",sans-serif;color:#1c2431;font-size:clamp(13px,1.1vw,17px)}
+.hsearchbox input::placeholder{color:#9aa4b3}
+.hsearchbox button{flex:none;height:72%;aspect-ratio:1;border:0;border-radius:50%;cursor:pointer;
+  background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 18px -8px rgba(20,90,200,.7);transition:transform .15s}
+.hsearchbox button:hover{transform:scale(1.06)}
+.hsearchbox button svg{width:46%;height:46%}
+
+/* ===== MOBILE HERO (HTML, readable) — hidden on desktop ===== */
+.mhero{display:none}
+.mhero .xmark{position:absolute;left:-70px;top:0;width:320px;height:320px;pointer-events:none;opacity:.09;z-index:0}
+.mhero .hleft{position:relative;z-index:2}
+.mhero .htitle{font-family:"Manrope";font-weight:800;letter-spacing:-.02em;line-height:1.03;font-size:clamp(34px,9vw,52px);color:var(--ink)}
+.mhero .htitle .b{color:var(--blue)}
+.mhero .hsub{margin-top:16px;font-size:16px;line-height:1.7;color:var(--ink2);font-weight:500}
+.mhero .search{margin-top:22px;display:flex;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 7px 6px 20px;box-shadow:0 18px 40px -26px rgba(20,60,130,.5)}
+.mhero .search input{flex:1;border:0;outline:0;font-family:"Noto Sans Thai","Manrope";font-size:16px;color:var(--ink);background:transparent}
+.mhero .search input::placeholder{color:#9aa4b3}
+.mhero .search button{flex:none;width:46px;height:46px;border:0;border-radius:50%;background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mhero .hphoto{margin-top:20px;border-radius:18px;overflow:hidden}
+.mhero .hphoto img{width:100%;height:auto;display:block}
 
 /* ============ ABOUT ============ */
 .about{max-width:1000px;margin:26px auto 8px;padding:54px 24px 40px;text-align:center}
@@ -138,12 +151,9 @@ footer a{color:#9fc0ff}
 @media (max-width:960px){
   .nav .links,.nav .login{display:none}
   .burger{display:flex}
-  .hero{flex-direction:column;min-height:auto;padding:26px 20px 22px;align-items:stretch;gap:20px}
-  .hero .xmark{width:330px;height:330px;left:-70px;top:0;transform:none}
-  .hleft{width:100%;max-width:none;order:2}
-  .hphoto{position:static;transform:none;width:100%;right:auto;order:1}
-  .hphoto img{border-radius:18px;-webkit-mask-image:none;mask-image:none}
-  .htitle{font-size:clamp(34px,9vw,52px)}
+  .dhero{display:none}
+  .mhero{display:flex;position:relative;flex-direction:column;min-height:auto;
+    max-width:var(--maxw);margin:0 auto;padding:24px 20px 20px;gap:18px;overflow:hidden}
   .stage{height:470px}
   .arrow.prev{left:8px}.arrow.next{right:8px}
   .card{width:90vw;aspect-ratio:7/6}
@@ -185,11 +195,25 @@ footer a{color:#9fc0ff}
   </div>
 </header>
 
-<!-- ============ HERO — HTML nav/headline/search + blended design photo ============ -->
-<section class="hero">
+<!-- ============ DESKTOP HERO — original design image + HTML search box ============ -->
+<section class="dhero">
+  <div class="herowrap">
+    <img class="herobase" src="heroimg_body.jpg" alt="Better Habits. Better Health. Better Life.">
+    <form class="hsearchbox" action="#jobs" onsubmit="return false" style="left:5.6%;top:65.2%;width:27.5%;height:14.6%">
+      <input type="text" placeholder="Job title or keywords" aria-label="Search jobs">
+      <button type="submit" aria-label="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- ============ MOBILE HERO — HTML (readable) ============ -->
+<section class="hero mhero">
   <svg class="xmark" viewBox="0 0 100 100" aria-hidden="true">
     <path d="M8 8 C 40 38, 60 38, 92 8 C 62 40, 62 60, 92 92 C 60 62, 40 62, 8 92 C 38 60, 38 40, 8 8 Z" fill="#2E7FE4"/>
   </svg>
+  <div class="hphoto"><img src="heroteam.jpg" alt="ทีมงาน CloverX"></div>
   <div class="hleft">
     <h1 class="htitle eng">Better Habits.<br>Better Health.<br><span class="b">Better Life.</span></h1>
     <p class="hsub">ร่วมเป็นส่วนหนึ่งกับบริษัทสุขภาพยุคใหม่<br>ที่ช่วยให้คนสุขภาพดีขึ้นและเติบโตไปด้วยกัน</p>
@@ -200,7 +224,6 @@ footer a{color:#9fc0ff}
       </button>
     </form>
   </div>
-  <div class="hphoto"><img src="heroteam.jpg" alt="ทีมงาน CloverX"></div>
 </section>
 
 <!-- ============ ABOUT ============ -->
