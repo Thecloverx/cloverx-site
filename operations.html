@@ -28,20 +28,27 @@
   .wsbadge{margin:14px 16px 6px;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
   .wsbadge .ic{width:34px;height:34px;border-radius:9px;background:#7A8699;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
   .wsbadge b{font-size:.92rem}.wsbadge span{display:block;font-size:.72rem;color:var(--muted)}
-  .nav{padding:8px 12px 18px;display:flex;flex-direction:column;gap:2px;flex:1;overflow:auto}
-  .nav .item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--ink);font-weight:600;font-size:.92rem;cursor:pointer;transition:.14s;border:0;background:none;width:100%;text-align:left;font-family:inherit}
-  .nav .item svg.i{width:19px;height:19px;flex:none;color:var(--muted)}
+  .nav{padding:8px 10px 12px;display:flex;flex-direction:column;gap:1px;flex:1;overflow:auto}
+  .nav .item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;color:var(--ink);font-weight:600;font-size:.88rem;cursor:pointer;transition:.14s;border:0;background:none;width:100%;text-align:left;font-family:inherit;position:relative}
+  .nav .item svg.i{width:18px;height:18px;flex:none;color:var(--muted)}
+  .nav .item .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .nav .item:hover{background:var(--soft)}
-  .nav .item.active{background:var(--brand-tint);color:var(--brand)}
+  .nav .item.active{background:var(--brand-tint);color:var(--brand);font-weight:700;box-shadow:inset 2.5px 0 0 var(--brand)}
   .nav .item.active svg.i{color:var(--brand)}
-  .nav .item .caret{margin-left:auto;transition:transform .18s;color:var(--muted)}
-  .nav .group.open>.item .caret{transform:rotate(90deg)}
-  .nav .children{display:none;flex-direction:column;gap:2px;margin:2px 0 2px 0;padding-left:0}
+  /* หัวข้อกลุ่ม = section label เล็ก ๆ */
+  .nav .group{margin-top:5px}
+  .nav .group:first-child{margin-top:0}
+  .nav .ghead{font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted)}
+  .nav .ghead svg.i{width:16px;height:16px}
+  .nav .ghead:hover{background:var(--soft);color:var(--ink)}
+  .nav .item .caret{margin-left:auto;transition:transform .18s;color:var(--muted);flex:none;opacity:.7}
+  .nav .group.open>.ghead .caret{transform:rotate(90deg)}
+  .nav .children{display:none;flex-direction:column;gap:1px;margin:1px 0 2px}
   .nav .group.open>.children{display:flex}
-  .nav .children .item{font-weight:500;padding-left:42px;font-size:.9rem}
-  .nav .children .children .item{padding-left:58px;font-size:.88rem;color:var(--muted)}
-  .nav .children .children .item.active{color:var(--brand)}
-  .nav .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex:none;margin-left:2px}
+  .nav .children .item{font-weight:600;padding-left:38px;font-size:.86rem;color:var(--ink)}
+  .nav .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45;flex:none}
+  .nav .navfoot{margin-top:auto;padding-top:8px;margin-bottom:0;border-top:1px solid var(--line)}
+  .nav .navfoot .item{margin-top:2px}
 
   /* MAIN */
   .main{display:flex;flex-direction:column;min-width:0}
@@ -222,46 +229,67 @@
       <div><b>ฝ่ายปฏิบัติการ</b><span>Operations</span></div>
     </div>
     <nav class="nav" id="nav">
+      <!-- ภาพรวม -->
       <div class="group open" id="g-overview">
-        <button class="item" data-toggle="g-overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>ภาพรวม (Overview)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="item ghead" data-toggle="g-overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="lbl">ภาพรวม</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item active" data-view="podash"><span class="dot"></span>Dashboard</button>
+          <button class="item active" data-view="podash"><span class="dot"></span><span class="lbl">Dashboard</span></button>
         </div>
       </div>
 
+      <!-- การขาย -->
       <div class="group open" id="g-manage">
-        <button class="item" data-toggle="g-manage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>การจัดการ (Management)<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="item ghead" data-toggle="g-manage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span class="lbl">การขาย</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item" data-view="order"><span class="dot"></span>Order</button>
-          <button class="item" data-view="preorder"><span class="dot"></span>Pre-Order</button>
-          <button class="item" data-view="qr"><span class="dot"></span>QR Code</button>
+          <button class="item" data-view="order"><span class="dot"></span><span class="lbl">Order</span></button>
+          <button class="item" data-view="preorder"><span class="dot"></span><span class="lbl">Pre-Order</span></button>
+          <button class="item" data-view="qr"><span class="dot"></span><span class="lbl">QR Code</span></button>
+          <button class="item" data-view="customers"><span class="dot"></span><span class="lbl">Customers</span></button>
         </div>
       </div>
 
-      <div class="group open" id="g-xvisor">
-        <button class="item" data-toggle="g-xvisor"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>X-Visor Management<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <!-- X-Visor -->
+      <div class="group" id="g-xvisor">
+        <button class="item ghead" data-toggle="g-xvisor"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg><span class="lbl">X-Visor</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item" data-view="cert"><span class="dot"></span>Certification</button>
-          <button class="item" data-view="activity"><span class="dot"></span>Activity</button>
+          <button class="item" data-view="cert"><span class="dot"></span><span class="lbl">Certification</span></button>
+          <button class="item" data-view="activity"><span class="dot"></span><span class="lbl">Activity</span></button>
         </div>
       </div>
 
-      <div class="group open" id="g-exam">
-        <button class="item" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg>Exam Certification<svg class="caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <!-- Exam -->
+      <div class="group" id="g-exam">
+        <button class="item ghead" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">Exam</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item" data-view="exam-overview"><span class="dot"></span>Exam Overview</button>
-          <button class="item" data-view="exam-session"><span class="dot"></span>Exam Session</button>
-          <button class="item" data-view="exam-tracker"><span class="dot"></span>Exam Tracker</button>
-          <button class="item" data-view="exam-result"><span class="dot"></span>Exam Result</button>
+          <button class="item" data-view="exam-overview"><span class="dot"></span><span class="lbl">Exam Overview</span></button>
+          <button class="item" data-view="exam-session"><span class="dot"></span><span class="lbl">Exam Session</span></button>
+          <button class="item" data-view="exam-tracker"><span class="dot"></span><span class="lbl">Exam Tracker</span></button>
+          <button class="item" data-view="exam-result"><span class="dot"></span><span class="lbl">Exam Result</span></button>
         </div>
       </div>
 
-      <button class="item" data-view="customers"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9"/></svg>Customers</button>
-      <button class="item" data-view="tasks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tasks</button>
-      <button class="item" data-view="issues"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/></svg>Issues / Tickets</button>
-      <button class="item" data-view="reports"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>Reports</button>
-      <button class="item" data-view="documents"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Documents</button>
-      <button class="item" data-view="settings"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 17 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Settings</button>
+      <!-- งานประจำวัน -->
+      <div class="group" id="g-work">
+        <button class="item ghead" data-toggle="g-work"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="lbl">งานประจำวัน</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="tasks"><span class="dot"></span><span class="lbl">Tasks</span></button>
+          <button class="item" data-view="issues"><span class="dot"></span><span class="lbl">Issues / Tickets</span></button>
+        </div>
+      </div>
+
+      <!-- รายงาน & เอกสาร -->
+      <div class="group" id="g-docs">
+        <button class="item ghead" data-toggle="g-docs"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg><span class="lbl">รายงาน &amp; เอกสาร</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="reports"><span class="dot"></span><span class="lbl">Reports</span></button>
+          <button class="item" data-view="documents"><span class="dot"></span><span class="lbl">Documents</span></button>
+        </div>
+      </div>
+
+      <!-- ตั้งค่า (ปักหมุดล่างสุด) -->
+      <div class="navfoot">
+        <button class="item" data-view="settings"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 17 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span class="lbl">Settings</span></button>
+      </div>
     </nav>
   </aside>
   <div class="scrim" id="scrim" onclick="toggleSide()"></div>
