@@ -43,10 +43,14 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 /* transparent clickable hotspots positioned by % over the baked image */
 .hero .hs{position:absolute;z-index:3;display:block;background:transparent;cursor:pointer}
 /* real search input over the baked "Job title or keywords" box */
-.hero .hsearch{position:absolute;z-index:3;display:flex;align-items:center}
-.hero .hsearch input{width:100%;height:100%;border:0;outline:0;background:transparent;
-  font-family:"Noto Sans Thai","Manrope",sans-serif;color:#1c2431;padding:0 2%}
+.hero .hsearch{position:absolute;z-index:3;display:flex;align-items:center;border-radius:999px;overflow:hidden}
+.hero .hsearch input{width:100%;border:0;outline:0;background:transparent;
+  font-family:"Noto Sans Thai","Manrope",sans-serif;color:#1c2431;
+  font-size:clamp(14px,1.45vw,22px);line-height:1.2;padding:0 5%}
 .hero .hsearch input::placeholder{color:transparent}
+/* hide the baked placeholder text only while focused / typing */
+.hero .hsearch input:focus,
+.hero .hsearch input:not(:placeholder-shown){background:#fff}
 .hero .hsbtn{position:absolute;z-index:4;background:transparent;border:0;cursor:pointer}
 
 /* ============ ABOUT ============ */
@@ -149,8 +153,8 @@ footer a{color:#9fc0ff}
     <a class="hs" href="#faqs"      style="left:63.5%;top:2.5%;width:6%;height:7%" aria-label="FAQs"></a>
     <a class="hs" href="/operations" style="left:92.5%;top:2%;width:7%;height:8%"  aria-label="Login"></a>
     <!-- real search input over the baked box + magnifier -->
-    <form class="hsearch" action="#jobs" onsubmit="return false" style="left:7%;top:70.5%;width:18.5%;height:10%">
-      <input type="text" aria-label="Job title or keywords">
+    <form class="hsearch" action="#jobs" onsubmit="return false" style="left:6%;top:70.5%;width:20%;height:10%">
+      <input type="text" placeholder=" " aria-label="Job title or keywords">
     </form>
     <button class="hsbtn" type="button" aria-label="search" style="left:25.5%;top:70.5%;width:5.5%;height:10%"></button>
   </div>
