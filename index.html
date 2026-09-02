@@ -53,9 +53,11 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdro
 
 /* ============ HERO ============ */
 /* ===== DESKTOP HERO — original design image (nav cropped off) + HTML search box ===== */
-.dhero{position:relative;width:100%;min-height:calc(100vh - 72px)}
+.dhero{position:relative;width:100%;min-height:calc(100vh - 74px);background:#fff}
 .dhero .herowrap{position:relative;width:100%;font-size:0}
-.dhero .herobase{width:100%;height:auto;display:block}
+.dhero .herobase{width:100%;height:auto;display:block;
+  -webkit-mask-image:linear-gradient(to bottom,#000 88%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 88%,transparent 100%)}
 .hsearchbox{position:absolute;z-index:3;display:flex;align-items:center;
   background:#fff;border:1.5px solid var(--line);border-radius:999px;
   padding:0 0.9% 0 2.6%;box-shadow:0 20px 44px -26px rgba(20,60,130,.5)}
@@ -199,7 +201,7 @@ footer a{color:#9fc0ff}
 <section class="dhero">
   <div class="herowrap">
     <img class="herobase" src="heroimg_body.jpg" alt="Better Habits. Better Health. Better Life.">
-    <form class="hsearchbox" action="#jobs" onsubmit="return false" style="left:5.6%;top:65.2%;width:27.5%;height:14.6%">
+    <form class="hsearchbox" action="#jobs" onsubmit="return false" style="left:6%;top:70.2%;width:26%;height:11%">
       <input type="text" placeholder="Job title or keywords" aria-label="Search jobs">
       <button type="submit" aria-label="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
