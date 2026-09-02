@@ -112,6 +112,13 @@
   .pill.new{background:var(--brand-tint);color:var(--brand)}
   .pill.bad{background:var(--bad-tint);color:var(--bad)}
   .pill.wait{background:#EEF1F6;color:#6B7793}
+  .etabs{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .etab{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:12px 18px;cursor:pointer;font-family:inherit;font-weight:800;color:var(--ink);font-size:.98rem;transition:.15s;min-width:180px}
+  .etab small{font-weight:600;font-size:.72rem;color:var(--muted)}
+  .etab .etab-n{display:inline-block;background:#EEF1F6;color:#6B7793;font-size:.72rem;font-weight:800;border-radius:999px;padding:1px 9px;margin-left:4px}
+  .etab:hover{border-color:var(--brand)}
+  .etab.on{border-color:var(--brand);background:var(--brand-tint);color:var(--brand);box-shadow:0 8px 20px -12px rgba(46,127,228,.5)}
+  .etab.on .etab-n{background:var(--brand);color:#fff}
 
   /* list */
   .li{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
@@ -462,6 +469,63 @@
   }
   function kpi(lb,v,bg,fg){return '<div class="kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+bg+';color:'+fg+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg></div></div><div class="v num">'+v+'</div></div>';}
 
+  /* ===== Exam Tracker (split Online / Offline On-Site) ===== */
+  var EXAM_TAB='online';
+  var EXAM_CANDS=[
+    {id:'660110001',name:'ณัฐวัฒน์ ยิ้มใจ',mode:'online',part:3,ansd:52,total:100,score:null,status:'in_progress',remain:'01:42:18'},
+    {id:'660110004',name:'ปวีณา ทองแท้',mode:'online',part:5,ansd:100,total:100,score:null,status:'checking',remain:'00:11:02'},
+    {id:'660110007',name:'กิตติพงษ์ ศรีสุข',mode:'online',part:5,ansd:100,total:100,score:86,status:'waiting_verify',remain:'—'},
+    {id:'660110009',name:'อารยา แจ่มใส',mode:'online',part:2,ansd:31,total:100,score:null,status:'remedial',remain:'01:58:40'},
+    {id:'660110012',name:'ธนกร วัฒนา',mode:'online',part:5,ansd:100,total:100,score:92,status:'passed',remain:'—'},
+    {id:'660110015',name:'สุชานันท์ ปิ่นทอง',mode:'online',part:1,ansd:8,total:100,score:null,status:'in_progress',remain:'01:51:33'},
+    {id:'660110002',name:'ชวินทร์ ก้องเกียรติ',mode:'onsite',part:4,ansd:74,total:100,score:null,status:'in_progress',remain:'00:58:19',paused:1},
+    {id:'660110003',name:'เมธาวี บุญมี',mode:'onsite',part:5,ansd:100,total:100,score:78,status:'remedial',remain:'—'},
+    {id:'660110006',name:'ภาคภูมิ ไชยวงศ์',mode:'onsite',part:5,ansd:100,total:100,score:88,status:'passed',remain:'—'},
+    {id:'660110008',name:'ณิชา พรหมมา',mode:'onsite',part:2,ansd:24,total:100,score:null,status:'in_progress',remain:'01:33:05',paused:2},
+    {id:'660110011',name:'อนุชา เรืองศรี',mode:'onsite',part:5,ansd:100,total:100,score:81,status:'completed',remain:'—'}
+  ];
+  var EXAM_STATUS={
+    in_progress:{cl:'new',t:'กำลังสอบ'}, checking:{cl:'wait',t:'กำลังตรวจ'}, remedial:{cl:'pend',t:'สอบซ่อม'},
+    waiting_verify:{cl:'wait',t:'รอทีมงานยืนยัน'}, passed:{cl:'ok',t:'ผ่านครบ 5 พาร์ท'}, completed:{cl:'ok',t:'เสร็จสมบูรณ์'}
+  };
+  function renderExamTracker(){
+    var list=EXAM_CANDS.filter(function(c){return c.mode===EXAM_TAB;});
+    var cnt=function(st){return list.filter(function(c){return c.status===st;}).length;};
+    var doing=cnt('in_progress')+cnt('checking'), rem=cnt('remedial'),
+        passed=cnt('passed')+cnt('completed'), waiting=cnt('waiting_verify');
+    var seg=function(id,label,sub){var on=EXAM_TAB===id;
+      return '<button class="etab'+(on?' on':'')+'" data-tab="'+id+'">'+label
+        +' <span class="etab-n">'+EXAM_CANDS.filter(function(c){return c.mode===id;}).length+'</span>'
+        +'<small>'+sub+'</small></button>';};
+    var rows=list.map(function(c){
+      var s=EXAM_STATUS[c.status];
+      var prog=c.status==='passed'||c.status==='completed'||c.status==='waiting_verify'
+        ? '<span style="color:var(--muted)">ครบ 5 พาร์ท</span>'
+        : 'พาร์ท '+c.part+' <span style="color:var(--muted)">· '+c.ansd+'/'+c.total+'</span>';
+      var pausedTag = c.mode==='onsite' && c.paused ? ' <span class="pill wait" title="หยุดเวลา">⏸ '+c.paused+'/2</span>' : '';
+      return '<tr><td class="num">'+c.id+'</td><td><b>'+c.name+'</b></td>'
+        +'<td>'+prog+pausedTag+'</td>'
+        +'<td class="num">'+c.remain+'</td>'
+        +'<td class="num">'+(c.score!=null?('<b>'+c.score+'</b><span style="color:var(--muted)">/100</span>'):'—')+'</td>'
+        +'<td><span class="pill '+s.cl+'">'+s.t+'</span></td></tr>';
+    }).join('');
+    var modeLabel = EXAM_TAB==='online' ? 'Online (สอบออนไลน์)' : 'Offline · On-Site (สอบที่ศูนย์)';
+    gen.innerHTML=
+      '<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'
+      +'<div><h1>ติดตามการสอบ · Exam Tracker</h1><p>ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor · แยกตามรูปแบบการสอบ</p></div>'
+      +'<a class="itembtn" href="/xvisor" target="_blank" style="text-decoration:none"><span class="ib-txt" style="color:var(--brand)">เปิดหน้าสอบ X-VISOR ↗</span></a></div>'
+      +'<div class="etabs">'+seg('online','Online','สอบออนไลน์ · เปิดกล้อง')+seg('onsite','Offline (On-Site)','สอบที่ศูนย์ · หยุดเวลาได้')+'</div>'
+      +'<div class="kpis">'
+      +kpi('กำลังสอบ · '+modeLabel.split(' ')[0],String(doing),'var(--brand-tint)','var(--brand)')
+      +kpi('สอบซ่อม',String(rem),'var(--warn-tint)','var(--warn)')
+      +kpi('ผ่านครบ / เสร็จ',String(passed),'var(--good-tint)','var(--good)')
+      +kpi('รอทีมงานยืนยัน',String(waiting),'#EEF1F6','#6B7793')
+      +'</div>'
+      +'<div class="panel"><div class="ph"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><a class="link" href="#">ส่งออก →</a></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    gen.querySelectorAll('.etab').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
+  }
+
   var PO_LINK='https://cloverx-site-production.up.railway.app/preorder';
   var PO_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASgAAAEoAQMAAADRyf5aAAAABlBMVEULDhb///8FXNk8AAABfklEQVR42u2awW7DMAxDif3/P2uDI4pSYgfFsNuYoIVRu5cHiaKUID654FM+9dtTuK6fJXD9wH9zJ77wyfUfToFg12Ihu+7I77VjXoNXRlcsWhlsfce8drwyusgrw828zrxANaN+mdeLfiUuorJ+nXipPt5v18cNr5u72HkR85r6tbxWCVj75K553eKL3OgpYtRM8xq85B9SslK6EqR5PXgxAZvq9yAzr1kfmYbRLEYGnf3ETr8g21XJ2KLPvGY+Rusam44JpHk962Oln7SLDt+8bvEly0V+9GTW+4NfZXwBaA7D/uvcb1PmyUwOw7we/SNqEK1JDmpCbV6DlwYUozZG0TSvh97rKUcFl/PxNP+K6CMw2Vbn48v8q9zD6CBdH7f9o3ofTe9l/81rF1/SemCKmnlN/WLzGG2hCb55HfxqL5KhBDWvez80GkfU08hKV/Pa8VJ89d7R+XjgxQZo9Nr2E2/61SRLVtb5eKiPgan1UTzNa+O//OagT/35qW97jTX96F1uSAAAAABJRU5ErkJggg==';
   var PO_PROD=[
@@ -749,7 +813,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var isOv=(v==='overview');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='exam-tracker')renderExamTracker(); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)

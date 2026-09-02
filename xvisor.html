@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-VISOR — ระบบสอบ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --blue:#2E7FE4; --blue-d:#1F6FDB; --blue-l:#5AA0FF;
+  --ink:#14294a; --ink2:#3a4b66; --muted:#7d8aa0;
+  --green:#12A67C; --green-t:#e4f6ef; --red:#E5484D; --red-t:#fdecec;
+  --line:rgba(180,200,228,.55);
+  --glass:rgba(255,255,255,.58); --glass-2:rgba(255,255,255,.82);
+  --r-s:14px; --r:20px; --r-l:26px;
+  --sh:0 14px 34px -16px rgba(28,74,150,.34), inset 0 1px 0 rgba(255,255,255,.85);
+  --glow:0 10px 30px -8px rgba(46,127,228,.62), inset 0 1px 0 rgba(255,255,255,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"Noto Sans Thai","Manrope",system-ui,sans-serif;color:var(--ink);
+  background:
+    radial-gradient(120% 90% at 82% 8%,#ffffff 0%,rgba(255,255,255,0) 42%),
+    radial-gradient(90% 70% at 12% 6%,#f2f8ff 0%,rgba(242,248,255,0) 46%),
+    linear-gradient(140deg,#e8f0fb 0%,#dce8f7 48%,#cfe0f4 100%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased;min-height:100%;
+}
+.eng{font-family:"Manrope","Noto Sans Thai",sans-serif}
+.num{font-family:"Manrope",sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- glass primitives ---------- */
+.glass{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.85);border-radius:var(--r);box-shadow:var(--sh)}
+.glass-2{background:var(--glass-2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.95);border-radius:var(--r);box-shadow:var(--sh)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:999px;
+  font-weight:700;font-size:1rem;padding:15px 26px;transition:transform .14s, box-shadow .14s, background .14s}
+.btn.pri{color:#fff;background:linear-gradient(180deg,#4a97f0,#1f6fdb);box-shadow:var(--glow);position:relative;overflow:hidden}
+.btn.pri::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  transform:translateX(-120%);transition:transform .6s}
+.btn.pri:hover:not(:disabled)::after{transform:translateX(120%)}
+.btn.pri:hover:not(:disabled){transform:translateY(-1px)}
+.btn.pri:disabled{background:linear-gradient(180deg,#b9cbe4,#a6bcdb);box-shadow:none;color:#eef4fb;cursor:not-allowed}
+.btn.ghost{background:var(--glass-2);color:var(--ink);border:1px solid rgba(255,255,255,.9);box-shadow:var(--sh)}
+.btn.ghost:hover{background:#fff}
+.btn.danger{background:var(--glass-2);color:var(--red);border:1px solid rgba(229,72,77,.4);box-shadow:var(--sh)}
+.btn .ic{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:1.6px solid currentColor}
+.btn svg{width:18px;height:18px}
+
+/* ---------- shell / header ---------- */
+.wrap{max-width:1500px;margin:0 auto;padding:22px}
+.xhead{display:flex;align-items:center;gap:14px;padding:14px 22px;margin-bottom:18px}
+.xhead .logo{font-family:"Manrope";font-weight:800;letter-spacing:.14em;font-size:1.3rem;color:var(--blue);white-space:nowrap}
+.xhead .sep{width:1px;height:34px;background:var(--line)}
+.hitem{display:flex;align-items:center;gap:9px;color:var(--ink2);font-size:.82rem}
+.hitem .ci{width:34px;height:34px;border-radius:50%;background:rgba(46,127,228,.10);color:var(--blue);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.hitem b{color:var(--ink);font-size:.92rem;display:block;font-weight:700}
+.hitem .sub{font-size:.72rem;color:var(--muted)}
+.hitem.ok .ci{background:var(--green-t);color:var(--green)}
+.hitem svg{width:18px;height:18px}
+.htimer{margin-left:auto;display:flex;align-items:center;gap:11px}
+.htimer .tlab{font-size:.72rem;color:var(--muted);text-align:right;line-height:1.2}
+.htimer .tval{font-size:1.6rem;font-weight:800;color:var(--blue-d)}
+.htimer .clk{width:34px;height:34px;color:var(--blue)}
+.demo{margin-left:14px;font-size:.72rem;color:var(--muted);border:1px dashed var(--line);border-radius:999px;
+  padding:6px 12px;background:rgba(255,255,255,.5)}
+.demo b{color:var(--blue);cursor:pointer}
+
+/* ---------- registration ---------- */
+.reg{max-width:960px;margin:0 auto;padding:10px 22px 40px}
+.reg h1{text-align:center;font-weight:800;font-size:clamp(24px,3vw,34px);margin-top:8px}
+.reg .lead{text-align:center;color:var(--muted);margin:6px 0 26px;font-weight:500}
+.card{padding:22px;margin-bottom:18px}
+.card .ct{font-weight:700;font-size:1.02rem;margin-bottom:14px}
+.frow{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.9);
+  border-radius:var(--r-s);padding:13px 16px;margin-bottom:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.frow .fi{width:30px;height:30px;border-radius:50%;background:rgba(46,127,228,.10);color:var(--blue);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.frow label{color:var(--muted);font-size:.9rem;width:120px;flex:none}
+.frow input{flex:1;border:0;outline:0;background:transparent;font-family:inherit;font-size:1.02rem;color:var(--ink);font-weight:700}
+.frow input::placeholder{color:#adb8c9;font-weight:500}
+.frow svg{width:17px;height:17px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mode{position:relative;display:flex;align-items:center;gap:16px;padding:20px;border-radius:var(--r);cursor:pointer;
+  background:rgba(255,255,255,.5);border:2px solid rgba(255,255,255,.85);transition:.16s}
+.mode .mi{width:64px;height:64px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 40% 35%,#eaf3ff,#d4e6fb);color:var(--blue);box-shadow:inset 0 2px 6px rgba(255,255,255,.9),0 6px 14px -8px rgba(46,127,228,.5)}
+.mode .mi svg{width:30px;height:30px}
+.mode .mt{font-weight:800;font-size:1.15rem;color:var(--blue)}
+.mode .ms{font-size:.86rem;color:var(--muted);margin-top:3px;line-height:1.45}
+.mode .rc{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:50%;border:2px solid #c3d2e6;background:#fff}
+.mode.on{border-color:var(--blue);background:rgba(230,242,255,.7);box-shadow:0 12px 30px -14px rgba(46,127,228,.55)}
+.mode.on .rc{border-color:var(--blue);background:var(--blue);display:flex;align-items:center;justify-content:center}
+.mode.on .rc::after{content:"";width:9px;height:9px;border-right:2.4px solid #fff;border-bottom:2.4px solid #fff;transform:rotate(45deg) translate(-1px,-1px)}
+.cam{display:flex;gap:18px;align-items:stretch;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);border-radius:var(--r);padding:16px}
+.cam .prev{width:200px;height:130px;border-radius:14px;background:linear-gradient(160deg,#c3ccd8,#aab6c6);flex:none;
+  display:flex;align-items:center;justify-content:center;color:#7c8aa0;position:relative;overflow:hidden}
+.cam .prev svg{width:44px;height:44px;opacity:.8}
+.cam .prev .corner{position:absolute;width:22px;height:22px;border:3px solid rgba(255,255,255,.85)}
+.cam .prev .c1{top:10px;left:10px;border-right:0;border-bottom:0}.cam .prev .c2{top:10px;right:10px;border-left:0;border-bottom:0}
+.cam .prev .c3{bottom:10px;left:10px;border-right:0;border-top:0}.cam .prev .c4{bottom:10px;right:10px;border-left:0;border-top:0}
+.cam .cinfo{display:flex;flex-direction:column;justify-content:center}
+.cam .cinfo b{color:var(--green);display:flex;align-items:center;gap:8px;font-size:1.02rem}
+.cam .cinfo b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--green)}
+.cam .cinfo span{color:var(--muted);font-size:.88rem;margin-top:4px;line-height:1.5}
+.chk{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.9);
+  border-radius:var(--r-s);padding:13px 16px;margin-top:12px;cursor:pointer;font-weight:600}
+.chk .box{width:24px;height:24px;border-radius:7px;border:2px solid #c3d2e6;background:#fff;flex:none;display:flex;align-items:center;justify-content:center}
+.chk.on .box{background:var(--blue);border-color:var(--blue)}
+.chk.on .box::after{content:"";width:7px;height:12px;border-right:2.6px solid #fff;border-bottom:2.6px solid #fff;transform:rotate(45deg) translateY(-1px)}
+.chknote{color:var(--muted);font-size:.82rem;margin-top:8px;padding-left:4px}
+.regbtns{margin-top:22px}
+.regbtns .btn{width:100%;margin-bottom:12px;font-size:1.08rem;padding:17px}
+.steps{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:22px;padding:14px;flex-wrap:wrap}
+.steps .st{display:flex;align-items:center;gap:9px;color:var(--muted);font-weight:600;font-size:.9rem}
+.steps .sn{width:34px;height:34px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800}
+.steps .st.on{color:var(--blue)}.steps .st.on .sn{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 6px 16px -6px rgba(46,127,228,.6)}
+.steps .dash{width:44px;height:0;border-top:2px dotted #c3d2e6}
+
+/* ---------- active exam (desktop 3-col) ---------- */
+.exam{display:grid;grid-template-columns:236px 1fr 320px;gap:18px;align-items:start}
+.journey{padding:18px}
+.journey .jt{font-weight:800;font-size:.98rem}.journey .js{font-size:.68rem;letter-spacing:.16em;color:var(--muted);font-weight:700;margin-bottom:14px}
+.jstep{display:flex;align-items:center;gap:13px;padding:10px 12px;border-radius:999px;margin-bottom:6px;position:relative}
+.jstep .jn{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;
+  background:#fff;border:1px solid var(--line);color:var(--ink2)}
+.jstep .jl b{font-weight:700;font-size:.95rem}.jstep .jl span{font-size:.8rem;color:var(--muted)}
+.jstep.active{background:linear-gradient(180deg,#eaf4ff,#dcecfe);box-shadow:0 8px 20px -12px rgba(46,127,228,.6)}
+.jstep.active .jn{background:linear-gradient(180deg,#4a97f0,#1f6fdb);color:#fff;box-shadow:0 6px 14px -6px rgba(46,127,228,.7)}
+.jstep.done .jn{background:var(--green-t);color:var(--green);border-color:transparent}
+.jstep.locked{opacity:.55}
+.center{padding:24px;min-height:440px;display:flex;flex-direction:column}
+.qmeta{color:var(--blue);font-weight:700;font-size:.92rem;margin-bottom:14px}
+.qmeta .dot{color:var(--muted);margin:0 8px}
+.qtext{font-size:clamp(19px,1.7vw,24px);font-weight:700;line-height:1.5;margin-bottom:22px}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opt{display:flex;align-items:center;gap:15px;padding:15px 18px;border-radius:var(--r-s);cursor:pointer;
+  background:rgba(255,255,255,.6);border:1.6px solid rgba(255,255,255,.9);box-shadow:inset 0 1px 0 rgba(255,255,255,.7);transition:.14s;font-size:1.05rem}
+.opt:hover{background:rgba(255,255,255,.85)}
+.opt .ol{width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;
+  background:#eef3fa;color:var(--ink2)}
+.opt.sel{background:linear-gradient(180deg,#eaf4ff,#d9ebfe);border-color:var(--blue);box-shadow:0 10px 24px -14px rgba(46,127,228,.7)}
+.opt.sel .ol{background:linear-gradient(180deg,#4a97f0,#1f6fdb);color:#fff}
+.opt.sel{color:var(--blue-d);font-weight:700}
+.center .nav{margin-top:auto;padding-top:22px;display:flex;gap:12px;align-items:center}
+.center .nav .btn{padding:13px 22px}
+.center .nav .spacer{flex:1}
+.side{display:flex;flex-direction:column;gap:18px}
+.ring{padding:18px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.ring .rlab{font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.02em}
+.ringwrap{position:relative;width:150px;height:150px;margin:6px 0}
+.ringwrap svg{transform:rotate(-90deg)}
+.ringwrap .pc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringwrap .pc b{font-size:2.2rem;font-weight:800;line-height:1}
+.ringwrap .pc span{font-size:.82rem;color:var(--muted)}
+.sheet{padding:18px}
+.sheet .stt{font-weight:800;margin-bottom:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.74rem;color:var(--muted);margin-bottom:14px}
+.legend i{display:inline-flex;align-items:center;gap:6px}
+.legend .d{width:13px;height:13px;border-radius:50%}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.gcell{aspect-ratio:1;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;cursor:pointer;
+  background:rgba(255,255,255,.6);border:1.4px solid rgba(255,255,255,.9);color:var(--ink2);position:relative}
+.gcell.answered{background:#e8f5f0;color:var(--green);border-color:transparent}
+.gcell.answered::after{content:"✓";position:absolute;bottom:1px;font-size:.6rem;opacity:.85}
+.gcell.current{border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 3px rgba(46,127,228,.15)}
+.gcell.empty{color:#b6c2d4}
+
+/* ---------- modal / sheet ---------- */
+.scrim{position:fixed;inset:0;background:rgba(20,40,80,.34);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:80;padding:20px}
+.modal{width:min(460px,94vw);padding:30px 28px;text-align:center;border-radius:var(--r-l);
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(238,246,255,.92));border:1px solid #fff;
+  box-shadow:0 40px 90px -30px rgba(28,74,150,.6),inset 0 1px 0 #fff}
+.modal h3{font-size:1.5rem;font-weight:800;margin-bottom:6px}
+.pausebig{width:150px;height:150px;border-radius:50%;margin:16px auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 45% 35%,#fff,#e9f2ff);box-shadow:inset 0 4px 12px rgba(255,255,255,.9),0 10px 26px -12px rgba(46,127,228,.5),0 0 0 8px rgba(255,255,255,.5)}
+.pausebig b{font-size:2.6rem;font-weight:800;color:var(--ink)}.pausebig span{color:var(--blue);font-weight:700}
+.usebadge{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 18px;font-weight:700;margin:6px 0}
+.usebadge b{color:var(--blue)}
+.mnote{display:flex;gap:10px;align-items:flex-start;text-align:left;background:rgba(46,127,228,.07);border:1px solid rgba(46,127,228,.2);
+  border-radius:var(--r-s);padding:12px 14px;margin:14px 0;color:var(--ink2);font-size:.9rem}
+.mnote svg{width:20px;height:20px;color:var(--blue);flex:none}
+.msub{color:var(--muted);font-size:.9rem;margin:6px 0 14px}
+.mbtns{display:flex;gap:12px}.mbtns .btn{flex:1}
+.checkrow{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.9);
+  border-radius:999px;padding:12px 18px;margin-bottom:10px;text-align:left;font-weight:600}
+.checkrow .ci2{width:30px;height:30px;flex:none;color:var(--blue)}
+.checkrow.warn .ci2{color:var(--red)}
+.checkrow svg{width:30px;height:30px}
+.modal.sheet-m{width:min(460px,96vw)}
+
+/* ---------- checking ---------- */
+.checking{max-width:720px;margin:0 auto;text-align:center;padding:20px}
+.checking .spin{width:96px;height:96px;margin:20px auto;border-radius:50%;border:6px solid rgba(46,127,228,.18);border-top-color:var(--blue);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.checking h2{font-size:1.6rem;font-weight:800}
+.checking .clist{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.crow{display:flex;align-items:center;gap:14px;padding:14px 18px;text-align:left}
+.crow .cn{font-weight:800;color:var(--ink2)}
+.crow .cst{margin-left:auto;font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:8px}
+.crow.done .cst{color:var(--green)}.crow.doing .cst{color:var(--blue)}
+.mini-spin{width:16px;height:16px;border-radius:50%;border:2.4px solid rgba(46,127,228,.25);border-top-color:var(--blue);animation:sp 1s linear infinite}
+
+/* ---------- results ---------- */
+.result{max-width:1040px;margin:0 auto;padding:12px 20px 40px}
+.result .rhead{text-align:center;margin-bottom:22px}
+.result .rhead h2{font-size:clamp(24px,3vw,34px);font-weight:800}
+.result .rhead p{color:var(--muted);margin-top:6px}
+.pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.pcard{padding:18px;text-align:center}
+.pcard .pp{font-weight:800;color:var(--ink2)}
+.pcard .psc{font-size:2rem;font-weight:800;margin:8px 0 2px}
+.pcard .psc span{font-size:1rem;color:var(--muted)}
+.pcard .pstat{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.86rem;padding:5px 14px;border-radius:999px;margin-top:6px}
+.pcard.pass .pstat{background:var(--green-t);color:var(--green)}
+.pcard.pass .psc{color:var(--green)}
+.pcard.fail .pstat{background:var(--red-t);color:var(--red)}
+.pcard.fail .psc{color:var(--red)}
+.summ{display:flex;gap:16px;flex-wrap:wrap;padding:20px;margin-bottom:20px;align-items:center;justify-content:center}
+.summ .sbox{text-align:center;padding:0 22px}
+.summ .sbox b{font-size:1.9rem;font-weight:800;display:block}
+.summ .sbox span{color:var(--muted);font-size:.86rem}
+.summ .sbox.ok b{color:var(--green)}.summ .sbox.no b{color:var(--red)}
+.summ .sdiv{width:1px;height:44px;background:var(--line)}
+.result .rbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.totalbar{text-align:center;padding:22px;margin-bottom:20px}
+.totalbar .tt{color:var(--muted);font-size:.9rem}
+.totalbar .tv{font-size:2.6rem;font-weight:800}.totalbar .tv span{font-size:1.2rem;color:var(--muted)}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:#fff;
+  padding:12px 22px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:120;transition:.25s;box-shadow:0 12px 30px -10px rgba(0,0,0,.4)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1024px){
+  .exam{grid-template-columns:1fr}
+  .journey.desk-journey{display:none}
+  .side{flex-direction:row;flex-wrap:wrap}
+  .ring{flex:1;min-width:200px}.sheet{flex:1;min-width:260px}
+}
+@media (max-width:560px){
+  .wrap{padding:12px}
+  .xhead{flex-wrap:wrap;gap:10px;padding:12px 14px}
+  .xhead .hitem.hide-m,.xhead .sep.hide-m{display:none}
+  .htimer{width:100%;justify-content:center;order:5}
+  .modes{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:1fr 1fr}
+  .exam{gap:12px}
+  .side{flex-direction:column}
+  .mtop{display:block}
+}
+/* mobile-exam top strip (parts + progress) shown on small screens */
+.mtop{display:none;margin-bottom:14px;padding:14px}
+.mtop .mparts{display:flex;gap:8px;justify-content:space-between;margin-bottom:12px}
+.mpn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;
+  background:#fff;border:1px solid var(--line);color:var(--ink2)}
+.mpn.active{background:linear-gradient(180deg,#4a97f0,#1f6fdb);color:#fff}
+.mpn.done{background:var(--green-t);color:var(--green);border-color:transparent}
+.mbar{display:flex;align-items:center;gap:12px}
+.mbar .track{flex:1;height:10px;border-radius:999px;background:#dfe8f4;overflow:hidden}
+.mbar .fill{height:100%;background:linear-gradient(90deg,#5aa0ff,#1f6fdb);border-radius:999px}
+.mbar .mpct{font-weight:800;color:var(--blue)}
+@media (max-width:1024px){ .mtop{display:block} .side .ring{display:none} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+<script>
+/* ============================================================
+   X-VISOR — ระบบสอบ (single-file prototype)
+   Real state machine + timer + 5×20 scoring + online/onsite rules
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const root=$('#root');
+const PARTS=[1,2,3,4,5], QPP=20, PASS=16, TOTAL_SEC=120*60;
+
+/* ---------- mock question bank ---------- */
+const QBANK=[
+ "ข้อใดเป็นปัจจัยสำคัญที่สุดที่ส่งผลต่อการเพิ่มขึ้นของจำนวนประชากร?",
+ "ข้อใดอธิบายสาเหตุของการเปลี่ยนแปลงวงโคจรโลกได้ถูกต้องที่สุด?",
+ "ข้อใดไม่ใช่คุณสมบัติที่พบได้ในเชื้อแบคทีเรียแกรมบวก?",
+ "ข้อใดเป็นแนวทางที่เหมาะสมที่สุดในการดูแลสุขภาพเชิงป้องกัน?",
+ "ข้อใดคือหลักการพื้นฐานของการวิเคราะห์ข้อมูลด้านสุขภาพ?",
+ "ปัจจัยใดมีผลต่อคุณภาพการนอนหลับมากที่สุด?",
+ "ข้อใดอธิบายความสัมพันธ์ระหว่างโภชนาการและการเผาผลาญได้ถูกต้อง?",
+ "ข้อใดเป็นตัวชี้วัดที่เหมาะสมสำหรับการติดตามการเคลื่อนไหวประจำวัน?"
+];
+function qText(p,i){ return QBANK[(p*7+i)%QBANK.length]; }
+const OPT=['ก','ข','ค','ง'];
+
+/* ---------- state ---------- */
+let S=null, timer=null, pauseTimer=null;
+function freshSession(phase){
+  return { examPhase:phase, remaining:TOTAL_SEC, currentPart:1, currentQ:0,
+           onsitePauseUsed:0, isPaused:false, pauseRemaining:0 };
+}
+function initState(){
+  const key={}; // mock answer key: correct index 0-3
+  PARTS.forEach(p=>{ for(let i=0;i<QPP;i++) key[p+'-'+i]=(p*3+i*2+1)%4; });
+  S={ phase:'registration',
+      candidate:{firstName:'',lastName:'',phone:'',examMode:'online',cameraConsent:false, id:'660110001'},
+      key, answers:{},
+      results:PARTS.map(p=>({part:p,score:0,status:p===1?'active':'locked',remedialUsed:0,wrongIds:[]})),
+      remedialQueue:[], staffVerified:false, submittedOnce:false };
+}
+function partResult(p){ return S.results.find(r=>r.part===p); }
+function answeredCount(){ return Object.keys(S.answers).length; }
+function fmt(sec){ sec=Math.max(0,sec|0); const h=(sec/3600|0), m=(sec%3600/60|0), s=sec%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+
+/* ---------- timer ---------- */
+function startTimer(){ stopTimer(); timer=setInterval(()=>{
+  if(S.phase!=='active_exam'||S.session.isPaused) return;
+  S.session.remaining--; updateTimerUI();
+  if(S.session.remaining<=0){ stopTimer(); onTimeout(); }
+},1000); }
+function stopTimer(){ if(timer){clearInterval(timer);timer=null;} }
+function updateTimerUI(){ const t=$('#timerVal'); if(t) t.textContent=fmt(S.session.remaining); }
+function onTimeout(){ toast('หมดเวลาสอบ — ระบบส่งคำตอบอัตโนมัติ'); doSubmit(); }
+
+/* ---------- toast ---------- */
+let tT; function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>el.classList.remove('show'),2200); }
+
+/* ============================================================ RENDER ============ */
+function render(){
+  const p=S.phase;
+  if(p==='registration') return renderRegistration();
+  if(p==='active_exam') return renderExam();
+  if(p==='checking') return renderChecking();
+  if(p==='first_result') return renderResult();
+}
+
+/* ---------- ICONS ---------- */
+const I={
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>',
+ phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5c0 9 6 15 15 15l0-3.5-4-1.5-2 2c-3-1.5-5.5-4-7-7l2-2-1.5-4L4 4z"/></svg>',
+ shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+ save:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 109 9"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+ bldg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>',
+ cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>',
+ chevL:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>',
+ chevR:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>',
+ info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg>',
+ warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.3"/></svg>',
+ circle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>',
+ checkC:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-5"/></svg>',
+ pause:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></svg>',
+ dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 20h14"/></svg>'
+};
+
+/* ============================================================ 01 REGISTRATION ==== */
+function renderRegistration(){
+  const c=S.candidate;
+  root.innerHTML=`
+  <div class="reg">
+    <div class="xhead glass" style="max-width:none">
+      <div class="logo eng">X-VISOR</div>
+      <div class="htimer"><div class="hitem ok"><span class="ci">${I.shield}</span><b style="color:var(--green)">ปลอดภัย</b></div></div>
+    </div>
+    <h1>เข้าสู่ระบบเพื่อเริ่มการสอบ</h1>
+    <div class="lead">กรุณากรอกข้อมูลผู้เข้าสอบให้ครบถ้วน</div>
+
+    <div class="card glass">
+      <div class="frow"><span class="fi">${I.user}</span><label>ชื่อ</label><input id="fn" placeholder="กรอกชื่อ" value="${c.firstName}"></div>
+      <div class="frow"><span class="fi">${I.user}</span><label>นามสกุล</label><input id="ln" placeholder="กรอกนามสกุล" value="${c.lastName}"></div>
+      <div class="frow"><span class="fi">${I.phone}</span><label>เบอร์โทรศัพท์</label><input id="ph" placeholder="089-123-4567" value="${c.phone}"></div>
+    </div>
+
+    <div class="card glass">
+      <div class="ct">รูปแบบการสอบ</div>
+      <div class="modes">
+        <div class="mode ${c.examMode==='online'?'on':''}" data-mode="online">
+          <span class="mi">${I.globe}</span><div><div class="mt">Online</div><div class="ms">สอบออนไลน์ผ่านระบบ<br>ด้วยตัวเอง</div></div><span class="rc"></span>
+        </div>
+        <div class="mode ${c.examMode==='onsite'?'on':''}" data-mode="onsite">
+          <span class="mi">${I.bldg}</span><div><div class="mt">Onsite</div><div class="ms">เข้าสอบที่ศูนย์สอบ<br>ตามสถานที่ที่กำหนด</div></div><span class="rc"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass" id="camCard" style="${c.examMode==='online'?'':'display:none'}">
+      <div class="ct">การขออนุญาตใช้กล้อง</div>
+      <div class="cam">
+        <div class="prev"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>${I.cam}</div>
+        <div class="cinfo"><b>กล้องพร้อมใช้งาน</b><span>ตรวจพบกล้องแล้ว<br>สามารถใช้งานได้ปกติ</span></div>
+      </div>
+      <div class="chk ${c.cameraConsent?'on':''}" id="consent"><span class="box"></span>ยินยอมเปิดกล้องตลอดการสอบ</div>
+      <div class="chknote">ห้ามปิดกล้องจนกว่าจะสอบเสร็จและทีมงานยืนยันผล</div>
+    </div>
+
+    <div class="regbtns">
+      <button class="btn pri" id="startBtn" disabled>ยืนยันและเริ่มทำข้อสอบ <span class="ic">${I.check}</span></button>
+    </div>
+    <div class="steps glass">
+      <div class="st on"><span class="sn">1</span>ข้อมูลผู้สอบ</div><span class="dash"></span>
+      <div class="st"><span class="sn">2</span>ยืนยันตัวตน</div><span class="dash"></span>
+      <div class="st"><span class="sn">3</span>เริ่มสอบ</div>
+    </div>
+  </div>`;
+
+  const upd=()=>{ c.firstName=$('#fn').value.trim(); c.lastName=$('#ln').value.trim(); c.phone=$('#ph').value.trim();
+    const ok = c.firstName && c.lastName && c.phone && (c.examMode==='onsite' || c.cameraConsent);
+    $('#startBtn').disabled=!ok; };
+  ['#fn','#ln','#ph'].forEach(s=>$(s).addEventListener('input',upd));
+  document.querySelectorAll('.mode').forEach(m=>m.onclick=()=>{ c.examMode=m.dataset.mode;
+    document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('on',x===m));
+    $('#camCard').style.display=c.examMode==='online'?'':'none'; upd(); });
+  $('#consent').onclick=()=>{ c.cameraConsent=!c.cameraConsent; $('#consent').classList.toggle('on',c.cameraConsent); upd(); };
+  $('#startBtn').onclick=()=>{ S.session=freshSession('first'); S.phase='active_exam'; render(); startTimer(); };
+  upd();
+}
+
+/* ============================================================ 02 ACTIVE EXAM ===== */
+function progressPct(){ return Math.round(answeredCount()/(PARTS.length*QPP)*100); }
+function ringSVG(pct){ const r=64,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<svg width="150" height="150" viewBox="0 0 150 150">
+    <circle cx="75" cy="75" r="${r}" fill="none" stroke="#dbe7f6" stroke-width="12"/>
+    <circle cx="75" cy="75" r="${r}" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5aa0ff"/><stop offset="1" stop-color="#1f6fdb"/></linearGradient></defs>
+  </svg>`; }
+
+function renderExam(){
+  const c=S.candidate, sess=S.session, onsite=c.examMode==='onsite';
+  const pct=progressPct();
+  root.innerHTML=`
+  <div class="wrap">
+    <div class="xhead glass">
+      <div class="logo eng">X-VISOR</div>
+      <div class="sep hide-m"></div>
+      <div class="hitem hide-m"><span class="ci">${I.user}</span><div><b class="num">${c.id}</b><span class="sub">${c.firstName} ${c.lastName}</span></div></div>
+      <div class="hitem ok hide-m"><span class="ci">${I.shield}</span><div><b style="color:var(--green)">ปลอดภัยและถูกต้อง</b><span class="sub">สถานะการสอบ</span></div></div>
+      <div class="hitem hide-m"><span class="ci">${I.save}</span><div><b style="color:var(--blue)">กำลังบันทึก…</b><span class="sub">บันทึกอัตโนมัติ</span></div></div>
+      <div class="htimer">
+        ${onsite?`<button class="btn danger" id="pauseBtn" style="padding:9px 16px;font-size:.86rem">${I.pause} หยุดเวลา · เหลือ ${2-sess.onsitePauseUsed} ครั้ง</button>`:''}
+        <span class="clk">${I.clock}</span>
+        <div class="tlab">เวลาที่เหลือ</div><div class="tval num" id="timerVal">${fmt(sess.remaining)}</div>
+      </div>
+      <div class="demo">เดโม: <b id="demoFill">สุ่มคำตอบ</b></div>
+    </div>
+
+    <!-- mobile top strip -->
+    <div class="mtop glass">
+      <div class="mparts">${PARTS.map(p=>{const r=partResult(p);const cl=p===sess.currentPart?'active':(r.status==='passed'||(p<sess.currentPart)?'done':'');return `<div class="mpn ${cl}">${p}</div>`;}).join('')}</div>
+      <div style="font-weight:800;color:var(--blue);margin-bottom:8px">พาร์ท ${sess.currentPart} <span style="color:var(--muted);font-weight:600;font-size:.85rem">· ${partAnswered(sess.currentPart)} / ${QPP}</span></div>
+      <div class="mbar"><b class="num" style="color:var(--ink)">${answeredCount()}</b><span style="color:var(--muted)">/ 100</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="mpct">${pct}%</span></div>
+    </div>
+
+    <div class="exam">
+      <!-- left journey -->
+      <div class="journey glass desk-journey">
+        <div class="jt">เส้นทางการสอบ</div><div class="js eng">EXAM JOURNEY</div>
+        ${PARTS.map(p=>{const r=partResult(p);const st=p===sess.currentPart?'active':(p<sess.currentPart||r.status==='passed'?'done':'locked');
+          return `<div class="jstep ${st}"><span class="jn num">${p}</span><div class="jl"><b>พาร์ท ${p}</b><span class="num"> ${partAnswered(p)} / ${QPP}</span></div></div>`;}).join('')}
+      </div>
+
+      <!-- center question -->
+      <div class="center glass">
+        <div class="qmeta">พาร์ท ${sess.currentPart} <span class="dot">·</span> ข้อ ${sess.currentQ+1} จาก ${QPP}</div>
+        <div class="qtext" id="qtext">${qText(sess.currentPart,sess.currentQ)}</div>
+        <div class="opts" id="opts">
+          ${OPT.map((o,i)=>{const sel=S.answers[sess.currentPart+'-'+sess.currentQ]===i;
+            return `<div class="opt ${sel?'sel':''}" data-i="${i}"><span class="ol">${o}</span><span>ตัวเลือก ${o}</span></div>`;}).join('')}
+        </div>
+        <div class="nav">
+          <button class="btn ghost" id="prevBtn">${I.chevL} ย้อนกลับ</button>
+          <button class="btn ghost" id="nextBtn">ข้อถัดไป ${I.chevR}</button>
+          <span class="spacer"></span>
+          <button class="btn pri" id="submitBtn">ยืนยันและส่งข้อสอบ <span class="ic">${I.check}</span></button>
+        </div>
+      </div>
+
+      <!-- right side -->
+      <div class="side">
+        <div class="ring glass">
+          <div class="rlab">ความคืบหน้าการสอบ</div>
+          <div class="ringwrap">${ringSVG(pct)}<div class="pc"><b class="num">${pct}%</b><span class="num">${answeredCount()} / 100</span></div></div>
+        </div>
+        <div class="sheet glass">
+          <div class="stt">กระดานคำตอบ</div>
+          <div class="legend">
+            <i><span class="d" style="background:#12A67C"></span>ตอบแล้ว</i>
+            <i><span class="d" style="border:2px solid var(--blue)"></span>กำลังทำ</i>
+            <i><span class="d" style="background:#dfe8f4"></span>ยังไม่ได้ตอบ</i>
+          </div>
+          <div class="grid" id="grid">
+            ${Array.from({length:QPP},(_,i)=>{const ans=S.answers[sess.currentPart+'-'+i]!=null;const cur=i===sess.currentQ;
+              return `<div class="gcell ${ans?'answered':'empty'} ${cur?'current':''}" data-q="${i}">${i+1}</div>`;}).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // events
+  document.querySelectorAll('#opts .opt').forEach(o=>o.onclick=()=>{ S.answers[sess.currentPart+'-'+sess.currentQ]=+o.dataset.i; render(); });
+  document.querySelectorAll('#grid .gcell').forEach(g=>g.onclick=()=>{ sess.currentQ=+g.dataset.q; render(); });
+  $('#prevBtn').onclick=()=>{ if(sess.currentQ>0){sess.currentQ--;} else if(sess.currentPart>1){sess.currentPart--;sess.currentQ=QPP-1;} render(); };
+  $('#nextBtn').onclick=()=>{ if(sess.currentQ<QPP-1){sess.currentQ++;} else if(sess.currentPart<5){sess.currentPart++;sess.currentQ=0;} render(); };
+  $('#submitBtn').onclick=openSubmit;
+  const pb=$('#pauseBtn'); if(pb) pb.onclick=openPause;
+  $('#demoFill').onclick=()=>{ demoAutofill(); render(); toast('กรอกคำตอบอัตโนมัติแล้ว (เดโม)'); };
+}
+function partAnswered(p){ let n=0; for(let i=0;i<QPP;i++) if(S.answers[p+'-'+i]!=null)n++; return n; }
+function demoAutofill(){ // ~85% correct → realistic mix of pass/fail
+  PARTS.forEach(p=>{ for(let i=0;i<QPP;i++){ const k=p+'-'+i;
+    S.answers[k]= Math.random()<0.85 ? S.key[k] : (S.key[k]+1)%4; }});
+}
+
+/* ---------- 03 PAUSE (onsite) ---------- */
+function openPause(){
+  if(S.candidate.examMode!=='onsite') return;
+  if(S.session.onsitePauseUsed>=2){ toast('ใช้สิทธิ์หยุดเวลาครบ 2 ครั้งแล้ว'); return; }
+  const use=S.session.onsitePauseUsed+1;
+  const s=document.createElement('div'); s.className='scrim'; s.id='pauseScrim';
+  s.innerHTML=`<div class="modal">
+    <h3>หยุดเวลาชั่วคราว</h3>
+    <div class="pausebig"><b class="num">10:00</b><span>นาที</span></div>
+    <div class="usebadge">ใช้สิทธิ์ครั้งที่ <b>${use}</b> จาก 2</div>
+    <div class="msub">การหยุดเวลาครั้งนี้ใช้ได้สูงสุด 10 นาที</div>
+    <div class="mnote">${I.info}<span>เมื่อครบเวลา ระบบจะเริ่มนับเวลาสอบต่อโดยอัตโนมัติ</span></div>
+    <div class="msub" style="margin-bottom:8px">เวลาสอบจะหยุดหลังยืนยัน</div>
+    <div class="mbtns">
+      <button class="btn ghost" id="pCancel">ทำข้อสอบต่อ</button>
+      <button class="btn danger" id="pOk">ยืนยันหยุดเวลา</button>
+    </div></div>`;
+  document.body.appendChild(s);
+  $('#pCancel').onclick=()=>s.remove();
+  $('#pOk').onclick=()=>{ s.remove(); startPause(); };
+}
+function startPause(){
+  S.session.isPaused=true; S.session.onsitePauseUsed++; S.session.pauseRemaining=600;
+  const s=document.createElement('div'); s.className='scrim'; s.id='pausedScrim';
+  s.innerHTML=`<div class="modal">
+    <h3>หยุดเวลาชั่วคราว</h3>
+    <div class="pausebig"><b class="num" id="pauseClock">10:00</b><span>นาที</span></div>
+    <div class="msub">เวลาสอบหยุดอยู่ · ระบบจะนับต่ออัตโนมัติเมื่อครบกำหนด</div>
+    <div class="mbtns"><button class="btn pri" id="pResume" style="flex:1">ทำข้อสอบต่อเลย</button></div></div>`;
+  document.body.appendChild(s);
+  const tick=()=>{ S.session.pauseRemaining--; const el=$('#pauseClock');
+    if(el){ const m=(S.session.pauseRemaining/60|0), ss=S.session.pauseRemaining%60; el.textContent=String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); }
+    if(S.session.pauseRemaining<=0) endPause(); };
+  pauseTimer=setInterval(tick,1000);
+  $('#pResume').onclick=endPause;
+}
+function endPause(){ if(pauseTimer){clearInterval(pauseTimer);pauseTimer=null;} S.session.isPaused=false;
+  const s=$('#pausedScrim'); if(s)s.remove(); render(); toast('เริ่มนับเวลาสอบต่อ'); }
+
+/* ---------- 04 SUBMIT ---------- */
+function openSubmit(){
+  const ans=answeredCount(), un=100-ans;
+  const s=document.createElement('div'); s.className='scrim'; s.id='subScrim';
+  s.innerHTML=`<div class="modal sheet-m">
+    <h3>ยืนยันและส่งข้อสอบ</h3>
+    <div style="margin-top:16px">
+      <div class="checkrow"><span class="ci2">${I.checkC}</span>คุณทำข้อสอบครบทั้ง 5 พาร์ทแล้ว</div>
+      <div class="checkrow"><span class="ci2">${I.checkC}</span>ตอบแล้ว ${ans} ข้อ</div>
+      <div class="checkrow"><span class="ci2">${un>0?I.circle:I.checkC}</span>ยังไม่ได้ตอบ ${un} ข้อ</div>
+      <div class="checkrow"><span class="ci2">${I.clock}</span>เวลาคงเหลือ <b class="num" style="margin-left:4px">${fmt(S.session.remaining)}</b></div>
+      <div class="checkrow warn"><span class="ci2">${I.warn}</span>เมื่อยืนยันแล้วจะไม่สามารถแก้ไขคำตอบได้</div>
+    </div>
+    <div class="mbtns" style="margin-top:8px;flex-direction:column">
+      <button class="btn pri" id="subOk" style="width:100%">ยืนยันและส่งคำตอบ <span class="ic">${I.check}</span></button>
+      <button class="btn ghost" id="subCancel" style="width:100%">กลับไปตรวจสอบ</button>
+    </div></div>`;
+  document.body.appendChild(s);
+  $('#subCancel').onclick=()=>s.remove();
+  $('#subOk').onclick=()=>{ s.remove(); doSubmit(); };
+}
+function doSubmit(){ stopTimer(); scoreAll(); S.phase='checking'; render(); }
+function scoreAll(){ S.results.forEach(r=>{ let sc=0; const wrong=[];
+  for(let i=0;i<QPP;i++){ const k=r.part+'-'+i; if(S.answers[k]===S.key[k]) sc++; else wrong.push(i+1); }
+  r.score=sc; r.wrongIds=wrong; r.status = sc>=PASS ? 'passed':'remedial_required'; }); }
+
+/* ---------- 05 CHECKING ---------- */
+function renderChecking(){
+  root.innerHTML=`<div class="wrap"><div class="checking glass" style="padding:34px">
+    <div class="spin"></div><h2>กำลังตรวจคำตอบ</h2>
+    <p style="color:var(--muted);margin-top:6px">ระบบกำลังประมวลผลคะแนนของแต่ละพาร์ท</p>
+    <div class="clist">${PARTS.map(p=>`<div class="crow glass doing" id="crow-${p}"><span class="cn">พาร์ท ${p}</span><span class="cst"><span class="mini-spin"></span>กำลังตรวจ</span></div>`).join('')}</div>
+  </div></div>`;
+  let i=0; const step=()=>{ if(i<PARTS.length){ const row=$('#crow-'+PARTS[i]);
+    row.classList.remove('doing');row.classList.add('done'); row.querySelector('.cst').innerHTML=I.checkC+' ตรวจเสร็จ'; i++; setTimeout(step,520); }
+    else setTimeout(()=>{ S.phase='first_result'; render(); },700); };
+  setTimeout(step,600);
+}
+
+/* ---------- 06 FIRST RESULT ---------- */
+function renderResult(){
+  const passed=S.results.filter(r=>r.status==='passed').length;
+  const remedial=S.results.filter(r=>r.status==='remedial_required');
+  const total=S.results.reduce((a,r)=>a+r.score,0);
+  root.innerHTML=`<div class="wrap"><div class="result">
+    <div class="xhead glass" style="max-width:none;margin-bottom:20px">
+      <div class="logo eng">X-VISOR</div>
+      <div class="htimer"><div class="hitem ${remedial.length?'':'ok'}"><span class="ci">${I.shield}</span><b style="color:${remedial.length?'var(--blue-d)':'var(--green)'}">${remedial.length?'ผลสอบรอบแรก':'ผ่านครบทั้ง 5 พาร์ท'}</b></div></div>
+    </div>
+    <div class="rhead"><h2>ผลสอบรอบแรก</h2><p>คะแนนแต่ละพาร์ท · เกณฑ์ผ่าน ${PASS}/${QPP} ต่อพาร์ท</p></div>
+    <div class="pgrid">
+      ${S.results.map(r=>{const pass=r.status==='passed';return `<div class="pcard glass ${pass?'pass':'fail'}">
+        <div class="pp">พาร์ท ${r.part}</div>
+        <div class="psc num">${r.score}<span>/${QPP}</span></div>
+        <div class="pstat">${pass?I.check+' ผ่าน':I.warn+' ต้องสอบซ่อม'}</div></div>`;}).join('')}
+    </div>
+    <div class="totalbar glass"><div class="tt">คะแนนรวมทั้ง 5 พาร์ท</div><div class="tv num">${total}<span>/100</span></div></div>
+    <div class="summ glass">
+      <div class="sbox ok"><b class="num">${passed}</b><span>พาร์ทที่ผ่าน</span></div>
+      <div class="sdiv"></div>
+      <div class="sbox no"><b class="num">${remedial.length}</b><span>พาร์ทที่ต้องสอบซ่อม</span></div>
+    </div>
+    <div class="rbtns">
+      ${remedial.length
+        ? `<button class="btn pri" id="startRem">เริ่มกระบวนการสอบซ่อม <span class="ic">${I.chevR}</span></button>`
+        : `<button class="btn pri" id="toVerify">ดำเนินการต่อ <span class="ic">${I.chevR}</span></button>`}
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:.85rem;margin-top:16px">* ดูคำถามที่ตอบผิดได้เมื่อผ่านครบทั้ง 5 พาร์ทและทีมงานยืนยันผลแล้ว</div>
+  </div></div>`;
+  const sr=$('#startRem'); if(sr) sr.onclick=()=>toast('หน้าเตรียมสอบซ่อม (07) — กำลังต่อยอดในเวอร์ชันถัดไป');
+  const tv=$('#toVerify'); if(tv) tv.onclick=()=>toast('หน้ารอทีมงานยืนยัน (10) — กำลังต่อยอดในเวอร์ชันถัดไป');
+}
+
+/* ---------- boot ---------- */
+initState(); render();
+</script>
+</body>
+</html>
