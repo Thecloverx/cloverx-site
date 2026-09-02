@@ -1,0 +1,197 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CloverX · XIRCLE</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#F1EADF;font-family:"Manrope",system-ui,-apple-system,sans-serif}
+/* รูปเป็นแนวนอนหมดแล้ว — เต็มจอได้และพอดีจอ; vh กันตัดบนจอเตี้ย */
+.xwrap{max-width:min(1880px,225vh);margin:0 auto;padding:0 20px}
+.xsec{position:relative;font-size:0;line-height:0}
+.xsec img{width:100%;display:block}
+#brands,#features{margin-top:52px}
+#membership{margin:30px 0}
+.hot{position:absolute;display:block;background:transparent;border:0;cursor:pointer;padding:0;z-index:2}
+/* ===== ปุ่มจริง มีมิติแบบ Oura: มีเงานุ่มตั้งแต่ตอนวางอยู่ · hover ยกตัว · กดแล้วยุบ ===== */
+.btn3d{position:absolute;z-index:5;display:inline-flex;align-items:center;justify-content:center;
+  border:0;border-radius:999px;color:#fff;font-family:"Manrope",system-ui,-apple-system,sans-serif;
+  font-weight:700;letter-spacing:.2px;cursor:pointer;text-decoration:none;line-height:1;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .17s cubic-bezier(.34,1.4,.5,1),box-shadow .17s cubic-bezier(.4,0,.2,1),filter .17s ease;
+  will-change:transform}
+/* น้ำเงิน (Explore hero · Shop · About Us) */
+.btn3d.blue{background:linear-gradient(180deg,#3D8CEC 0%,#2472D8 100%);
+  box-shadow:0 5px 14px -5px rgba(20,85,190,.45),inset 0 1px 0 rgba(255,255,255,.22)}
+.btn3d.blue:hover{transform:translateY(-2px) scale(1.03);
+  box-shadow:0 12px 24px -8px rgba(20,85,190,.5),inset 0 1px 0 rgba(255,255,255,.28);filter:brightness(1.04)}
+.btn3d.blue:active{transform:translateY(1px) scale(.98);
+  box-shadow:0 2px 6px -3px rgba(20,85,190,.45)}
+/* ปุ่มเทา "Explore" — คงดีไซน์ใส ๆ เดิมในภาพไว้ (ไม่ทับสีทึบ) แค่ใส่จังหวะกด/ชี้เบา ๆ */
+.pbtn{position:absolute;z-index:5;border:0;padding:0;cursor:pointer;background:transparent;
+  border-radius:999px;-webkit-tap-highlight-color:transparent;
+  transition:transform .16s cubic-bezier(.4,0,.2,1),box-shadow .16s cubic-bezier(.4,0,.2,1);will-change:transform}
+.pbtn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 12px 24px -8px rgba(0,0,0,.45)}
+.pbtn:active{transform:translateY(1px) scale(.965);box-shadow:inset 0 0 0 120px rgba(0,0,0,.12)}
+
+/* ===== การ์ดแนวนอน (Desktop) — เรียงคู่ มีช่องไฟ ===== */
+.drow{display:flex;gap:22px;margin-top:22px}
+.dcard{position:relative;flex:1;border-radius:20px;overflow:hidden;font-size:0;line-height:0}
+.dcard img{width:100%;display:block}
+.cardbtn{position:absolute;z-index:5;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:999px;font-family:"Manrope",system-ui,sans-serif;font-weight:700;letter-spacing:.2px;cursor:pointer;
+  text-decoration:none;white-space:nowrap;line-height:1;-webkit-tap-highlight-color:transparent;
+  transition:transform .17s cubic-bezier(.34,1.4,.5,1),box-shadow .17s cubic-bezier(.4,0,.2,1),background .17s}
+.cardbtn.blue{background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;
+  box-shadow:0 5px 14px -5px rgba(20,85,190,.5),inset 0 1px 0 rgba(255,255,255,.22)}
+.cardbtn.blue:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 12px 24px -8px rgba(20,85,190,.55)}
+.cardbtn.blue:active{transform:translateY(1px) scale(.98)}
+.cardbtn.line{background:rgba(255,255,255,.10);color:#fff;border:1.6px solid rgba(255,255,255,.78);backdrop-filter:blur(3px)}
+.cardbtn.line:hover{transform:translateY(-2px) scale(1.03);background:rgba(255,255,255,.20)}
+.cardbtn.line:active{transform:translateY(1px) scale(.98)}
+/* ===== Membership (Desktop, สร้างด้วย HTML) ===== */
+.dmem{text-align:center;background:#fff;border-radius:20px;padding:60px 24px 64px;margin-top:22px}
+.dmem .cl{font-size:15px;letter-spacing:3px;font-weight:800;color:#22262b}
+.dmem .cl b{color:#2E7FE4}
+.dmem .cllogo{height:34px;width:auto;display:inline-block;vertical-align:middle}
+.dmem h2{font-size:clamp(28px,3vw,42px);font-weight:800;color:#3a3f44;margin-top:14px}
+.dmem p{font-size:clamp(15px,1.4vw,20px);color:#7a8290;margin-top:10px;font-weight:500}
+.dmem .about{margin-top:26px;display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;border-radius:999px;padding:13px 46px;
+  font-family:"Manrope",system-ui,sans-serif;font-weight:700;font-size:clamp(15px,1.3vw,18px);text-decoration:none;
+  box-shadow:0 6px 16px -6px rgba(20,85,190,.55);transition:transform .17s cubic-bezier(.34,1.4,.5,1)}
+.dmem .about:active{transform:translateY(1px) scale(.98)}
+
+/* ===================== MOBILE ===================== */
+.mob{display:none}
+.mtopbar{display:flex;align-items:center;justify-content:space-between;padding:14px 6px;background:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid #f0f0f2;margin-bottom:12px}
+.mtopbar .mburger{width:26px;height:26px;display:flex;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;background:none;border:0;padding:0}
+.mtopbar .mburger span{display:block;height:2px;width:24px;background:#2a2c2e;border-radius:2px}
+.mtopbar .mlogo{font-weight:800;font-size:17px;letter-spacing:1px;color:#22262b;display:flex;align-items:center;gap:5px}
+.mtopbar .mlogo b{color:#2E7FE4}
+.mtopbar .mcart{width:34px;height:34px;border:1.5px solid #cdd3db;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#5a6472;text-decoration:none}
+.msec{position:relative;font-size:0;line-height:0;border-radius:16px;overflow:hidden}
+.msec img{width:100%;display:block}
+.mband,.mfeat{margin-top:14px}
+/* Membership block (มือถือ) — สร้างด้วย HTML ปุ่มจริงมีมิติ */
+.mmem{text-align:center;padding:40px 24px 42px;background:#fff}
+.mmem .cl{font-size:13px;letter-spacing:3px;font-weight:800;color:#22262b}
+.mmem .cl b{color:#2E7FE4}
+.mmem h2{font-size:27px;font-weight:800;color:#3a3f44;margin-top:12px}
+.mmem p{font-size:15px;color:#7a8290;margin-top:8px;font-weight:500}
+.mabout{margin-top:22px;display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#3D8CEC 0%,#2472D8 100%);color:#fff;border:0;border-radius:999px;
+  padding:10px 34px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none;
+  box-shadow:0 5px 14px -5px rgba(20,85,190,.45),inset 0 1px 0 rgba(255,255,255,.22);
+  transition:transform .17s cubic-bezier(.34,1.4,.5,1),box-shadow .17s cubic-bezier(.4,0,.2,1)}
+.mabout:active{transform:translateY(1px) scale(.98);box-shadow:0 2px 6px -3px rgba(20,85,190,.45)}
+
+@media(max-width:820px){
+  body{background:#fff}
+  .desk{display:none}
+  .mob{display:block;max-width:520px;margin:0 auto;padding:0 12px 20px}
+}
+</style></head>
+<body>
+
+<!-- ============ DESKTOP ============ -->
+<div class="desk"><div class="xwrap">
+
+  <!-- HERO -->
+  <div class="xsec" id="hero">
+    <img src="hero.jpg" alt="XIRCLE">
+    <a class="hot" href="/preorder" style="left:12%;top:1%;width:5%;height:6%" aria-label="Shop"></a>
+    <a class="hot" href="/preorder" style="left:95%;top:1%;width:4%;height:8%" aria-label="ตะกร้า"></a>
+    <a class="btn3d blue" href="/preorder" style="left:46%;top:81%;width:8%;height:5.6%;font-size:clamp(11px,1vw,16px)">Explore</a>
+  </div>
+
+  <!-- BRAND CARDS -->
+  <div class="drow">
+    <div class="dcard">
+      <img src="dband_stain.jpg" alt="Xircle Brand - Stainless">
+      <a class="hot" href="/preorder" style="inset:0" aria-label="Xircle Brand Stainless"></a>
+      <a class="cardbtn line" href="/preorder" style="left:57%;top:82%;width:18%;height:10%;font-size:clamp(12px,1.25vw,16px)">Explore</a>
+      <a class="cardbtn blue" href="/preorder" style="left:77%;top:82%;width:18%;height:10%;font-size:clamp(12px,1.25vw,16px)">Shop</a>
+    </div>
+    <div class="dcard">
+      <img src="dband_nylon.jpg" alt="Xircle Brand - Nylon">
+      <a class="hot" href="/preorder" style="inset:0" aria-label="Xircle Brand Nylon"></a>
+      <a class="cardbtn line" href="/preorder" style="left:57%;top:82%;width:18%;height:10%;font-size:clamp(12px,1.25vw,16px)">Explore</a>
+      <a class="cardbtn blue" href="/preorder" style="left:77%;top:82%;width:18%;height:10%;font-size:clamp(12px,1.25vw,16px)">Shop</a>
+    </div>
+  </div>
+
+  <!-- MEMBERSHIP -->
+  <div class="dmem">
+    <div class="cl"><img class="cllogo" src="cloverx_logo.png" alt="CLOVER X"></div>
+    <h2>The Membership</h2>
+    <p>We Give You Wellness and Longevity</p>
+    <a class="about" href="#about">About Us</a>
+  </div>
+
+  <!-- FEATURE CARDS -->
+  <div class="drow">
+    <div class="dcard">
+      <img src="dfeat1.jpg" alt="Eat Move Sleep">
+      <a class="hot" href="#health" style="inset:0" aria-label="Eat Move Sleep"></a>
+    </div>
+    <div class="dcard">
+      <img src="dfeat2.jpg" alt="Wellness and Longevity">
+      <a class="hot" href="#longevity" style="inset:0" aria-label="Wellness and Longevity"></a>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- ============ MOBILE ============ -->
+<div class="mob">
+
+  <div class="mtopbar">
+    <button class="mburger" aria-label="เมนู"><span></span><span></span><span></span></button>
+    <div class="mlogo">CLOVER<b>✕</b></div>
+    <a class="mcart" href="/preorder" aria-label="ตะกร้า"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/></svg></a>
+  </div>
+
+  <!-- HERO -->
+  <div class="msec">
+    <img src="mhero.jpg" alt="XIRCLE">
+    <a class="pbtn" href="/preorder" style="left:39%;top:78%;width:22%;height:12%" aria-label="Explore"></a>
+  </div>
+
+  <!-- BRAND Stainless -->
+  <div class="msec mband">
+    <img src="mband1.jpg" alt="Xircle Brand - Stainless">
+    <a class="hot" href="/preorder" style="left:2%;top:4%;width:78%;height:92%" aria-label="Xircle Brand Stainless"></a>
+    <a class="pbtn" href="/preorder" style="left:83.5%;top:60.5%;width:14%;height:14%" aria-label="Explore"></a>
+    <a class="pbtn" href="/preorder" style="left:83.5%;top:78.3%;width:14%;height:14.5%" aria-label="Shop"></a>
+  </div>
+
+  <!-- BRAND Nylon -->
+  <div class="msec mband">
+    <img src="mband2.jpg" alt="Xircle Brand - Nylon">
+    <a class="hot" href="/preorder" style="left:2%;top:4%;width:78%;height:92%" aria-label="Xircle Brand Nylon"></a>
+    <a class="pbtn" href="/preorder" style="left:83.5%;top:59.5%;width:14%;height:14.5%" aria-label="Explore"></a>
+    <a class="pbtn" href="/preorder" style="left:83.5%;top:77.6%;width:14%;height:15%" aria-label="Shop"></a>
+  </div>
+
+  <!-- MEMBERSHIP -->
+  <div class="mmem">
+    <div class="cl"><img src="cloverx_logo.png" alt="CLOVER X" style="height:26px;width:auto"></div>
+    <h2>The Membership</h2>
+    <p>We Give You Wellness and Longevity</p>
+    <a class="mabout" href="#about">About Us</a>
+  </div>
+
+  <!-- FEATURE Eat Move Sleep -->
+  <div class="msec mfeat">
+    <img src="mfeat1.jpg" alt="Eat Move Sleep">
+    <a class="hot" href="#health" style="left:2%;top:3%;width:96%;height:94%" aria-label="Eat Move Sleep"></a>
+  </div>
+
+  <!-- FEATURE Wellness -->
+  <div class="msec mfeat">
+    <img src="mfeat2.jpg" alt="Wellness and Longevity">
+    <a class="hot" href="#longevity" style="left:2%;top:3%;width:96%;height:94%" aria-label="Wellness and Longevity"></a>
+  </div>
+
+</div>
+
+</body></html>
