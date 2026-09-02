@@ -36,21 +36,18 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdro
 .burger span::before{position:absolute;top:-6px}
 .burger span::after{position:absolute;top:6px}
 
-/* ============ HERO ============ */
-.hero{max-width:var(--maxw);margin:0 auto;padding:56px 24px 40px;display:grid;grid-template-columns:1.02fr 1.1fr;gap:38px;align-items:center;position:relative}
-.hero .xmark{position:absolute;left:-90px;top:-10px;width:560px;height:560px;pointer-events:none;opacity:.10;z-index:0}
-.hleft{position:relative;z-index:1}
-.htitle{font-family:"Manrope";font-weight:800;letter-spacing:-.02em;line-height:1.02;font-size:clamp(40px,5.4vw,74px);color:var(--ink)}
-.htitle .b{color:var(--blue)}
-.hsub{margin-top:20px;font-size:clamp(16px,1.35vw,20px);line-height:1.7;color:var(--ink2);font-weight:500;max-width:30em}
-.search{margin-top:30px;display:flex;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 8px 7px 24px;max-width:460px;box-shadow:0 18px 40px -26px rgba(20,60,130,.5)}
-.search input{flex:1;border:0;outline:0;font-family:"Noto Sans Thai","Manrope";font-size:17px;color:var(--ink);background:transparent}
-.search input::placeholder{color:#9aa4b3}
-.search button{flex:none;width:50px;height:50px;border:0;border-radius:50%;background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -8px rgba(20,90,200,.7);transition:transform .15s}
-.search button:hover{transform:scale(1.06)}
-.hright{position:relative;z-index:1}
-.hphoto{border-radius:26px;overflow:hidden;box-shadow:0 40px 80px -50px rgba(20,50,110,.5);background:#eef3f9}
-.hphoto img{width:100%;height:100%;object-fit:cover}
+/* ============ HERO (exact design image + transparent overlays) ============ */
+.hero{position:relative;width:100%;min-height:calc(100vh - 2px);display:flex;flex-direction:column}
+.herowrap{position:relative;width:100%;font-size:0}
+.hero .herobase{width:100%;height:auto;display:block}
+/* transparent clickable hotspots positioned by % over the baked image */
+.hero .hs{position:absolute;z-index:3;display:block;background:transparent;cursor:pointer}
+/* real search input over the baked "Job title or keywords" box */
+.hero .hsearch{position:absolute;z-index:3;display:flex;align-items:center}
+.hero .hsearch input{width:100%;height:100%;border:0;outline:0;background:transparent;
+  font-family:"Noto Sans Thai","Manrope",sans-serif;color:#1c2431;padding:0 2%}
+.hero .hsearch input::placeholder{color:transparent}
+.hero .hsbtn{position:absolute;z-index:4;background:transparent;border:0;cursor:pointer}
 
 /* ============ ABOUT ============ */
 .about{max-width:1000px;margin:26px auto 8px;padding:54px 24px 40px;text-align:center}
@@ -117,14 +114,9 @@ footer .fx .x{color:#5aa0ff}
 footer a{color:#9fc0ff}
 
 /* ============ RESPONSIVE ============ */
-[id]{scroll-margin-top:92px}
+[id]{scroll-margin-top:20px}
 @media (max-width:960px){
-  .nav .links,.nav .login{display:none}
-  .burger{display:flex}
-  .hero{grid-template-columns:1fr;gap:26px;padding:34px 20px 28px}
-  .hero .xmark{width:360px;height:360px;left:-80px;top:-30px}
-  .hright{order:-1}
-  .htitle{font-size:clamp(36px,10vw,54px)}
+  .hero{min-height:auto}
   .stage{height:470px}
   .arrow.prev{left:8px}.arrow.next{right:8px}
   .card{width:90vw;aspect-ratio:7/6}
@@ -132,7 +124,6 @@ footer a{color:#9fc0ff}
   .card .body p{-webkit-line-clamp:3}
 }
 @media (max-width:520px){
-  .nav{height:64px;padding:0 16px}.brand img{height:28px}
   .stage{height:460px}
   .card{aspect-ratio:6/5.6}
   .card .lg .mk{font-size:19px}
@@ -142,48 +133,26 @@ footer a{color:#9fc0ff}
   .card .links a{padding:8px 13px;font-size:13px}
   .arrow{width:46px;height:46px}
 }
-/* mobile drawer */
-.drawer{position:fixed;inset:0;z-index:100;background:rgba(12,18,30,.5);opacity:0;pointer-events:none;transition:opacity .2s}
-.drawer.open{opacity:1;pointer-events:auto}
-.drawer .panel{position:absolute;top:0;right:0;height:100%;width:78%;max-width:320px;background:#fff;padding:26px 24px;display:flex;flex-direction:column;gap:6px;transform:translateX(100%);transition:transform .26s}
-.drawer.open .panel{transform:none}
-.drawer a{font-family:"Manrope";font-weight:600;font-size:18px;padding:14px 6px;border-bottom:1px solid var(--line);color:#1c2431}
-.drawer .cl{align-self:flex-end;font-size:26px;color:#6b7688;padding:4px 10px;cursor:pointer}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="nav">
-    <a class="brand" href="/"><img src="cloverx_logo.png" alt="CloverX"></a>
-    <nav class="links">
-      <a href="#about">About Us</a>
-      <a href="#life">Life at CloverX</a>
-      <a href="#jobs">Jobs</a>
-      <a href="#faqs">FAQs</a>
-    </nav>
-    <a class="login" href="/operations">Login</a>
-    <button class="burger" id="burger" aria-label="menu"><span></span></button>
-  </div>
-</header>
-
-<!-- ============ HERO ============ -->
+<!-- ============ HERO — exact design image with transparent clickable overlays ============ -->
 <section class="hero">
-  <svg class="xmark" viewBox="0 0 100 100" aria-hidden="true">
-    <path d="M8 8 C 40 38, 60 38, 92 8 C 62 40, 62 60, 92 92 C 60 62, 40 62, 8 92 C 38 60, 38 40, 8 8 Z" fill="#2E7FE4"/>
-  </svg>
-  <div class="hleft">
-    <h1 class="htitle eng">Better Habits.<br>Better Health.<br><span class="b">Better Life.</span></h1>
-    <p class="hsub">ร่วมเป็นส่วนหนึ่งกับบริษัทสุขภาพยุคใหม่<br>ที่ช่วยให้คนสุขภาพดีขึ้นและเติบโตไปด้วยกัน</p>
-    <form class="search" action="#jobs" onsubmit="return false">
-      <input type="text" placeholder="Job title or keywords" aria-label="Search jobs">
-      <button type="submit" aria-label="search">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
-      </button>
+  <div class="herowrap">
+    <img class="herobase" src="heroimg.jpg" alt="CloverX — Better Habits. Better Health. Better Life.">
+    <!-- nav hotspots (transparent, sit over baked menu) -->
+    <a class="hs" href="/"          style="left:1.5%;top:2%;width:13%;height:9%"  aria-label="CloverX home"></a>
+    <a class="hs" href="#about"     style="left:31%;top:2.5%;width:9%;height:7%"   aria-label="About Us"></a>
+    <a class="hs" href="#life"      style="left:42%;top:2.5%;width:12%;height:7%"  aria-label="Life at CloverX"></a>
+    <a class="hs" href="#jobs"      style="left:57%;top:2.5%;width:5%;height:7%"   aria-label="Jobs"></a>
+    <a class="hs" href="#faqs"      style="left:63.5%;top:2.5%;width:6%;height:7%" aria-label="FAQs"></a>
+    <a class="hs" href="/operations" style="left:92.5%;top:2%;width:7%;height:8%"  aria-label="Login"></a>
+    <!-- real search input over the baked box + magnifier -->
+    <form class="hsearch" action="#jobs" onsubmit="return false" style="left:7%;top:70.5%;width:18.5%;height:10%">
+      <input type="text" aria-label="Job title or keywords">
     </form>
-  </div>
-  <div class="hright">
-    <div class="hphoto"><img src="team.jpg" alt="ทีมงาน CloverX"></div>
+    <button class="hsbtn" type="button" aria-label="search" style="left:25.5%;top:70.5%;width:5.5%;height:10%"></button>
   </div>
 </section>
 
@@ -211,18 +180,6 @@ footer a{color:#9fc0ff}
   <div>762/84 ซอยพัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพฯ 10250 · โทร 065-514-6576</div>
   <div style="margin-top:8px"><a href="mailto:info@cloverxth.com">info@cloverxth.com</a> · <a href="https://www.cloverxth.com">www.cloverxth.com</a></div>
 </footer>
-
-<!-- mobile drawer -->
-<div class="drawer" id="drawer">
-  <div class="panel">
-    <span class="cl" id="cl">✕</span>
-    <a href="#about">About Us</a>
-    <a href="#life">Life at CloverX</a>
-    <a href="#jobs">Jobs</a>
-    <a href="#faqs">FAQs</a>
-    <a href="/operations">Login</a>
-  </div>
-</div>
 
 <script>
 /* ---------- icons ---------- */
@@ -312,12 +269,6 @@ stage.addEventListener('mousedown',e=>{mdown=true;mx=e.clientX;});
 window.addEventListener('mouseup',e=>{ if(!mdown)return; const dx=e.clientX-mx; if(Math.abs(dx)>60){dx<0?next():prev();} mdown=false; });
 
 layout();
-
-/* ---------- mobile drawer ---------- */
-const drawer=document.getElementById('drawer');
-document.getElementById('burger').addEventListener('click',()=>drawer.classList.add('open'));
-document.getElementById('cl').addEventListener('click',()=>drawer.classList.remove('open'));
-drawer.addEventListener('click',e=>{ if(e.target===drawer||e.target.tagName==='A')drawer.classList.remove('open'); });
 </script>
 </body>
 </html>
