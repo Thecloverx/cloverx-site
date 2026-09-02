@@ -22,9 +22,11 @@
 
   /* SIDEBAR */
   .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
-  .brand{padding:18px 20px;border-bottom:1px solid var(--line);display:block}
+  .brand{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px}
+  .brand .bmark{width:36px;height:36px;border-radius:9px;background:var(--brand);color:#fff;font-weight:800;font-size:1.05rem;display:flex;align-items:center;justify-content:center;flex:none}
+  .brand .btext{display:flex;flex-direction:column;min-width:0}
   .brand .logo{display:flex;align-items:center;gap:7px;font-weight:800;font-size:1.32rem;letter-spacing:.04em}
-  .brand small{display:block;color:var(--muted);font-size:.72rem;font-weight:600;margin-top:6px}
+  .brand small{display:block;color:var(--muted);font-size:.72rem;font-weight:600;margin-top:4px;white-space:nowrap}
   .wsbadge{margin:14px 16px 6px;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
   .wsbadge .ic{width:34px;height:34px;border-radius:9px;background:#7A8699;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
   .wsbadge b{font-size:.92rem}.wsbadge span{display:block;font-size:.72rem;color:var(--muted)}
@@ -132,6 +134,27 @@
 
   .view{display:none}.view.active{display:block}
 
+  /* ===== Collapsible icon-rail sidebar (desktop) ===== */
+  @media(min-width:901px){
+    .app{grid-template-columns:74px 1fr}
+    .side{width:74px;overflow:visible;z-index:45;transition:width .22s cubic-bezier(.4,0,.2,1)}
+    .side.expanded{width:262px;box-shadow:16px 0 44px -20px rgba(15,23,42,.30)}
+    /* collapsed (rail) visuals */
+    .side:not(.expanded) .brand{justify-content:center;padding:16px 0}
+    .side:not(.expanded) .btext{display:none}
+    .side:not(.expanded) .wsbadge{margin:12px auto 6px;padding:8px;justify-content:center}
+    .side:not(.expanded) .wsbadge>div{display:none}
+    .side:not(.expanded) .nav .item{justify-content:center;padding:9px 0;gap:0}
+    .side:not(.expanded) .nav .item .lbl,
+    .side:not(.expanded) .nav .item .caret{display:none}
+    .side:not(.expanded) .nav .children{display:none!important}
+    .side:not(.expanded) .nav .item.active{box-shadow:none;border-radius:9px}
+    /* group icon shows the active state while collapsed */
+    .side:not(.expanded) .nav .group.has-active>.ghead{background:var(--brand-tint);color:var(--brand)}
+    .side:not(.expanded) .nav .group.has-active>.ghead svg.i{color:var(--brand)}
+    .side .nav{overflow:visible}
+  }
+
   @media(max-width:900px){
     .app{grid-template-columns:1fr}
     .side{position:fixed;left:0;top:0;bottom:0;width:270px;z-index:60;transform:translateX(-100%);transition:transform .22s}
@@ -221,8 +244,11 @@
 <div class="app">
   <aside class="side" id="side">
     <a class="brand" href="center.html" title="กลับ CloverX Center">
-      <div class="logo">CLOVER</div>
-      <small>One Platform, All Departments</small>
+      <span class="bmark">C</span>
+      <span class="btext">
+        <span class="logo">CLOVER</span>
+        <small>One Platform, All Departments</small>
+      </span>
     </a>
     <div class="wsbadge">
       <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
@@ -726,6 +752,8 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
+    // mark the group that holds the active item (so the collapsed rail shows it)
+    document.querySelectorAll('#nav .group').forEach(function(g){g.classList.toggle('has-active',!!g.querySelector('.item[data-view].active'));});
     var m=v==='overview'?{t:'Overview'}:META[v];
     document.getElementById('crumbTitle').textContent=m?m.t:'Overview';
     window.scrollTo(0,0);
@@ -735,6 +763,13 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   // nav wiring
   document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
   document.querySelectorAll('#nav .item[data-toggle]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');});});
+  // ===== collapsible icon-rail: expand on hover (desktop) =====
+  (function(){
+    var side=document.getElementById('side'); if(!side) return;
+    var mq=window.matchMedia('(min-width:901px)'); var t;
+    side.addEventListener('mouseenter',function(){ if(mq.matches){ clearTimeout(t); side.classList.add('expanded'); } });
+    side.addEventListener('mouseleave',function(){ if(mq.matches){ t=setTimeout(function(){ side.classList.remove('expanded'); },130); } });
+  })();
   function poDelete(id){if(!confirm('ลบออเดอร์ '+id+' ออกจากระบบถาวร?\n(ลบเฉพาะรายการในระบบ ไม่กระทบการเงินฝั่ง Stripe)'))return;fetch('/api/orders/'+id+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){poRefresh();}else{alert('ลบไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='forbidden')?' (ต้องใส่ Admin Key)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
   // ===== Refund flow =====
   var RF_SUB={'ลูกค้าคืนสินค้า':['สินค้าชำรุด/เสียหาย','ได้รับสินค้าผิด','เปลี่ยนใจ'],'ลูกค้ายกเลิกคำสั่งซื้อ':['เปลี่ยนสินค้า','เปลี่ยนใจ'],'ระบบมีปัญหา':['ราคาสินค้าผิด']};
