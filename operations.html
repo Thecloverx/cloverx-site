@@ -1050,13 +1050,13 @@
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผู้เข้าสอบในหมวดนี้</td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
-      +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
       +xvKstrip((function(){var tot=Math.max(1,list.length);return [
         xvKpi('กำลังสอบ',String(doing),'#0A67D8','อัปเดตแบบเรียลไทม์',doing/tot*100,true),
         xvKpi('ต้องสอบซ่อม',String(rem),'#E8A317','รอผู้สอบทำการสอบซ่อม',rem/tot*100),
         xvKpi('ยืนยันผ่านแล้ว',String(passed),'#0E9F6E','ผ่านเกณฑ์ · ออกใบรับรอง',passed/tot*100),
         xvKpi('รอทีมงานยืนยัน',String(waiting),'#7790B5','ข้อมูลครบ รอกดยืนยัน',waiting/tot*100)
       ];})())
+      +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
       +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><input id="trkSearch" type="text" value="'+String(EXAM_TRK_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px"></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.etab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
