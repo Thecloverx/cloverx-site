@@ -39,10 +39,16 @@ module.exports = function (app, DATA) {
     const today = readReg().filter(r => (r.regNo || '').indexOf(base) === 0).length;
     return base + p((today + 1) > 99 ? (today + 1) : (today + 1)).toString().padStart(3, '0');
   };
+  // A seat counts as taken ONLY once payment is confirmed (business rule: reserve on paid).
+  // Pending / review / waitlisted / cancelled / refunded do NOT hold a seat.
+  const SEAT_TAKEN = ['CONFIRMED', 'CHECKED_IN', 'EXAM_STARTED', 'COMPLETED', 'TRANSFERRED_TO_EXAM'];
   const roundSeats = (r) => {
     const cap = parseInt(r.capacity, 10) || 0; // 0 = unlimited
-    const used = readReg().filter(x => x.roundId === r.id && x.status !== 'CANCELLED' && x.status !== 'REJECTED').length;
-    return { capacity: cap, used, left: cap > 0 ? Math.max(0, cap - used) : null, full: cap > 0 && used >= cap };
+    const all = readReg().filter(x => x.roundId === r.id);
+    const used = all.filter(x => SEAT_TAKEN.indexOf(x.status) >= 0).length; // confirmed seats only
+    const pending = all.filter(x => x.status === 'PENDING_PAYMENT' || x.status === 'PAYMENT_REVIEW').length;
+    const waitlisted = all.filter(x => x.status === 'WAITLISTED').length;
+    return { capacity: cap, used, pending, waitlisted, left: cap > 0 ? Math.max(0, cap - used) : null, full: cap > 0 && used >= cap };
   };
   const pubRound = (r) => Object.assign({
     id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt,

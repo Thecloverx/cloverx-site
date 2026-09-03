@@ -773,7 +773,7 @@
       if(j&&j.ok&&Array.isArray(j.rounds)){EXAM_ROUNDS=j.rounds;EXAM_LIVE=true;}else{EXAM_ROUNDS=roundsDemo();EXAM_LIVE=false;}cb();
     }).catch(function(){EXAM_ROUNDS=roundsDemo();EXAM_LIVE=false;cb();});
   }
-  function roundsRefresh(){fetchRounds(paintSession);}
+  function roundsRefresh(){fetchRounds(function(){ if(EXAM_VIEW==='exam-register'){ fetchRegs(paintRegister); } else { paintSession(); } });}
 
   function renderExamSession(){
     gen.innerHTML=xvSpinner('กำลังโหลดรอบสอบ…');
@@ -812,7 +812,7 @@
     var bankReady=Object.keys(counts).length>=PARTS_N;
     var totalQ=Object.keys(counts).reduce(function(a,p){return a+(counts[p]||0);},0)||100;
 
-    gen.innerHTML=xvHead('รอบการสอบ · Exam Session','ลิสต์รอบสอบตามวันที่ — แต่ละรอบใช้คลังข้อสอบตัวแม่ร่วมกัน (ไม่ต้องก็อปข้อสอบใหม่)')
+    gen.innerHTML=xvHead('รอบการสอบ · Exam Session','ลิสต์รอบสอบตามวันที่ — แต่ละรอบใช้คลังข้อสอบกลางร่วมกัน (ไม่ต้องก็อปข้อสอบใหม่)')
       +xvKstrip([
         xvKpi('รอบสอบทั้งหมด',String(totalR),'#0A67D8','ทุกรอบที่สร้างไว้',100,true),
         xvKpi('เปิดสอบอยู่',String(openR),'#0E9F6E','ผู้สอบเข้าได้ตอนนี้',totalR?openR/totalR*100:20),
@@ -825,10 +825,10 @@
         +(EXAM_LIVE?'':'<p style="color:var(--muted);font-size:.8rem;margin-top:10px">* ตัวอย่าง — ใส่ Admin Key เพื่อจัดการรอบสอบจริง</p>')
       +'</div>'
       +'<div class="row2" style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px">'
-      +'<div class="panel"><div class="ph"><h3>คลังข้อสอบตัวแม่ '+(bankReady?'<span class="pill ok" style="margin-left:6px">พร้อมสอบ</span>':'<span class="pill bad" style="margin-left:6px">ยังไม่พร้อม</span>')+'</h3><div style="display:flex;align-items:center;gap:12px"><span style="color:var(--muted);font-size:.82rem;font-weight:600">รวม '+totalQ+' ข้อ</span><button onclick="bankImportOpen()" style="border:1px solid var(--brand);background:var(--brand-tint);color:var(--brand);border-radius:9px;padding:7px 13px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">↑ นำเข้าชุดข้อสอบ (CSV)</button></div></div>'
+      +'<div class="panel"><div class="ph"><h3>คลังข้อสอบกลาง '+(bankReady?'<span class="pill ok" style="margin-left:6px">พร้อมสอบ</span>':'<span class="pill bad" style="margin-left:6px">ยังไม่พร้อม</span>')+'</h3><div style="display:flex;align-items:center;gap:12px"><span style="color:var(--muted);font-size:.82rem;font-weight:600">รวม '+totalQ+' ข้อ</span><button onclick="bankImportOpen()" style="border:1px solid var(--brand);background:var(--brand-tint);color:var(--brand);border-radius:9px;padding:7px 13px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">↑ นำเข้าชุดข้อสอบ (CSV)</button></div></div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
         +[1,2,3,4,5].map(function(p){var c=counts[p]||counts[String(p)]||QPP;return '<div style="flex:1;min-width:90px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px"><div style="font-size:.72rem;color:var(--muted);font-weight:700">พาร์ท '+p+'</div><div style="font-weight:800">'+c+' ข้อ</div></div>';}).join('')
-        +'</div><p style="color:var(--muted);font-size:.8rem;margin-top:12px">แก้ไขข้อสอบที่คลังตัวแม่ครั้งเดียว มีผลกับทุกรอบทันที — ไม่ต้องคัดลอกข้อสอบ</p></div>'
+        +'</div><p style="color:var(--muted);font-size:.8rem;margin-top:12px">แก้ไขข้อสอบที่คลังข้อสอบกลางครั้งเดียว มีผลกับทุกรอบทันที — ไม่ต้องคัดลอกข้อสอบ</p></div>'
       +'<div class="panel"><div class="ph"><h3>กติกาการสอบ</h3></div>'
         +'<div class="li"><div class="dotc" style="background:var(--brand-tint);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div><div><div class="t">สลับข้อ + สลับตัวเลือก</div><div class="s">ทุกคนได้ลำดับต่างกัน (กันลอก) — สุ่มใหม่ทุกครั้งที่เริ่มสอบ</div></div></div>'
         +'<div class="li"><div class="dotc" style="background:var(--good-tint);color:var(--good)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="t">เกณฑ์ผ่าน</div><div class="s">ต้องได้ '+PASS_PART+'/'+QPP+' ทุกพาร์ท · '+EXAM_MIN+' นาที · สอบซ่อม '+(MAXATT-1)+' ครั้ง</div></div></div>'
@@ -896,7 +896,7 @@
     var today=new Date().toISOString().slice(0,10);
     var mval=d.mode||'online', venue=d.venue||'', fee=(d.fee!=null&&d.fee!=='')?d.fee:500;
     xvSheet('<h3 style="font-size:1.12rem">'+(isEdit?'แก้ไขรอบสอบ · ครั้งที่ '+(d.no||''):'สร้างรอบสอบใหม่')+'</h3>'
-      +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 8px">'+(isEdit?'ปรับวันที่ / สถานที่ / ค่าสมัคร / วันปิดรับสมัคร — มีผลกับผู้สมัครทันที':'ใช้คลังข้อสอบตัวแม่ร่วมกัน — ตั้งค่ารอบด้านล่าง')+'</p>'
+      +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 8px">'+(isEdit?'ปรับวันที่ / สถานที่ / ค่าสมัคร / วันปิดรับสมัคร — มีผลกับผู้สมัครทันที':'ใช้คลังข้อสอบกลางร่วมกัน — ตั้งค่ารอบด้านล่าง')+'</p>'
       +'<label style="'+lblCss()+'">รูปแบบการสอบ</label><select id="rcMode" style="'+fieldCss()+'"><option value="online"'+(mval==='online'?' selected':'')+'>Online (สอบออนไลน์)</option><option value="onsite"'+(mval==='onsite'?' selected':'')+'>On-Site (สอบที่ศูนย์)</option></select>'
       +'<label style="'+lblCss()+'">วันที่สอบ</label><input id="rcDate" type="date" value="'+(d.date||today)+'" style="'+fieldCss()+'">'
       +'<div id="rcVenueWrap" style="display:'+(mval==='onsite'?'block':'none')+'"><label style="'+lblCss()+'">สถานที่สอบ (ศูนย์)</label><input id="rcVenue" type="text" value="'+String(venue).replace(/"/g,'&quot;')+'" placeholder="เช่น Udomsuk Hub" style="'+fieldCss()+'"></div>'
@@ -920,7 +920,7 @@
     if(!demoGuard())return;
     var d=new Date((date||new Date().toISOString().slice(0,10))+'T00:00:00');d.setDate(d.getDate()+7);var nd=d.toISOString().slice(0,10);
     xvSheet('<h3 style="font-size:1.12rem">คัดลอกรอบสอบ</h3>'
-      +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 4px">คัดลอก<b>การตั้งค่ารอบ</b> (วัน/ครั้ง/ชื่อ) ไปเป็นรอบใหม่ — ไม่ได้ก็อปข้อสอบ ยังใช้คลังตัวแม่เดิม</p>'
+      +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 4px">คัดลอก<b>การตั้งค่ารอบ</b> (วัน/ครั้ง/ชื่อ) ไปเป็นรอบใหม่ — ไม่ได้ก็อปข้อสอบ ยังใช้คลังข้อสอบกลางเดิม</p>'
       +'<label style="'+lblCss()+'">วันที่สอบใหม่</label><input id="rdDate" type="date" value="'+nd+'" style="'+fieldCss()+'">'
       +'<label style="'+lblCss()+'">ครั้งที่ใหม่</label><input id="rdNo" type="number" min="1" value="'+nextRoundNo()+'" style="'+fieldCss()+'">'
       +'<label style="'+lblCss()+'">Topic</label><input id="rdTopic" type="text" value="'+(topic||'Certification')+'" style="'+fieldCss()+'">'
@@ -1237,64 +1237,199 @@
   }
 
   /* ---------- 5) REGISTRATIONS (ผู้สมัครสอบ + ตรวจสลิป EasySlip + เช็กอิน) ---------- */
-  var REG_CACHE=null, REG_TAB='online', REG_Q='';
+  var REG_CACHE=null, REG_TAB='online', REG_Q='', REG_MAINTAB='overview';
+  var REG_SEAT_TAKEN=['CONFIRMED','CHECKED_IN','EXAM_STARTED','COMPLETED','TRANSFERRED_TO_EXAM'];
   var REG_ST={PENDING_PAYMENT:{cl:'wait',t:'รอชำระเงิน'},PAYMENT_REVIEW:{cl:'pend',t:'รอตรวจสลิป'},CONFIRMED:{cl:'ok',t:'ยืนยันการจองแล้ว'},WAITLISTED:{cl:'wait',t:'สำรอง'},CANCELLED:{cl:'bad',t:'ยกเลิก'},REJECTED:{cl:'bad',t:'ไม่ผ่าน'},CHECKED_IN:{cl:'ok',t:'เช็กอินแล้ว'},NO_SHOW:{cl:'bad',t:'ขาดสอบ'},REFUNDED:{cl:'bad',t:'คืนเงินแล้ว'},PARTIALLY_REFUNDED:{cl:'pend',t:'คืนเงินบางส่วน'}};
   function regName(r){var c=r.candidate||{};return ((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';}
   function fetchRegs(cb){fetch('/api/xv/admin/registrations'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){REG_CACHE=(j&&j.ok)?j.registrations:[];cb&&cb();}).catch(function(){REG_CACHE=[];cb&&cb();});}
   function regEsBadge(r){var e=r.easyslip;if(!e)return '<span class="pill wait">ยังไม่ตรวจสลิป</span>';var m={confirmed:['ok','✓ ยอด+บัญชีตรง'],verified:['ok','ตรวจผ่าน'],mismatch:['bad','ยอด/บัญชีไม่ตรง'],duplicate:['bad','สลิปซ้ำ'],error:['wait','ตรวจไม่ได้'],no_data:['wait','อ่านสลิปไม่ได้']}[e.result]||['wait',e.result||'—'];return '<span class="pill '+m[0]+'">'+m[1]+'</span>'+(e.amount!=null?('<div style="color:var(--muted);font-size:.72rem;margin-top:2px">สลิป '+e.amount+' บาท</div>'):'');}
   function renderExamRegister(){
-    gen.innerHTML=xvSpinner('กำลังโหลดผู้สมัคร…');
-    fetchRegs(function(){
-      var all=REG_CACHE||[]; var onsite=REG_TAB==='onsite';
-      var list=all.filter(function(r){return (r.mode||'online')===REG_TAB;});
-      var q=(REG_Q||'').toLowerCase().trim();
-      var shown=list.filter(function(r){if(!q)return true;var c=r.candidate||{};return (((c.firstName||'')+' '+(c.lastName||'')).toLowerCase().indexOf(q)>=0)||String(c.phone||'').indexOf(q)>=0||String(r.regNo||'').toLowerCase().indexOf(q)>=0;});
-      var cnt=function(st){return list.filter(function(r){return r.status===st;}).length;};
-      var okC=cnt('CONFIRMED')+cnt('CHECKED_IN'),revC=cnt('PAYMENT_REVIEW'),pendC=cnt('PENDING_PAYMENT');
-      var seg=function(id,label){var on=REG_TAB===id;var n=all.filter(function(r){return (r.mode||'online')===id;}).length;return '<button class="rtab-sm" data-rt="'+id+'" style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'var(--brand-tint)':'#fff')+';color:'+(on?'var(--brand)':'var(--ink)')+';border-radius:999px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer">'+label+'<span style="background:'+(on?'var(--brand)':'#EEF1F6')+';color:'+(on?'#fff':'#6B7793')+';border-radius:999px;font-size:.72rem;font-weight:800;padding:1px 8px">'+n+'</span></button>';};
-      var rows=shown.map(function(r){
-        var st=REG_ST[r.status]||{cl:'wait',t:r.status}; var c=r.candidate||{};
-        var slip=r.payment&&r.payment.slipUrl, idc=r.idCardUrl;
-        var files=(slip?'<a href="'+slip+'" target="_blank" class="link" style="font-size:.77rem">ดูสลิป</a>':'')+(idc?' · <a href="'+idc+'" target="_blank" class="link" style="font-size:.77rem">บัตร ปชช.</a>':'');
-        // การชำระเงินตรวจอัตโนมัติด้วย EasySlip อยู่แล้ว — แอดมินไม่ต้องกดยืนยันซ้ำ
-        // เมนูจัดการ (⋮) มีเฉพาะการกระทำที่จำเป็น: เช็กอิน · คืนเงิน · ยกเลิก · (สำรอง) ตรวจสลิปซ้ำ/ยืนยันด้วยตนเอง
-        var nmA=regName(r).replace(/'/g,'').replace(/"/g,'');
-        var fee=(r.payment&&r.payment.fee)||r.fee||0;
-        var refunded=Number(r.refundedTotal)||0;
-        var settled=(r.status==='CONFIRMED'||r.status==='CHECKED_IN');
-        var pendingPay=(r.status==='PENDING_PAYMENT'||r.status==='PAYMENT_REVIEW'||r.status==='WAITLISTED');
-        var esResult=(r.easyslip&&r.easyslip.result)||'';
-        function rgI(label,onc,col){return '<button class="kebab-item'+(col?(' k-'+col):'')+'" onclick="poMenuClose(this);'+onc+'">'+label+'</button>';}
-        var mi=[];
-        if(settled&&onsite&&r.status==='CONFIRMED')mi.push(rgI('✓ เช็กอินเข้าสอบ',"regAct('"+r.id+"','CHECKED_IN','"+nmA+"')",'good'));
-        if(pendingPay){
-          if(slip)mi.push(rgI('🔄 ตรวจสลิปอีกครั้ง (EasySlip)',"regReverify('"+r.id+"')",'brand'));
-          // ยืนยันด้วยตนเอง — ใช้เฉพาะกรณี EasySlip ตรวจไม่ผ่าน/อ่านไม่ได้ แล้วแอดมินตรวจสลิปเอง
-          if(esResult!=='confirmed')mi.push(rgI('✓ ยืนยันการชำระด้วยตนเอง',"regAct('"+r.id+"','CONFIRMED','"+nmA+"',1)",'good'));
-        }
-        if((settled||r.status==='PARTIALLY_REFUNDED')&&(fee-refunded>0.001))mi.push(rgI('↩ คืนเงิน',"regRefundOpen('"+r.id+"',"+fee+","+refunded+",'"+nmA+"')",'bad'));
-        if(r.status!=='CANCELLED'&&r.status!=='CHECKED_IN'&&r.status!=='REFUNDED')mi.push(rgI('✕ ยกเลิกการสมัคร',"regAct('"+r.id+"','CANCELLED','"+nmA+"',1)",'bad'));
-        if(r.status==='CANCELLED'||r.status==='REJECTED')mi.push(rgI('↺ กู้คืน (รอชำระเงิน)',"regAct('"+r.id+"','PENDING_PAYMENT','"+nmA+"')",'good'));
-        if(slip)mi.push(rgI('📄 ดูสลิปการโอน',"window.open('"+slip+"','_blank')",'brand'));
-        if(idc)mi.push(rgI('🪪 ดูบัตรประชาชน',"window.open('"+idc+"','_blank')",'brand'));
-        var acts='<div class="kebab-wrap"><button class="kebab-btn" onclick="poMenu(this)" aria-label="เมนูจัดการ">⋮</button><div class="kebab-menu">'+(mi.join('')||'<div class="kebab-note">ไม่มีรายการจัดการ</div>')+'</div></div>';
-        var prov=(r.address&&r.address.province)||'';
-        return '<tr><td class="num">'+(r.regNo||'—')+'<div style="color:var(--muted);font-size:.72rem">'+(r.coachTeam||'—')+(r.referrer?(' · '+r.referrer):'')+'</div></td>'
-          +'<td><b>'+regName(r)+'</b><div style="color:var(--muted);font-size:.76rem">'+(c.phone||'')+(prov?(' · '+prov):'')+'</div></td>'
-          +'<td>ครั้งที่ '+(r.roundNo||'—')+'<div style="color:var(--muted);font-size:.74rem">'+fmtDateTH(r.round&&r.round.date)+'</div></td>'
-          +'<td>'+regEsBadge(r)+'<div style="margin-top:3px">'+files+'</div></td>'
-          +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
-          +'<td><div style="display:flex;gap:6px;flex-wrap:wrap">'+(acts||'—')+'</div></td></tr>';
-      }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผู้สมัครในหมวดนี้ · <a href="/xvisor_register" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></td></tr>';
-      var tot=Math.max(1,list.length);
-      gen.innerHTML=xvHead('ผู้สมัครสอบ · Registrations','ตรวจสลิปอัตโนมัติด้วย EasySlip · ยอดตรง = ยืนยันการจองอัตโนมัติ (แอดมินไม่ต้องกดยืนยันซ้ำ) · จัดการผ่านเมนู ⋮ (เช็กอิน · คืนเงิน · ยกเลิก)')
-        +xvKstrip([xvKpi('ผู้สมัครทั้งหมด',String(list.length),'#0A67D8','ในหมวดนี้',100,true),xvKpi('รอตรวจสลิป',String(revC),'#E8A317','EasySlip ยังไม่ผ่านอัตโนมัติ',revC/tot*100),xvKpi('ยืนยันแล้ว',String(okC),'#0E9F6E','ยอดตรง · จองสำเร็จ',okC/tot*100),xvKpi('รอชำระเงิน',String(pendC),'#7790B5','ยังไม่แนบสลิป/ยังไม่จ่าย',pendC/tot*100)])
-        +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
-        +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ผู้สมัคร '+(onsite?'ที่ศูนย์สอบ':'ออนไลน์')+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><input id="regSearch" type="text" value="'+String(REG_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ / เบอร์ / เลขลงทะเบียน" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;min-width:220px"><a href="/xvisor_register" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></div></div>'
-        +'<div style="overflow-x:auto"><table><thead><tr><th>เลขลงทะเบียน</th><th>ชื่อ–นามสกุล</th><th>รอบสอบ</th><th>การชำระเงิน (EasySlip)</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
-      gen.querySelectorAll('.rtab-sm').forEach(function(b){b.addEventListener('click',function(){REG_TAB=b.getAttribute('data-rt');renderExamRegister();});});
-      var q2=document.getElementById('regSearch');if(q2)q2.addEventListener('input',function(){var pos=this.selectionStart;REG_Q=this.value;renderExamRegister();var el=document.getElementById('regSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
-    });
+    gen.innerHTML=xvSpinner('กำลังโหลดข้อมูลลงทะเบียน…');
+    fetchRounds(function(){ fetchRegs(function(){ paintRegister(); }); });
+  }
+  // ---- registration seat / stats helpers (seat = confirmed payment only) ----
+  function regRoundStats(all,rid){
+    var rs=all.filter(function(x){return x.roundId===rid;});
+    return {
+      total:rs.length,
+      confirmed:rs.filter(function(x){return REG_SEAT_TAKEN.indexOf(x.status)>=0;}).length,
+      pending:rs.filter(function(x){return x.status==='PENDING_PAYMENT'||x.status==='PAYMENT_REVIEW';}).length,
+      waitlist:rs.filter(function(x){return x.status==='WAITLISTED';}).length
+    };
+  }
+  function regSeatText(cap,confirmed){
+    if(!cap||cap<=0)return '<b>'+confirmed+'</b> ที่นั่ง · <span style="color:var(--muted)">ไม่จำกัด</span>';
+    var left=Math.max(0,cap-confirmed);
+    return '<b>'+confirmed+'</b>/'+cap+' · เหลือ <b style="color:'+(left>0?'var(--good)':'var(--bad)')+'">'+left+'</b>';
+  }
+  // ---- 5 main tabs ----
+  function regMainTabs(){
+    var tabs=[['overview','ภาพรวม'],['schedules','รอบสอบ'],['people','ผู้ลงทะเบียน'],['payments','ตรวจสอบการชำระเงิน'],['history','ประวัติ']];
+    return '<div class="rmtabs" style="display:flex;gap:2px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:18px">'+tabs.map(function(t){
+      var on=REG_MAINTAB===t[0];
+      return '<button class="rmtab" data-mt="'+t[0]+'" style="border:0;border-bottom:3px solid '+(on?'var(--brand)':'transparent')+';background:none;color:'+(on?'var(--brand)':'var(--muted)')+';font-family:inherit;font-weight:'+(on?'800':'600')+';font-size:.92rem;padding:9px 15px;margin-bottom:-2px;cursor:pointer">'+t[1]+'</button>';
+    }).join('')+'</div>';
+  }
+  function paintRegister(){
+    var all=REG_CACHE||[], rounds=EXAM_ROUNDS||[];
+    var body;
+    if(REG_MAINTAB==='schedules')body=regTabSchedules(all,rounds);
+    else if(REG_MAINTAB==='people')body=regTabPeople(all,'all');
+    else if(REG_MAINTAB==='payments')body=regTabPeople(all,'payments');
+    else if(REG_MAINTAB==='history')body=regTabHistory(all,rounds);
+    else body=regTabOverview(all,rounds);
+    gen.innerHTML=xvHead('ระบบลงทะเบียนสอบ · Registration','สร้างรอบ · เปิดรับสมัคร · ตรวจสลิปอัตโนมัติ (EasySlip) · จัดการผู้สมัคร แยก Online / On-Site')+regMainTabs()+body;
+    gen.querySelectorAll('.rmtab').forEach(function(b){b.addEventListener('click',function(){REG_MAINTAB=b.getAttribute('data-mt');paintRegister();});});
+    regWireTabEvents();
+  }
+  function regWireTabEvents(){
+    gen.querySelectorAll('.rtab-sm').forEach(function(b){b.addEventListener('click',function(){REG_TAB=b.getAttribute('data-rt');paintRegister();});});
+    var q2=document.getElementById('regSearch');if(q2)q2.addEventListener('input',function(){var pos=this.selectionStart;REG_Q=this.value;paintRegister();var el=document.getElementById('regSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
+    gen.querySelectorAll('[data-goto]').forEach(function(b){b.addEventListener('click',function(){REG_MAINTAB=b.getAttribute('data-goto');var rt=b.getAttribute('data-rt2');if(rt)REG_TAB=rt;paintRegister();});});
+  }
+  // ---- registrant row (shared by ผู้ลงทะเบียน + ตรวจสอบการชำระเงิน) ----
+  function regRowHtml(r,onsite){
+    var st=REG_ST[r.status]||{cl:'wait',t:r.status}; var c=r.candidate||{};
+    var slip=r.payment&&r.payment.slipUrl, idc=r.idCardUrl;
+    var files=(slip?'<a href="'+slip+'" target="_blank" class="link" style="font-size:.77rem">ดูสลิป</a>':'')+(idc?' · <a href="'+idc+'" target="_blank" class="link" style="font-size:.77rem">บัตร ปชช.</a>':'');
+    var nmA=regName(r).replace(/'/g,'').replace(/"/g,'');
+    var fee=(r.payment&&r.payment.fee)||r.fee||0;
+    var refunded=Number(r.refundedTotal)||0;
+    var settled=(r.status==='CONFIRMED'||r.status==='CHECKED_IN');
+    var pendingPay=(r.status==='PENDING_PAYMENT'||r.status==='PAYMENT_REVIEW'||r.status==='WAITLISTED');
+    var esResult=(r.easyslip&&r.easyslip.result)||'';
+    function rgI(label,onc,col){return '<button class="kebab-item'+(col?(' k-'+col):'')+'" onclick="poMenuClose(this);'+onc+'">'+label+'</button>';}
+    var mi=[];
+    if(settled&&onsite&&r.status==='CONFIRMED')mi.push(rgI('✓ เช็กอินเข้าสอบ',"regAct('"+r.id+"','CHECKED_IN','"+nmA+"')",'good'));
+    if(pendingPay){
+      if(slip)mi.push(rgI('🔄 ตรวจสลิปอีกครั้ง (EasySlip)',"regReverify('"+r.id+"')",'brand'));
+      if(esResult!=='confirmed')mi.push(rgI('✓ ยืนยันการชำระด้วยตนเอง',"regAct('"+r.id+"','CONFIRMED','"+nmA+"',1)",'good'));
+    }
+    if((settled||r.status==='PARTIALLY_REFUNDED')&&(fee-refunded>0.001))mi.push(rgI('↩ คืนเงิน',"regRefundOpen('"+r.id+"',"+fee+","+refunded+",'"+nmA+"')",'bad'));
+    if(r.status!=='CANCELLED'&&r.status!=='CHECKED_IN'&&r.status!=='REFUNDED')mi.push(rgI('✕ ยกเลิกการสมัคร',"regAct('"+r.id+"','CANCELLED','"+nmA+"',1)",'bad'));
+    if(r.status==='CANCELLED'||r.status==='REJECTED')mi.push(rgI('↺ กู้คืน (รอชำระเงิน)',"regAct('"+r.id+"','PENDING_PAYMENT','"+nmA+"')",'good'));
+    if(slip)mi.push(rgI('📄 ดูสลิปการโอน',"window.open('"+slip+"','_blank')",'brand'));
+    if(idc)mi.push(rgI('🪪 ดูบัตรประชาชน',"window.open('"+idc+"','_blank')",'brand'));
+    var acts='<div class="kebab-wrap"><button class="kebab-btn" onclick="poMenu(this)" aria-label="เมนูจัดการ">⋮</button><div class="kebab-menu">'+(mi.join('')||'<div class="kebab-note">ไม่มีรายการจัดการ</div>')+'</div></div>';
+    var prov=(r.address&&r.address.province)||'';
+    return '<tr><td class="num">'+(r.regNo||'—')+'<div style="color:var(--muted);font-size:.72rem">'+(r.coachTeam||'—')+(r.referrer?(' · '+r.referrer):'')+'</div></td>'
+      +'<td><b>'+regName(r)+'</b><div style="color:var(--muted);font-size:.76rem">'+(c.phone||'')+(prov?(' · '+prov):'')+'</div></td>'
+      +'<td>ครั้งที่ '+(r.roundNo||'—')+'<div style="color:var(--muted);font-size:.74rem">'+fmtDateTH(r.round&&r.round.date)+'</div></td>'
+      +'<td>'+regEsBadge(r)+'<div style="margin-top:3px">'+files+'</div></td>'
+      +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
+      +'<td><div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+'</div></td></tr>';
+  }
+  // ---- TAB: ผู้ลงทะเบียน / ตรวจสอบการชำระเงิน ----
+  function regTabPeople(all,kind){
+    var onsite=REG_TAB==='onsite';
+    var payMode=(kind==='payments');
+    var list=all.filter(function(r){return (r.mode||'online')===REG_TAB;});
+    if(payMode)list=list.filter(function(r){return ['PENDING_PAYMENT','PAYMENT_REVIEW','PARTIALLY_REFUNDED','REFUNDED'].indexOf(r.status)>=0;});
+    var q=(REG_Q||'').toLowerCase().trim();
+    var shown=list.filter(function(r){if(!q)return true;var c=r.candidate||{};return (((c.firstName||'')+' '+(c.lastName||'')).toLowerCase().indexOf(q)>=0)||String(c.phone||'').indexOf(q)>=0||String(r.regNo||'').toLowerCase().indexOf(q)>=0;});
+    var cnt=function(st){return list.filter(function(r){return r.status===st;}).length;};
+    var okC=cnt('CONFIRMED')+cnt('CHECKED_IN'),revC=cnt('PAYMENT_REVIEW'),pendC=cnt('PENDING_PAYMENT');
+    var seg=function(id,label){var on=REG_TAB===id;var base=all.filter(function(r){return (r.mode||'online')===id;});var n=(payMode?base.filter(function(r){return ['PENDING_PAYMENT','PAYMENT_REVIEW','PARTIALLY_REFUNDED','REFUNDED'].indexOf(r.status)>=0;}):base).length;return '<button class="rtab-sm" data-rt="'+id+'" style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'var(--brand-tint)':'#fff')+';color:'+(on?'var(--brand)':'var(--ink)')+';border-radius:999px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer">'+label+'<span style="background:'+(on?'var(--brand)':'#EEF1F6')+';color:'+(on?'#fff':'#6B7793')+';border-radius:999px;font-size:.72rem;font-weight:800;padding:1px 8px">'+n+'</span></button>';};
+    var rows=shown.map(function(r){return regRowHtml(r,onsite);}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">'+(payMode?'ไม่มีรายการชำระเงินที่ต้องตรวจในหมวดนี้':'ยังไม่มีผู้สมัครในหมวดนี้')+' · <a href="/xvisor_register" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></td></tr>';
+    var tot=Math.max(1,list.length);
+    var kpis=payMode
+      ?[xvKpi('รอตรวจในหมวดนี้',String(list.length),'#0A67D8','ต้องดำเนินการ',100,true),xvKpi('รอตรวจสลิป',String(revC),'#E8A317','EasySlip ยังไม่ผ่านอัตโนมัติ',revC/tot*100),xvKpi('ยังไม่ชำระ',String(pendC),'#7790B5','ยังไม่แนบสลิป',pendC/tot*100),xvKpi('คืนเงิน',String(cnt('REFUNDED')+cnt('PARTIALLY_REFUNDED')),'#D5493F','มีการคืนเงิน',10)]
+      :[xvKpi('ผู้สมัครทั้งหมด',String(list.length),'#0A67D8','ในหมวดนี้',100,true),xvKpi('รอตรวจสลิป',String(revC),'#E8A317','EasySlip ยังไม่ผ่านอัตโนมัติ',revC/tot*100),xvKpi('ยืนยันแล้ว',String(okC),'#0E9F6E','ยอดตรง · จองสำเร็จ',okC/tot*100),xvKpi('รอชำระเงิน',String(pendC),'#7790B5','ยังไม่แนบสลิป/ยังไม่จ่าย',pendC/tot*100)];
+    var note=payMode?'ตรวจสลิปอัตโนมัติด้วย EasySlip — ยอดตรงระบบยืนยันเอง · แถวนี้คือที่ยังไม่ผ่านอัตโนมัติหรือรอชำระ':'ยอดตรง = ยืนยันการจองอัตโนมัติ · จัดการผ่านเมนู ⋮ (เช็กอิน · คืนเงิน · ยกเลิก)';
+    return xvKstrip(kpis)
+      +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(payMode?'ตรวจสอบการชำระเงิน':'ผู้สมัคร')+' '+(onsite?'ที่ศูนย์สอบ':'ออนไลน์')+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><input id="regSearch" type="text" value="'+String(REG_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ / เบอร์ / เลขลงทะเบียน" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;min-width:220px"><a href="/xvisor_register" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></div></div>'
+      +'<p style="color:var(--muted);font-size:.8rem;margin:0 0 12px">'+note+'</p>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขลงทะเบียน</th><th>ชื่อ–นามสกุล</th><th>รอบสอบ</th><th>การชำระเงิน (EasySlip)</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  }
+  // ---- TAB: รอบสอบ (registration-centric schedule list) ----
+  function regTabSchedules(all,rounds){
+    var rows=(rounds||[]).slice().map(function(r){
+      var s=regRoundStats(all,r.id);
+      var cap=parseInt(r.capacity,10)||0;
+      var onsite=(r.mode||'online')==='onsite';
+      var modeChip='<span class="pill '+(onsite?'wait':'new')+'" style="font-size:.7rem">'+(onsite?'On-Site':'Online')+'</span>';
+      var open=r.status==='open';
+      var badge=open?'<span class="pill ok">เปิดรับสมัคร</span>':'<span class="pill wait">ปิดรับ</span>';
+      return '<tr>'
+        +'<td><b>'+fmtDateTH(r.date)+'</b><div style="color:var(--muted);font-size:.74rem;margin-top:2px">'+modeChip+' '+(onsite?(r.venue||'ศูนย์สอบ'):'สอบออนไลน์')+'</div></td>'
+        +'<td class="num">ครั้งที่ '+r.no+'</td>'
+        +'<td class="num">'+((r.fee!=null?r.fee:500))+' บาท</td>'
+        +'<td class="num">'+regSeatText(cap,s.confirmed)+(s.pending?('<div style="color:var(--muted);font-size:.72rem">รอชำระ '+s.pending+(s.waitlist?(' · สำรอง '+s.waitlist):'')+'</div>'):(s.waitlist?('<div style="color:var(--muted);font-size:.72rem">สำรอง '+s.waitlist+'</div>'):''))+'</td>'
+        +'<td>'+(r.regCloseAt?fmtDateTH(r.regCloseAt):'—')+'</td>'
+        +'<td>'+badge+'</td>'
+        +'<td style="text-align:right"><button class="rkebab" onclick="roundMenu(this)" data-id="'+r.id+'" data-code="'+r.code+'" data-no="'+r.no+'" data-date="'+(r.date||'')+'" data-topic="'+String(r.topic||'').replace(/"/g,'&quot;')+'" data-status="'+r.status+'" data-mode="'+(r.mode||'online')+'" data-venue="'+String(r.venue||'').replace(/"/g,'&quot;')+'" data-fee="'+((r.fee!=null?r.fee:500))+'" data-close="'+(r.regCloseAt||'')+'" title="จัดการรอบ" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;color:var(--ink);font-weight:800;line-height:1">⋮</button></td>'
+        +'</tr>';
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีรอบสอบ — กด “+ สร้างรอบสอบใหม่” เพื่อเริ่ม</td></tr>';
+    return '<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>รอบสอบทั้งหมด (Exam Schedules)</h3>'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
+      +'<p style="color:var(--muted);font-size:.8rem;margin:0 0 12px">ที่นั่ง = นับเฉพาะคน<b>ชำระเงินยืนยันแล้ว</b> · คนรอชำระยังไม่กันที่นั่ง · เมนู ⋮ = เปิด/ปิดรับ · แก้ไข · แชร์ลิงก์+QR · คัดลอกรอบ · ลบ</p>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>วันที่สอบ</th><th>ครั้งที่</th><th>ค่าสมัคร</th><th>ที่นั่ง (ชำระแล้ว)</th><th>วันปิดรับ</th><th>สถานะ</th><th style="text-align:right">จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +(EXAM_LIVE?'':'<p style="color:var(--muted);font-size:.8rem;margin-top:10px">* ตัวอย่าง — ใส่ Admin Key เพื่อจัดการรอบจริง</p>')+'</div>';
+  }
+  // ---- TAB: ภาพรวม ----
+  function regTabOverview(all,rounds){
+    var active=all.filter(function(r){return r.status!=='CANCELLED'&&r.status!=='REJECTED';});
+    var by=function(f){return active.filter(f).length;};
+    var online=by(function(r){return (r.mode||'online')==='online';});
+    var onsite=by(function(r){return (r.mode||'online')==='onsite';});
+    var confirmed=by(function(r){return REG_SEAT_TAKEN.indexOf(r.status)>=0;});
+    var review=by(function(r){return r.status==='PAYMENT_REVIEW';});
+    var pending=by(function(r){return r.status==='PENDING_PAYMENT';});
+    var wait=by(function(r){return r.status==='WAITLISTED';});
+    var totCap=0,totConf=0,capRounds=0;
+    (rounds||[]).forEach(function(r){var cap=parseInt(r.capacity,10)||0;if(cap>0){totCap+=cap;totConf+=regRoundStats(all,r.id).confirmed;capRounds++;}});
+    var seatLeft=capRounds?Math.max(0,totCap-totConf):null;
+    var tot=Math.max(1,active.length);
+    var kpis=[
+      xvKpi('ผู้ลงทะเบียนทั้งหมด',String(active.length),'#0A67D8','ไม่รวมที่ยกเลิก',100,true),
+      xvKpi('Online',String(online),'#12A9F5','สอบออนไลน์',online/tot*100),
+      xvKpi('On-Site',String(onsite),'#7C5CFC','สอบที่ศูนย์',onsite/tot*100),
+      xvKpi('ชำระแล้ว',String(confirmed),'#0E9F6E','ยืนยันการจอง',confirmed/tot*100),
+      xvKpi('รอตรวจสลิป',String(review),'#E8A317','EasySlip ยังไม่ผ่าน',review/tot*100),
+      xvKpi('ยังไม่ชำระ',String(pending),'#7790B5','ยังไม่แนบสลิป',pending/tot*100),
+      xvKpi('Waiting List',String(wait),'#B45309','ที่นั่งเต็มรอเลื่อน',wait/tot*100),
+      xvKpi('ที่นั่งคงเหลือ',(seatLeft==null?'ไม่จำกัด':String(seatLeft)),'#0891B2',(capRounds?('จากรอบที่จำกัดที่นั่ง'):'ทุกรอบไม่จำกัด'),seatLeft==null?8:(totCap?seatLeft/totCap*100:0))
+    ];
+    // action items
+    var todayISO=new Date().toISOString().slice(0,10);
+    var soon=(rounds||[]).filter(function(r){if(r.status!=='open'||!r.regCloseAt)return false;var d=Math.round((new Date(r.regCloseAt)-new Date(todayISO))/86400000);return d>=0&&d<=3;});
+    var items=[];
+    if(review>0)items.push(['#E8A317','มีสลิปรอตรวจ '+review+' รายการ','ไปตรวจการชำระเงิน','payments']);
+    if(pending>0)items.push(['#7790B5','ผู้สมัครยังไม่ชำระ '+pending+' รายการ','ดูรายชื่อ','people']);
+    if(wait>0)items.push(['#B45309','Waiting List '+wait+' รายการ รอที่นั่งว่าง','ดูรายชื่อ','people']);
+    soon.forEach(function(r){items.push(['#D5493F','รอบ '+fmtDateTH(r.date)+' ใกล้ปิดรับ ('+fmtDateTH(r.regCloseAt)+')','จัดการรอบ','schedules']);});
+    var itemsHtml=items.length?items.map(function(it){
+      return '<div class="li" style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line-soft,#EEF1F6)"><span style="width:9px;height:9px;border-radius:50%;background:'+it[0]+';flex:none"></span><div style="flex:1"><b style="font-size:.9rem">'+it[1]+'</b></div><button data-goto="'+it[3]+'" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 11px;font-family:inherit;font-weight:700;font-size:.78rem;color:var(--brand);cursor:pointer">'+it[2]+' →</button></div>';
+    }).join(''):'<p style="color:var(--muted);font-size:.86rem;padding:8px 0">ไม่มีรายการค้างต้องดำเนินการ 🎉</p>';
+    // open round cards
+    var openRounds=(rounds||[]).filter(function(r){return r.status==='open';});
+    var cards=openRounds.map(function(r){
+      var s=regRoundStats(all,r.id);var cap=parseInt(r.capacity,10)||0;var ons=(r.mode||'online')==='onsite';
+      return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--panel,#fff);min-width:230px;flex:1"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>'+fmtDateTH(r.date)+'</b><span class="pill '+(ons?'wait':'new')+'" style="font-size:.68rem">'+(ons?'On-Site':'Online')+'</span></div>'
+        +'<div style="color:var(--muted);font-size:.76rem;margin:2px 0 10px">'+(ons?(r.venue||'ศูนย์สอบ'):'สอบออนไลน์')+' · ค่าสมัคร '+((r.fee!=null?r.fee:500))+' บาท'+(r.regCloseAt?(' · ปิดรับ '+fmtDateTH(r.regCloseAt)):'')+'</div>'
+        +'<div style="display:flex;gap:14px;font-size:.82rem"><div><div style="color:var(--muted);font-size:.72rem">ที่นั่ง (ชำระแล้ว)</div><div style="font-weight:800">'+regSeatText(cap,s.confirmed)+'</div></div><div><div style="color:var(--muted);font-size:.72rem">รอชำระ</div><div style="font-weight:800">'+s.pending+'</div></div></div>'
+        +'<button data-goto="schedules" style="margin-top:12px;width:100%;border:1px solid var(--brand);background:var(--brand-tint);color:var(--brand);border-radius:9px;padding:7px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">จัดการรอบ →</button></div>';
+    }).join('')||'<p style="color:var(--muted);font-size:.86rem;padding:8px 0">ยังไม่มีรอบที่เปิดรับสมัคร · <button data-goto="schedules" style="border:0;background:none;color:var(--brand);font-weight:700;cursor:pointer;font-family:inherit">สร้าง/เปิดรอบ →</button></p>';
+    return xvKstrip(kpis)
+      +'<div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+      +'<div class="panel"><div class="ph"><h3>รายการที่ต้องดำเนินการ</h3></div>'+itemsHtml+'</div>'
+      +'<div class="panel"><div class="ph"><h3>รอบที่เปิดรับสมัคร <span style="color:var(--muted);font-weight:600">('+openRounds.length+')</span></h3><button onclick="roundCreateOpen()" style="'+btnGhost()+';font-size:.8rem;padding:7px 12px">+ สร้างรอบ</button></div><div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>'
+      +'</div><style>@media(max-width:820px){.row2{grid-template-columns:1fr!important}}</style>';
+  }
+  // ---- TAB: ประวัติ ----
+  function regTabHistory(all,rounds){
+    var q=(REG_Q||'').toLowerCase().trim();
+    var past=(rounds||[]).filter(function(r){return r.status!=='open';});
+    var rows=past.map(function(r){
+      var s=regRoundStats(all,r.id);var ons=(r.mode||'online')==='onsite';
+      return '<tr><td><b>'+fmtDateTH(r.date)+'</b><div style="color:var(--muted);font-size:.74rem"><span class="pill '+(ons?'wait':'new')+'" style="font-size:.68rem">'+(ons?'On-Site':'Online')+'</span> ครั้งที่ '+r.no+'</div></td>'
+        +'<td class="num">'+s.total+' คน</td><td class="num">'+s.confirmed+' คน</td>'
+        +'<td><span class="pill wait">ปิดรับแล้ว</span></td>'
+        +'<td><button data-goto="people" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 11px;font-family:inherit;font-weight:700;font-size:.78rem;color:var(--brand);cursor:pointer">ดูรายชื่อ →</button></td></tr>';
+    }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีรอบที่ปิดรับ — รอบที่ปิด/จบแล้วจะเก็บไว้ที่นี่ (ข้อมูลไม่หาย)</td></tr>';
+    return '<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ประวัติรอบสอบ <span style="color:var(--muted);font-weight:600">('+past.length+')</span></h3><span style="color:var(--muted);font-size:.8rem">รอบที่ปิดรับ/จบแล้ว — ค้นหาและดูย้อนหลังได้ ข้อมูลไม่ถูกลบ</span></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>วันที่สอบ</th><th>ผู้สมัครทั้งหมด</th><th>ชำระแล้ว</th><th>สถานะ</th><th>รายชื่อ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   }
   function regAct(id,to,nm,danger){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อจัดการจริง','bad');return;}
