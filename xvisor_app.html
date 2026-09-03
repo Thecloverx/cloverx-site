@@ -379,7 +379,7 @@ input{font-family:inherit}
 <div class="demobar" id="demobar" style="display:none">เดโม: <b id="demoFill">สุ่มคำตอบ</b> · <b id="demoNext">ข้ามไปหน้าถัดไป</b></div>
 <script>
 /* ================= constants ================= */
-const PARTS=5,QPP=20,TOTAL=120*60,PASS=16,MAXATT=2,OPTL=['ก','ข','ค','ง'];
+const PARTS=5,QPP=20,TOTAL=120*60,PASS=16,MAXATT=3,REMEDIAL_MAX=MAXATT-1,PAUSE_MAX=2,OPTL=['ก','ข','ค','ง'];
 /* DEMO tools (random-fill / skip) show only with ?demo=1 — hidden in production */
 const DEMO=(function(){try{return /[?&]demo=1/.test(location.search);}catch(e){return false;}})();
 const R=64,C=2*Math.PI*R,R2=46,C2=2*Math.PI*R2;
@@ -538,7 +538,7 @@ function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',
  let tabs='';ap.forEach((p,ix)=>tabs+=`<button class="tab ${p===ss.currentPart?'active':''}" data-part="${p}"><b class="num">${p}</b><span>พาร์ต</span></button>`);
  let cells='';for(let i=0;i<QPP;i++){const a=S.answers[key(ss.currentPart,i)]!=null;cells+=`<button class="cell ${a?'answered':''} ${i===ss.currentQ?'current':''}" data-q="${i}">${i+1}</button>`;}
  app.innerHTML=`
- ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn btn-danger-ghost" id="pauseBtn" style="margin-left:var(--space-2);padding:9px 14px;font-size:13px">${I.pause} หยุดเวลา · เหลือ ${MAXATT-ss.pauseUsed}</button>`:''}`)}
+ ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn btn-danger-ghost" id="pauseBtn" style="margin-left:var(--space-2);padding:9px 14px;font-size:13px">${I.pause} หยุดเวลา · เหลือ ${PAUSE_MAX-ss.pauseUsed}</button>`:''}`)}
  <nav class="tabs">${tabs}</nav>
  <div class="mprogress card"><span class="mpct num">${pct}%</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="mtime tv num">${fmt(ss.remaining)}</span></div>
  <div class="layout">
@@ -585,10 +585,10 @@ function tickExam(){$$('.tv').forEach(e=>e.textContent=fmt(S.session.remaining))
 function startTimer(){clearInterval(examTimer);examTimer=setInterval(()=>{const ss=S.session;if(!ss||ss.paused)return;if(ss.remaining>0){ss.remaining--;tickExam();}else{clearInterval(examTimer);doSubmit();}},1000);}
 
 /* ---------- pause (onsite) ---------- */
-function openPause(){const ss=S.session;if(ss.pauseUsed>=MAXATT){toast('ใช้สิทธิ์หยุดเวลาครบแล้ว');return;}ss.paused=true;
+function openPause(){const ss=S.session;if(ss.pauseUsed>=PAUSE_MAX){toast('ใช้สิทธิ์หยุดเวลาครบแล้ว');return;}ss.paused=true;
  if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:true,remaining:ss.remaining}).catch(()=>{});
  scrim(`<div class="modal"><h3>หยุดเวลาชั่วคราว</h3><div class="ringwrap pause-orb">${ringSVG(100,{size:184})}<div class="rc"><b class="num" id="pv">10:00</b><span>นาที</span></div></div>
-   <div class="mnote">${I.info}<span>หยุดเวลาได้สูงสุด ${MAXATT} ครั้ง · ครั้งละ 10 นาที · ระบบจะนับต่อเมื่อครบเวลาหรือกดทำต่อ</span></div>
+   <div class="mnote">${I.info}<span>หยุดเวลาได้สูงสุด ${PAUSE_MAX} ครั้ง · ครั้งละ 10 นาที · ระบบจะนับต่อเมื่อครบเวลาหรือกดทำต่อ</span></div>
    <div class="mbtns"><button class="btn btn-primary block" id="resume">ทำข้อสอบต่อเลย</button></div></div>`);
  let left=600;const iv=setInterval(()=>{left--;const m=(left/60|0),s=left%60;const pv=document.getElementById('pv');if(pv)pv.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(left<=0){clearInterval(iv);end();}},1000);
  function end(){ss.pauseUsed++;ss.paused=false;if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:false,pauseUsed:ss.pauseUsed,remaining:ss.remaining}).catch(()=>{});closeScrim();renderExam();toast('กลับเข้าห้องสอบแล้ว');}
@@ -671,8 +671,8 @@ function renderRemedialPrep(){const q=S.remedialQueue;
        <div class="hero-sub">เวลาเริ่มนับทันทีเมื่อกด<br>เริ่มสอบซ่อม</div></div>
      <div style="display:flex;flex-direction:column;gap:var(--space-3)">
        <div class="field-title" style="text-align:center">ลำดับการสอบซ่อม (เรียงพาร์ทอัตโนมัติ)</div>
-       ${q.map((p,ix)=>{const r=S.results[p-1];return `<div class="remq ${ix===0?'act':'lock'}"><span class="rqn">${ix===0?p:I.lock}</span><span class="rqm"><b>พาร์ต ${p}</b><span>คะแนนเดิม ${r.score}/${QPP}</span></span><span class="rqr"><span class="u">สิทธิ์ครั้งที่ ${r.attempts+1} จาก ${MAXATT}</span><small>${ix===0?'กำลังดำเนินการ':'รอพาร์ทก่อนหน้า'}</small></span></div>`;}).join('')}
-       <div class="card rules"><span class="shield">${I.shield}</span><ul><li>ระบบเรียงพาร์ทจากน้อยไปมากอัตโนมัติ เลือกหรือข้ามไม่ได้</li><li>สอบซ่อมได้สูงสุด ${MAXATT} ครั้งต่อพาร์ท</li><li>หากใช้สิทธิ์ครบแล้วยังไม่ผ่าน ระบบจะยุติการสอบทันที</li><li>หมดเวลา 120 นาทีก่อนส่ง ถือว่าไม่ผ่าน</li></ul></div></div></div>
+       ${q.map((p,ix)=>{const r=S.results[p-1];return `<div class="remq ${ix===0?'act':'lock'}"><span class="rqn">${ix===0?p:I.lock}</span><span class="rqm"><b>พาร์ต ${p}</b><span>คะแนนเดิม ${r.score}/${QPP}</span></span><span class="rqr"><span class="u">สอบซ่อมครั้งที่ ${r.attempts} จาก ${REMEDIAL_MAX}</span><small>${ix===0?'กำลังดำเนินการ':'รอพาร์ทก่อนหน้า'}</small></span></div>`;}).join('')}
+       <div class="card rules"><span class="shield">${I.shield}</span><ul><li>ระบบเรียงพาร์ทจากน้อยไปมากอัตโนมัติ เลือกหรือข้ามไม่ได้</li><li>สอบซ่อมได้สูงสุด ${REMEDIAL_MAX} ครั้งต่อพาร์ท</li><li>หากใช้สิทธิ์ครบแล้วยังไม่ผ่าน ระบบจะยุติการสอบทันที</li><li>หมดเวลา 120 นาทีก่อนส่ง ถือว่าไม่ผ่าน</li></ul></div></div></div>
    <div class="rfoot"><label class="consent" id="agree" style="margin:0;max-width:none;flex:1"><span class="box">${I.check}</span><span><b>ฉันเข้าใจกติกาการสอบซ่อมแล้ว</b></span></label>
      <button class="btn btn-primary lg" id="begin" disabled>เริ่มสอบซ่อม พาร์ท ${q[0]} ${I.next}</button></div></div>`;
  let ok=false;$('#agree').onclick=()=>{ok=!ok;$('#agree').classList.toggle('on',ok);$('#begin').disabled=!ok;};
@@ -684,7 +684,7 @@ function renderRemedialPrep(){const q=S.remedialQueue;
 
 /* ---------- 09 attempts completed ---------- */
 function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
-   <h2>คุณใช้สิทธิ์สอบซ่อมครบแล้ว</h2><p>บางพาร์ทใช้สิทธิ์ครบ ${MAXATT} ครั้งแล้วยังไม่ผ่าน ระบบจึงยุติการสอบรอบนี้<br>อย่าเพิ่งเสียใจไป! คุณสามารถสมัครสอบใหม่ได้ในรอบถัดไป</p>
+   <h2>คุณใช้สิทธิ์สอบซ่อมครบแล้ว</h2><p>บางพาร์ทสอบครบ ${MAXATT} ครั้ง (รอบแรก + สอบซ่อม ${REMEDIAL_MAX} ครั้ง) แล้วยังไม่ผ่าน ระบบจึงยุติการสอบรอบนี้<br>อย่าเพิ่งเสียใจไป! คุณสามารถสมัครสอบใหม่ได้ในรอบถัดไป</p>
    <div style="margin-top:var(--space-5)"><button class="btn btn-primary lg" id="home">สมัครสอบใหม่รอบหน้า</button></div></div>`;
  $('#home').onclick=()=>{initState();render();};
 }

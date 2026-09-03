@@ -534,7 +534,7 @@
   var EXAM_QINFO=null;      // question-bank info
   var EXAM_LOADING=false;
 
-  var PARTS_N=5, QPP=20, PASS_PART=16, MAXATT=2, EXAM_MIN=120;
+  var PARTS_N=5, QPP=20, PASS_PART=16, MAXATT=3, REMEDIAL_MAX=MAXATT-1, PAUSE_MAX=2, EXAM_MIN=120; // MAXATT=total attempts/part; REMEDIAL_MAX=remedial retries; PAUSE_MAX=On-Site pauses
   var XV_ST={
     in_progress:{cl:'new',t:'กำลังสอบ'},
     awaiting_verify:{cl:'wait',t:'รอทีมงานยืนยัน'},
@@ -560,7 +560,7 @@
     if(s.status==='remedial_required') return {cl:'pend',t:'ต้องสอบซ่อม'};
     return {cl:'wait',t:'—'};
   }
-  function xvAttLabel(s){var maxAtt=(s.results||[]).reduce(function(m,r){return Math.max(m,r.attempts||1);},1);return (maxAtt<=1)?'สอบรอบแรก':('สอบซ่อม '+(maxAtt-1)+'/'+MAXATT);}
+  function xvAttLabel(s){var maxAtt=(s.results||[]).reduce(function(m,r){return Math.max(m,r.attempts||1);},1);return (maxAtt<=1)?'สอบรอบแรก':('สอบซ่อม '+(maxAtt-1)+'/'+REMEDIAL_MAX);}
   function xvTimeUsed(s){if(!s.startedAt||!s.submittedAt)return '—';var sec=Math.max(0,((s.submittedAt-s.startedAt)/1000)|0);return fmtHMS(sec);}
   function xvKeyQ(extra){var q=OPS_KEY?('key='+encodeURIComponent(OPS_KEY)):'';if(extra)q=q?(q+'&'+extra):extra;return q?('?'+q):'';}
   function xvName(s){var c=(s&&s.candidate)||{};return ((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';}
@@ -1041,15 +1041,19 @@
     var doing=cnt(list,'in_progress'), rem=cnt(list,'remedial_required'),
         passed=cnt(list,onsite?'submitted':'verified'), waiting=cnt(list,'awaiting_verify'),
         pausedN=list.filter(function(s){return s.status==='in_progress'&&s.paused;}).length;
-    var shown=list.filter(function(s){return xvMatch(s,EXAM_TRK_Q);});
-    var seg=function(id,label){var on=EXAM_TAB===id;var n=all.filter(function(s){return s.candidate.mode===id;}).length;
+    // Tracker shows only candidates who are NOT finished yet — currently taking or between rounds (remedial).
+    // Finished ones (submitted / verified / awaiting_verify / ended_failed / disqualified) drop off here and live in หน้าผลการสอบ.
+    var isActiveTrk=function(s){return s.status==='in_progress'||s.status==='remedial_required';};
+    var active=list.filter(isActiveTrk);
+    var shown=active.filter(function(s){return xvMatch(s,EXAM_TRK_Q);});
+    var seg=function(id,label){var on=EXAM_TAB===id;var n=all.filter(function(s){return s.candidate.mode===id&&(s.status==='in_progress'||s.status==='remedial_required');}).length;
       return '<button class="etab-sm" data-tab="'+id+'" style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'var(--brand-tint)':'#fff')+';color:'+(on?'var(--brand)':'var(--ink)')+';border-radius:999px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;transition:.14s">'+label
         +'<span style="background:'+(on?'var(--brand)':'#EEF1F6')+';color:'+(on?'#fff':'#6B7793')+';border-radius:999px;font-size:.72rem;font-weight:800;padding:1px 8px">'+n+'</span></button>';};
     var rows=shown.map(function(s){
       var st=onsite?xvOnsiteStat(s):(XV_ST[s.status]||{cl:'wait',t:s.status});
       var maxAtt=(s.results||[]).reduce(function(m,r){return Math.max(m,r.attempts||1);},1);
-      var attTxt=(maxAtt<=1)?'สอบรอบแรก':('สอบซ่อม '+(maxAtt-1)+'/'+MAXATT);
-      var pausedTag=(s.candidate.mode==='onsite'&&s.pauseUsed)?' <span class="pill wait" title="หยุดเวลา">⏸ '+s.pauseUsed+'/'+MAXATT+'</span>':'';
+      var attTxt=(maxAtt<=1)?'สอบรอบแรก':('สอบซ่อม '+(maxAtt-1)+'/'+REMEDIAL_MAX);
+      var pausedTag=(s.candidate.mode==='onsite'&&s.pauseUsed)?' <span class="pill wait" title="หยุดเวลา">⏸ '+s.pauseUsed+'/'+PAUSE_MAX+'</span>':'';
       var prog='<div style="min-width:250px">'+xvPartPills(s)+'<span class="xatt">'+attTxt+'</span>'+pausedTag+'</div>';
       var scoreCell=(s.status==='in_progress')?'—':('<b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span>');
       var remain=(s.status==='in_progress')?fmtHMS(s.remaining):'—';
@@ -1073,7 +1077,7 @@
         +'<td class="num">'+remain+'</td>'
         +'<td class="num">'+scoreCell+'</td>'
         +'<td>'+statusCell+'</td></tr>';
-    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผู้เข้าสอบในหมวดนี้</td></tr>';
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ไม่มีผู้ที่กำลังสอบอยู่ตอนนี้ · ผู้ที่สอบเสร็จแล้วดูได้ที่ <a class="link" href="#" onclick="go(\'exam-result\');return false">หน้าผลการสอบ →</a></td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
       +xvKstrip((function(){var tot=Math.max(1,list.length);return onsite?[
@@ -1088,7 +1092,7 @@
         xvKpi('รอทีมงานยืนยัน',String(waiting),'#7790B5','ข้อมูลครบ รอกดยืนยัน',waiting/tot*100)
       ];})())
       +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
-      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><input id="trkSearch" type="text" value="'+String(EXAM_TRK_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px"></div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>กำลังสอบอยู่ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><input id="trkSearch" type="text" value="'+String(EXAM_TRK_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px"><a class="link" href="#" onclick="go(\'exam-result\');return false">ดูผลการสอบ →</a></div></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.etab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
     var tq=document.getElementById('trkSearch');if(tq)tq.addEventListener('input',function(){var pos=this.selectionStart;EXAM_TRK_Q=this.value;renderExamTracker();var el=document.getElementById('trkSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});

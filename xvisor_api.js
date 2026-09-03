@@ -28,7 +28,7 @@ module.exports = function (app, DATA) {
   const nextRoundNo = () => { const rs = readR(); return rs.length ? Math.max.apply(null, rs.map(r => r.no || 0)) + 1 : 1; };
   const pubRound = (r) => ({ id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt });
 
-  const PARTS = [1, 2, 3, 4, 5], QPP = 20, PASS = 16, MAXATT = 2, TOTAL = 120 * 60;
+  const PARTS = [1, 2, 3, 4, 5], QPP = 20, PASS = 16, MAXATT = 3, TOTAL = 120 * 60; // MAXATT = total attempts/part (1 first + 2 remedial)
   // Exam admin endpoints are open (no Admin Key) — per CloverX request. Keep the operations URL private.
   // NOTE: the orders/Stripe/PII admin in server.js still uses ADMIN_KEY separately.
   const adminOk = (req) => true;
