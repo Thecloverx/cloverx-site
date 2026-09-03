@@ -134,6 +134,9 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
 
 app.use(express.json({ limit: '10mb' }));
 
+// ---- X-VISOR exam backend (server-side shuffle + scoring) ----
+try { require('./xvisor_api')(app, DATA); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
+
 function read() { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) { return []; } }
 function write(d) { fs.writeFileSync(DB, JSON.stringify(d, null, 2)); }
 

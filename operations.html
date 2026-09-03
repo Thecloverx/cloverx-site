@@ -469,61 +469,335 @@
   }
   function kpi(lb,v,bg,fg){return '<div class="kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+bg+';color:'+fg+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg></div></div><div class="v num">'+v+'</div></div>';}
 
-  /* ===== Exam Tracker (split Online / Offline On-Site) ===== */
+  /* ===================================================================
+     X-VISOR EXAM ADMIN — Operation ▸ Exam
+     Live data from /api/xv/admin/*  (key = OPS_KEY, same as orders)
+     Graceful demo fallback when the server/API is unreachable.
+     =================================================================== */
   var EXAM_TAB='online';
-  var EXAM_CANDS=[
-    {id:'660110001',name:'ณัฐวัฒน์ ยิ้มใจ',mode:'online',part:3,ansd:52,total:100,score:null,status:'in_progress',remain:'01:42:18'},
-    {id:'660110004',name:'ปวีณา ทองแท้',mode:'online',part:5,ansd:100,total:100,score:null,status:'checking',remain:'00:11:02'},
-    {id:'660110007',name:'กิตติพงษ์ ศรีสุข',mode:'online',part:5,ansd:100,total:100,score:86,status:'waiting_verify',remain:'—'},
-    {id:'660110009',name:'อารยา แจ่มใส',mode:'online',part:2,ansd:31,total:100,score:null,status:'remedial',remain:'01:58:40'},
-    {id:'660110012',name:'ธนกร วัฒนา',mode:'online',part:5,ansd:100,total:100,score:92,status:'passed',remain:'—'},
-    {id:'660110015',name:'สุชานันท์ ปิ่นทอง',mode:'online',part:1,ansd:8,total:100,score:null,status:'in_progress',remain:'01:51:33'},
-    {id:'660110002',name:'ชวินทร์ ก้องเกียรติ',mode:'onsite',part:4,ansd:74,total:100,score:null,status:'in_progress',remain:'00:58:19',paused:1},
-    {id:'660110003',name:'เมธาวี บุญมี',mode:'onsite',part:5,ansd:100,total:100,score:78,status:'remedial',remain:'—'},
-    {id:'660110006',name:'ภาคภูมิ ไชยวงศ์',mode:'onsite',part:5,ansd:100,total:100,score:88,status:'passed',remain:'—'},
-    {id:'660110008',name:'ณิชา พรหมมา',mode:'onsite',part:2,ansd:24,total:100,score:null,status:'in_progress',remain:'01:33:05',paused:2},
-    {id:'660110011',name:'อนุชา เรืองศรี',mode:'onsite',part:5,ansd:100,total:100,score:81,status:'completed',remain:'—'}
-  ];
-  var EXAM_STATUS={
-    in_progress:{cl:'new',t:'กำลังสอบ'}, checking:{cl:'wait',t:'กำลังตรวจ'}, remedial:{cl:'pend',t:'สอบซ่อม'},
-    waiting_verify:{cl:'wait',t:'รอทีมงานยืนยัน'}, passed:{cl:'ok',t:'ผ่านครบ 5 พาร์ท'}, completed:{cl:'ok',t:'เสร็จสมบูรณ์'}
+  var EXAM_CACHE=null;      // last sessions array (live or demo)
+  var EXAM_LIVE=false;      // true when last fetch came from the server
+  var EXAM_OVW=null;        // last overview object
+  var EXAM_QINFO=null;      // question-bank info
+  var EXAM_LOADING=false;
+
+  var PARTS_N=5, QPP=20, PASS_PART=16, MAXATT=2, EXAM_MIN=120;
+  var XV_ST={
+    in_progress:{cl:'new',t:'กำลังสอบ'},
+    awaiting_verify:{cl:'wait',t:'รอทีมงานยืนยัน'},
+    verified:{cl:'ok',t:'ยืนยันแล้ว · ผ่าน'},
+    remedial_required:{cl:'pend',t:'ต้องสอบซ่อม'},
+    ended_failed:{cl:'bad',t:'ไม่ผ่าน (ครบ '+MAXATT+' ครั้ง)'}
   };
+  function xvKeyQ(extra){var q=OPS_KEY?('key='+encodeURIComponent(OPS_KEY)):'';if(extra)q=q?(q+'&'+extra):extra;return q?('?'+q):'';}
+  function xvName(s){var c=(s&&s.candidate)||{};return ((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';}
+  function xvTotal(s){return (s.results||[]).reduce(function(a,r){return a+(r.score||0);},0);}
+  function xvMaxTotal(){return PARTS_N*QPP;} // 100
+  function fmtHMS(sec){sec=Math.max(0,sec|0);var h=(sec/3600)|0,m=((sec%3600)/60)|0,s=sec%60;var p=function(n){return(n<10?'0':'')+n;};return p(h)+':'+p(m)+':'+p(s);}
+  // progress: how many parts have a recorded result vs 5, and answered-in-current
+  function xvProgress(s){
+    var done=(s.results||[]).length;
+    if(s.status!=='in_progress') return {done:done,label:'ครบ '+PARTS_N+' พาร์ท'};
+    return {done:done,label:'พาร์ท '+Math.min(PARTS_N,done+1)+'/'+PARTS_N};
+  }
+
+  // ---- lightweight toast (no native dialogs) ----
+  function xvToast(msg,kind){
+    var el=document.getElementById('xvToast');
+    if(!el){el=document.createElement('div');el.id='xvToast';
+      el.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:9999;background:#1E2A44;color:#fff;padding:12px 18px;border-radius:12px;font-family:inherit;font-weight:700;font-size:.9rem;box-shadow:0 14px 40px -12px rgba(0,0,0,.45);opacity:0;transition:.25s;max-width:88vw';
+      document.body.appendChild(el);}
+    el.style.background=kind==='ok'?'#12A67C':kind==='bad'?'#E5484D':'#1E2A44';
+    el.textContent=msg;
+    requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateX(-50%) translateY(0)';});
+    clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(-50%) translateY(20px)';},2600);
+  }
+  // ---- custom confirm (avoids native confirm/alert) ----
+  function xvConfirm(title,body,okLabel,onOk,danger){
+    var m=document.getElementById('xvConfirm');
+    if(!m){m=document.createElement('div');m.id='xvConfirm';
+      m.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(20,30,55,.42);padding:20px';
+      m.innerHTML='<div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:24px;box-shadow:0 30px 80px -20px rgba(0,0,0,.5)">'
+        +'<h3 id="xvcT" style="font-size:1.12rem;margin-bottom:8px"></h3>'
+        +'<p id="xvcB" style="color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:20px"></p>'
+        +'<div style="display:flex;gap:10px;justify-content:flex-end">'
+        +'<button id="xvcCancel" style="background:none;border:1px solid var(--line);border-radius:10px;padding:9px 16px;font-family:inherit;font-weight:700;color:var(--ink);cursor:pointer">ยกเลิก</button>'
+        +'<button id="xvcOk" style="border:0;border-radius:10px;padding:9px 18px;font-family:inherit;font-weight:800;color:#fff;cursor:pointer"></button>'
+        +'</div></div>';
+      document.body.appendChild(m);
+      m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';});
+      document.getElementById('xvcCancel').onclick=function(){m.style.display='none';};
+    }
+    document.getElementById('xvcT').textContent=title;
+    document.getElementById('xvcB').textContent=body;
+    var ok=document.getElementById('xvcOk');
+    ok.textContent=okLabel;ok.style.background=danger?'var(--bad)':'var(--good)';
+    ok.onclick=function(){m.style.display='none';onOk();};
+    m.style.display='flex';
+  }
+
+  // ---- demo fallback (server shape) so pages look complete offline ----
+  function xvDemo(){
+    var mk=function(id,fn,ln,ph,mode,status,scores,pause,verified){
+      var res=(scores||[]).map(function(sc,i){return {part:i+1,score:sc,attempts:1,status:sc>=PASS_PART?'passed':'failed'};});
+      return {id:id,code:'XV'+id.slice(-6),candidate:{firstName:fn,lastName:ln,phone:'08x-xxx-'+id.slice(-4),mode:mode},
+        phase:ph,status:status,results:res,pauseUsed:pause||0,staffVerified:!!verified,
+        createdAt:Date.now()-3600000,submittedAt:status==='in_progress'?null:Date.now()-600000,remaining:status==='in_progress'?(Math.random()*7000|0):0};
+    };
+    return [
+      mk('a10001','ณัฐวัฒน์','ยิ้มใจ','first','online','in_progress',[18,17],0),
+      mk('a10004','ปวีณา','ทองแท้','first','online','awaiting_verify',[19,18,17,20,16],0),
+      mk('a10007','กิตติพงษ์','ศรีสุข','first','online','verified',[18,18,19,17,16],0,true),
+      mk('a10009','อารยา','แจ่มใส','remedial','online','remedial_required',[12,17,18,10,19],0),
+      mk('a10015','สุชานันท์','ปิ่นทอง','first','online','in_progress',[16],0),
+      mk('a10002','ชวินทร์','ก้องเกียรติ','first','onsite','in_progress',[17,18,16],1),
+      mk('a10003','เมธาวี','บุญมี','remedial','onsite','remedial_required',[14,17,18,16,11],2),
+      mk('a10006','ภาคภูมิ','ไชยวงศ์','first','onsite','awaiting_verify',[18,16,17,19,18],1),
+      mk('a10011','อนุชา','เรืองศรี','first','onsite','ended_failed',[10,12,9,14,11],2)
+    ];
+  }
+
+  function xvFetch(cb){
+    EXAM_LOADING=true;
+    Promise.all([
+      fetch('/api/xv/admin/overview'+xvKeyQ()).then(function(r){return r.json();}).catch(function(){return null;}),
+      fetch('/api/xv/admin/sessions'+xvKeyQ()).then(function(r){return r.json();}).catch(function(){return null;})
+    ]).then(function(res){
+      var ov=res[0],ss=res[1];
+      if(ss&&ss.ok&&Array.isArray(ss.sessions)){EXAM_CACHE=ss.sessions;EXAM_OVW=(ov&&ov.ok)?ov:null;EXAM_LIVE=true;}
+      else {EXAM_CACHE=xvDemo();EXAM_OVW=null;EXAM_LIVE=false;}
+      EXAM_LOADING=false;cb&&cb();
+    });
+  }
+  // banner shown at top of each exam page: live vs demo + key unlock
+  function xvBanner(){
+    if(EXAM_LIVE) return '<div style="display:inline-flex;align-items:center;gap:7px;background:var(--good-tint);color:var(--good);font-weight:700;font-size:.78rem;padding:5px 12px;border-radius:999px"><span style="width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px rgba(18,166,124,.18)"></span>เชื่อมต่อระบบสอบจริง (Live)</div>';
+    return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-tint);border:1px solid #F3D9A8;border-radius:12px;padding:10px 14px;margin-bottom:16px">'
+      +'<span style="font-weight:700;color:var(--warn);font-size:.84rem">โหมดตัวอย่าง (demo) — ยังไม่ได้เชื่อมข้อมูลจริง</span>'
+      +'<span style="color:var(--muted);font-size:.8rem">ใส่ Admin Key เพื่อดึงข้อมูลผู้สอบจริงจากเซิร์ฟเวอร์</span>'
+      +'<button onclick="opsUnlock()" style="margin-left:auto;background:var(--warn);border:0;border-radius:9px;padding:7px 14px;color:#fff;font-family:inherit;font-weight:800;font-size:.82rem;cursor:pointer">ใส่ Admin Key</button></div>';
+  }
+  function xvHead(title,sub){
+    return '<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'
+      +'<div><h1>'+title+'</h1><p>'+sub+'</p></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      +(EXAM_LIVE?xvBanner():'')
+      +'<button onclick="examRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button>'
+      +'<a href="/xvisor" target="_blank" style="text-decoration:none;background:var(--brand);border:1px solid var(--brand);border-radius:9px;padding:8px 14px;color:#fff;font-family:inherit;font-weight:800;font-size:.82rem">เปิดหน้าสอบ ↗</a>'
+      +'</div></div>'
+      +(EXAM_LIVE?'':xvBanner());
+  }
+  // re-fetch then re-render whichever exam view is active
+  var EXAM_VIEW='exam-tracker';
+  function examRefresh(){var g=gen;g.innerHTML=xvSpinner('กำลังโหลดข้อมูลการสอบ…');xvFetch(function(){examDispatch(EXAM_VIEW);});}
+  function xvSpinner(t){return '<div style="padding:60px 0;text-align:center;color:var(--muted)"><div style="width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;margin:0 auto 14px;animation:xvspin .8s linear infinite"></div>'+(t||'กำลังโหลด…')+'</div><style>@keyframes xvspin{to{transform:rotate(360deg)}}</style>';}
+  function examDispatch(v){
+    EXAM_VIEW=v;
+    if(v==='exam-overview')renderExamOverview();
+    else if(v==='exam-session')renderExamSession();
+    else if(v==='exam-tracker')renderExamTracker();
+    else if(v==='exam-result')renderExamResult();
+  }
+  // entry point from router — loads once then dispatches
+  function examEnter(v){
+    EXAM_VIEW=v;
+    if(EXAM_CACHE){examDispatch(v);} // use cache; user can hit refresh
+    else {gen.innerHTML=xvSpinner('กำลังโหลดข้อมูลการสอบ…');xvFetch(function(){examDispatch(v);});}
+  }
+
+  /* ---------- 1) EXAM OVERVIEW ---------- */
+  function renderExamOverview(){
+    var all=EXAM_CACHE||[];
+    var cnt=function(f){return all.filter(f).length;};
+    var o=EXAM_OVW||{
+      total:all.length,
+      inProgress:cnt(function(s){return s.status==='in_progress';}),
+      awaiting:cnt(function(s){return s.status==='awaiting_verify';}),
+      verified:cnt(function(s){return s.status==='verified';}),
+      remedial:cnt(function(s){return s.status==='remedial_required';}),
+      ended:cnt(function(s){return s.status==='ended_failed';}),
+      online:cnt(function(s){return s.candidate.mode==='online';}),
+      onsite:cnt(function(s){return s.candidate.mode==='onsite';})
+    };
+    var passRate = o.total? Math.round((o.verified/o.total)*100):0;
+    var kbig=function(lb,v,bg,fg,sub){return '<div class="kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+bg+';color:'+fg+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg></div></div><div class="v num">'+v+'</div>'+(sub?'<div style="font-size:.78rem;color:var(--muted);margin-top:4px">'+sub+'</div>':'')+'</div>';};
+    var barRow=function(lb,n,tot,color){var pct=tot?Math.round(n/tot*100):0;
+      return '<div class="li" style="align-items:center"><div style="min-width:140px"><div class="t">'+lb+'</div></div>'
+        +'<div style="flex:1;height:10px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 12px"><div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:999px"></div></div>'
+        +'<div class="num" style="min-width:56px;text-align:right"><b>'+n+'</b> <span style="color:var(--muted);font-size:.8rem">'+pct+'%</span></div></div>';};
+    gen.innerHTML=xvHead('ภาพรวมการสอบ · Exam Overview','สรุปภาพรวมการสอบรับรอง X-Visor แบบเรียลไทม์ · Certification')
+      +'<div class="kpis">'
+      +kbig('ผู้เข้าสอบทั้งหมด',String(o.total),'var(--brand-tint)','var(--brand)','ทุกสถานะ')
+      +kbig('กำลังสอบ',String(o.inProgress),'var(--brand-tint)','var(--brand)','ออนไลน์ '+o.online+' · ที่ศูนย์ '+o.onsite)
+      +kbig('รอทีมงานยืนยัน',String(o.awaiting),'#EEF1F6','#6B7793','ตรวจแล้ว รอกดยืนยัน')
+      +kbig('ยืนยันผ่านแล้ว',String(o.verified),'var(--good-tint)','var(--good)','ผ่านเกณฑ์ · ออกใบรับรอง')
+      +'</div>'
+      +'<div class="row2" style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px">'
+      +'<div class="panel"><div class="ph"><h3>สัดส่วนตามสถานะ</h3><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูรายชื่อ →</a></div>'
+        +barRow('กำลังสอบ',o.inProgress,o.total,'var(--brand)')
+        +barRow('รอยืนยัน',o.awaiting,o.total,'#6B7793')
+        +barRow('ต้องสอบซ่อม',o.remedial,o.total,'var(--warn)')
+        +barRow('ยืนยันผ่าน',o.verified,o.total,'var(--good)')
+        +barRow('ไม่ผ่าน (ครบ '+MAXATT+' ครั้ง)',o.ended,o.total,'var(--bad)')
+      +'</div>'
+      +'<div class="panel"><div class="ph"><h3>สรุป</h3></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--good-tint);color:var(--good)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="t">อัตราการรับรอง</div><div class="s">'+passRate+'% ของผู้เข้าสอบทั้งหมด</div></div></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--brand-tint);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div><div class="t">รูปแบบการสอบ</div><div class="s">ออนไลน์ '+o.online+' คน · ที่ศูนย์ '+o.onsite+' คน</div></div></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--warn-tint);color:var(--warn)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><div class="t">ต้องติดตาม</div><div class="s">รอยืนยัน '+o.awaiting+' · สอบซ่อม '+o.remedial+'</div></div></div>'
+        +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+          +'<button onclick="go(\'exam-result\')" style="flex:1;background:var(--brand);border:0;border-radius:10px;padding:10px;color:#fff;font-family:inherit;font-weight:800;font-size:.84rem;cursor:pointer">ไปหน้ายืนยันผล →</button>'
+        +'</div>'
+      +'</div></div>'
+      +'<style>@media(max-width:820px){.row2{grid-template-columns:1fr!important}}</style>';
+  }
+
+  /* ---------- 2) EXAM SESSION (config / bank health) ---------- */
+  function renderExamSession(){
+    var info=EXAM_QINFO;
+    var render=function(){
+      var counts=(info&&info.counts)||{};
+      var names=(info&&info.names)||{};
+      var ready=Object.keys(counts).length>=PARTS_N;
+      var totalQ=Object.keys(counts).reduce(function(a,p){return a+(counts[p]||0);},0);
+      var partRows='';
+      for(var p=1;p<=PARTS_N;p++){
+        var c=counts[p]||counts[String(p)]||0;
+        var ok=c>=QPP;
+        partRows+='<tr><td class="num">พาร์ท '+p+'</td><td><b>'+(names[p]||names[String(p)]||('พาร์ท '+p))+'</b></td>'
+          +'<td class="num">'+c+' ข้อ</td>'
+          +'<td><span class="pill '+(ok?'ok':'bad')+'">'+(ok?'พร้อมใช้งาน':'ข้อไม่ครบ')+'</span></td></tr>';
+      }
+      gen.innerHTML=xvHead('รอบการสอบ · Exam Session','ตั้งค่ารูปแบบการสอบ คลังข้อสอบ และกติกาการรับรอง X-Visor')
+        +'<div class="kpis">'
+        +kpi('จำนวนพาร์ท',PARTS_N+' พาร์ท','var(--brand-tint)','var(--brand)')
+        +kpi('ข้อต่อพาร์ท',QPP+' ข้อ','var(--brand-tint)','var(--brand)')
+        +kpi('เกณฑ์ผ่านต่อพาร์ท',PASS_PART+'/'+QPP,'var(--good-tint)','var(--good)')
+        +kpi('เวลาสอบ',EXAM_MIN+' นาที','var(--warn-tint)','var(--warn)')
+        +'</div>'
+        +'<div class="row2" style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">'
+        +'<div class="panel"><div class="ph"><h3>คลังข้อสอบ '+(ready?'<span class="pill ok" style="margin-left:6px">พร้อมสอบ</span>':'<span class="pill bad" style="margin-left:6px">ยังไม่พร้อม</span>')+'</h3><span style="color:var(--muted);font-size:.82rem;font-weight:600">รวม '+totalQ+' ข้อ</span></div>'
+          +'<div style="overflow-x:auto"><table><thead><tr><th>พาร์ท</th><th>ชื่อพาร์ท</th><th>จำนวนข้อ</th><th>สถานะ</th></tr></thead><tbody>'+partRows+'</tbody></table></div>'
+          +(EXAM_LIVE?'':'<p style="color:var(--muted);font-size:.8rem;margin-top:10px">* ตัวอย่าง — ใส่ Admin Key เพื่อดูคลังข้อสอบจริง</p>')
+        +'</div>'
+        +'<div class="panel"><div class="ph"><h3>กติกาการสอบ</h3></div>'
+          +'<div class="li"><div class="dotc" style="background:var(--brand-tint);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></div><div><div class="t">สลับข้อ + สลับตัวเลือก</div><div class="s">ผู้สอบแต่ละคนได้ลำดับข้อและตัวเลือกต่างกัน (กันลอก)</div></div></div>'
+          +'<div class="li"><div class="dotc" style="background:var(--good-tint);color:var(--good)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="t">เกณฑ์ผ่าน</div><div class="s">ต้องได้ '+PASS_PART+'/'+QPP+' ทุกพาร์ท จึงจะผ่าน</div></div></div>'
+          +'<div class="li"><div class="dotc" style="background:var(--warn-tint);color:var(--warn)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></div><div><div class="t">สอบซ่อม</div><div class="s">พาร์ทที่ไม่ผ่าน สอบซ่อมได้อีก '+(MAXATT-1)+' ครั้ง (รวม '+MAXATT+' ครั้ง)</div></div></div>'
+          +'<div class="li"><div class="dotc" style="background:#EEF1F6;color:#6B7793"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><div class="t">เวลาสอบ</div><div class="s">'+EXAM_MIN+' นาทีต่อรอบ · โหมดที่ศูนย์หยุดเวลาได้ '+MAXATT+' ครั้ง</div></div></div>'
+          +'<div style="margin-top:12px"><a href="/xvisor" target="_blank" style="display:block;text-align:center;text-decoration:none;background:var(--brand);border-radius:10px;padding:11px;color:#fff;font-weight:800;font-size:.86rem">เปิดหน้าสอบ X-VISOR ↗</a></div>'
+        +'</div></div>'
+        +'<style>@media(max-width:820px){.row2{grid-template-columns:1fr!important}}</style>';
+    };
+    if(EXAM_LIVE && !info){
+      gen.innerHTML=xvSpinner('กำลังโหลดคลังข้อสอบ…');
+      fetch('/api/xv/admin/questions'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){
+        EXAM_QINFO=(j&&j.ok)?j:{names:{},counts:{}};info=EXAM_QINFO;render();
+      }).catch(function(){EXAM_QINFO={names:{},counts:{}};info=EXAM_QINFO;render();});
+    } else {
+      if(!info){ // demo bank info
+        EXAM_QINFO={names:{1:'ความรู้พื้นฐานผลิตภัณฑ์',2:'โภชนาการ & สุขภาพ',3:'การใช้งาน & อุปกรณ์',4:'การขาย & บริการ',5:'จรรยาบรรณ & นโยบาย'},counts:{1:QPP,2:QPP,3:QPP,4:QPP,5:QPP}};
+        info=EXAM_QINFO;
+      }
+      render();
+    }
+  }
+
+  /* ---------- 3) EXAM TRACKER (Online / Offline) ---------- */
   function renderExamTracker(){
-    var list=EXAM_CANDS.filter(function(c){return c.mode===EXAM_TAB;});
-    var cnt=function(st){return list.filter(function(c){return c.status===st;}).length;};
-    var doing=cnt('in_progress')+cnt('checking'), rem=cnt('remedial'),
-        passed=cnt('passed')+cnt('completed'), waiting=cnt('waiting_verify');
-    var seg=function(id,label,sub){var on=EXAM_TAB===id;
+    var all=EXAM_CACHE||[];
+    var list=all.filter(function(s){return s.candidate.mode===EXAM_TAB;});
+    var cnt=function(arr,st){return arr.filter(function(s){return s.status===st;}).length;};
+    var doing=cnt(list,'in_progress'), rem=cnt(list,'remedial_required'),
+        passed=cnt(list,'verified'), waiting=cnt(list,'awaiting_verify');
+    var seg=function(id,label,sub){var on=EXAM_TAB===id;var n=all.filter(function(s){return s.candidate.mode===id;}).length;
       return '<button class="etab'+(on?' on':'')+'" data-tab="'+id+'">'+label
-        +' <span class="etab-n">'+EXAM_CANDS.filter(function(c){return c.mode===id;}).length+'</span>'
-        +'<small>'+sub+'</small></button>';};
-    var rows=list.map(function(c){
-      var s=EXAM_STATUS[c.status];
-      var prog=c.status==='passed'||c.status==='completed'||c.status==='waiting_verify'
-        ? '<span style="color:var(--muted)">ครบ 5 พาร์ท</span>'
-        : 'พาร์ท '+c.part+' <span style="color:var(--muted)">· '+c.ansd+'/'+c.total+'</span>';
-      var pausedTag = c.mode==='onsite' && c.paused ? ' <span class="pill wait" title="หยุดเวลา">⏸ '+c.paused+'/2</span>' : '';
-      return '<tr><td class="num">'+c.id+'</td><td><b>'+c.name+'</b></td>'
+        +' <span class="etab-n">'+n+'</span><small>'+sub+'</small></button>';};
+    var rows=list.map(function(s){
+      var st=XV_ST[s.status]||{cl:'wait',t:s.status};
+      var pr=xvProgress(s);
+      var prog=s.status==='in_progress'
+        ? pr.label+' <span style="color:var(--muted)">· ตรวจแล้ว '+pr.done+' พาร์ท</span>'
+        : '<span style="color:var(--muted)">ครบ '+PARTS_N+' พาร์ท</span>';
+      var pausedTag=(s.candidate.mode==='onsite'&&s.pauseUsed)?' <span class="pill wait" title="หยุดเวลา">⏸ '+s.pauseUsed+'/'+MAXATT+'</span>':'';
+      var scoreCell=(s.status==='in_progress')?'—':('<b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span>');
+      var remain=(s.status==='in_progress')?fmtHMS(s.remaining):'—';
+      return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b></td>'
         +'<td>'+prog+pausedTag+'</td>'
-        +'<td class="num">'+c.remain+'</td>'
-        +'<td class="num">'+(c.score!=null?('<b>'+c.score+'</b><span style="color:var(--muted)">/100</span>'):'—')+'</td>'
-        +'<td><span class="pill '+s.cl+'">'+s.t+'</span></td></tr>';
-    }).join('');
-    var modeLabel = EXAM_TAB==='online' ? 'Online (สอบออนไลน์)' : 'Offline · On-Site (สอบที่ศูนย์)';
-    gen.innerHTML=
-      '<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'
-      +'<div><h1>ติดตามการสอบ · Exam Tracker</h1><p>ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor · แยกตามรูปแบบการสอบ</p></div>'
-      +'<a class="itembtn" href="/xvisor" target="_blank" style="text-decoration:none"><span class="ib-txt" style="color:var(--brand)">เปิดหน้าสอบ X-VISOR ↗</span></a></div>'
+        +'<td class="num">'+remain+'</td>'
+        +'<td class="num">'+scoreCell+'</td>'
+        +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td></tr>';
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผู้เข้าสอบในหมวดนี้</td></tr>';
+    var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
+    gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
       +'<div class="etabs">'+seg('online','Online','สอบออนไลน์ · เปิดกล้อง')+seg('onsite','Offline (On-Site)','สอบที่ศูนย์ · หยุดเวลาได้')+'</div>'
       +'<div class="kpis">'
-      +kpi('กำลังสอบ · '+modeLabel.split(' ')[0],String(doing),'var(--brand-tint)','var(--brand)')
-      +kpi('สอบซ่อม',String(rem),'var(--warn-tint)','var(--warn)')
-      +kpi('ผ่านครบ / เสร็จ',String(passed),'var(--good-tint)','var(--good)')
+      +kpi('กำลังสอบ',String(doing),'var(--brand-tint)','var(--brand)')
+      +kpi('ต้องสอบซ่อม',String(rem),'var(--warn-tint)','var(--warn)')
+      +kpi('ยืนยันผ่านแล้ว',String(passed),'var(--good-tint)','var(--good)')
       +kpi('รอทีมงานยืนยัน',String(waiting),'#EEF1F6','#6B7793')
       +'</div>'
-      +'<div class="panel"><div class="ph"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><a class="link" href="#">ส่งออก →</a></div>'
+      +'<div class="panel"><div class="ph"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><a class="link" href="#" onclick="go(\'exam-result\');return false">ไปหน้ายืนยันผล →</a></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.etab').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
+  }
+
+  /* ---------- 4) EXAM RESULT (+ staff verify) ---------- */
+  function renderExamResult(){
+    var all=EXAM_CACHE||[];
+    // show finished sessions (not in-progress), newest first
+    var list=all.filter(function(s){return s.status!=='in_progress';})
+      .sort(function(a,b){return (b.submittedAt||0)-(a.submittedAt||0);});
+    var awaiting=list.filter(function(s){return s.status==='awaiting_verify';}).length;
+    var partCell=function(s){
+      var res=(s.results||[]).slice().sort(function(a,b){return a.part-b.part;});
+      return res.map(function(r){
+        var ok=r.status==='passed';
+        return '<span title="พาร์ท '+r.part+'" style="display:inline-block;min-width:30px;text-align:center;font-weight:800;font-size:.78rem;padding:2px 6px;border-radius:7px;margin:1px;background:'+(ok?'var(--good-tint)':'var(--bad-tint)')+';color:'+(ok?'var(--good)':'var(--bad)')+'">'+r.score+'</span>';
+      }).join('');
+    };
+    var rows=list.map(function(s){
+      var st=XV_ST[s.status]||{cl:'wait',t:s.status};
+      var action='';
+      if(s.status==='awaiting_verify'){
+        action='<button class="xv-verify" data-id="'+s.id+'" data-name="'+xvName(s).replace(/"/g,'')+'" style="background:var(--good);border:0;border-radius:8px;padding:6px 13px;color:#fff;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">ยืนยันผล ✓</button>';
+      } else if(s.status==='verified'){
+        action='<span class="pill ok">✓ ยืนยันแล้ว</span>';
+      } else if(s.status==='remedial_required'){
+        action='<span style="color:var(--muted);font-size:.8rem">รอผู้สอบทำการสอบซ่อม</span>';
+      } else if(s.status==='ended_failed'){
+        action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
+      }
+      return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b><div style="color:var(--muted);font-size:.76rem">'+(s.candidate.mode==='onsite'?'ที่ศูนย์':'ออนไลน์')+'</div></td>'
+        +'<td>'+partCell(s)+'</td>'
+        +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
+        +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
+        +'<td>'+action+'</td></tr>';
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ตรวจเสร็จ</td></tr>';
+    gen.innerHTML=xvHead('ผลการสอบ · Exam Result','ผลสอบ คะแนนรายพาร์ท และการยืนยันผลเพื่อออกใบรับรอง X-Visor')
+      +'<div class="kpis">'
+      +kpi('ผลสอบทั้งหมด',String(list.length),'var(--brand-tint)','var(--brand)')
+      +kpi('รอยืนยัน',String(awaiting),'#EEF1F6','#6B7793')
+      +kpi('ยืนยันผ่านแล้ว',String(list.filter(function(s){return s.status==='verified';}).length),'var(--good-tint)','var(--good)')
+      +kpi('ไม่ผ่าน',String(list.filter(function(s){return s.status==='ended_failed';}).length),'var(--bad-tint)','var(--bad)')
+      +'</div>'
+      +(awaiting?'<div style="background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:var(--brand-ink);font-size:.86rem">มีผลสอบ '+awaiting+' รายการที่ตรวจเสร็จแล้ว รอทีมงานกดยืนยันเพื่อปล่อยผลให้ผู้สอบ</div>':'')
+      +'<div class="panel"><div class="ph"><h3>ผลการสอบ <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    gen.querySelectorAll('.xv-verify').forEach(function(b){
+      b.addEventListener('click',function(){
+        var id=b.getAttribute('data-id'), nm=b.getAttribute('data-name');
+        if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อยืนยันผลจริง','bad');return;}
+        xvConfirm('ยืนยันผลการสอบ','ยืนยันผลของ "'+nm+'" ใช่ไหม? เมื่อยืนยันแล้ว ผู้สอบจะเห็นผลและระบบจะออกใบรับรองให้','ยืนยันผล ✓',function(){
+          b.disabled=true;b.textContent='กำลังยืนยัน…';
+          fetch('/api/xv/admin/session/'+id+'/verify'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
+            .then(function(r){return r.json();})
+            .then(function(j){
+              if(j&&j.ok){xvToast('ยืนยันผลเรียบร้อย','ok');xvFetch(function(){renderExamResult();});}
+              else{b.disabled=false;b.textContent='ยืนยันผล ✓';xvToast('ยืนยันไม่สำเร็จ: '+((j&&j.error)||'ตรวจสอบ Admin Key'),'bad');}
+            }).catch(function(){b.disabled=false;b.textContent='ยืนยันผล ✓';xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+        });
+      });
+    });
   }
 
   var PO_LINK='https://cloverx-site-production.up.railway.app/preorder';
@@ -541,7 +815,7 @@
   var OPS_KEY=(function(){try{return sessionStorage.getItem('opsKey')||'';}catch(e){return '';}})();
   var OPS_KEY_ASKED=false;
   function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
-  function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}poRefresh();}}catch(e){}}
+  function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}var act=document.querySelector('#nav .item[data-view].active');var av=act?act.getAttribute('data-view'):'';if(av&&av.indexOf('exam-')===0){EXAM_QINFO=null;examRefresh();}else{poRefresh();}}}catch(e){}}
   function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
   // "ต้องตรวจสอบ" = pending ที่ต้องให้เจ้าหน้าที่ตรวจ (โอนธนาคาร) — ไม่รวมบัตรที่ลูกค้ายังไม่จ่าย
@@ -813,7 +1087,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var isOv=(v==='overview');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='exam-tracker')renderExamTracker(); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='exam-overview'||v==='exam-session'||v==='exam-tracker'||v==='exam-result')examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)
