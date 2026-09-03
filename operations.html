@@ -1897,5 +1897,26 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
         else{var er=(res.j&&res.j.error)||'ไม่สำเร็จ';if(er==='forbidden'||er==='ต้องใส่ Admin Key')er='ต้องใส่ Admin Key ที่ถูกต้อง';if(er==='amount_exceeds')er='ยอดคืนเกินค่าสมัคร';document.getElementById('rfErr2').textContent='ผิดพลาด: '+er;}
       }).catch(function(){btn.disabled=false;btn.textContent='ยืนยันคืนเงิน';document.getElementById('rfErr2').textContent='เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง';});
   }
+  // ---- Real-time auto-refresh (registration views) ----
+  // Polls lightly every 25s; repaints only when registration data actually changed, and never
+  // while a modal/menu is open or the user is typing — so it feels live without disrupting work.
+  var _regSig='';
+  setInterval(function(){
+    try{
+      if(!EXAM_LIVE) return;
+      if((EXAM_VIEW||'').indexOf('reg-')!==0) return;
+      var sheet=document.getElementById('xvSheet'); if(sheet&&sheet.style.display!=='none') return;
+      if(document.querySelector('.kebab-menu.on')||document.querySelector('.rmenu')) return;
+      var ae=document.activeElement; if(ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return;
+      fetch('/api/xv/admin/registrations'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){
+        if(!j||!j.ok) return;
+        var sig=(j.registrations||[]).map(function(x){return x.id+x.status;}).join(',');
+        if(sig===_regSig) return;      // nothing changed → no repaint
+        _regSig=sig; REG_CACHE=j.registrations;
+        fetchRounds(function(){ fetchAudit(function(){ if((EXAM_VIEW||'').indexOf('reg-')===0) paintRegister(); }); });
+      }).catch(function(){});
+    }catch(e){}
+  }, 25000);
+
   go('podash'); // เปิดหน้า Dashboard เป็นค่าเริ่มต้น
 </script>
