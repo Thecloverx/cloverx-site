@@ -402,7 +402,16 @@ function initState(){S={phase:'registration',api:{on:false,id:null,token:null},
   candidate:{firstName:'',lastName:'',phone:'',mode:'online',cameraConsent:false,id:'660110001'},
   answers:{}, results:Array.from({length:PARTS},(_,i)=>({part:i+1,score:0,status:'pending',attempts:0,wrongIds:[]})),
   remedialQueue:[], staffVerified:false, paper:{},
-  session:null, wrongTab:1};}
+  round:null, session:null, wrongTab:1};}
+/* resolve exam round from ?round=CODE (candidate share link) */
+async function resolveRound(){
+  let code=null; try{code=new URLSearchParams(location.search).get('round');}catch(e){}
+  if(!code)return;
+  try{const r=await fetch('/api/xv/round/'+encodeURIComponent(code));const j=await r.json();
+    if(j&&j.ok){S.round=j.round;} else {S.round={code,notFound:true};}
+  }catch(e){S.round={code,offline:true};}
+  if(S.phase==='registration')render();
+}
 function freshSession(phase){buildPaper(phase==='remedial'?S.remedialQueue:[1,2,3,4,5]);return {phase,remaining:TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
 function activeParts(){return S.session&&S.session.phase==='remedial'?S.remedialQueue.slice():[1,2,3,4,5];}
 function partAnswered(p){let n=0;for(let q=0;q<QPP;q++)if(S.answers[key(p,q)]!=null)n++;return n;}
@@ -466,6 +475,16 @@ function appbar(extra){const c=S.candidate;
    <span class="status"><span class="dot"></span>ปลอดภัยและถูกต้อง</span></header>`;}
 
 /* ---------- 01 registration ---------- */
+const _THMON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thDate(iso){if(!iso)return '';const d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;return d.getDate()+' '+_THMON[d.getMonth()]+' '+(d.getFullYear()+543);}
+function roundOpen(){return !(S.round&&(S.round.notFound||S.round.offline||S.round.open===false));}
+function roundBanner(){const r=S.round;if(!r)return '';
+  if(r.notFound)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-weight:700;font-size:14px">ไม่พบรอบสอบนี้ — โปรดตรวจสอบลิงก์กับผู้จัดสอบอีกครั้ง</div>`;
+  const closed=r.open===false;
+  const meta=`ครั้งที่ ${r.no}${r.date?(' · '+thDate(r.date)):''}${r.topic?(' · '+r.topic):''}`;
+  if(closed)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">รอบนี้ยังไม่เปิดสอบ / ปิดรับแล้ว — โปรดรอผู้จัดสอบเปิดรอบ</div></div>`;
+  return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">เปิดรับสมัคร — กรอกข้อมูลแล้วเริ่มสอบได้เลย</div></div>`;
+}
 function renderRegistration(){const c=S.candidate;
  app.innerHTML=`
  <header class="appbar card"><span class="brand">X-VISOR</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span><span class="spacer"></span>
@@ -476,6 +495,7 @@ function renderRegistration(){const c=S.candidate;
      <div class="step"><span class="sn">2</span>ยืนยันตัวตน</div><span class="dash"></span>
      <div class="step"><span class="sn">3</span>เริ่มสอบ</div></div>
    <h1 class="hero-h">เข้าสู่ระบบเพื่อเริ่มการสอบ</h1><div class="hero-sub">กรุณากรอกข้อมูลผู้เข้าสอบให้ครบถ้วน</div>
+   ${roundBanner()}
    <div class="reg-grid" style="margin-top:var(--space-5)">
      <div><div class="field-title">ข้อมูลผู้สอบ</div>
        <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>ชื่อ</label><input id="fn" placeholder="กรอกชื่อ" value="${c.firstName}"></span></div>
@@ -493,14 +513,15 @@ function renderRegistration(){const c=S.candidate;
    <div class="reg-foot"><button class="btn btn-ghost" id="back">${I.prev} กลับ</button><button class="btn btn-primary lg" id="start" disabled>ยืนยันและเริ่มทำข้อสอบ <span class="chip">${I.check}</span></button></div>
  </div>`;
  const upd=()=>{c.firstName=$('#fn').value.trim();c.lastName=$('#ln').value.trim();c.phone=$('#ph').value.trim();
-   $('#start').disabled=!(c.firstName&&c.lastName&&c.phone&&(c.mode==='onsite'||c.cameraConsent));};
+   $('#start').disabled=!(c.firstName&&c.lastName&&c.phone&&(c.mode==='onsite'||c.cameraConsent)&&roundOpen());};
  ['#fn','#ln','#ph'].forEach(s=>$(s).addEventListener('input',upd));
  $$('.mode').forEach(m=>m.onclick=()=>{c.mode=m.dataset.mode;$$('.mode').forEach(x=>x.classList.toggle('on',x===m));
    const on=c.mode==='online';$('#consent').style.display=on?'':'none';$('#camReady').textContent=on?'กล้องพร้อมใช้งาน':'สำหรับ Online เท่านั้น';$('#camReady').style.color=on?'var(--success)':'var(--text-secondary)';$('#camPanel').style.opacity=on?1:.5;upd();});
  $('#consent').onclick=()=>{c.cameraConsent=!c.cameraConsent;$('#consent').classList.toggle('on',c.cameraConsent);upd();};
  $('#back').onclick=()=>toast('อยู่ที่ขั้นตอนแรกแล้ว');
- $('#start').onclick=async()=>{const btn=$('#start');btn.disabled=true;btn.style.opacity=.7;
-   try{const res=await apiPost('/api/xv/start',{firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode});
+ $('#start').onclick=async()=>{if(!roundOpen()){toast('รอบนี้ยังไม่เปิดสอบ');return;}const btn=$('#start');btn.disabled=true;btn.style.opacity=.7;
+   try{const res=await apiPost('/api/xv/start',{firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode,roundId:S.round&&S.round.id,roundCode:S.round&&S.round.code});
+     if(res&&res.error==='round_closed'){btn.disabled=false;btn.style.opacity=1;S.round&&(S.round.open=false);toast('รอบนี้เพิ่งถูกปิด — เข้าสอบไม่ได้');render();return;}
      if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};res.parts.forEach(pp=>S.paper[pp]=res.paper[pp]);
        S.session=freshSessionAPI('first',res.durationSec);S.phase='active_exam';render();startTimer();return;}
    }catch(e){/* offline → demo mode */}
@@ -733,7 +754,7 @@ document.getElementById('demoNext').onclick=()=>{const order=['registration','ac
  let i=order.indexOf(S.phase);i=(i+1)%order.length;S.phase=order[i];if(S.phase==='active_exam'&&!S.session){S.session=freshSession('first');}render();};
 
 if(DEMO){document.getElementById('demobar').style.display='';}
-initState();render();
+initState();render();resolveRound();
 </script>
 </body>
 </html>

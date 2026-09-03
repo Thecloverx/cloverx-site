@@ -9,6 +9,7 @@ module.exports = function (app, DATA) {
   const QF = path.join(XV, 'questions.json');
   const QF_ROOT = path.join(DATA, '..', 'xvisor_questions.json'); // repo-root fallback (flat deploy)
   const SF = path.join(XV, 'sessions.json');
+  const RF = path.join(XV, 'rounds.json');
 
   const rd = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
   const wr = (f, d) => fs.writeFileSync(f, JSON.stringify(d, null, 2));
@@ -19,6 +20,13 @@ module.exports = function (app, DATA) {
   };
   const readS = () => rd(SF, []);
   const writeS = (s) => wr(SF, s);
+  const readR = () => rd(RF, []);
+  const writeR = (r) => wr(RF, r);
+  const findR = (id) => readR().find(x => x.id === id);
+  const findRByCode = (code) => readR().find(x => String(x.code).toUpperCase() === String(code || '').toUpperCase());
+  const roundCode = () => 'R' + crypto.randomBytes(3).toString('hex').toUpperCase(); // e.g. R7F3A9C
+  const nextRoundNo = () => { const rs = readR(); return rs.length ? Math.max.apply(null, rs.map(r => r.no || 0)) + 1 : 1; };
+  const pubRound = (r) => ({ id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt });
 
   const PARTS = [1, 2, 3, 4, 5], QPP = 20, PASS = 16, MAXATT = 2, TOTAL = 120 * 60;
   const adminOk = (req) => process.env.ADMIN_KEY && (req.query.key === process.env.ADMIN_KEY || req.get('x-admin-key') === process.env.ADMIN_KEY);
@@ -64,11 +72,17 @@ module.exports = function (app, DATA) {
     if (!b.firstName || !b.lastName || !b.phone) return res.status(400).json({ ok: false, error: 'missing_fields' });
     const B = bank();
     if (!B.bank || Object.keys(B.bank).length < 5) return res.status(400).json({ ok: false, error: 'no_questions' });
+    // resolve round (accept roundId or round code); gate closed rounds
+    let round = null;
+    if (b.roundId) round = findR(b.roundId);
+    if (!round && b.roundCode) round = findRByCode(b.roundCode);
+    if (round && round.status !== 'open') return res.status(403).json({ ok: false, error: 'round_closed' });
     const paper = buildPaper(B, PARTS);
     const s = {
       id: genId(), token: crypto.randomBytes(12).toString('hex'),
       candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: b.mode === 'onsite' ? 'onsite' : 'online' },
       code: 'XV' + (Date.now() % 1000000),
+      roundId: round ? round.id : null, roundNo: round ? round.no : null,
       phase: 'first', paper, answers: {}, results: [], status: 'in_progress',
       startedAt: Date.now(), remaining: TOTAL, pauseUsed: 0, staffVerified: false, createdAt: Date.now()
     };
@@ -117,6 +131,13 @@ module.exports = function (app, DATA) {
     res.json({ ok: true, results: s.results.map(r => ({ part: r.part, score: r.score, wrongIds: r.wrongIds || [], questions: (r.wrongIds || []).map(n => s.paper[r.part][n - 1].q) })) });
   });
 
+  // public: resolve a round by code (for the candidate share link) — no keys/PII
+  app.get('/api/xv/round/:code', (req, res) => {
+    const r = findRByCode(req.params.code);
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open' } });
+  });
+
   /* ---------------- admin endpoints (ADMIN_KEY) ---------------- */
   app.get('/api/xv/admin/overview', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
@@ -138,6 +159,7 @@ module.exports = function (app, DATA) {
     res.json({
       ok: true, sessions: readS().map(s => ({
         id: s.id, code: s.code, candidate: s.candidate, phase: s.phase, status: s.status,
+        roundId: s.roundId || null, roundNo: s.roundNo || null,
         results: pubResults(s), total: s.results.reduce((a, r) => a + (r.score || 0), 0),
         pauseUsed: s.pauseUsed, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining
       }))
@@ -156,6 +178,77 @@ module.exports = function (app, DATA) {
     const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
     if (s.status !== 'awaiting_verify') return res.status(400).json({ ok: false, error: 'not_awaiting' });
     s.staffVerified = true; s.status = 'verified'; s.verifiedAt = Date.now(); writeS(all);
+    res.json({ ok: true });
+  });
+
+  /* -------- admin: exam ROUNDS (date-based windows over the master bank) -------- */
+  // list rounds + how many candidates in each
+  app.get('/api/xv/admin/rounds', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const sess = readS();
+    const rounds = readR().slice().sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.no || 0) - (a.no || 0));
+    res.json({
+      ok: true, rounds: rounds.map(r => {
+        const list = sess.filter(s => s.roundId === r.id);
+        return Object.assign(pubRound(r), {
+          candidates: list.length,
+          inProgress: list.filter(s => s.status === 'in_progress').length,
+          awaiting: list.filter(s => s.status === 'awaiting_verify').length,
+          verified: list.filter(s => s.status === 'verified').length
+        });
+      })
+    });
+  });
+
+  // create a round (points at the master bank — no question copy)
+  app.post('/api/xv/admin/rounds', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const b = req.body || {};
+    const r = {
+      id: genId(), code: roundCode(),
+      no: (b.no != null && b.no !== '') ? (parseInt(b.no, 10) || nextRoundNo()) : nextRoundNo(),
+      date: String(b.date || new Date().toISOString().slice(0, 10)).slice(0, 10),
+      topic: String(b.topic || 'Certification').slice(0, 80),
+      status: b.status === 'open' ? 'open' : 'closed',
+      createdAt: Date.now()
+    };
+    const all = readR(); all.push(r); writeR(all);
+    res.json({ ok: true, round: pubRound(r) });
+  });
+
+  // update a round (date / no / topic / status) — used by edit AND open-close
+  app.post('/api/xv/admin/rounds/:id', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readR(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
+    const b = req.body || {};
+    if (b.date != null) r.date = String(b.date).slice(0, 10);
+    if (b.no != null && b.no !== '') r.no = parseInt(b.no, 10) || r.no;
+    if (b.topic != null) r.topic = String(b.topic).slice(0, 80);
+    if (b.status === 'open' || b.status === 'closed') r.status = b.status;
+    writeR(all); res.json({ ok: true, round: pubRound(r) });
+  });
+
+  // duplicate a round's SETTINGS to a new round (new code + no; optional new date)
+  app.post('/api/xv/admin/rounds/:id/duplicate', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readR(); const src = all.find(x => x.id === req.params.id); if (!src) return res.status(404).json({ ok: false });
+    const b = req.body || {};
+    const r = {
+      id: genId(), code: roundCode(),
+      no: (b.no != null && b.no !== '') ? (parseInt(b.no, 10) || nextRoundNo()) : nextRoundNo(),
+      date: String(b.date || src.date || new Date().toISOString().slice(0, 10)).slice(0, 10),
+      topic: String(b.topic != null ? b.topic : src.topic).slice(0, 80),
+      status: 'closed', createdAt: Date.now()
+    };
+    all.push(r); writeR(all);
+    res.json({ ok: true, round: pubRound(r) });
+  });
+
+  // delete a round (does NOT touch questions; sessions keep their history but unlink)
+  app.delete('/api/xv/admin/rounds/:id', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readR(); const i = all.findIndex(x => x.id === req.params.id); if (i < 0) return res.status(404).json({ ok: false });
+    all.splice(i, 1); writeR(all);
     res.json({ ok: true });
   });
 
