@@ -586,11 +586,12 @@ function startTimer(){clearInterval(examTimer);examTimer=setInterval(()=>{const 
 
 /* ---------- pause (onsite) ---------- */
 function openPause(){const ss=S.session;if(ss.pauseUsed>=MAXATT){toast('ใช้สิทธิ์หยุดเวลาครบแล้ว');return;}ss.paused=true;
+ if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:true,remaining:ss.remaining}).catch(()=>{});
  scrim(`<div class="modal"><h3>หยุดเวลาชั่วคราว</h3><div class="ringwrap pause-orb">${ringSVG(100,{size:184})}<div class="rc"><b class="num" id="pv">10:00</b><span>นาที</span></div></div>
    <div class="mnote">${I.info}<span>หยุดเวลาได้สูงสุด ${MAXATT} ครั้ง · ครั้งละ 10 นาที · ระบบจะนับต่อเมื่อครบเวลาหรือกดทำต่อ</span></div>
    <div class="mbtns"><button class="btn btn-primary block" id="resume">ทำข้อสอบต่อเลย</button></div></div>`);
  let left=600;const iv=setInterval(()=>{left--;const m=(left/60|0),s=left%60;const pv=document.getElementById('pv');if(pv)pv.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(left<=0){clearInterval(iv);end();}},1000);
- function end(){ss.pauseUsed++;ss.paused=false;closeScrim();renderExam();toast('กลับเข้าห้องสอบแล้ว');}
+ function end(){ss.pauseUsed++;ss.paused=false;if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:false,pauseUsed:ss.pauseUsed,remaining:ss.remaining}).catch(()=>{});closeScrim();renderExam();toast('กลับเข้าห้องสอบแล้ว');}
  document.getElementById('resume').onclick=()=>{clearInterval(iv);end();};
 }
 
@@ -614,7 +615,7 @@ function openSubmit(){const ap=activeParts();
 }
 function doSubmit(){clearInterval(examTimer);
  if(S.api&&S.api.on){apiPost('/api/xv/submit',{sessionId:S.api.id,token:S.api.token}).then(res=>{
-   if(res&&res.ok){S.results=[1,2,3,4,5].map(p=>{const r=(res.results||[]).find(x=>x.part===p)||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});S.remedialQueue=res.remedialQueue||[];}
+   if(res&&res.ok){S.results=[1,2,3,4,5].map(p=>{const r=(res.results||[]).find(x=>x.part===p)||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';}
    S.phase='checking';render();}).catch(()=>{S.phase='checking';render();});return;}
  S.phase='checking';render();}
 
@@ -624,7 +625,12 @@ function scoreActive(){if(S.api&&S.api.on)return;const ap=activeParts();ap.forEa
 function afterScore(){const failed=S.results.filter(r=>r.status==='failed');
  const exhausted=failed.filter(r=>r.attempts>=MAXATT);
  if(exhausted.length){S.phase='attempts_completed';return;}
- if(failed.length===0){S.phase='waiting_verification';return;}
+ if(failed.length===0){
+   // Onsite (On-Site) candidates are auto-verified — skip the "waiting for staff" screen.
+   const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';
+   if(onsite){S.staffVerified=true;S.phase='all_passed';}
+   else S.phase='waiting_verification';
+   return;}
  S.remedialQueue=failed.map(r=>r.part).sort((a,b)=>a-b);S.phase=S.session.phase==='remedial'?'remedial_result':'first_result';
 }
 
@@ -650,10 +656,10 @@ function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRe
      <div class="card rpanel"><div class="rpt">สรุปผลการสอบ</div><div class="rsum">
        <div class="ri ok"><span class="ric">${I.checkc}</span><span><b>${passed}</b><span>พาร์ทที่ผ่าน</span></span></div><span class="rdiv"></span>
        <div class="ri no"><span class="ric">${I.xc}</span><span><b>${failed}</b><span>ต้องสอบซ่อม</span></span></div></div></div>
-     <div class="card rpanel"><div class="lockp"><span class="li">${I.lock}</span><span><b>ยังไม่สามารถดูข้อที่ตอบผิดได้</b><span>ดูได้เมื่อผ่านครบทั้ง 5 พาร์ทและทีมงานยืนยันผลแล้ว</span></span></div></div></div>
+     <div class="card rpanel"><div class="lockp"><span class="li">${I.lock}</span><span><b>ยังไม่สามารถดูข้อที่ตอบผิดได้</b><span>${(S.candidate&&S.candidate.mode==='onsite')?'ดูได้เมื่อผ่านครบทั้ง 5 พาร์ท':'ดูได้เมื่อผ่านครบทั้ง 5 พาร์ทและทีมงานยืนยันผลแล้ว'}</span></span></div></div></div>
    <div class="rfoot"><span class="note">${I.info} ${allPass?'ผ่านครบทั้ง 5 พาร์ท':'สอบซ่อมเฉพาะพาร์ท '+S.remedialQueue.join(', ')}</span><span class="spacer" style="flex:1"></span>
      ${allPass?`<button class="btn btn-primary lg" id="toVerify">ดำเนินการต่อ ${I.next}</button>`:`<button class="btn btn-ghost" id="exit">ออกจากระบบ</button><button class="btn btn-primary lg" id="toRem">เตรียมสอบซ่อม ${I.next}</button>`}</div></div>`;
- if(allPass){$('#toVerify').onclick=()=>{S.phase='waiting_verification';render();};}
+ if(allPass){$('#toVerify').onclick=()=>{const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';if(onsite){S.staffVerified=true;S.phase='all_passed';}else{S.phase='waiting_verification';}render();};}
  else{$('#toRem').onclick=()=>{S.phase='remedial_prep';render();};$('#exit').onclick=()=>{initState();render();};}
 }
 
@@ -727,7 +733,7 @@ function demoWrong(p){const seed=[[3,14],[7],[],[2,9,17],[]][p-1];return seed;}
 function renderFinal(){const total=S.results.reduce((a,r)=>a+r.score,0);
  app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-4)">
    <h1 class="hero-h">ใบรายงานผลคะแนน X-VISOR</h1>
-   <div class="card cert"><div class="cert-top"><span class="brand">X-VISOR</span><span class="status"><span class="dot"></span>ยืนยันผลแล้ว</span></div>
+   <div class="card cert"><div class="cert-top"><span class="brand">X-VISOR</span><span class="status"><span class="dot"></span>${(S.candidate&&S.candidate.mode==='onsite')?'บันทึกคะแนนแล้ว':'ยืนยันผลแล้ว'}</span></div>
      <div class="cert-meta"><div><span>รหัสผู้เข้าสอบ</span><b class="num">${S.candidate.id}</b></div><div><span>ชื่อ-นามสกุล</span><b>${S.candidate.firstName||'ณัฐวัฒน์'} ${S.candidate.lastName||'ยิ้มใจ'}</b></div><div><span>วันที่สอบ</span><b>${thaiDate()}</b></div></div>
      <table class="ctbl"><thead><tr><th>พาร์ท</th><th>คะแนนที่ได้</th><th style="text-align:right">ผลการสอบ</th></tr></thead><tbody>
        ${[1,2,3,4,5].map(p=>{const r=S.results[p-1];return `<tr><td><span class="cn">${p}</span>พาร์ต ${p}</td><td class="num"><b>${r.score}</b> <span style="color:var(--text-secondary)">/ ${QPP}</span></td><td style="text-align:right"><span class="res">${I.checkc} ผ่าน</span></td></tr>`;}).join('')}</tbody></table>

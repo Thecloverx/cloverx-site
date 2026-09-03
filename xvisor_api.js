@@ -62,8 +62,15 @@ module.exports = function (app, DATA) {
     const failed = s.results.filter(r => r.status === 'failed');
     const exhausted = failed.filter(r => r.attempts >= MAXATT);
     if (exhausted.length) s.status = 'ended_failed';
-    else if (failed.length === 0) s.status = 'awaiting_verify';
+    else if (failed.length === 0) {
+      // On-Site: system only records scores — no staff verification step. Status is a terminal "submitted".
+      // staffVerified stays true internally so the candidate can view their own score report in-app.
+      // Online: candidate waits for staff to verify before results are released.
+      if (s.candidate && s.candidate.mode === 'onsite') { s.status = 'submitted'; s.staffVerified = true; s.verifiedAt = Date.now(); }
+      else s.status = 'awaiting_verify';
+    }
     else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); }
+    s.paused = false;
     s.submittedAt = Date.now();
   }
   const pubResults = (s) => s.results.map(r => ({ part: r.part, score: r.score, status: r.status, attempts: r.attempts }));
@@ -98,6 +105,7 @@ module.exports = function (app, DATA) {
     if (b.part && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) s.answers[b.part + '-' + b.q] = b.choice;
     if (typeof b.remaining === 'number') s.remaining = Math.max(0, b.remaining | 0);
     if (typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
+    if (typeof b.paused === 'boolean') s.paused = b.paused; // On-Site pause state, for staff tracking
     writeS(all); res.json({ ok: true });
   });
 
@@ -164,6 +172,7 @@ module.exports = function (app, DATA) {
       inProgress: by(s => s.status === 'in_progress'),
       awaiting: by(s => s.status === 'awaiting_verify'),
       verified: by(s => s.status === 'verified'),
+      submitted: by(s => s.status === 'submitted'),
       remedial: by(s => s.status === 'remedial_required'),
       ended: by(s => s.status === 'ended_failed'),
       online: by(s => s.candidate.mode === 'online'),
@@ -178,7 +187,7 @@ module.exports = function (app, DATA) {
         id: s.id, code: s.code, candidate: s.candidate, phase: s.phase, status: s.status,
         roundId: s.roundId || null, roundNo: s.roundNo || null,
         results: pubResults(s), total: s.results.reduce((a, r) => a + (r.score || 0), 0),
-        pauseUsed: s.pauseUsed, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining,
+        pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining, startedAt: s.startedAt,
         proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0 } : null,
         flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0)) : 0,
         proctorDecision: s.proctorDecision || null
