@@ -29,7 +29,9 @@ module.exports = function (app, DATA) {
   const pubRound = (r) => ({ id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt });
 
   const PARTS = [1, 2, 3, 4, 5], QPP = 20, PASS = 16, MAXATT = 2, TOTAL = 120 * 60;
-  const adminOk = (req) => process.env.ADMIN_KEY && (req.query.key === process.env.ADMIN_KEY || req.get('x-admin-key') === process.env.ADMIN_KEY);
+  // Exam admin endpoints are open (no Admin Key) — per CloverX request. Keep the operations URL private.
+  // NOTE: the orders/Stripe/PII admin in server.js still uses ADMIN_KEY separately.
+  const adminOk = (req) => true;
   const genId = () => crypto.randomBytes(9).toString('hex');
 
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -178,7 +180,8 @@ module.exports = function (app, DATA) {
         results: pubResults(s), total: s.results.reduce((a, r) => a + (r.score || 0), 0),
         pauseUsed: s.pauseUsed, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining,
         proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0 } : null,
-        flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0)) : 0
+        flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0)) : 0,
+        proctorDecision: s.proctorDecision || null
       }))
     });
   });
@@ -188,6 +191,17 @@ module.exports = function (app, DATA) {
     const s = readS().find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
     const out = Object.assign({}, s); delete out.token; // keep paper with keys for admin review
     res.json({ ok: true, session: out });
+  });
+
+  // proctor decision: staff marks a flagged candidate normal, or disqualifies them (ends the exam)
+  app.post('/api/xv/admin/session/:id/proctor-decision', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
+    const d = req.body && req.body.decision;
+    if (d === 'disqualified') { s.status = 'disqualified'; s.proctorDecision = 'disqualified'; s.disqualifiedAt = Date.now(); }
+    else if (d === 'normal') { s.proctorDecision = 'normal'; }
+    else return res.status(400).json({ ok: false, error: 'bad_decision' });
+    writeS(all); res.json({ ok: true, status: s.status });
   });
 
   app.post('/api/xv/admin/session/:id/verify', (req, res) => {

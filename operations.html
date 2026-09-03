@@ -261,8 +261,8 @@
   .xv .xkpi.hi{background:var(--xg);border:0;box-shadow:0 16px 34px rgba(10,103,214,.3)}
   .xv .xring{position:relative;width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--rc) 0 var(--rp,74%),#E1EFF9 var(--rp,74%) 100%);box-shadow:0 0 20px color-mix(in srgb,var(--rc) 24%,transparent)}
   .xv .xring:before{content:"";width:48px;height:48px;border-radius:50%;background:#fbfdff;box-shadow:inset 0 0 9px rgba(25,104,207,.08)}
-  .xv .xkpi.hi .xring{background:conic-gradient(#fff 0 var(--rp,74%),rgba(255,255,255,.3) var(--rp,74%) 100%);box-shadow:none}
-  .xv .xkpi.hi .xring:before{background:transparent;box-shadow:none}
+  .xv .xkpi.hi .xring{background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 6px rgba(255,255,255,.25)}
+  .xv .xkpi.hi .xring:before{width:34px;height:34px;background:rgba(255,255,255,.9);box-shadow:none}
   .xv .xring .xrv{position:absolute;font-weight:800;font-size:.9rem;color:var(--rc)}
   .xv .xkpi.hi .xring .xrv{color:#fff}
   .xv .xkpi .km{min-width:0}
@@ -540,7 +540,8 @@
     awaiting_verify:{cl:'wait',t:'รอทีมงานยืนยัน'},
     verified:{cl:'ok',t:'ยืนยันแล้ว · ผ่าน'},
     remedial_required:{cl:'pend',t:'ต้องสอบซ่อม'},
-    ended_failed:{cl:'bad',t:'ไม่ผ่าน (ครบ '+MAXATT+' ครั้ง)'}
+    ended_failed:{cl:'bad',t:'ไม่ผ่าน (ครบ '+MAXATT+' ครั้ง)'},
+    disqualified:{cl:'bad',t:'หมดสิทธิ์สอบ'}
   };
   function xvKeyQ(extra){var q=OPS_KEY?('key='+encodeURIComponent(OPS_KEY)):'';if(extra)q=q?(q+'&'+extra):extra;return q?('?'+q):'';}
   function xvName(s){var c=(s&&s.candidate)||{};return ((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';}
@@ -994,15 +995,28 @@
   }
 
   /* ---------- 3) EXAM TRACKER (Online / Offline) ---------- */
-  var EXAM_TRK_Q='', EXAM_TRK_SUS=false;
+  var EXAM_TRK_Q='';
+  // a candidate is "suspicious" if they have behaviour flags and staff hasn't marked them normal / disqualified
+  function xvSusp(s){return (s.flags||0)>0 && s.proctorDecision!=='normal' && s.status!=='disqualified';}
+  function proctorDecide(id,decision,name){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
+    var run=function(){
+      fetch('/api/xv/admin/session/'+id+'/proctor-decision'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({decision:decision})})
+        .then(function(r){return r.json();}).then(function(j){
+          if(j&&j.ok){xvToast(decision==='disqualified'?('ตัดสิทธิ์ '+name+' ออกจากการสอบแล้ว'):('ทำเครื่องหมาย '+name+' เป็นปกติแล้ว'),'ok');xvFetch(function(){renderExamTracker();});}
+          else xvToast('ทำรายการไม่สำเร็จ','bad');
+        }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    };
+    if(decision==='disqualified')xvConfirm('ตัดสิทธิ์การสอบ','ยืนยันตัดสิทธิ์ "'+name+'" ออกจากการสอบ? ผู้สอบจะทำข้อสอบต่อไม่ได้ (ถ้ากำลังสอบอยู่จะถูกหยุดทันที)','ตัดสิทธิ์การสอบ',run,true);
+    else run();
+  }
   function renderExamTracker(){
     var all=EXAM_CACHE||[];
     var list=all.filter(function(s){return s.candidate.mode===EXAM_TAB;});
     var cnt=function(arr,st){return arr.filter(function(s){return s.status===st;}).length;};
     var doing=cnt(list,'in_progress'), rem=cnt(list,'remedial_required'),
         passed=cnt(list,'verified'), waiting=cnt(list,'awaiting_verify');
-    var suspicious=list.filter(function(s){return (s.flags||0)>0;}).length;
-    var shown=list.filter(function(s){return xvMatch(s,EXAM_TRK_Q)&&(!EXAM_TRK_SUS||(s.flags||0)>0);});
+    var shown=list.filter(function(s){return xvMatch(s,EXAM_TRK_Q);});
     var seg=function(id,label){var on=EXAM_TAB===id;var n=all.filter(function(s){return s.candidate.mode===id;}).length;
       return '<button class="etab-sm" data-tab="'+id+'" style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'var(--brand-tint)':'#fff')+';color:'+(on?'var(--brand)':'var(--ink)')+';border-radius:999px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;transition:.14s">'+label
         +'<span style="background:'+(on?'var(--brand)':'#EEF1F6')+';color:'+(on?'#fff':'#6B7793')+';border-radius:999px;font-size:.72rem;font-weight:800;padding:1px 8px">'+n+'</span></button>';};
@@ -1015,13 +1029,24 @@
       var scoreCell=(s.status==='in_progress')?'—':('<b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span>');
       var remain=(s.status==='in_progress')?fmtHMS(s.remaining):'—';
       var rtag=s.roundNo?'<div style="color:var(--muted);font-size:.74rem;font-weight:600">รอบครั้งที่ '+s.roundNo+'</div>':'';
-      var pf=s.proctor||{}, flags=s.flags||0;
+      var pf=s.proctor||{}, flags=s.flags||0, susp=xvSusp(s);
+      var isRed=susp||s.status==='disqualified';
       var warn=flags?(' <span title="ออกจากหน้าสอบ/สลับแท็บ '+((pf.leave||0)+(pf.blur||0))+' ครั้ง · พยายามแคปหน้าจอ '+(pf.printscreen||0)+' · คัดลอก '+(pf.copy||0)+' · คลิกขวา '+(pf.contextmenu||0)+'" style="display:inline-block;background:var(--bad-tint);color:var(--bad);font-weight:800;font-size:.7rem;border-radius:999px;padding:1px 8px;margin-left:6px;cursor:help">⚠ '+flags+'</span>'):'';
-      return '<tr'+(flags?' style="background:#FEF6F6"':'')+'><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+warn+rtag+'</td>'
+      var nameHtml='<b style="'+(isRed?'color:var(--bad)':'')+'">'+xvName(s)+'</b>'+warn+(s.proctorDecision==='normal'&&flags?' <span style="color:var(--good);font-size:.72rem;font-weight:700">✓ ตรวจแล้ว</span>':'')+rtag;
+      // status cell: suspicious+undecided -> decision buttons; else status pill
+      var statusCell;
+      if(susp){
+        statusCell='<div style="display:flex;flex-direction:column;gap:6px;min-width:150px"><span class="pill bad" style="align-self:flex-start">⚠ ต้องตัดสิน</span>'
+          +'<div style="display:flex;gap:6px"><button class="pd-ok" data-id="'+s.id+'" data-name="'+xvName(s).replace(/"/g,'')+'" style="border:1px solid #82D7B3;background:#EFFBF6;color:#078654;border-radius:8px;padding:5px 11px;font-family:inherit;font-weight:800;font-size:.76rem;cursor:pointer">ปกติ</button>'
+          +'<button class="pd-dq" data-id="'+s.id+'" data-name="'+xvName(s).replace(/"/g,'')+'" style="border:1px solid #F1ADB4;background:#FFF5F6;color:#DC3545;border-radius:8px;padding:5px 11px;font-family:inherit;font-weight:800;font-size:.76rem;cursor:pointer">หมดสิทธิ์สอบ</button></div></div>';
+      } else {
+        statusCell='<span class="pill '+st.cl+'">'+st.t+'</span>';
+      }
+      return '<tr'+(isRed?' style="background:#FEF3F4"':'')+'><td class="num">'+(s.code||'—')+'</td><td>'+nameHtml+'</td>'
         +'<td>'+prog+'</td>'
         +'<td class="num">'+remain+'</td>'
         +'<td class="num">'+scoreCell+'</td>'
-        +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td></tr>';
+        +'<td>'+statusCell+'</td></tr>';
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผู้เข้าสอบในหมวดนี้</td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
@@ -1032,11 +1057,12 @@
         xvKpi('ยืนยันผ่านแล้ว',String(passed),'#0E9F6E','ผ่านเกณฑ์ · ออกใบรับรอง',passed/tot*100),
         xvKpi('รอทีมงานยืนยัน',String(waiting),'#7790B5','ข้อมูลครบ รอกดยืนยัน',waiting/tot*100)
       ];})())
-      +(suspicious?'<div style="background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-weight:700;font-size:.86rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap">⚠ พบพฤติกรรมน่าสงสัย '+suspicious+' คน (ออกจากหน้าสอบ/สลับแท็บ หรือพยายามแคปหน้าจอ)<button onclick="EXAM_TRK_SUS='+(!EXAM_TRK_SUS)+';renderExamTracker()" style="margin-left:auto;border:1px solid '+(EXAM_TRK_SUS?'var(--bad)':'#FDA4A4')+';background:'+(EXAM_TRK_SUS?'var(--bad)':'#fff')+';color:'+(EXAM_TRK_SUS?'#fff':'var(--bad)')+';border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">'+(EXAM_TRK_SUS?'แสดงทั้งหมด':'ดูเฉพาะที่น่าสงสัย')+'</button></div>':'')
       +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><input id="trkSearch" type="text" value="'+String(EXAM_TRK_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px"></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.etab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
     var tq=document.getElementById('trkSearch');if(tq)tq.addEventListener('input',function(){var pos=this.selectionStart;EXAM_TRK_Q=this.value;renderExamTracker();var el=document.getElementById('trkSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
+    gen.querySelectorAll('.pd-ok').forEach(function(b){b.addEventListener('click',function(){proctorDecide(b.getAttribute('data-id'),'normal',b.getAttribute('data-name'));});});
+    gen.querySelectorAll('.pd-dq').forEach(function(b){b.addEventListener('click',function(){proctorDecide(b.getAttribute('data-id'),'disqualified',b.getAttribute('data-name'));});});
   }
 
   /* ---------- 4) EXAM RESULT (+ staff verify) ---------- */
