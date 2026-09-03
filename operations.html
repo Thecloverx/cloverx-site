@@ -243,6 +243,58 @@
   .rf-sr span{color:var(--muted);flex:none}
   .rf-sr b{color:var(--ink);text-align:right}
   .rf-method{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px;line-height:1.5}
+
+  /* ===================== X-VISOR premium theme (glass + rings) — scoped to #view-generic.xv ===================== */
+  .xv{--xg:linear-gradient(135deg,#26B7EA,#0A67D8);--xc:#12A9F5;--xb:#0A63E6;--xink:#0A2A63}
+  .xv .head h1{font-size:1.55rem;letter-spacing:-.01em;color:var(--xink)}
+  .xv .head p{color:#5E7691}
+  /* premium action buttons in the exam header */
+  .xv .xbtn{height:40px;padding:0 15px;border-radius:12px;border:1px solid #CBDEF6;background:rgba(255,255,255,.85);color:#0753C8;font-weight:800;font-size:.83rem;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit;text-decoration:none;transition:.15s}
+  .xv .xbtn:hover{border-color:var(--xb)}
+  .xv .xbtn.pri{color:#fff;border:0;background:var(--xg);box-shadow:0 9px 20px rgba(10,103,214,.28)}
+  /* glass cards: upgrade existing .panel automatically */
+  .xv .panel{background:linear-gradient(150deg,rgba(255,255,255,.96),rgba(244,251,255,.82));border:1px solid #E1EEFB;border-radius:22px;box-shadow:0 16px 38px rgba(20,90,180,.09),inset 0 1px rgba(255,255,255,.9);backdrop-filter:blur(14px)}
+  .xv .panel h3{color:var(--xink);font-size:1.04rem}
+  /* ring KPI strip */
+  .xv .xkpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  .xv .xkpi{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:22px;background:linear-gradient(150deg,rgba(255,255,255,.96),rgba(244,251,255,.82));border:1px solid #E1EEFB;box-shadow:0 14px 32px rgba(20,90,180,.08),inset 0 1px #fff;min-width:0}
+  .xv .xkpi.hi{background:var(--xg);border:0;box-shadow:0 16px 34px rgba(10,103,214,.3)}
+  .xv .xring{position:relative;width:64px;height:64px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--rc) 0 var(--rp,74%),#E1EFF9 var(--rp,74%) 100%);box-shadow:0 0 20px color-mix(in srgb,var(--rc) 24%,transparent)}
+  .xv .xring:before{content:"";width:48px;height:48px;border-radius:50%;background:#fbfdff;box-shadow:inset 0 0 9px rgba(25,104,207,.08)}
+  .xv .xkpi.hi .xring{background:conic-gradient(#fff 0 var(--rp,74%),rgba(255,255,255,.3) var(--rp,74%) 100%);box-shadow:none}
+  .xv .xkpi.hi .xring:before{background:transparent;box-shadow:none}
+  .xv .xring .xrv{position:absolute;font-weight:800;font-size:.9rem;color:var(--rc)}
+  .xv .xkpi.hi .xring .xrv{color:#fff}
+  .xv .xkpi .km{min-width:0}
+  .xv .xkpi .kl{font-size:.8rem;color:#5E7691;font-weight:600}
+  .xv .xkpi .kv{font-size:2.05rem;font-weight:800;letter-spacing:-.03em;color:#061F4D;line-height:1;margin-top:5px;font-variant-numeric:tabular-nums}
+  .xv .xkpi .ks{font-size:.72rem;color:#7290B5;margin-top:5px}
+  .xv .xkpi.hi .kl,.xv .xkpi.hi .ks{color:rgba(255,255,255,.86)}
+  .xv .xkpi.hi .kv{color:#fff}
+  @media(max-width:1000px){.xv .xkpis{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.xv .xkpis{grid-template-columns:1fr}}
+  /* filter chips */
+  .xv .xchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .xv .xchip{padding:8px 14px;border-radius:11px;background:rgba(240,247,255,.8);border:1px solid #D6E5F8;color:#526D93;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px;transition:.15s}
+  .xv .xchip:hover{border-color:#7FB8FF}
+  .xv .xchip.on{color:#0963E6;border-color:#7FB8FF;background:#EDF6FF;box-shadow:0 6px 16px rgba(10,103,214,.14)}
+  /* premium tables (scoped so other dept tables are untouched) */
+  .xv table{width:100%;border-collapse:separate;border-spacing:0;font-size:.88rem}
+  .xv thead th{text-align:left;color:#6D83A1;font-weight:600;padding:12px 13px;border-bottom:1px solid #DBE8F7;font-size:.8rem}
+  .xv tbody td{padding:15px 13px;border-bottom:1px solid #E7F0FA;vertical-align:middle;color:var(--xink)}
+  .xv tbody tr{transition:.18s}
+  .xv tbody tr:hover{background:linear-gradient(90deg,rgba(228,242,255,.5),transparent);box-shadow:inset 3px 0 var(--xc)}
+  .xv .num{font-variant-numeric:tabular-nums}
+  /* part-score pills + attempt badge */
+  .xv .xps{min-width:36px;height:32px;padding:0 8px;border-radius:9px;display:inline-grid;place-items:center;border:1px solid #91C3FF;background:linear-gradient(180deg,#f8fcff,#e6f2ff);color:#075FE8;font-size:.8rem;font-weight:800;font-variant-numeric:tabular-nums;box-shadow:0 4px 11px rgba(0,107,255,.1)}
+  .xv .xps.miss{border-color:#E0E9F3;background:#F4F8FC;color:#9FB2C8;box-shadow:none}
+  .xv .xps.bad{border-color:#F3B4B9;background:#FFF3F4;color:#DC3545;box-shadow:0 4px 11px rgba(220,53,69,.1)}
+  .xv .xdiv{color:#BFCEDD;margin:0 2px;font-weight:400}
+  .xv .xatt{display:inline-flex;padding:5px 10px;border-radius:999px;background:#EDF1F6;color:#61748F;font-size:.72rem;font-weight:800;border:1px solid #DCE4EF;margin-top:7px}
+  /* premium pills within exam */
+  .xv .pill{padding:6px 11px;font-size:.74rem;border-radius:999px;font-weight:800}
+  .xv .pill.ok{background:#E7F8F0;color:#0E9F6E}.xv .pill.bad{background:#FEECEC;color:#E5484D}.xv .pill.pend{background:#FFF3DF;color:#C77E12}.xv .pill.new{background:#E5F0FF;color:#0863E8}.xv .pill.wait{background:#EDF1F7;color:#657994}
+  .xv .kpis{display:none} /* legacy strip hidden in premium (replaced by .xkpis) */
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -493,6 +545,8 @@
   function xvKeyQ(extra){var q=OPS_KEY?('key='+encodeURIComponent(OPS_KEY)):'';if(extra)q=q?(q+'&'+extra):extra;return q?('?'+q):'';}
   function xvName(s){var c=(s&&s.candidate)||{};return ((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';}
   function xvTotal(s){return (s.results||[]).reduce(function(a,r){return a+(r.score||0);},0);}
+  // premium part-score pills P1..P5 (— for parts not graded yet)
+  function xvPartPills(s){var by={};(s.results||[]).forEach(function(r){by[r.part]=r;});var cells='';for(var p=1;p<=PARTS_N;p++){var r=by[p];if(!r)cells+='<span class="xps miss">—</span>';else cells+='<span class="xps'+(r.score<PASS_PART?' bad':'')+'">'+r.score+'</span>';if(p<PARTS_N)cells+='<span class="xdiv">|</span>';}return '<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap">'+cells+'</div>';}
   function xvMaxTotal(){return PARTS_N*QPP;} // 100
   function fmtHMS(sec){sec=Math.max(0,sec|0);var h=(sec/3600)|0,m=((sec%3600)/60)|0,s=sec%60;var p=function(n){return(n<10?'0':'')+n;};return p(h)+':'+p(m)+':'+p(s);}
   // progress: how many parts have a recorded result vs 5, and answered-in-current
@@ -539,18 +593,20 @@
 
   // ---- demo fallback (server shape) so pages look complete offline ----
   function xvDemo(){
-    var mk=function(id,fn,ln,ph,mode,status,scores,pause,verified){
+    var mk=function(id,fn,ln,ph,mode,status,scores,pause,verified,proc){
       var res=(scores||[]).map(function(sc,i){return {part:i+1,score:sc,attempts:1,status:sc>=PASS_PART?'passed':'failed'};});
+      var flags=proc?((proc.leave||0)+(proc.blur||0)+(proc.printscreen||0)+(proc.copy||0)+(proc.contextmenu||0)):0;
       return {id:id,code:'XV'+id.slice(-6),candidate:{firstName:fn,lastName:ln,phone:'08x-xxx-'+id.slice(-4),mode:mode},
         phase:ph,status:status,results:res,pauseUsed:pause||0,staffVerified:!!verified,roundNo:(status==='in_progress'?14:13),
+        proctor:proc||null,flags:flags,
         createdAt:Date.now()-3600000,submittedAt:status==='in_progress'?null:Date.now()-600000,remaining:status==='in_progress'?(Math.random()*7000|0):0};
     };
     return [
-      mk('a10001','ณัฐวัฒน์','ยิ้มใจ','first','online','in_progress',[18,17],0),
+      mk('a10001','ณัฐวัฒน์','ยิ้มใจ','first','online','in_progress',[18,17],0,false,{leave:2,printscreen:1}),
       mk('a10004','ปวีณา','ทองแท้','first','online','awaiting_verify',[19,18,17,20,16],0),
       mk('a10007','กิตติพงษ์','ศรีสุข','first','online','verified',[18,18,19,17,16],0,true),
       mk('a10009','อารยา','แจ่มใส','remedial','online','remedial_required',[12,17,18,10,19],0),
-      mk('a10015','สุชานันท์','ปิ่นทอง','first','online','in_progress',[16],0),
+      mk('a10015','สุชานันท์','ปิ่นทอง','first','online','in_progress',[16],0,false,{leave:1}),
       mk('a10002','ชวินทร์','ก้องเกียรติ','first','onsite','in_progress',[17,18,16],1),
       mk('a10003','เมธาวี','บุญมี','remedial','onsite','remedial_required',[14,17,18,16,11],2),
       mk('a10006','ภาคภูมิ','ไชยวงศ์','first','onsite','awaiting_verify',[18,16,17,19,18],1),
@@ -579,21 +635,28 @@
       +'<button onclick="opsUnlock()" style="margin-left:auto;background:var(--warn);border:0;border-radius:9px;padding:7px 14px;color:#fff;font-family:inherit;font-weight:800;font-size:.82rem;cursor:pointer">ใส่ Admin Key</button></div>';
   }
   function xvHead(title,sub){
-    return '<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'
+    return '<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">'
       +'<div><h1>'+title+'</h1><p>'+sub+'</p></div>'
       +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       +(EXAM_LIVE?xvBanner():'')
-      +'<button onclick="examRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button>'
-      +'<a href="/xvisor" target="_blank" style="text-decoration:none;background:var(--brand);border:1px solid var(--brand);border-radius:9px;padding:8px 14px;color:#fff;font-family:inherit;font-weight:800;font-size:.82rem">เปิดหน้าสอบ ↗</a>'
+      +'<button onclick="examRefresh()" class="xbtn">↻ รีเฟรช</button>'
+      +'<a href="/xvisor" target="_blank" class="xbtn pri">เปิดหน้าสอบ ↗</a>'
       +'</div></div>'
       +(EXAM_LIVE?'':xvBanner());
   }
+  // premium ring-KPI strip (glass + conic-gradient donut)
+  function xvRing(pct,color){var p=Math.max(6,Math.min(100,Math.round(pct==null?74:pct)));return '<div class="xring" style="--rc:'+(color||'#1884ff')+';--rp:'+p+'%"></div>';}
+  function xvKpi(label,value,color,sub,pct,hi){
+    return '<div class="xkpi'+(hi?' hi':'')+'">'+xvRing(pct,color)+'<div class="km"><div class="kl">'+label+'</div><div class="kv num">'+value+'</div>'+(sub?'<div class="ks">'+sub+'</div>':'')+'</div></div>';
+  }
+  function xvKstrip(cards){return '<div class="xkpis">'+cards.join('')+'</div>';}
   // re-fetch then re-render whichever exam view is active
   var EXAM_VIEW='exam-tracker';
   function examRefresh(){var g=gen;g.innerHTML=xvSpinner('กำลังโหลดข้อมูลการสอบ…');xvFetch(function(){examDispatch(EXAM_VIEW);});}
   function xvSpinner(t){return '<div style="padding:60px 0;text-align:center;color:var(--muted)"><div style="width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;margin:0 auto 14px;animation:xvspin .8s linear infinite"></div>'+(t||'กำลังโหลด…')+'</div><style>@keyframes xvspin{to{transform:rotate(360deg)}}</style>';}
   function examDispatch(v){
     EXAM_VIEW=v;
+    gen.classList.add('xv');
     if(v==='exam-overview')renderExamOverview();
     else if(v==='exam-session')renderExamSession();
     else if(v==='exam-tracker')renderExamTracker();
@@ -627,12 +690,12 @@
         +'<div style="flex:1;height:10px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 12px"><div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:999px"></div></div>'
         +'<div class="num" style="min-width:56px;text-align:right"><b>'+n+'</b> <span style="color:var(--muted);font-size:.8rem">'+pct+'%</span></div></div>';};
     gen.innerHTML=xvHead('ภาพรวมการสอบ · Exam Overview','สรุปภาพรวมการสอบรับรอง X-Visor แบบเรียลไทม์ · Certification')
-      +'<div class="kpis">'
-      +kbig('ผู้เข้าสอบทั้งหมด',String(o.total),'var(--brand-tint)','var(--brand)','ทุกสถานะ')
-      +kbig('กำลังสอบ',String(o.inProgress),'var(--brand-tint)','var(--brand)','ออนไลน์ '+o.online+' · ที่ศูนย์ '+o.onsite)
-      +kbig('รอทีมงานยืนยัน',String(o.awaiting),'#EEF1F6','#6B7793','ตรวจแล้ว รอกดยืนยัน')
-      +kbig('ยืนยันผ่านแล้ว',String(o.verified),'var(--good-tint)','var(--good)','ผ่านเกณฑ์ · ออกใบรับรอง')
-      +'</div>'
+      +xvKstrip([
+        xvKpi('ผู้เข้าสอบทั้งหมด',String(o.total),'#0A67D8','ทุกสถานะ',100,true),
+        xvKpi('กำลังสอบ',String(o.inProgress),'#12A9F5','ออนไลน์ '+o.online+' · ที่ศูนย์ '+o.onsite,o.total?o.inProgress/o.total*100:20),
+        xvKpi('รอทีมงานยืนยัน',String(o.awaiting),'#7790B5','ตรวจแล้ว รอกดยืนยัน',o.total?o.awaiting/o.total*100:20),
+        xvKpi('ยืนยันผ่านแล้ว',String(o.verified),'#0E9F6E','ผ่านเกณฑ์ · ออกใบรับรอง',passRate)
+      ])
       +'<div class="row2" style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px">'
       +'<div class="panel"><div class="ph"><h3>สัดส่วนตามสถานะ</h3><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูรายชื่อ →</a></div>'
         +barRow('กำลังสอบ',o.inProgress,o.total,'var(--brand)')
@@ -719,19 +782,19 @@
     var totalQ=Object.keys(counts).reduce(function(a,p){return a+(counts[p]||0);},0)||100;
 
     gen.innerHTML=xvHead('รอบการสอบ · Exam Session','ลิสต์รอบสอบตามวันที่ — แต่ละรอบใช้คลังข้อสอบตัวแม่ร่วมกัน (ไม่ต้องก็อปข้อสอบใหม่)')
-      +'<div class="kpis">'
-      +kpi('รอบสอบทั้งหมด',String(totalR),'var(--brand-tint)','var(--brand)')
-      +kpi('เปิดสอบอยู่',String(openR),'var(--good-tint)','var(--good)')
-      +kpi('ผู้เข้าสอบรวม',String(totalC),'var(--brand-tint)','var(--brand)')
-      +kpi('รอยืนยันรวม',String(totalA),'#EEF1F6','#6B7793')
-      +'</div>'
+      +xvKstrip([
+        xvKpi('รอบสอบทั้งหมด',String(totalR),'#0A67D8','ทุกรอบที่สร้างไว้',100,true),
+        xvKpi('เปิดสอบอยู่',String(openR),'#0E9F6E','ผู้สอบเข้าได้ตอนนี้',totalR?openR/totalR*100:20),
+        xvKpi('ผู้เข้าสอบรวม',String(totalC),'#12A9F5','ทุกรอบรวมกัน',totalC?100:6),
+        xvKpi('รอยืนยันรวม',String(totalA),'#7790B5','ตรวจแล้ว รอกดยืนยัน',totalC?totalA/totalC*100:10)
+      ])
       +'<div class="panel"><div class="ph"><h3>รอบสอบ (Exam Rounds)</h3>'
         +'<button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div>'
         +'<div style="overflow-x:auto"><table><thead><tr><th>วันที่สอบ</th><th>Topic</th><th>ครั้งที่</th><th>ผู้เข้าสอบ</th><th>สถานะ</th><th style="text-align:right">จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
         +(EXAM_LIVE?'':'<p style="color:var(--muted);font-size:.8rem;margin-top:10px">* ตัวอย่าง — ใส่ Admin Key เพื่อจัดการรอบสอบจริง</p>')
       +'</div>'
       +'<div class="row2" style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px">'
-      +'<div class="panel"><div class="ph"><h3>คลังข้อสอบตัวแม่ '+(bankReady?'<span class="pill ok" style="margin-left:6px">พร้อมสอบ</span>':'<span class="pill bad" style="margin-left:6px">ยังไม่พร้อม</span>')+'</h3><span style="color:var(--muted);font-size:.82rem;font-weight:600">รวม '+totalQ+' ข้อ · ใช้ร่วมกันทุกรอบ</span></div>'
+      +'<div class="panel"><div class="ph"><h3>คลังข้อสอบตัวแม่ '+(bankReady?'<span class="pill ok" style="margin-left:6px">พร้อมสอบ</span>':'<span class="pill bad" style="margin-left:6px">ยังไม่พร้อม</span>')+'</h3><div style="display:flex;align-items:center;gap:12px"><span style="color:var(--muted);font-size:.82rem;font-weight:600">รวม '+totalQ+' ข้อ</span><button onclick="bankImportOpen()" style="border:1px solid var(--brand);background:var(--brand-tint);color:var(--brand);border-radius:9px;padding:7px 13px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">↑ นำเข้าชุดข้อสอบ (CSV)</button></div></div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
         +[1,2,3,4,5].map(function(p){var c=counts[p]||counts[String(p)]||QPP;return '<div style="flex:1;min-width:90px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px"><div style="font-size:.72rem;color:var(--muted);font-weight:700">พาร์ท '+p+'</div><div style="font-weight:800">'+c+' ข้อ</div></div>';}).join('')
         +'</div><p style="color:var(--muted);font-size:.8rem;margin-top:12px">แก้ไขข้อสอบที่คลังตัวแม่ครั้งเดียว มีผลกับทุกรอบทันที — ไม่ต้องคัดลอกข้อสอบ</p></div>'
@@ -839,48 +902,147 @@
     document.getElementById('rsCopy').onclick=function(){var v=link;var done=function(){xvToast('คัดลอกลิงก์แล้ว','ok');};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(done,function(){var i=document.getElementById('rsLink');i.select();document.execCommand('copy');done();});}else{var i=document.getElementById('rsLink');i.select();document.execCommand('copy');done();}};
   }
 
+  /* ---------- นำเข้าชุดข้อสอบ (CSV) ---------- */
+  var LET={'ก':0,'ข':1,'ค':2,'ง':3};
+  function parseCSV(text){
+    text=text.replace(/^﻿/,'');
+    var rows=[],row=[],field='',i=0,inQ=false;
+    while(i<text.length){var ch=text[i];
+      if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue;} field+=ch;i++;continue; }
+      if(ch==='"'){inQ=true;i++;continue;}
+      if(ch===','){row.push(field);field='';i++;continue;}
+      if(ch==='\r'){i++;continue;}
+      if(ch==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue;}
+      field+=ch;i++;
+    }
+    if(field.length||row.length){row.push(field);rows.push(row);}
+    return rows;
+  }
+  function csvToBank(rows){
+    var errors=[],names={},bank={};
+    var start=(rows.length&&isNaN(parseInt(rows[0][0],10)))?1:0; // skip header
+    for(var r=start;r<rows.length;r++){
+      var row=rows[r]; if(!row||(row.join('').trim()===''))continue;
+      var ln=r+1;
+      if(row.length<9){errors.push('แถว '+ln+': คอลัมน์ไม่ครบ (ต้องมี 9 ช่องขึ้นไป)');continue;}
+      var part=parseInt(row[0],10), pname=(row[1]||'').trim(), q=(row[3]||'').trim();
+      var opts=[row[4],row[5],row[6],row[7]].map(function(x){return (x||'').trim();});
+      var ans=(row[8]||'').trim();
+      if(!(part>=1&&part<=5)){errors.push('แถว '+ln+': พาร์ทต้องเป็น 1–5');continue;}
+      if(!q){errors.push('แถว '+ln+': ไม่มีคำถาม');continue;}
+      if(opts.some(function(o){return !o;})){errors.push('แถว '+ln+': ตัวเลือกไม่ครบ 4 ข้อ');continue;}
+      if(!(ans in LET)){errors.push('แถว '+ln+': เฉลยต้องเป็น ก/ข/ค/ง (พบ "'+ans+'")');continue;}
+      if(pname&&!names[part])names[part]=pname;
+      (bank[part]=bank[part]||[]).push({q:q,o:opts,c:LET[ans]});
+    }
+    return {names:names,bank:bank,errors:errors};
+  }
+  function bankFatal(b){ // exam-readiness checks -> blocking errors
+    var e=b.errors.slice();
+    for(var p=1;p<=5;p++){var n=(b.bank[p]||[]).length;if(n!==QPP)e.push('พาร์ท '+p+': มี '+n+' ข้อ (ต้องมี '+QPP+' ข้อพอดี)');}
+    var extra=Object.keys(b.bank).filter(function(p){return +p<1||+p>5;});
+    if(extra.length)e.push('มีพาร์ทเกิน 1–5: '+extra.join(','));
+    return e;
+  }
+  function bankTemplate(){
+    var head=['พาร์ท','ชื่อพาร์ท','ข้อที่','คำถาม','ตัวเลือก ก','ตัวเลือก ข','ตัวเลือก ค','ตัวเลือก ง','เฉลย','ข้อความเฉลย'];
+    var ex=['1','ความรู้พื้นฐานผลิตภัณฑ์','1','ตัวอย่างคำถาม?','ตัวเลือก ก','ตัวเลือก ข','ตัวเลือก ค','ตัวเลือก ง','ก','ตัวเลือก ก'];
+    var q=function(a){return a.map(function(x){return '"'+String(x).replace(/"/g,'""')+'"';}).join(',');};
+    var csv='﻿'+q(head)+'\r\n'+q(ex)+'\r\n';
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='xvisor_questions_template.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+  var _importBank=null;
+  function bankImportOpen(){
+    if(!demoGuard())return;
+    _importBank=null;
+    xvSheet('<h3 style="font-size:1.12rem">นำเข้าชุดข้อสอบ (CSV)</h3>'
+      +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 4px">อัปโหลดไฟล์ CSV รูปแบบเดียวกับ examkey (พาร์ท · ชื่อพาร์ท · ข้อที่ · คำถาม · ตัวเลือก ก–ง · เฉลย) — <b>5 พาร์ท พาร์ทละ '+QPP+' ข้อ</b></p>'
+      +'<div style="background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;border-radius:10px;padding:10px 13px;font-size:.8rem;font-weight:600;margin:10px 0">⚠ การนำเข้าจะ<b>แทนที่คลังข้อสอบเดิมทั้งหมด</b> (ไม่กระทบรอบสอบและผลเก่า)</div>'
+      +'<input id="impFile" type="file" accept=".csv,text/csv" style="'+fieldCss()+';padding:9px">'
+      +'<div id="impPreview" style="margin-top:14px"></div>'
+      +'<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px"><button onclick="bankTemplate()" style="'+btnGhost()+'">↓ ดาวน์โหลดเทมเพลต</button><div style="display:flex;gap:10px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="impSave" disabled style="'+btnPri()+';opacity:.5">นำเข้า</button></div></div>');
+    document.getElementById('impFile').onchange=function(){
+      var f=this.files&&this.files[0];if(!f)return;
+      var rd=new FileReader();
+      rd.onload=function(){
+        try{
+          var rows=parseCSV(String(rd.result));
+          var b=csvToBank(rows); _importBank=b;
+          var fatal=bankFatal(b);
+          var prev=document.getElementById('impPreview');
+          var partRows='';for(var p=1;p<=5;p++){var n=(b.bank[p]||[]).length;var ok=n===QPP;partRows+='<tr><td class="num">พาร์ท '+p+'</td><td>'+(b.names[p]||'—')+'</td><td class="num">'+n+' ข้อ</td><td><span class="pill '+(ok?'ok':'bad')+'">'+(ok?'ครบ':'ไม่ครบ')+'</span></td></tr>';}
+          var totalQ=Object.keys(b.bank).reduce(function(a,p){return a+(b.bank[p]||[]).length;},0);
+          prev.innerHTML='<div style="overflow-x:auto"><table><thead><tr><th>พาร์ท</th><th>ชื่อพาร์ท</th><th>จำนวนข้อ</th><th>สถานะ</th></tr></thead><tbody>'+partRows+'</tbody></table></div>'
+            +'<div style="font-size:.82rem;color:var(--muted);margin-top:8px">อ่านได้ '+totalQ+' ข้อ</div>'
+            +(fatal.length?('<div style="background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:10px;padding:10px 13px;font-size:.8rem;font-weight:600;margin-top:10px">พบปัญหา '+fatal.length+' รายการ — แก้ไฟล์แล้วอัปโหลดใหม่:<ul style="margin:6px 0 0;padding-left:18px;font-weight:500">'+fatal.slice(0,8).map(function(x){return '<li>'+x+'</li>';}).join('')+(fatal.length>8?'<li>… และอีก '+(fatal.length-8)+' รายการ</li>':'')+'</ul></div>'):'<div style="background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;border-radius:10px;padding:10px 13px;font-size:.82rem;font-weight:700;margin-top:10px">✓ ไฟล์ถูกต้อง พร้อมนำเข้า</div>');
+          var save=document.getElementById('impSave');
+          if(fatal.length){save.disabled=true;save.style.opacity=.5;}else{save.disabled=false;save.style.opacity=1;}
+        }catch(e){document.getElementById('impPreview').innerHTML='<div style="color:var(--bad);font-size:.84rem;font-weight:700">อ่านไฟล์ไม่สำเร็จ: '+(e.message||e)+'</div>';}
+      };
+      rd.readAsText(f,'utf-8');
+    };
+    document.getElementById('impSave').onclick=function(){
+      if(!_importBank)return;var b=_importBank;
+      this.disabled=true;this.textContent='กำลังนำเข้า…';
+      fetch('/api/xv/admin/import-questions'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,names:b.names,bank:b.bank})})
+        .then(function(r){return r.json();}).then(function(j){
+          if(j&&j.ok){xvSheetClose();xvToast('นำเข้าข้อสอบสำเร็จ ('+j.parts+' พาร์ท)','ok');EXAM_QINFO=null;roundsRefresh();}
+          else xvToast('นำเข้าไม่สำเร็จ: '+((j&&j.error)||''),'bad');
+        }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    };
+  }
+
   /* ---------- 3) EXAM TRACKER (Online / Offline) ---------- */
+  var EXAM_TRK_Q='', EXAM_TRK_SUS=false;
   function renderExamTracker(){
     var all=EXAM_CACHE||[];
     var list=all.filter(function(s){return s.candidate.mode===EXAM_TAB;});
     var cnt=function(arr,st){return arr.filter(function(s){return s.status===st;}).length;};
     var doing=cnt(list,'in_progress'), rem=cnt(list,'remedial_required'),
         passed=cnt(list,'verified'), waiting=cnt(list,'awaiting_verify');
-    var seg=function(id,label,sub){var on=EXAM_TAB===id;var n=all.filter(function(s){return s.candidate.mode===id;}).length;
-      return '<button class="etab'+(on?' on':'')+'" data-tab="'+id+'">'+label
-        +' <span class="etab-n">'+n+'</span><small>'+sub+'</small></button>';};
-    var rows=list.map(function(s){
+    var suspicious=list.filter(function(s){return (s.flags||0)>0;}).length;
+    var shown=list.filter(function(s){return xvMatch(s,EXAM_TRK_Q)&&(!EXAM_TRK_SUS||(s.flags||0)>0);});
+    var seg=function(id,label){var on=EXAM_TAB===id;var n=all.filter(function(s){return s.candidate.mode===id;}).length;
+      return '<button class="etab-sm" data-tab="'+id+'" style="display:inline-flex;align-items:center;gap:7px;border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'var(--brand-tint)':'#fff')+';color:'+(on?'var(--brand)':'var(--ink)')+';border-radius:999px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;transition:.14s">'+label
+        +'<span style="background:'+(on?'var(--brand)':'#EEF1F6')+';color:'+(on?'#fff':'#6B7793')+';border-radius:999px;font-size:.72rem;font-weight:800;padding:1px 8px">'+n+'</span></button>';};
+    var rows=shown.map(function(s){
       var st=XV_ST[s.status]||{cl:'wait',t:s.status};
-      var pr=xvProgress(s);
-      var prog=s.status==='in_progress'
-        ? pr.label+' <span style="color:var(--muted)">· ตรวจแล้ว '+pr.done+' พาร์ท</span>'
-        : '<span style="color:var(--muted)">ครบ '+PARTS_N+' พาร์ท</span>';
+      var maxAtt=(s.results||[]).reduce(function(m,r){return Math.max(m,r.attempts||1);},1);
+      var attTxt=(maxAtt<=1)?'สอบรอบแรก':('สอบซ่อม '+(maxAtt-1)+'/'+MAXATT);
       var pausedTag=(s.candidate.mode==='onsite'&&s.pauseUsed)?' <span class="pill wait" title="หยุดเวลา">⏸ '+s.pauseUsed+'/'+MAXATT+'</span>':'';
+      var prog='<div style="min-width:250px">'+xvPartPills(s)+'<span class="xatt">'+attTxt+'</span>'+pausedTag+'</div>';
       var scoreCell=(s.status==='in_progress')?'—':('<b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span>');
       var remain=(s.status==='in_progress')?fmtHMS(s.remaining):'—';
       var rtag=s.roundNo?'<div style="color:var(--muted);font-size:.74rem;font-weight:600">รอบครั้งที่ '+s.roundNo+'</div>':'';
-      return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+rtag+'</td>'
-        +'<td>'+prog+pausedTag+'</td>'
+      var pf=s.proctor||{}, flags=s.flags||0;
+      var warn=flags?(' <span title="ออกจากหน้าสอบ/สลับแท็บ '+((pf.leave||0)+(pf.blur||0))+' ครั้ง · พยายามแคปหน้าจอ '+(pf.printscreen||0)+' · คัดลอก '+(pf.copy||0)+' · คลิกขวา '+(pf.contextmenu||0)+'" style="display:inline-block;background:var(--bad-tint);color:var(--bad);font-weight:800;font-size:.7rem;border-radius:999px;padding:1px 8px;margin-left:6px;cursor:help">⚠ '+flags+'</span>'):'';
+      return '<tr'+(flags?' style="background:#FEF6F6"':'')+'><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+warn+rtag+'</td>'
+        +'<td>'+prog+'</td>'
         +'<td class="num">'+remain+'</td>'
         +'<td class="num">'+scoreCell+'</td>'
         +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td></tr>';
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผู้เข้าสอบในหมวดนี้</td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
-      +'<div class="etabs">'+seg('online','Online','สอบออนไลน์ · เปิดกล้อง')+seg('onsite','Offline (On-Site)','สอบที่ศูนย์ · หยุดเวลาได้')+'</div>'
-      +'<div class="kpis">'
-      +kpi('กำลังสอบ',String(doing),'var(--brand-tint)','var(--brand)')
-      +kpi('ต้องสอบซ่อม',String(rem),'var(--warn-tint)','var(--warn)')
-      +kpi('ยืนยันผ่านแล้ว',String(passed),'var(--good-tint)','var(--good)')
-      +kpi('รอทีมงานยืนยัน',String(waiting),'#EEF1F6','#6B7793')
-      +'</div>'
-      +'<div class="panel"><div class="ph"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><a class="link" href="#" onclick="go(\'exam-result\');return false">ไปหน้ายืนยันผล →</a></div>'
+      +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
+      +xvKstrip((function(){var tot=Math.max(1,list.length);return [
+        xvKpi('กำลังสอบ',String(doing),'#0A67D8','อัปเดตแบบเรียลไทม์',doing/tot*100,true),
+        xvKpi('ต้องสอบซ่อม',String(rem),'#E8A317','รอผู้สอบทำการสอบซ่อม',rem/tot*100),
+        xvKpi('ยืนยันผ่านแล้ว',String(passed),'#0E9F6E','ผ่านเกณฑ์ · ออกใบรับรอง',passed/tot*100),
+        xvKpi('รอทีมงานยืนยัน',String(waiting),'#7790B5','ข้อมูลครบ รอกดยืนยัน',waiting/tot*100)
+      ];})())
+      +(suspicious?'<div style="background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:12px;padding:11px 16px;margin-bottom:14px;font-weight:700;font-size:.86rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap">⚠ พบพฤติกรรมน่าสงสัย '+suspicious+' คน (ออกจากหน้าสอบ/สลับแท็บ หรือพยายามแคปหน้าจอ)<button onclick="EXAM_TRK_SUS='+(!EXAM_TRK_SUS)+';renderExamTracker()" style="margin-left:auto;border:1px solid '+(EXAM_TRK_SUS?'var(--bad)':'#FDA4A4')+';background:'+(EXAM_TRK_SUS?'var(--bad)':'#fff')+';color:'+(EXAM_TRK_SUS?'#fff':'var(--bad)')+';border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">'+(EXAM_TRK_SUS?'แสดงทั้งหมด':'ดูเฉพาะที่น่าสงสัย')+'</button></div>':'')
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ผู้เข้าสอบ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><input id="trkSearch" type="text" value="'+String(EXAM_TRK_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px"></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
-    gen.querySelectorAll('.etab').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
+    gen.querySelectorAll('.etab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
+    var tq=document.getElementById('trkSearch');if(tq)tq.addEventListener('input',function(){var pos=this.selectionStart;EXAM_TRK_Q=this.value;renderExamTracker();var el=document.getElementById('trkSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
   }
 
   /* ---------- 4) EXAM RESULT (+ staff verify) ---------- */
-  var EXAM_RES_ROUND='all';
+  var EXAM_RES_ROUND='all', EXAM_RES_PASS='all', EXAM_RES_Q='';
+  function xvMatch(s,q){if(!q)return true;q=q.toLowerCase().trim();var nm=(((s.candidate||{}).firstName||'')+' '+((s.candidate||{}).lastName||'')).toLowerCase();var ph=String((s.candidate||{}).phone||'').toLowerCase();var code=String(s.code||'').toLowerCase();return nm.indexOf(q)>=0||ph.indexOf(q)>=0||code.indexOf(q)>=0;}
+  var _passGroup={pass:['awaiting_verify','verified'],fail:['remedial_required','ended_failed']};
   function renderExamResult(){
     var all=EXAM_CACHE||[];
     // show finished sessions (not in-progress), newest first
@@ -890,8 +1052,16 @@
     var roundNos=[];finished.forEach(function(s){if(s.roundNo!=null&&roundNos.indexOf(s.roundNo)<0)roundNos.push(s.roundNo);});
     roundNos.sort(function(a,b){return b-a;});
     if(EXAM_RES_ROUND!=='all'&&roundNos.indexOf(parseInt(EXAM_RES_ROUND,10))<0)EXAM_RES_ROUND='all';
-    var list=EXAM_RES_ROUND==='all'?finished:finished.filter(function(s){return String(s.roundNo)===String(EXAM_RES_ROUND);});
-    var roundSel=roundNos.length?('<select id="resRound" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.84rem;color:var(--ink);background:#fff;cursor:pointer"><option value="all"'+(EXAM_RES_ROUND==='all'?' selected':'')+'>ทุกรอบ</option>'+roundNos.map(function(n){return '<option value="'+n+'"'+(String(EXAM_RES_ROUND)===String(n)?' selected':'')+'>รอบครั้งที่ '+n+'</option>';}).join('')+'</select>'):'';
+    var list=finished.filter(function(s){
+      if(EXAM_RES_ROUND!=='all'&&String(s.roundNo)!==String(EXAM_RES_ROUND))return false;
+      if(EXAM_RES_PASS!=='all'&&_passGroup[EXAM_RES_PASS].indexOf(s.status)<0)return false;
+      if(!xvMatch(s,EXAM_RES_Q))return false;
+      return true;
+    });
+    var selCss='border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.84rem;color:var(--ink);background:#fff;cursor:pointer';
+    var roundSel=roundNos.length?('<select id="resRound" style="'+selCss+'"><option value="all"'+(EXAM_RES_ROUND==='all'?' selected':'')+'>ทุกรอบ</option>'+roundNos.map(function(n){return '<option value="'+n+'"'+(String(EXAM_RES_ROUND)===String(n)?' selected':'')+'>รอบครั้งที่ '+n+'</option>';}).join('')+'</select>'):'';
+    var passSel='<select id="resPass" style="'+selCss+'"><option value="all"'+(EXAM_RES_PASS==='all'?' selected':'')+'>ทุกเกณฑ์</option><option value="pass"'+(EXAM_RES_PASS==='pass'?' selected':'')+'>ผ่านเกณฑ์</option><option value="fail"'+(EXAM_RES_PASS==='fail'?' selected':'')+'>ไม่ผ่านเกณฑ์</option></select>';
+    var searchBox='<input id="resSearch" type="text" value="'+String(EXAM_RES_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px">';
     var awaiting=list.filter(function(s){return s.status==='awaiting_verify';}).length;
     var partCell=function(s){
       var res=(s.results||[]).slice().sort(function(a,b){return a.part-b.part;});
@@ -913,22 +1083,24 @@
         action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
       }
       return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b><div style="color:var(--muted);font-size:.76rem">'+(s.candidate.mode==='onsite'?'ที่ศูนย์':'ออนไลน์')+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
-        +'<td>'+partCell(s)+'</td>'
+        +'<td>'+xvPartPills(s)+'</td>'
         +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
         +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
         +'<td>'+action+'</td></tr>';
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ตรวจเสร็จ</td></tr>';
     gen.innerHTML=xvHead('ผลการสอบ · Exam Result','ผลสอบ คะแนนรายพาร์ท และการยืนยันผลเพื่อออกใบรับรอง X-Visor')
-      +'<div class="kpis">'
-      +kpi('ผลสอบทั้งหมด',String(list.length),'var(--brand-tint)','var(--brand)')
-      +kpi('รอยืนยัน',String(awaiting),'#EEF1F6','#6B7793')
-      +kpi('ยืนยันผ่านแล้ว',String(list.filter(function(s){return s.status==='verified';}).length),'var(--good-tint)','var(--good)')
-      +kpi('ไม่ผ่าน',String(list.filter(function(s){return s.status==='ended_failed';}).length),'var(--bad-tint)','var(--bad)')
-      +'</div>'
+      +xvKstrip((function(){var tot=Math.max(1,list.length);var vf=list.filter(function(s){return s.status==='verified';}).length;var ef=list.filter(function(s){return s.status==='ended_failed';}).length;return [
+        xvKpi('ผลสอบทั้งหมด',String(list.length),'#0A67D8','ที่ตรวจเสร็จแล้ว',100,true),
+        xvKpi('รอยืนยัน',String(awaiting),'#7790B5','รอทีมงานกดยืนยัน',awaiting/tot*100),
+        xvKpi('ยืนยันผ่านแล้ว',String(vf),'#0E9F6E','ออกใบรับรองแล้ว',vf/tot*100),
+        xvKpi('ไม่ผ่าน',String(ef),'#E5484D','ครบ '+MAXATT+' ครั้ง',ef/tot*100)
+      ];})())
       +(awaiting?'<div style="background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:var(--brand-ink);font-size:.86rem">มีผลสอบ '+awaiting+' รายการที่ตรวจเสร็จแล้ว รอทีมงานกดยืนยันเพื่อปล่อยผลให้ผู้สอบ</div>':'')
-      +'<div class="panel"><div class="ph"><h3>ผลการสอบ <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px">'+roundSel+'<a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ผลการสอบ <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+passSel+roundSel+'<a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     var rsel=document.getElementById('resRound');if(rsel)rsel.addEventListener('change',function(){EXAM_RES_ROUND=rsel.value;renderExamResult();});
+    var psel=document.getElementById('resPass');if(psel)psel.addEventListener('change',function(){EXAM_RES_PASS=psel.value;renderExamResult();});
+    var qbox=document.getElementById('resSearch');if(qbox)qbox.addEventListener('input',function(){var pos=this.selectionStart;EXAM_RES_Q=this.value;renderExamResult();var el=document.getElementById('resSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
     gen.querySelectorAll('.xv-verify').forEach(function(b){
       b.addEventListener('click',function(){
         var id=b.getAttribute('data-id'), nm=b.getAttribute('data-name');
@@ -1231,9 +1403,11 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
 
   function go(v){
     var isOv=(v==='overview');
+    var isExam=(v==='exam-overview'||v==='exam-session'||v==='exam-tracker'||v==='exam-result');
+    if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='exam-overview'||v==='exam-session'||v==='exam-tracker'||v==='exam-result')examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)

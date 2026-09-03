@@ -99,6 +99,21 @@ module.exports = function (app, DATA) {
     writeS(all); res.json({ ok: true });
   });
 
+  // proctor: record anti-cheat behaviour events during the exam
+  const PROC_TYPES = ['leave', 'blur', 'printscreen', 'copy', 'contextmenu'];
+  app.post('/api/xv/proctor', (req, res) => {
+    const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
+    if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
+    const type = PROC_TYPES.indexOf(b.type) >= 0 ? b.type : null;
+    if (!type) return res.status(400).json({ ok: false, error: 'bad_type' });
+    s.proctor = s.proctor || { leave: 0, blur: 0, printscreen: 0, copy: 0, contextmenu: 0, events: [] };
+    s.proctor[type] = (s.proctor[type] || 0) + 1;
+    s.proctor.events = s.proctor.events || [];
+    s.proctor.events.push({ type, at: Date.now() });
+    if (s.proctor.events.length > 60) s.proctor.events = s.proctor.events.slice(-60);
+    writeS(all); res.json({ ok: true });
+  });
+
   app.post('/api/xv/submit', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
@@ -161,7 +176,9 @@ module.exports = function (app, DATA) {
         id: s.id, code: s.code, candidate: s.candidate, phase: s.phase, status: s.status,
         roundId: s.roundId || null, roundNo: s.roundNo || null,
         results: pubResults(s), total: s.results.reduce((a, r) => a + (r.score || 0), 0),
-        pauseUsed: s.pauseUsed, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining
+        pauseUsed: s.pauseUsed, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining,
+        proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0 } : null,
+        flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0)) : 0
       }))
     });
   });
@@ -256,7 +273,24 @@ module.exports = function (app, DATA) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const b = req.body || {}; const data = b.bank ? b : { names: {}, bank: b.questions || b };
     if (!data.bank || Object.keys(data.bank).length < 1) return res.status(400).json({ ok: false, error: 'expected {names,bank}' });
-    wr(QF, data); res.json({ ok: true, parts: Object.keys(data.bank).length });
+    // validate structure so a bad import can't corrupt the exam
+    const errs = [];
+    Object.keys(data.bank).forEach(p => {
+      const arr = data.bank[p];
+      if (!Array.isArray(arr) || !arr.length) { errs.push('part ' + p + ' empty'); return; }
+      arr.forEach((it, i) => {
+        if (!it || typeof it.q !== 'string' || !it.q.trim()) errs.push('part ' + p + ' q' + (i + 1) + ': missing question');
+        else if (!Array.isArray(it.o) || it.o.length !== 4 || it.o.some(o => typeof o !== 'string' || !o.trim())) errs.push('part ' + p + ' q' + (i + 1) + ': need 4 options');
+        else if (!(Number.isInteger(it.c) && it.c >= 0 && it.c < 4)) errs.push('part ' + p + ' q' + (i + 1) + ': bad answer index');
+      });
+    });
+    if (errs.length) return res.status(400).json({ ok: false, error: 'invalid_bank', details: errs.slice(0, 10) });
+    // keep only q/o/c per item; clamp names to strings
+    const clean = { names: {}, bank: {} };
+    Object.keys(data.names || {}).forEach(p => { clean.names[p] = String(data.names[p]).slice(0, 120); });
+    Object.keys(data.bank).forEach(p => { clean.bank[p] = data.bank[p].map(it => ({ q: String(it.q), o: it.o.map(String), c: it.c | 0 })); });
+    wr(QF, clean);
+    res.json({ ok: true, parts: Object.keys(clean.bank).length, questions: Object.keys(clean.bank).reduce((a, p) => a + clean.bank[p].length, 0) });
   });
 
   app.get('/api/xv/admin/questions', (req, res) => {

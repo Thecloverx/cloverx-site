@@ -754,6 +754,28 @@ document.getElementById('demoNext').onclick=()=>{const order=['registration','ac
  let i=order.indexOf(S.phase);i=(i+1)%order.length;S.phase=order[i];if(S.phase==='active_exam'&&!S.session){S.session=freshSession('first');}render();};
 
 if(DEMO){document.getElementById('demobar').style.display='';}
+/* ---------- proctor: บันทึกพฤติกรรมระหว่างสอบ (best-effort) ---------- */
+(function proctorInit(){
+  var last={};
+  var examing=function(){return S&&S.phase==='active_exam';};
+  function report(type){
+    if(!examing())return;
+    var now=Date.now(); if(last[type]&&now-last[type]<800)return; last[type]=now;
+    if(S.api&&S.api.on){try{fetch('/api/xv/proctor',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:S.api.id,token:S.api.token,type:type})});}catch(e){}}
+    if(type==='leave'||type==='blur')toast('⚠ ระบบบันทึกการออกจากหน้าสอบ');
+    else if(type==='printscreen')toast('⚠ ระบบบันทึกการพยายามแคปหน้าจอ');
+  }
+  document.addEventListener('visibilitychange',function(){if(document.hidden)report('leave');});
+  window.addEventListener('blur',function(){if(!document.hidden)report('blur');});
+  window.addEventListener('keyup',function(e){if(e.key==='PrintScreen')report('printscreen');});
+  window.addEventListener('keydown',function(e){
+    if(e.key==='PrintScreen'){report('printscreen');return;}
+    var k=(e.key||'').toLowerCase();
+    if((e.metaKey||e.ctrlKey)&&e.shiftKey&&(k==='s'||k==='3'||k==='4'||k==='5'))report('printscreen');
+  });
+  document.addEventListener('copy',function(){report('copy');});
+  document.addEventListener('contextmenu',function(e){if(examing()){e.preventDefault();report('contextmenu');}});
+})();
 initState();render();resolveRound();
 </script>
 </body>
