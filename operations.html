@@ -343,13 +343,24 @@
         </div>
       </div>
 
-      <!-- Exam -->
+      <!-- Registration -->
+      <div class="group" id="g-reg">
+        <button class="item ghead" data-toggle="g-reg"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4M9 3v4h6V3M8 12h8M8 16h5"/></svg><span class="lbl">Registration</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="reg-overview"><span class="dot"></span><span class="lbl">Registration Overview</span></button>
+          <button class="item" data-view="reg-schedules"><span class="dot"></span><span class="lbl">Exam Schedules</span></button>
+          <button class="item" data-view="reg-people"><span class="dot"></span><span class="lbl">Registrants</span></button>
+          <button class="item" data-view="reg-payments"><span class="dot"></span><span class="lbl">Payment Verification</span></button>
+          <button class="item" data-view="reg-history"><span class="dot"></span><span class="lbl">Registration History</span></button>
+        </div>
+      </div>
+
+      <!-- Exam Management -->
       <div class="group" id="g-exam">
-        <button class="item ghead" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">Exam</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="item ghead" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">Exam Management</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
           <button class="item" data-view="exam-overview"><span class="dot"></span><span class="lbl">Exam Overview</span></button>
           <button class="item" data-view="exam-session"><span class="dot"></span><span class="lbl">Exam Session</span></button>
-          <button class="item" data-view="exam-register"><span class="dot"></span><span class="lbl">Registrations</span></button>
           <button class="item" data-view="exam-tracker"><span class="dot"></span><span class="lbl">Exam Tracker</span></button>
           <button class="item" data-view="exam-result"><span class="dot"></span><span class="lbl">Exam Result</span></button>
         </div>
@@ -492,9 +503,13 @@
     podash:{t:'Dashboard',th:'แดชบอร์ด',d:'เลือกหัวข้อแดชบอร์ดจากฟิลเตอร์ด้านบน',kind:'dash'},
     cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
     activity:{t:'Activity Dashboard',th:'แดชบอร์ดกิจกรรม X-Visor',d:'ติดตามกิจกรรมและความเคลื่อนไหวของทีม X-Visor',kind:'dash'},
+    'reg-overview':{t:'Registration Overview',th:'ภาพรวมการลงทะเบียน',d:'สรุปผู้สมัคร ที่นั่ง และรายการที่ต้องดำเนินการ',kind:'plain'},
+    'reg-schedules':{t:'Exam Schedules',th:'รอบสอบ',d:'สร้าง/แก้/เปิด-ปิดรอบสอบ และดูที่นั่งคงเหลือ',kind:'plain'},
+    'reg-people':{t:'Registrants',th:'ผู้ลงทะเบียน',d:'รายชื่อผู้สมัคร จัดการ เช็กอิน คืนเงิน ยกเลิก',kind:'plain'},
+    'reg-payments':{t:'Payment Verification',th:'ตรวจสอบการชำระเงิน',d:'คิวตรวจสลิป (EasySlip) และการชำระเงิน',kind:'plain'},
+    'reg-history':{t:'Registration History',th:'ประวัติการลงทะเบียน',d:'รอบที่ปิด/จบแล้ว — ค้นหาและดูย้อนหลัง',kind:'plain'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
     'exam-session':{t:'Exam Session',th:'รอบการสอบ',d:'จัดการรอบสอบ ตารางสอบ และผู้เข้าสอบ',kind:'plain'},
-    'exam-register':{t:'Registrations',th:'ผู้สมัครสอบ',d:'รายชื่อผู้สมัคร ตรวจสลิป (EasySlip) และเช็กอิน',kind:'plain'},
     'exam-tracker':{t:'Exam Tracker',th:'ติดตามการสอบ',d:'ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ',kind:'dash'},
     'exam-result':{t:'Exam Result',th:'ผลการสอบ',d:'ผลสอบ คะแนน และการออกใบรับรอง',kind:'dash'},
     customers:{t:'Customers',th:'ลูกค้า',d:'ฐานข้อมูลลูกค้าและประวัติการสั่งซื้อ',kind:'plain'},
@@ -681,7 +696,11 @@
     gen.classList.add('xv');
     if(v==='exam-overview')renderExamOverview();
     else if(v==='exam-session')renderExamSession();
-    else if(v==='exam-register')renderExamRegister();
+    else if(v==='reg-overview'){REG_MAINTAB='overview';renderExamRegister();}
+    else if(v==='reg-schedules'){REG_MAINTAB='schedules';renderExamRegister();}
+    else if(v==='reg-people'){REG_MAINTAB='people';renderExamRegister();}
+    else if(v==='reg-payments'){REG_MAINTAB='payments';renderExamRegister();}
+    else if(v==='reg-history'){REG_MAINTAB='history';renderExamRegister();}
     else if(v==='exam-tracker')renderExamTracker();
     else if(v==='exam-result')renderExamResult();
   }
@@ -773,7 +792,7 @@
       if(j&&j.ok&&Array.isArray(j.rounds)){EXAM_ROUNDS=j.rounds;EXAM_LIVE=true;}else{EXAM_ROUNDS=roundsDemo();EXAM_LIVE=false;}cb();
     }).catch(function(){EXAM_ROUNDS=roundsDemo();EXAM_LIVE=false;cb();});
   }
-  function roundsRefresh(){fetchRounds(function(){ if(EXAM_VIEW==='exam-register'){ fetchRegs(paintRegister); } else { paintSession(); } });}
+  function roundsRefresh(){fetchRounds(function(){ if(EXAM_VIEW.indexOf('reg-')===0){ fetchRegs(paintRegister); } else { paintSession(); } });}
 
   function renderExamSession(){
     gen.innerHTML=xvSpinner('กำลังโหลดรอบสอบ…');
@@ -820,7 +839,7 @@
         xvKpi('รอยืนยันรวม',String(totalA),'#7790B5','ตรวจแล้ว รอกดยืนยัน',totalC?totalA/totalC*100:10)
       ])
       +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>รอบสอบ (Exam Rounds)</h3>'
-        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><a class="link" href="#" onclick="go(\'exam-register\');return false">ดูผู้สมัคร →</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
+        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><a class="link" href="#" onclick="go(\'reg-people\');return false">ดูผู้สมัคร →</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
         +'<div style="overflow-x:auto"><table><thead><tr><th>วันที่สอบ</th><th>Topic</th><th>ครั้งที่</th><th>ผู้เข้าสอบ</th><th>สถานะ</th><th style="text-align:right">จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
         +(EXAM_LIVE?'':'<p style="color:var(--muted);font-size:.8rem;margin-top:10px">* ตัวอย่าง — ใส่ Admin Key เพื่อจัดการรอบสอบจริง</p>')
       +'</div>'
@@ -1272,20 +1291,27 @@
   }
   function paintRegister(){
     var all=REG_CACHE||[], rounds=EXAM_ROUNDS||[];
+    var H={
+      overview:['ภาพรวมการลงทะเบียน · Overview','สรุปผู้สมัคร ที่นั่ง และรายการที่ต้องดำเนินการ'],
+      schedules:['รอบสอบ · Exam Schedules','สร้าง/แก้/เปิด-ปิดรอบ · ที่นั่งนับเฉพาะคนชำระเงินยืนยันแล้ว'],
+      people:['ผู้ลงทะเบียน · Registrants','จัดการผู้สมัคร เช็กอิน คืนเงิน ยกเลิก แยก Online / On-Site'],
+      payments:['ตรวจสอบการชำระเงิน · Payment Verification','คิวตรวจสลิป (EasySlip) — ยอดตรงระบบยืนยันเอง'],
+      history:['ประวัติการลงทะเบียน · History','รอบที่ปิด/จบแล้ว — ข้อมูลไม่ถูกลบ']
+    };
     var body;
     if(REG_MAINTAB==='schedules')body=regTabSchedules(all,rounds);
     else if(REG_MAINTAB==='people')body=regTabPeople(all,'all');
     else if(REG_MAINTAB==='payments')body=regTabPeople(all,'payments');
     else if(REG_MAINTAB==='history')body=regTabHistory(all,rounds);
     else body=regTabOverview(all,rounds);
-    gen.innerHTML=xvHead('ระบบลงทะเบียนสอบ · Registration','สร้างรอบ · เปิดรับสมัคร · ตรวจสลิปอัตโนมัติ (EasySlip) · จัดการผู้สมัคร แยก Online / On-Site')+regMainTabs()+body;
-    gen.querySelectorAll('.rmtab').forEach(function(b){b.addEventListener('click',function(){REG_MAINTAB=b.getAttribute('data-mt');paintRegister();});});
+    var h=H[REG_MAINTAB]||H.overview;
+    gen.innerHTML=xvHead(h[0],h[1])+body;
     regWireTabEvents();
   }
   function regWireTabEvents(){
     gen.querySelectorAll('.rtab-sm').forEach(function(b){b.addEventListener('click',function(){REG_TAB=b.getAttribute('data-rt');paintRegister();});});
     var q2=document.getElementById('regSearch');if(q2)q2.addEventListener('input',function(){var pos=this.selectionStart;REG_Q=this.value;paintRegister();var el=document.getElementById('regSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
-    gen.querySelectorAll('[data-goto]').forEach(function(b){b.addEventListener('click',function(){REG_MAINTAB=b.getAttribute('data-goto');var rt=b.getAttribute('data-rt2');if(rt)REG_TAB=rt;paintRegister();});});
+    gen.querySelectorAll('[data-goto]').forEach(function(b){b.addEventListener('click',function(){go('reg-'+b.getAttribute('data-goto'));});});
   }
   // ---- registrant row (shared by ผู้ลงทะเบียน + ตรวจสอบการชำระเงิน) ----
   function regRowHtml(r,onsite){
@@ -1454,7 +1480,7 @@
   var OPS_KEY=(function(){try{return sessionStorage.getItem('opsKey')||'';}catch(e){return '';}})();
   var OPS_KEY_ASKED=false;
   function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
-  function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}var act=document.querySelector('#nav .item[data-view].active');var av=act?act.getAttribute('data-view'):'';if(av&&av.indexOf('exam-')===0){EXAM_QINFO=null;examRefresh();}else{poRefresh();}}}catch(e){}}
+  function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}var act=document.querySelector('#nav .item[data-view].active');var av=act?act.getAttribute('data-view'):'';if(av&&(av.indexOf('exam-')===0||av.indexOf('reg-')===0)){EXAM_QINFO=null;examRefresh();}else{poRefresh();}}}catch(e){}}
   function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
   // "ต้องตรวจสอบ" = pending ที่ต้องให้เจ้าหน้าที่ตรวจ (โอนธนาคาร) — ไม่รวมบัตรที่ลูกค้ายังไม่จ่าย
@@ -1724,7 +1750,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
 
   function go(v){
     var isOv=(v==='overview');
-    var isExam=(v==='exam-overview'||v==='exam-session'||v==='exam-register'||v==='exam-tracker'||v==='exam-result');
+    var isExam=(v.indexOf('exam-')===0||v.indexOf('reg-')===0);
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
