@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
 
 module.exports = function (app, DATA) {
   const XV = path.join(DATA, 'xvisor');
@@ -10,6 +11,9 @@ module.exports = function (app, DATA) {
   const QF_ROOT = path.join(DATA, '..', 'xvisor_questions.json'); // repo-root fallback (flat deploy)
   const SF = path.join(XV, 'sessions.json');
   const RF = path.join(XV, 'rounds.json');
+  const REGF = path.join(XV, 'registrations.json');
+  const REGUP = path.join(XV, 'reguploads'); // slip / id-card images
+  if (!fs.existsSync(REGUP)) { try { fs.mkdirSync(REGUP, { recursive: true }); } catch (e) {} }
 
   const rd = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
   const wr = (f, d) => fs.writeFileSync(f, JSON.stringify(d, null, 2));
@@ -26,7 +30,88 @@ module.exports = function (app, DATA) {
   const findRByCode = (code) => readR().find(x => String(x.code).toUpperCase() === String(code || '').toUpperCase());
   const roundCode = () => 'R' + crypto.randomBytes(3).toString('hex').toUpperCase(); // e.g. R7F3A9C
   const nextRoundNo = () => { const rs = readR(); return rs.length ? Math.max.apply(null, rs.map(r => r.no || 0)) + 1 : 1; };
-  const pubRound = (r) => ({ id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt });
+  const readReg = () => rd(REGF, []);
+  const writeReg = (x) => wr(REGF, x);
+  // registration number: RG + yymmdd + 4-run — human-readable, unique enough
+  const nextRegNo = () => {
+    const d = new Date(); const p = n => (n < 10 ? '0' : '') + n;
+    const base = 'RG' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate());
+    const today = readReg().filter(r => (r.regNo || '').indexOf(base) === 0).length;
+    return base + p((today + 1) > 99 ? (today + 1) : (today + 1)).toString().padStart(3, '0');
+  };
+  const roundSeats = (r) => {
+    const cap = parseInt(r.capacity, 10) || 0; // 0 = unlimited
+    const used = readReg().filter(x => x.roundId === r.id && x.status !== 'CANCELLED' && x.status !== 'REJECTED').length;
+    return { capacity: cap, used, left: cap > 0 ? Math.max(0, cap - used) : null, full: cap > 0 && used >= cap };
+  };
+  const pubRound = (r) => Object.assign({
+    id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt,
+    mode: r.mode || 'online', fee: r.fee != null ? r.fee : 500, capacity: parseInt(r.capacity, 10) || 0,
+    venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || ''
+  }, roundSeats(r));
+  // save a data-url image to disk, return its public path (or '' if none/invalid)
+  const saveRegImage = (dataUrl, tag) => {
+    if (!dataUrl || typeof dataUrl !== 'string') return '';
+    const m = dataUrl.match(/^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!m) return '';
+    const ext = m[1] === 'jpeg' ? 'jpg' : m[1];
+    const buf = Buffer.from(m[2], 'base64');
+    if (buf.length > 6 * 1024 * 1024) return 'TOO_BIG';
+    const fn = tag + '_' + crypto.randomBytes(8).toString('hex') + '.' + ext;
+    try { fs.writeFileSync(path.join(REGUP, fn), buf); } catch (e) { return ''; }
+    return '/api/xv/reg/file/' + fn;
+  };
+
+  /* ---- EasySlip auto-verification for registration payments (opt-in via EASYSLIP_API_KEY) ---- */
+  const esDigits = (x) => String(x == null ? '' : x).replace(/[^0-9]/g, '');
+  const esConfigured = () => !!process.env.EASYSLIP_API_KEY;
+  function esVerify(base64raw) {
+    return new Promise((resolve) => {
+      if (!esConfigured()) { resolve({ ok: false, error: 'not_configured' }); return; }
+      const urlStr = process.env.EASYSLIP_VERIFY_URL || 'https://developer.easyslip.com/api/v1/verify';
+      let u; try { u = new URL(urlStr); } catch (e) { resolve({ ok: false, error: 'bad_url' }); return; }
+      const body = JSON.stringify({ image: base64raw });
+      const rq = https.request({ hostname: u.hostname, path: u.pathname + (u.search || ''), method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + process.env.EASYSLIP_API_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
+        (resp) => { let b = ''; resp.on('data', d => b += d); resp.on('end', () => { try { resolve({ ok: resp.statusCode >= 200 && resp.statusCode < 300, http: resp.statusCode, body: JSON.parse(b) }); } catch (e) { resolve({ ok: false, error: 'parse', http: resp.statusCode }); } }); });
+      rq.on('error', e => resolve({ ok: false, error: e.message }));
+      rq.setTimeout(15000, () => { rq.destroy(); resolve({ ok: false, error: 'timeout' }); });
+      rq.write(body); rq.end();
+    });
+  }
+  function esExtract(j) {
+    const d = (j && j.data) ? j.data : j; if (!d) return null;
+    let amount = null;
+    if (d.amount != null) amount = (typeof d.amount === 'object') ? Number(d.amount.amount != null ? d.amount.amount : (d.amount.local && d.amount.local.amount)) : Number(d.amount);
+    const recv = d.receiver || {}, acc = recv.account || {};
+    let recvName = ''; if (acc.name) recvName = acc.name.th || acc.name.en || (typeof acc.name === 'string' ? acc.name : '');
+    const recvNum = (acc.bank && acc.bank.account) || acc.account || acc.number || (recv.bank && recv.bank.account) || '';
+    const ref = d.transRef || d.transactionId || d.transaction_id || d.ref1 || d.payload || '';
+    return { amount, recvName: String(recvName || ''), recvNum: String(recvNum || ''), ref: String(ref || '') };
+  }
+  // verify a registration's slip; auto-confirm when amount + (account or name) match and not duplicate
+  function autoVerifyReg(regId, base64raw) {
+    esVerify(base64raw).then((r) => {
+      const all = readReg(); const x = all.find(y => y.id === regId); if (!x) return;
+      x.easyslip = { at: Date.now(), ok: r.ok, http: r.http || null };
+      if (!r.ok || !r.body) { x.easyslip.result = 'error'; x.easyslip.error = r.error || ('http ' + r.http); writeReg(all); return; }
+      const sD = esExtract(r.body); if (!sD) { x.easyslip.result = 'no_data'; writeReg(all); return; }
+      x.easyslip.amount = sD.amount; x.easyslip.recvName = sD.recvName; x.easyslip.recvNum = sD.recvNum; x.easyslip.ref = sD.ref;
+      const fee = Number((x.payment && x.payment.fee) || 0);
+      const amtOk = (sD.amount != null && !isNaN(sD.amount)) && Math.abs(sD.amount - fee) < 1;
+      const want = esDigits(process.env.EASYSLIP_RECV_ACCOUNT || '2311711191'); const last4 = want.slice(-4); const recvDigits = esDigits(sD.recvNum);
+      const acctOk = !!(recvDigits && recvDigits.length >= 4 && want && (want.indexOf(recvDigits) >= 0 || recvDigits.indexOf(last4) >= 0));
+      const esNorm = s => String(s || '').replace(/[\s().\-]/g, '').replace(/[​‎‏ ]/g, '').normalize('NFC');
+      const rn = esNorm(sD.recvName); const nk = esNorm(process.env.EASYSLIP_RECV_NAME || 'โคลเวอร์เอ็กซ์'); const core = esNorm(process.env.EASYSLIP_RECV_NAMECORE || 'โคลเวอร์');
+      const nameOk = !!(rn && ((nk && (rn.indexOf(nk) >= 0 || nk.indexOf(rn) >= 0)) || (core && rn.indexOf(core) >= 0)));
+      const dup = !!(sD.ref && all.some(y => y.id !== x.id && y.easyslip && y.easyslip.ref && y.easyslip.ref === sD.ref));
+      x.easyslip.amtOk = amtOk; x.easyslip.acctOk = acctOk; x.easyslip.nameOk = nameOk; x.easyslip.dup = dup;
+      const pass = amtOk && (acctOk || nameOk) && !dup;
+      if (pass && process.env.EASYSLIP_AUTOCONFIRM !== '0') { x.status = 'CONFIRMED'; x.confirmedAt = Date.now(); x.easyslip.result = 'confirmed'; }
+      else x.easyslip.result = pass ? 'verified' : (dup ? 'duplicate' : 'mismatch');
+      writeReg(all);
+    }).catch(() => {});
+  }
 
   const PARTS = [1, 2, 3, 4, 5], QPP = 20, PASS = 16, MAXATT = 3, TOTAL = 120 * 60; // MAXATT = total attempts/part (1 first + 2 remedial)
   // Exam admin endpoints are open (no Admin Key) — per CloverX request. Keep the operations URL private.
@@ -250,6 +335,12 @@ module.exports = function (app, DATA) {
       date: String(b.date || new Date().toISOString().slice(0, 10)).slice(0, 10),
       topic: String(b.topic || 'Certification').slice(0, 80),
       status: b.status === 'open' ? 'open' : 'closed',
+      mode: b.mode === 'onsite' ? 'onsite' : 'online',
+      fee: b.fee != null && b.fee !== '' ? (parseInt(b.fee, 10) || 0) : 500,
+      capacity: parseInt(b.capacity, 10) || 0,
+      venue: String(b.venue || '').slice(0, 200),
+      timeslot: String(b.timeslot || '').slice(0, 60),
+      regCloseAt: String(b.regCloseAt || '').slice(0, 10),
       createdAt: Date.now()
     };
     const all = readR(); all.push(r); writeR(all);
@@ -265,6 +356,12 @@ module.exports = function (app, DATA) {
     if (b.no != null && b.no !== '') r.no = parseInt(b.no, 10) || r.no;
     if (b.topic != null) r.topic = String(b.topic).slice(0, 80);
     if (b.status === 'open' || b.status === 'closed') r.status = b.status;
+    if (b.mode === 'online' || b.mode === 'onsite') r.mode = b.mode;
+    if (b.fee != null && b.fee !== '') r.fee = parseInt(b.fee, 10) || 0;
+    if (b.capacity != null && b.capacity !== '') r.capacity = parseInt(b.capacity, 10) || 0;
+    if (b.venue != null) r.venue = String(b.venue).slice(0, 200);
+    if (b.timeslot != null) r.timeslot = String(b.timeslot).slice(0, 60);
+    if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
     writeR(all); res.json({ ok: true, round: pubRound(r) });
   });
 
@@ -290,6 +387,149 @@ module.exports = function (app, DATA) {
     const all = readR(); const i = all.findIndex(x => x.id === req.params.id); if (i < 0) return res.status(404).json({ ok: false });
     all.splice(i, 1); writeR(all);
     res.json({ ok: true });
+  });
+
+  /* ---------------- REGISTRATION (public + admin) ---------------- */
+  const REG_STATUS = ['DRAFT', 'PENDING_PAYMENT', 'PAYMENT_REVIEW', 'CONFIRMED', 'WAITLISTED', 'CANCELLED', 'REJECTED', 'CHECKED_IN', 'NO_SHOW', 'EXAM_STARTED', 'COMPLETED', 'REFUNDED', 'PARTIALLY_REFUNDED'];
+  const regOpenForReg = (r) => {
+    if (r.status !== 'open') return false;
+    if (r.regCloseAt) { const today = new Date().toISOString().slice(0, 10); if (today > r.regCloseAt) return false; }
+    return true;
+  };
+  // public: rounds available to register for (optionally filtered by mode)
+  app.get('/api/xv/reg/rounds', (req, res) => {
+    const mode = req.query.mode === 'onsite' ? 'onsite' : (req.query.mode === 'online' ? 'online' : null);
+    const list = readR().filter(r => regOpenForReg(r) && (!mode || (r.mode || 'online') === mode))
+      .map(pubRound).sort((a, b) => (a.date < b.date ? -1 : 1));
+    res.json({ ok: true, rounds: list });
+  });
+  // serve an uploaded slip / id-card image
+  app.get('/api/xv/reg/file/:fn', (req, res) => {
+    const fn = path.basename(String(req.params.fn));
+    const p = path.join(REGUP, fn);
+    if (!fs.existsSync(p)) return res.status(404).end();
+    res.sendFile(p);
+  });
+  // public: create a registration
+  app.post('/api/xv/register', (req, res) => {
+    const b = req.body || {};
+    const need = ['nationalId', 'firstName', 'lastName', 'phone', 'email', 'roundId'];
+    for (const k of need) if (!b[k] || !String(b[k]).trim()) return res.status(400).json({ ok: false, error: 'missing_' + k });
+    if (!/^\d{13}$/.test(String(b.nationalId).replace(/\D/g, ''))) return res.status(400).json({ ok: false, error: 'bad_national_id' });
+    if (!b.consentTerms || !b.consentPdpa) return res.status(400).json({ ok: false, error: 'consent_required' });
+    const round = findR(b.roundId);
+    if (!round) return res.status(404).json({ ok: false, error: 'round_not_found' });
+    if (!regOpenForReg(round)) return res.status(403).json({ ok: false, error: 'round_closed' });
+    const nid = String(b.nationalId).replace(/\D/g, '');
+    const all = readReg();
+    // duplicate guard: same person + round, not cancelled
+    if (all.some(x => x.candidate && x.candidate.nationalId === nid && x.roundId === round.id && x.status !== 'CANCELLED' && x.status !== 'REJECTED'))
+      return res.status(409).json({ ok: false, error: 'already_registered' });
+    // capacity guard (re-read fresh)
+    const seats = roundSeats(round);
+    if (seats.full) {
+      if (!round.waitlist) return res.status(409).json({ ok: false, error: 'round_full' });
+    }
+    const slipUrl = saveRegImage(b.slipImage, 'slip');
+    const idCardUrl = saveRegImage(b.idCardImage, 'idcard');
+    if (slipUrl === 'TOO_BIG' || idCardUrl === 'TOO_BIG') return res.status(400).json({ ok: false, error: 'image_too_big' });
+    const hasSlip = !!slipUrl;
+    const reg = {
+      id: genId(), regNo: nextRegNo(), createdAt: Date.now(),
+      roundId: round.id, roundNo: round.no, roundCode: round.code, mode: round.mode || 'online',
+      candidate: {
+        nationalId: nid, firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60),
+        phone: String(b.phone).slice(0, 30), email: String(b.email).slice(0, 120)
+      },
+      taxEmail: String(b.taxEmail || b.email || '').slice(0, 120),
+      address: {
+        line1: String(b.addrLine1 || '').slice(0, 200), subdistrict: String(b.subdistrict || '').slice(0, 80),
+        district: String(b.district || '').slice(0, 80), province: String(b.province || '').slice(0, 80), postal: String(b.postal || '').slice(0, 10)
+      },
+      coachTeam: String(b.coachTeam || '').slice(0, 80),
+      referrer: String(b.referrer || '').slice(0, 80),
+      country: String(b.country || 'ประเทศไทย').slice(0, 60),
+      usStateCity: String(b.usStateCity || '').slice(0, 80),
+      payment: { transferDate: String(b.transferDate || '').slice(0, 10), transferTime: String(b.transferTime || '').slice(0, 20), slipUrl: slipUrl || '', fee: round.fee != null ? round.fee : 500 },
+      idCardUrl: idCardUrl || '',
+      consentTerms: true, consentPdpa: true,
+      status: seats.full && round.waitlist ? 'WAITLISTED' : (hasSlip ? 'PAYMENT_REVIEW' : 'PENDING_PAYMENT')
+    };
+    all.push(reg); writeReg(all);
+    // fire EasySlip auto-verification (async) if a slip was attached and EasySlip is configured
+    if (esConfigured() && b.slipImage) {
+      const m = String(b.slipImage).match(/^data:image\/[^;]+;base64,(.+)$/);
+      if (m) { try { autoVerifyReg(reg.id, m[1]); } catch (e) {} }
+    }
+    res.json({ ok: true, regNo: reg.regNo, id: reg.id, status: reg.status, mode: reg.mode, round: { no: round.no, date: round.date, mode: round.mode, venue: round.venue, timeslot: round.timeslot } });
+  });
+  // admin: re-run EasySlip verification on a registration's saved slip
+  app.post('/api/xv/admin/registrations/:id/reverify', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const r = readReg().find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
+    if (!esConfigured()) return res.status(400).json({ ok: false, error: 'easyslip_not_configured' });
+    const url = r.payment && r.payment.slipUrl; if (!url) return res.status(400).json({ ok: false, error: 'no_slip' });
+    const fn = path.basename(String(url)); const p = path.join(REGUP, fn);
+    fs.readFile(p, (err, buf) => { if (err) return res.status(404).json({ ok: false, error: 'slip_missing' }); try { autoVerifyReg(r.id, buf.toString('base64')); } catch (e) {} res.json({ ok: true, message: 'reverifying' }); });
+  });
+  // public: check a registration's status (regNo + phone to verify identity)
+  app.get('/api/xv/reg/status', (req, res) => {
+    const regNo = String(req.query.regNo || '').trim().toUpperCase();
+    const phone = String(req.query.phone || '').replace(/\D/g, '');
+    if (!regNo || !phone) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    const r = readReg().find(x => (x.regNo || '').toUpperCase() === regNo);
+    if (!r || String((r.candidate || {}).phone || '').replace(/\D/g, '') !== phone) return res.status(404).json({ ok: false, error: 'not_found' });
+    const nm = ((r.candidate.firstName || '') + ' ' + (r.candidate.lastName || '')).trim();
+    const round = findR(r.roundId);
+    res.json({
+      ok: true, regNo: r.regNo, status: r.status, mode: r.mode,
+      name: nm.length > 1 ? (nm[0] + '****' + nm.slice(-1)) : nm,
+      round: round ? { no: round.no, date: round.date, mode: round.mode, venue: round.venue, timeslot: round.timeslot } : null,
+      createdAt: r.createdAt
+    });
+  });
+  // admin: list registrations (optionally by mode / round)
+  app.get('/api/xv/admin/registrations', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const mode = req.query.mode; const roundId = req.query.roundId;
+    let list = readReg();
+    if (mode === 'online' || mode === 'onsite') list = list.filter(r => (r.mode || 'online') === mode);
+    if (roundId) list = list.filter(r => r.roundId === roundId);
+    list = list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    res.json({ ok: true, registrations: list });
+  });
+  // admin: update a registration's status (confirm payment / cancel / check-in)
+  app.post('/api/xv/admin/registrations/:id', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readReg(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
+    const b = req.body || {};
+    if (b.status && REG_STATUS.indexOf(b.status) >= 0) {
+      r.status = b.status;
+      if (b.status === 'CHECKED_IN') { r.checkedInAt = Date.now(); }
+      if (b.status === 'CONFIRMED') { r.confirmedAt = Date.now(); }
+      if (b.status === 'CANCELLED') { r.cancelledAt = Date.now(); }
+    }
+    writeReg(all); res.json({ ok: true, registration: r });
+  });
+  // admin: refund a registration — payment is by bank transfer (EasySlip), so we only RECORD the
+  // refund; the admin transfers the money back manually. Supports full or partial, reason, note.
+  app.post('/api/xv/admin/registrations/:id/refund', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readReg(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
+    const b = req.body || {};
+    const fee = Number((r.payment && r.payment.fee) || r.fee || 0);
+    const already = Number(r.refundedTotal) || 0;
+    const full = b.full !== false;
+    let amount = full ? (fee - already) : Number(b.amount || 0);
+    if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'bad_amount' });
+    if (amount > fee - already + 0.001) return res.status(400).json({ ok: false, error: 'amount_exceeds', max: fee - already });
+    const rec = { amount: amount, full: full, category: b.category || '', subReason: b.subReason || '', note: b.note || '', at: Date.now(), method: 'bank_manual' };
+    r.refunds = Array.isArray(r.refunds) ? r.refunds : [];
+    r.refunds.push(rec); r.refund = rec;
+    r.refundedTotal = already + amount;
+    r.status = (r.refundedTotal >= fee - 0.001) ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+    r.refundedAt = Date.now();
+    writeReg(all); res.json({ ok: true, method: 'bank_manual', registration: r });
   });
 
   app.post('/api/xv/admin/import-questions', (req, res) => {
