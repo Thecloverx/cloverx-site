@@ -1262,9 +1262,11 @@
   function regName(r){var c=r.candidate||{};return ((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';}
   function fetchRegs(cb){fetch('/api/xv/admin/registrations'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){REG_CACHE=(j&&j.ok)?j.registrations:[];cb&&cb();}).catch(function(){REG_CACHE=[];cb&&cb();});}
   function regEsBadge(r){var e=r.easyslip;if(!e)return '<span class="pill wait">ยังไม่ตรวจสลิป</span>';var m={confirmed:['ok','✓ ยอด+บัญชีตรง'],verified:['ok','ตรวจผ่าน'],mismatch:['bad','ยอด/บัญชีไม่ตรง'],duplicate:['bad','สลิปซ้ำ'],error:['wait','ตรวจไม่ได้'],no_data:['wait','อ่านสลิปไม่ได้']}[e.result]||['wait',e.result||'—'];return '<span class="pill '+m[0]+'">'+m[1]+'</span>'+(e.amount!=null?('<div style="color:var(--muted);font-size:.72rem;margin-top:2px">สลิป '+e.amount+' บาท</div>'):'');}
+  var REG_AUDIT=null;
+  function fetchAudit(cb){fetch('/api/xv/admin/audit'+xvKeyQ('limit=120')).then(function(r){return r.json();}).then(function(j){REG_AUDIT=(j&&j.ok)?j.audit:[];cb&&cb();}).catch(function(){REG_AUDIT=[];cb&&cb();});}
   function renderExamRegister(){
     gen.innerHTML=xvSpinner('กำลังโหลดข้อมูลลงทะเบียน…');
-    fetchRounds(function(){ fetchRegs(function(){ paintRegister(); }); });
+    fetchRounds(function(){ fetchRegs(function(){ fetchAudit(function(){ paintRegister(); }); }); });
   }
   // ---- registration seat / stats helpers (seat = confirmed payment only) ----
   function regRoundStats(all,rid){
@@ -1331,6 +1333,7 @@
       if(slip)mi.push(rgI('🔄 ตรวจสลิปอีกครั้ง (EasySlip)',"regReverify('"+r.id+"')",'brand'));
       if(esResult!=='confirmed')mi.push(rgI('✓ ยืนยันการชำระด้วยตนเอง',"regAct('"+r.id+"','CONFIRMED','"+nmA+"',1)",'good'));
     }
+    if(r.status!=='CANCELLED'&&r.status!=='REFUNDED'&&r.status!=='CHECKED_IN')mi.push(rgI('🔀 ย้ายรอบ / เปลี่ยนรูปแบบ',"regMoveOpen('"+r.id+"','"+nmA+"','"+r.roundId+"')",'brand'));
     if((settled||r.status==='PARTIALLY_REFUNDED')&&(fee-refunded>0.001))mi.push(rgI('↩ คืนเงิน',"regRefundOpen('"+r.id+"',"+fee+","+refunded+",'"+nmA+"')",'bad'));
     if(r.status!=='CANCELLED'&&r.status!=='CHECKED_IN'&&r.status!=='REFUNDED')mi.push(rgI('✕ ยกเลิกการสมัคร',"regAct('"+r.id+"','CANCELLED','"+nmA+"',1)",'bad'));
     if(r.status==='CANCELLED'||r.status==='REJECTED')mi.push(rgI('↺ กู้คืน (รอชำระเงิน)',"regAct('"+r.id+"','PENDING_PAYMENT','"+nmA+"')",'good'));
@@ -1454,8 +1457,19 @@
         +'<td><span class="pill wait">ปิดรับแล้ว</span></td>'
         +'<td><button data-goto="people" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 11px;font-family:inherit;font-weight:700;font-size:.78rem;color:var(--brand);cursor:pointer">ดูรายชื่อ →</button></td></tr>';
     }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีรอบที่ปิดรับ — รอบที่ปิด/จบแล้วจะเก็บไว้ที่นี่ (ข้อมูลไม่หาย)</td></tr>';
-    return '<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ประวัติรอบสอบ <span style="color:var(--muted);font-weight:600">('+past.length+')</span></h3><span style="color:var(--muted);font-size:.8rem">รอบที่ปิดรับ/จบแล้ว — ค้นหาและดูย้อนหลังได้ ข้อมูลไม่ถูกลบ</span></div>'
-      +'<div style="overflow-x:auto"><table><thead><tr><th>วันที่สอบ</th><th>ผู้สมัครทั้งหมด</th><th>ชำระแล้ว</th><th>สถานะ</th><th>รายชื่อ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    // audit log
+    var AU_LABEL={register:['สมัครใหม่','new'],status:['เปลี่ยนสถานะ','pend'],payment_auto_confirm:['ยืนยันสลิปอัตโนมัติ','ok'],refund:['คืนเงิน','bad'],move:['ย้ายรอบ','pend'],waitlist_promote:['เลื่อนจาก Waiting List','ok'],round_create:['สร้างรอบ','new'],round_update:['แก้ไขรอบ','pend']};
+    var au=(REG_AUDIT||[]);
+    var auRows=au.slice(0,60).map(function(a){
+      var lb=AU_LABEL[a.action]||[a.action,'wait'];
+      var when=new Date(a.at); var wtxt=isNaN(when)?'':(when.toLocaleDateString('th-TH',{day:'2-digit',month:'short'})+' '+when.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
+      var chg=(a.before!=null||a.after!=null)?('<span style="color:var(--muted)">'+(a.before||'—')+'</span> → <b>'+(a.after||'—')+'</b>'):'';
+      return '<tr><td style="white-space:nowrap;color:var(--muted);font-size:.78rem">'+wtxt+'</td><td><span class="pill '+lb[1]+'">'+lb[0]+'</span></td><td style="font-size:.82rem">'+(a.ref||a.recordId||'')+'<div style="font-size:.76rem">'+chg+'</div></td><td style="font-size:.8rem;color:var(--ink)">'+(a.reason||'')+'<div style="color:var(--muted);font-size:.72rem">'+(a.actor||'')+'</div></td></tr>';
+    }).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">ยังไม่มีบันทึกการดำเนินการ</td></tr>';
+    return '<div class="panel" style="margin-bottom:16px"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>ประวัติรอบสอบ <span style="color:var(--muted);font-weight:600">('+past.length+')</span></h3><span style="color:var(--muted);font-size:.8rem">รอบที่ปิดรับ/จบแล้ว — ค้นหาและดูย้อนหลังได้ ข้อมูลไม่ถูกลบ</span></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>วันที่สอบ</th><th>ผู้สมัครทั้งหมด</th><th>ชำระแล้ว</th><th>สถานะ</th><th>รายชื่อ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>บันทึกการดำเนินการ (Audit Log) <span style="color:var(--muted);font-weight:600">('+au.length+')</span></h3><span style="color:var(--muted);font-size:.8rem">ทุกการเปลี่ยนแปลงถูกบันทึกไว้ — ผู้ทำ / เวลา / ค่าเดิม→ใหม่ / เหตุผล</span></div>'
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เวลา</th><th>การกระทำ</th><th>รายการ (เดิม→ใหม่)</th><th>เหตุผล / ผู้ทำ</th></tr></thead><tbody>'+auRows+'</tbody></table></div></div>';
   }
   function regAct(id,to,nm,danger){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อจัดการจริง','bad');return;}
@@ -1464,6 +1478,36 @@
     if(danger)xvConfirm(label,label+' ของ "'+nm+'" ใช่ไหม?',label,run,true);else run();
   }
   function regReverify(id){if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key','bad');return;}xvToast('กำลังตรวจสลิปซ้ำด้วย EasySlip…');fetch('/api/xv/admin/registrations/'+id+'/reverify'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){setTimeout(function(){renderExamRegister();},1600);}else xvToast('ตรวจสลิปไม่สำเร็จ: '+((j&&j.error)||''),'bad');}).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});}
+  // ---- move a registrant to a different round / mode (change schedule) ----
+  function regMoveOpen(id,nm,curRoundId){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อจัดการจริง','bad');return;}
+    var reg=(REG_CACHE||[]).find(function(x){return x.id===id;});
+    var curFee=(reg&&reg.payment&&reg.payment.fee)||0;
+    // open rounds excluding the current one
+    var opts=(EXAM_ROUNDS||[]).filter(function(r){return r.status==='open'&&r.id!==curRoundId;});
+    if(!opts.length){xvSheet('<h3 style="font-size:1.12rem">ย้ายรอบ / เปลี่ยนรูปแบบ</h3><p style="color:var(--muted);font-size:.9rem;margin:10px 0 18px">ยังไม่มีรอบอื่นที่เปิดรับสมัครให้ย้ายไป — เปิดรอบปลายทางก่อนที่หน้า Exam Schedules</p><div style="text-align:right"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ปิด</button></div>');return;}
+    var oline=opts.map(function(r){var ons=(r.mode||'online')==='onsite';return '<option value="'+r.id+'" data-fee="'+((r.fee!=null?r.fee:500))+'">ครั้งที่ '+r.no+' · '+fmtDateTH(r.date)+' · '+(ons?('On-Site'+(r.venue?(' '+r.venue):'')):'Online')+' · '+((r.fee!=null?r.fee:500))+' บาท</option>';}).join('');
+    xvSheet('<h3 style="font-size:1.12rem">🔀 ย้ายรอบ / เปลี่ยนรูปแบบการสอบ</h3>'
+      +'<p style="color:var(--muted);font-size:.86rem;margin:4px 0 14px">ย้าย <b>'+nm+'</b> ไปรอบใหม่ — แก้ที่รายการเดิม ไม่สร้างซ้ำ · บันทึกประวัติและเหตุผล</p>'
+      +'<label style="font-size:.82rem;color:var(--muted);font-weight:600;display:block;margin-bottom:6px">รอบปลายทาง</label>'
+      +'<select id="mvRound" style="'+fieldCss()+'" onchange="regMoveFee('+curFee+')">'+oline+'</select>'
+      +'<div id="mvFeeNote" style="font-size:.82rem;color:var(--muted);margin:8px 0 4px"></div>'
+      +'<label style="font-size:.82rem;color:var(--muted);font-weight:600;display:block;margin:12px 0 6px">เหตุผลการย้าย (บังคับ)</label>'
+      +'<input id="mvReason" placeholder="เช่น ลูกค้าขอเปลี่ยนวัน / เปลี่ยนเป็นสอบที่ศูนย์" style="'+fieldCss()+'">'
+      +'<div id="mvErr" style="color:var(--bad);font-size:.82rem;margin-top:8px"></div>'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="mvGo" onclick="regMove(\''+id+'\')" style="'+btnPri()+'">ยืนยันการย้าย</button></div>');
+    regMoveFee(curFee);
+  }
+  function regMoveFee(curFee){var s=document.getElementById('mvRound');if(!s)return;var opt=s.options[s.selectedIndex];var nf=Number(opt.getAttribute('data-fee'))||0;var d=nf-curFee;var el=document.getElementById('mvFeeNote');if(el)el.innerHTML=d===0?('ค่าสมัครเท่าเดิม ('+nf+' บาท)'):('ค่าสมัครใหม่ '+nf+' บาท · ส่วนต่าง <b style="color:'+(d>0?'var(--bad)':'var(--good)')+'">'+(d>0?'+':'')+d+' บาท</b>'+(d>0?' (เก็บเพิ่ม)':' (คืนส่วนต่าง)'));}
+  function regMove(id){
+    var rid=document.getElementById('mvRound').value;var reason=(document.getElementById('mvReason').value||'').trim();
+    if(!reason){document.getElementById('mvErr').textContent='กรุณาระบุเหตุผลการย้าย';return;}
+    var btn=document.getElementById('mvGo');btn.disabled=true;btn.textContent='กำลังย้าย…';
+    fetch('/api/xv/admin/registrations/'+id+'/move'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,toRoundId:rid,reason:reason})}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.ok){xvSheetClose();xvToast('ย้ายรอบเรียบร้อย'+(j.feeDiff?(' · ส่วนต่าง '+(j.feeDiff>0?'+':'')+j.feeDiff+' บาท'):''),'ok');fetchRounds(function(){fetchRegs(paintRegister);});}
+      else{btn.disabled=false;btn.textContent='ยืนยันการย้าย';var e={target_full:'รอบปลายทางที่นั่งเต็ม',reason_required:'ต้องระบุเหตุผล',same_round:'เป็นรอบเดิม'}[(j&&j.error)]||((j&&j.error)||'ไม่สำเร็จ');document.getElementById('mvErr').textContent='ผิดพลาด: '+e;}
+    }).catch(function(){btn.disabled=false;btn.textContent='ยืนยันการย้าย';document.getElementById('mvErr').textContent='เชื่อมต่อไม่สำเร็จ';});
+  }
 
   var PO_LINK='https://cloverx-site-production.up.railway.app/preorder';
   var PO_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASgAAAEoAQMAAADRyf5aAAAABlBMVEULDhb///8FXNk8AAABfklEQVR42u2awW7DMAxDif3/P2uDI4pSYgfFsNuYoIVRu5cHiaKUID654FM+9dtTuK6fJXD9wH9zJ77wyfUfToFg12Ihu+7I77VjXoNXRlcsWhlsfce8drwyusgrw828zrxANaN+mdeLfiUuorJ+nXipPt5v18cNr5u72HkR85r6tbxWCVj75K553eKL3OgpYtRM8xq85B9SslK6EqR5PXgxAZvq9yAzr1kfmYbRLEYGnf3ETr8g21XJ2KLPvGY+Rusam44JpHk962Oln7SLDt+8bvEly0V+9GTW+4NfZXwBaA7D/uvcb1PmyUwOw7we/SNqEK1JDmpCbV6DlwYUozZG0TSvh97rKUcFl/PxNP+K6CMw2Vbn48v8q9zD6CBdH7f9o3ofTe9l/81rF1/SemCKmnlN/WLzGG2hCb55HfxqL5KhBDWvez80GkfU08hKV/Pa8VJ89d7R+XjgxQZo9Nr2E2/61SRLVtb5eKiPgan1UTzNa+O//OagT/35qW97jTX96F1uSAAAAABJRU5ErkJggg==';

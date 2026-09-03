@@ -12,6 +12,7 @@ module.exports = function (app, DATA) {
   const SF = path.join(XV, 'sessions.json');
   const RF = path.join(XV, 'rounds.json');
   const REGF = path.join(XV, 'registrations.json');
+  const AUDITF = path.join(XV, 'audit.json'); // append-only admin action log
   const REGUP = path.join(XV, 'reguploads'); // slip / id-card images
   if (!fs.existsSync(REGUP)) { try { fs.mkdirSync(REGUP, { recursive: true }); } catch (e) {} }
 
@@ -27,16 +28,16 @@ module.exports = function (app, DATA) {
      The JSON file is ALWAYS written too (a durable backup + the fallback source read
      before Postgres finishes hydrating), so switching to or from Postgres never loses
      data. Each collection (sessions/rounds/registrations) is one JSONB blob row. */
-  const fileOf = { sessions: SF, rounds: RF, registrations: REGF };
-  const COLLS = ['sessions', 'rounds', 'registrations'];
+  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF };
+  const COLLS = ['sessions', 'rounds', 'registrations', 'audit'];
   const USE_PG = !!process.env.DATABASE_URL;
-  const mem = { sessions: [], rounds: [], registrations: [] };
+  const mem = { sessions: [], rounds: [], registrations: [], audit: [] };
   let pool = null, pgReady = false;
-  const persistQ = { sessions: Promise.resolve(), rounds: Promise.resolve(), registrations: Promise.resolve() };
+  const persistQ = {};
   const pgPersist = (coll) => {
     if (!pool) return;
     const snap = mem[coll];
-    persistQ[coll] = persistQ[coll].then(() =>
+    persistQ[coll] = (persistQ[coll] || Promise.resolve()).then(() =>
       pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [coll, JSON.stringify(snap)])
     ).catch(e => console.error('[x-visor] PG persist ' + coll + ' failed:', e.message));
   };
@@ -83,6 +84,36 @@ module.exports = function (app, DATA) {
   const nextRoundNo = () => { const rs = readR(); return rs.length ? Math.max.apply(null, rs.map(r => r.no || 0)) + 1 : 1; };
   const readReg = () => readColl('registrations');
   const writeReg = (x) => writeColl('registrations', x);
+  const readAudit = () => readColl('audit');
+  // append-only audit log — records every admin action (who/when/what/before→after/reason)
+  const logAudit = (action, recordType, recordId, ref, before, after, reason, actor) => {
+    try {
+      const all = readAudit();
+      all.push({ id: 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), at: Date.now(), action, recordType, recordId, ref: ref || '', before: before == null ? null : before, after: after == null ? null : after, reason: reason || '', actor: actor || 'staff' });
+      // keep the log bounded (most recent 3000 entries)
+      writeColl('audit', all.length > 3000 ? all.slice(all.length - 3000) : all);
+    } catch (e) { /* audit must never break the main action */ }
+  };
+  // waiting-list promotion: when a confirmed seat frees up, promote the earliest waitlisted person
+  // back into the payment flow so they can pay for the seat. Seats count only CONFIRMED (business rule).
+  const promoteWaitlist = (roundId) => {
+    const round = readR().find(r => r.id === roundId); if (!round) return;
+    const cap = parseInt(round.capacity, 10) || 0;
+    const all = readReg();
+    const confirmed = all.filter(x => x.roundId === roundId && SEAT_TAKEN.indexOf(x.status) >= 0).length;
+    if (cap > 0 && confirmed >= cap) return; // still full
+    const seatsFree = cap > 0 ? (cap - confirmed) : 999;
+    const waiting = all.filter(x => x.roundId === roundId && x.status === 'WAITLISTED').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    let promoted = 0;
+    for (const w of waiting) {
+      if (promoted >= seatsFree) break;
+      w.status = (w.payment && w.payment.slipUrl) ? 'PAYMENT_REVIEW' : 'PENDING_PAYMENT';
+      w.promotedAt = Date.now();
+      promoted++;
+      logAudit('waitlist_promote', 'registration', w.id, w.regNo, 'WAITLISTED', w.status, 'ที่นั่งว่าง — เลื่อนจาก Waiting List อัตโนมัติ', 'system');
+    }
+    if (promoted) writeReg(all);
+  };
   // registration number: RG + yymmdd + 4-run — human-readable, unique enough
   const nextRegNo = () => {
     const d = new Date(); const p = n => (n < 10 ? '0' : '') + n;
@@ -104,7 +135,7 @@ module.exports = function (app, DATA) {
   const pubRound = (r) => Object.assign({
     id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt,
     mode: r.mode || 'online', fee: r.fee != null ? r.fee : 500, capacity: parseInt(r.capacity, 10) || 0,
-    venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || ''
+    waitlist: !!r.waitlist, venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || ''
   }, roundSeats(r));
   // save a data-url image to disk, return its public path (or '' if none/invalid)
   const saveRegImage = (dataUrl, tag) => {
@@ -164,9 +195,11 @@ module.exports = function (app, DATA) {
       const dup = !!(sD.ref && all.some(y => y.id !== x.id && y.easyslip && y.easyslip.ref && y.easyslip.ref === sD.ref));
       x.easyslip.amtOk = amtOk; x.easyslip.acctOk = acctOk; x.easyslip.nameOk = nameOk; x.easyslip.dup = dup;
       const pass = amtOk && (acctOk || nameOk) && !dup;
+      const wasConfirmed = SEAT_TAKEN.indexOf(x.status) >= 0;
       if (pass && process.env.EASYSLIP_AUTOCONFIRM !== '0') { x.status = 'CONFIRMED'; x.confirmedAt = Date.now(); x.easyslip.result = 'confirmed'; }
       else x.easyslip.result = pass ? 'verified' : (dup ? 'duplicate' : 'mismatch');
       writeReg(all);
+      if (!wasConfirmed && x.status === 'CONFIRMED') logAudit('payment_auto_confirm', 'registration', x.id, x.regNo, 'PAYMENT_REVIEW', 'CONFIRMED', 'EasySlip ตรวจสลิปผ่าน (ยอด+บัญชีตรง) — ยืนยันอัตโนมัติ', 'system');
     }).catch(() => {});
   }
 
@@ -395,12 +428,14 @@ module.exports = function (app, DATA) {
       mode: b.mode === 'onsite' ? 'onsite' : 'online',
       fee: b.fee != null && b.fee !== '' ? (parseInt(b.fee, 10) || 0) : 500,
       capacity: parseInt(b.capacity, 10) || 0,
+      waitlist: !!b.waitlist,
       venue: String(b.venue || '').slice(0, 200),
       timeslot: String(b.timeslot || '').slice(0, 60),
       regCloseAt: String(b.regCloseAt || '').slice(0, 10),
       createdAt: Date.now()
     };
     const all = readR(); all.push(r); writeR(all);
+    logAudit('round_create', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, 'สร้างรอบ ' + r.date + ' (' + r.mode + ')', 'staff');
     res.json({ ok: true, round: pubRound(r) });
   });
 
@@ -416,10 +451,13 @@ module.exports = function (app, DATA) {
     if (b.mode === 'online' || b.mode === 'onsite') r.mode = b.mode;
     if (b.fee != null && b.fee !== '') r.fee = parseInt(b.fee, 10) || 0;
     if (b.capacity != null && b.capacity !== '') r.capacity = parseInt(b.capacity, 10) || 0;
+    if (b.waitlist != null) r.waitlist = !!b.waitlist;
     if (b.venue != null) r.venue = String(b.venue).slice(0, 200);
     if (b.timeslot != null) r.timeslot = String(b.timeslot).slice(0, 60);
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
-    writeR(all); res.json({ ok: true, round: pubRound(r) });
+    writeR(all);
+    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.status === 'open' ? 'เปิดรับสมัคร' : (b.status === 'closed' ? 'ปิดรับสมัคร' : 'แก้ไขข้อมูลรอบ')), 'staff');
+    res.json({ ok: true, round: pubRound(r) });
   });
 
   // duplicate a round's SETTINGS to a new round (new code + no; optional new date)
@@ -513,6 +551,7 @@ module.exports = function (app, DATA) {
       status: seats.full && round.waitlist ? 'WAITLISTED' : (hasSlip ? 'PAYMENT_REVIEW' : 'PENDING_PAYMENT')
     };
     all.push(reg); writeReg(all);
+    logAudit('register', 'registration', reg.id, reg.regNo, null, reg.status, 'สมัครผ่านหน้าลงทะเบียน · ครั้งที่ ' + round.no + ' (' + (round.mode || 'online') + ')', 'customer');
     // fire EasySlip auto-verification (async) if a slip was attached and EasySlip is configured
     if (esConfigured() && b.slipImage) {
       const m = String(b.slipImage).match(/^data:image\/[^;]+;base64,(.+)$/);
@@ -561,12 +600,17 @@ module.exports = function (app, DATA) {
     const all = readReg(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
     const b = req.body || {};
     if (b.status && REG_STATUS.indexOf(b.status) >= 0) {
+      const before = r.status;
+      const freedSeat = SEAT_TAKEN.indexOf(before) >= 0 && SEAT_TAKEN.indexOf(b.status) < 0;
       r.status = b.status;
       if (b.status === 'CHECKED_IN') { r.checkedInAt = Date.now(); }
       if (b.status === 'CONFIRMED') { r.confirmedAt = Date.now(); }
       if (b.status === 'CANCELLED') { r.cancelledAt = Date.now(); }
-    }
-    writeReg(all); res.json({ ok: true, registration: r });
+      writeReg(all);
+      logAudit('status', 'registration', r.id, r.regNo, before, b.status, b.reason || '', 'staff');
+      if (freedSeat) promoteWaitlist(r.roundId);
+    } else { writeReg(all); }
+    res.json({ ok: true, registration: r });
   });
   // admin: refund a registration — payment is by bank transfer (EasySlip), so we only RECORD the
   // refund; the admin transfers the money back manually. Supports full or partial, reason, note.
@@ -574,6 +618,7 @@ module.exports = function (app, DATA) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const all = readReg(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
     const b = req.body || {};
+    const beforeStatus = r.status;
     const fee = Number((r.payment && r.payment.fee) || r.fee || 0);
     const already = Number(r.refundedTotal) || 0;
     const full = b.full !== false;
@@ -586,7 +631,52 @@ module.exports = function (app, DATA) {
     r.refundedTotal = already + amount;
     r.status = (r.refundedTotal >= fee - 0.001) ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
     r.refundedAt = Date.now();
-    writeReg(all); res.json({ ok: true, method: 'bank_manual', registration: r });
+    writeReg(all);
+    logAudit('refund', 'registration', r.id, r.regNo, beforeStatus, r.status, '฿' + amount + (b.category ? (' · ' + b.category) : '') + (b.note ? (' · ' + b.note) : ''), 'staff');
+    if (SEAT_TAKEN.indexOf(beforeStatus) >= 0) promoteWaitlist(r.roundId);
+    res.json({ ok: true, method: 'bank_manual', registration: r });
+  });
+  // admin: move a registrant to a different round / mode (change schedule) — updates the SAME record,
+  // records the change history + reason, recomputes fee difference, frees the source seat & promotes waitlist.
+  app.post('/api/xv/admin/registrations/:id/move', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readReg(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
+    const b = req.body || {};
+    const toRound = findR(b.toRoundId);
+    if (!toRound) return res.status(404).json({ ok: false, error: 'target_round_not_found' });
+    if (toRound.id === r.roundId) return res.status(400).json({ ok: false, error: 'same_round' });
+    if (!b.reason || !String(b.reason).trim()) return res.status(400).json({ ok: false, error: 'reason_required' });
+    // capacity guard on the TARGET (only matters when this registrant holds a confirmed seat)
+    const holdsSeat = SEAT_TAKEN.indexOf(r.status) >= 0;
+    if (holdsSeat) {
+      const s = roundSeats(toRound);
+      if (s.full && !toRound.waitlist) return res.status(409).json({ ok: false, error: 'target_full' });
+    }
+    const fromRoundId = r.roundId;
+    const oldFee = Number((r.payment && r.payment.fee) || r.fee || 0);
+    const newFee = Number(toRound.fee != null ? toRound.fee : 500);
+    const fromSnap = { roundId: r.roundId, roundNo: r.roundNo, date: (r.round && r.round.date) || '', mode: r.mode };
+    // apply the move to the same record
+    r.roundId = toRound.id; r.roundNo = toRound.no; r.roundCode = toRound.code; r.mode = toRound.mode || 'online';
+    r.round = { date: toRound.date, venue: toRound.venue || '', mode: toRound.mode || 'online' };
+    if (r.payment) r.payment.fee = newFee; else r.payment = { fee: newFee };
+    const feeDiff = newFee - oldFee;
+    r.changes = Array.isArray(r.changes) ? r.changes : [];
+    r.changes.push({ at: Date.now(), from: fromSnap, to: { roundId: toRound.id, roundNo: toRound.no, date: toRound.date, mode: toRound.mode || 'online' }, reason: String(b.reason).trim(), feeDiff: feeDiff });
+    r.movedAt = Date.now();
+    writeReg(all);
+    logAudit('move', 'registration', r.id, r.regNo, 'ครั้งที่ ' + fromSnap.roundNo + ' (' + fromSnap.mode + ')', 'ครั้งที่ ' + toRound.no + ' (' + (toRound.mode || 'online') + ')', String(b.reason).trim() + (feeDiff ? (' · ส่วนต่างค่าสมัคร ' + (feeDiff > 0 ? '+' : '') + feeDiff + ' บาท') : ''), 'staff');
+    if (holdsSeat) promoteWaitlist(fromRoundId); // source seat may have freed up
+    res.json({ ok: true, registration: r, feeDiff: feeDiff });
+  });
+  // admin: audit log (recent admin actions) — optional ?recordId / ?limit
+  app.get('/api/xv/admin/audit', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    let list = readAudit().slice();
+    if (req.query.recordId) list = list.filter(a => a.recordId === req.query.recordId);
+    list.sort((a, b) => (b.at || 0) - (a.at || 0));
+    const limit = Math.min(500, parseInt(req.query.limit, 10) || 200);
+    res.json({ ok: true, audit: list.slice(0, limit) });
   });
 
   app.post('/api/xv/admin/import-questions', (req, res) => {
