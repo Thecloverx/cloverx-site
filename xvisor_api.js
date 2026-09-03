@@ -16,22 +16,73 @@ module.exports = function (app, DATA) {
   if (!fs.existsSync(REGUP)) { try { fs.mkdirSync(REGUP, { recursive: true }); } catch (e) {} }
 
   const rd = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
-  const wr = (f, d) => fs.writeFileSync(f, JSON.stringify(d, null, 2));
+  const wr = (f, d) => { try { fs.writeFileSync(f, JSON.stringify(d, null, 2)); } catch (e) {} };
   const bank = () => {
     let b = rd(QF, null);
     if (!b || !b.bank || !Object.keys(b.bank).length) b = rd(QF_ROOT, null);
     return b && b.bank ? b : { names: {}, bank: {} };
   };
-  const readS = () => rd(SF, []);
-  const writeS = (s) => wr(SF, s);
-  const readR = () => rd(RF, []);
-  const writeR = (r) => wr(RF, r);
+
+  /* ---- storage layer: Postgres when DATABASE_URL is set, else JSON files ----
+     The JSON file is ALWAYS written too (a durable backup + the fallback source read
+     before Postgres finishes hydrating), so switching to or from Postgres never loses
+     data. Each collection (sessions/rounds/registrations) is one JSONB blob row. */
+  const fileOf = { sessions: SF, rounds: RF, registrations: REGF };
+  const COLLS = ['sessions', 'rounds', 'registrations'];
+  const USE_PG = !!process.env.DATABASE_URL;
+  const mem = { sessions: [], rounds: [], registrations: [] };
+  let pool = null, pgReady = false;
+  const persistQ = { sessions: Promise.resolve(), rounds: Promise.resolve(), registrations: Promise.resolve() };
+  const pgPersist = (coll) => {
+    if (!pool) return;
+    const snap = mem[coll];
+    persistQ[coll] = persistQ[coll].then(() =>
+      pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [coll, JSON.stringify(snap)])
+    ).catch(e => console.error('[x-visor] PG persist ' + coll + ' failed:', e.message));
+  };
+  const readColl = (coll) => (pool && pgReady) ? mem[coll] : rd(fileOf[coll], []);
+  const writeColl = (coll, all) => {
+    wr(fileOf[coll], all);                     // durable file backup (sync) — always
+    if (pool && pgReady) { mem[coll] = all; pgPersist(coll); }
+  };
+  if (USE_PG) {
+    try {
+      const { Pool } = require('pg');
+      pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === '0' ? false : { rejectUnauthorized: false }, max: 5 });
+      (async () => {
+        await pool.query('CREATE TABLE IF NOT EXISTS xv_store (coll text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz DEFAULT now())');
+        for (const coll of COLLS) {
+          const fileData = rd(fileOf[coll], []);
+          const { rows } = await pool.query('SELECT data FROM xv_store WHERE coll=$1', [coll]);
+          if (!rows.length) {                                 // first run → seed PG from any existing file data
+            mem[coll] = Array.isArray(fileData) ? fileData : [];
+            await pool.query('INSERT INTO xv_store(coll,data) VALUES($1,$2) ON CONFLICT(coll) DO NOTHING', [coll, JSON.stringify(mem[coll])]);
+          } else {                                            // hydrate from PG, recover any file-only records (crash-window safety)
+            let data = Array.isArray(rows[0].data) ? rows[0].data : [];
+            const seen = new Set(data.map(x => x && x.id));
+            let recovered = 0;
+            for (const f of (Array.isArray(fileData) ? fileData : [])) { if (f && f.id && !seen.has(f.id)) { data.push(f); recovered++; } }
+            mem[coll] = data;
+            if (recovered) await pool.query('UPDATE xv_store SET data=$2, updated_at=now() WHERE coll=$1', [coll, JSON.stringify(data)]);
+          }
+          wr(fileOf[coll], mem[coll]);                        // keep file mirror in sync after hydrate
+        }
+        pgReady = true;
+        console.log('[x-visor] Postgres store ready — ' + COLLS.map(c => c + ':' + mem[c].length).join(' '));
+      })().catch(e => { console.error('[x-visor] PG init failed, using file store:', e.message); pool = null; pgReady = false; });
+    } catch (e) { console.error('[x-visor] pg module unavailable, using file store:', e.message); pool = null; }
+  }
+
+  const readS = () => readColl('sessions');
+  const writeS = (s) => writeColl('sessions', s);
+  const readR = () => readColl('rounds');
+  const writeR = (r) => writeColl('rounds', r);
   const findR = (id) => readR().find(x => x.id === id);
   const findRByCode = (code) => readR().find(x => String(x.code).toUpperCase() === String(code || '').toUpperCase());
   const roundCode = () => 'R' + crypto.randomBytes(3).toString('hex').toUpperCase(); // e.g. R7F3A9C
   const nextRoundNo = () => { const rs = readR(); return rs.length ? Math.max.apply(null, rs.map(r => r.no || 0)) + 1 : 1; };
-  const readReg = () => rd(REGF, []);
-  const writeReg = (x) => wr(REGF, x);
+  const readReg = () => readColl('registrations');
+  const writeReg = (x) => writeColl('registrations', x);
   // registration number: RG + yymmdd + 4-run — human-readable, unique enough
   const nextRegNo = () => {
     const d = new Date(); const p = n => (n < 10 ? '0' : '') + n;
