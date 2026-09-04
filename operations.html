@@ -1600,6 +1600,46 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   function poItemsClose(){document.getElementById('itModal').classList.remove('on');}
   function poItems(o){return (o.items||[]).map(function(i){return i.nm+(i.fam?' <span style="color:var(--muted);font-size:.82em">(ครอบครัว)</span>':'');}).join(' + ')||'-';}
+  function poItemsText(o){var g=poGroup(o);if(!g.length)return '-';return g.map(function(x){return x.nm+(x.fam?'(ครอบครัว)':'')+' x'+x.qty;}).join(' + ');}
+  // ---- export Pre-Order orders to a real .xlsx (SheetJS lazy-loaded on first use) ----
+  function poExportExcel(){
+    if(!PO_ORDERS||!PO_ORDERS.length){xvToast('ยังไม่มีคำสั่งซื้อให้ส่งออก','bad');return;}
+    function build(){
+      try{
+        var rows=PO_ORDERS.map(function(o){
+          var s=PO_ST[o.status]||['-','']; if(poAwaitPay(o))s=['รอลูกค้าชำระ',''];
+          var refunded=Number(o.refundedTotal)||0;
+          return {
+            'เลขออเดอร์':o.id||'',
+            'วันที่-เวลา':poTime(o.at)||'',
+            'ชื่อลูกค้า':o.name||'',
+            'เบอร์โทร':o.phone||'',
+            'สินค้า':poItemsText(o),
+            'สถานะ':s[0],
+            'ยอดรวม (บาท)':Number(o.total)||0,
+            'คืนเงินแล้ว (บาท)':refunded,
+            'ช่องทางชำระ':o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร',
+            'ทีม':o.team||'',
+            'ผู้แนะนำ':o.ref||'',
+            'การจัดส่ง':o.ship==='pickup'?'รับหน้างาน':'จัดส่ง',
+            'ที่อยู่':[o.addr,o.subdistrict,o.district,o.province,o.postal].filter(Boolean).join(' ')||''
+          };
+        });
+        var ws=XLSX.utils.json_to_sheet(rows);
+        ws['!cols']=[{wch:14},{wch:12},{wch:20},{wch:13},{wch:28},{wch:12},{wch:12},{wch:13},{wch:12},{wch:12},{wch:14},{wch:11},{wch:34}];
+        var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Pre-Order');
+        var d=new Date(); var pad=function(n){return ('0'+n).slice(-2);};
+        XLSX.writeFile(wb,'PreOrder_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes())+'.xlsx');
+        xvToast('ส่งออก Excel แล้ว ('+rows.length+' รายการ)','ok');
+      }catch(e){xvToast('สร้างไฟล์ไม่สำเร็จ','bad');}
+    }
+    if(window.XLSX){build();return;}
+    xvToast('กำลังเตรียมไฟล์ Excel…');
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=build; sc.onerror=function(){xvToast('โหลดตัวช่วย Excel ไม่สำเร็จ ลองใหม่','bad');};
+    document.head.appendChild(sc);
+  }
   function poTime(iso){if(!iso)return'';var d=new Date(iso);if(isNaN(d))return'';return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
   function poDraw(){
     var today=new Date().toDateString();
@@ -1664,7 +1704,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
           +'<td style="white-space:nowrap">'+act+'</td></tr>';
       }).join('');
     }
-    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งซื้อ <span style="font-size:.8rem;font-weight:500;color:var(--muted)">('+PO_ORDERS.length+')</span></h3><div style="display:flex;gap:14px;align-items:center"><button onclick="poRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button><a class="link" href="#" onclick="return false">ส่งออก Excel →</a></div></div>'
+    var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งซื้อ <span style="font-size:.8rem;font-weight:500;color:var(--muted)">('+PO_ORDERS.length+')</span></h3><div style="display:flex;gap:14px;align-items:center"><button onclick="poRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button><a class="link" href="#" onclick="poExportExcel();return false">ส่งออก Excel →</a></div></div>'
       +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่คำสั่งซื้อ</th><th>ลูกค้า</th><th>สินค้า</th><th>สถานะคำสั่งซื้อ</th><th>ทั้งหมด</th><th>ทีมโค้ช</th><th>ผู้แนะนำ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     var prows=PO_PROD.map(function(p){
       var pct=Math.round(p.left/p.quota*100);
