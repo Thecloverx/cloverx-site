@@ -1,10 +1,9 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<script>(function(){try{var t=localStorage.getItem('clx_theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('clx_lang');if(l)document.documentElement.setAttribute('lang',l);}catch(e){}})();</script>
+<meta name="color-scheme" content="light">
 <title>CloverX Thailand — Build the Future of Health With Us</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -226,16 +225,6 @@ footer a{color:var(--foot-link)}
       <a href="#faqs" data-i18n="nav_faqs">FAQs</a>
     </nav>
     <div class="navright">
-      <div class="ctrls">
-        <div class="langseg" id="langSeg">
-          <button type="button" data-lang="th">TH</button>
-          <button type="button" data-lang="en">EN</button>
-        </div>
-        <button type="button" class="themebtn" id="themeBtn" aria-label="Toggle theme">
-          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-          <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A8.5 8.5 0 1111.2 3a6.6 6.6 0 009.8 9.8z"/></svg>
-        </button>
-      </div>
       <a class="login" href="/operations" data-i18n="nav_login">Login</a>
       <button class="burger" id="burger" aria-label="menu"><span></span></button>
     </div>
@@ -451,18 +440,9 @@ if(burger){ burger.addEventListener('click',function(){drawer.classList.add('ope
 document.getElementById('cl').addEventListener('click',function(){drawer.classList.remove('open');});
 drawer.addEventListener('click',function(e){ if(e.target===drawer||e.target.tagName==='A')drawer.classList.remove('open'); });
 
-/* ================= controls wiring ================= */
-document.getElementById('langSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;applyLang(b.getAttribute('data-lang'));});
-document.getElementById('themeBtn').addEventListener('click',function(){
-  var cur=document.documentElement.getAttribute('data-theme');
-  var isDark=cur==='dark' || (cur!=='light' && window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches);
-  applyTheme(isDark?'light':'dark');
-});
-
-/* ================= init ================= */
+/* ================= init (fixed: Thai, light theme — no toggles) ================= */
 (function(){
-  var st=lget('clx_theme'); if(st==='dark'||st==='light') applyTheme(st); else document.documentElement.removeAttribute('data-theme');
-  applyLang(lget('clx_lang')||'th');
+  applyLang('th');
   layout();
 })();
 </script>

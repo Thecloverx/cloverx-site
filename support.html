@@ -48,6 +48,11 @@
   .nav .children{display:none;flex-direction:column;gap:1px;margin:1px 0 2px}
   .nav .group.open>.children{display:flex}
   .nav .children .item{font-weight:600;padding-left:38px;font-size:.86rem;color:var(--ink)}
+  .nav .children .item.lvl2{padding-left:16px;font-size:.82rem;font-weight:800;color:var(--ink)}
+  .nav .children .item.lvl3{padding-left:34px;font-size:.85rem}
+  .nav .children .item.ghead.lvl3{font-weight:700}
+  .nav .children .item.lvl4{padding-left:52px;font-size:.84rem}
+  .nav .children .group{margin-top:1px}
   .nav .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45;flex:none}
   .nav .navfoot{margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
   .nav .navfoot .item{margin-top:2px}
@@ -140,21 +145,30 @@
       <div><b>ฝ่ายซัพพอร์ต</b><span>Support</span></div>
     </div>
     <nav class="nav" id="nav">
-      <!-- อีเวนต์ -->
-      <div class="group open" id="g-events">
-        <button class="item ghead" data-toggle="g-events"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span class="lbl">อีเวนต์</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <!-- Event Management -->
+      <div class="group open" id="g-event">
+        <button class="item ghead" data-toggle="g-event"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span class="lbl">Event Management</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item active" data-view="lldash"><span class="dot"></span><span class="lbl">Dashboard</span></button>
-          <button class="item" data-view="leanlab"><span class="dot"></span><span class="lbl">Lean Lab · ผู้สมัคร</span></button>
-        </div>
-      </div>
-
-      <!-- ช่วยเหลือลูกค้า -->
-      <div class="group open" id="g-help">
-        <button class="item ghead" data-toggle="g-help"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lbl">ช่วยเหลือลูกค้า</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="children">
-          <button class="item" data-view="tickets"><span class="dot"></span><span class="lbl">Tickets</span><span class="soon">เร็ว ๆ นี้</span></button>
-          <button class="item" data-view="kb"><span class="dot"></span><span class="lbl">ฐานความรู้</span><span class="soon">เร็ว ๆ นี้</span></button>
+          <div class="group open" id="g-ll">
+            <button class="item ghead lvl2" data-toggle="g-ll"><span class="dot"></span><span class="lbl">Lean Lab</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="children">
+              <button class="item lvl3 active" data-view="lldash"><span class="dot"></span><span class="lbl">Dashboard</span></button>
+              <button class="item lvl3" data-view="llreg"><span class="dot"></span><span class="lbl">Register</span></button>
+              <div class="group open" id="g-mem">
+                <button class="item ghead lvl3" data-toggle="g-mem"><span class="dot"></span><span class="lbl">Member</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+                <div class="children">
+                  <button class="item lvl4" data-view="llmstart"><span class="dot"></span><span class="lbl">Start Member</span></button>
+                  <button class="item lvl4" data-view="llmafter"><span class="dot"></span><span class="lbl">After Member</span></button>
+                </div>
+              </div>
+              <div class="group open" id="g-pay">
+                <button class="item ghead lvl3" data-toggle="g-pay"><span class="dot"></span><span class="lbl">Payment Status</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+                <div class="children">
+                  <button class="item lvl4" data-view="llorder"><span class="dot"></span><span class="lbl">Order</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -194,7 +208,7 @@
     document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');
   });});
 
-  var TITLES={lldash:'Dashboard',leanlab:'Lean Lab · ผู้สมัคร',tickets:'Tickets',kb:'ฐานความรู้',settings:'ตั้งค่า'};
+  var TITLES={lldash:'Dashboard',llreg:'Register',llmstart:'Start Member',llmafter:'After Member',llorder:'Order · Payment Status',tickets:'Tickets',kb:'ฐานความรู้',settings:'ตั้งค่า'};
 
   // ---------- DASHBOARD (Lean Lab event overview) ----------
   function dashView(){
@@ -272,45 +286,89 @@
     }).catch(function(){var e=document.getElementById('dashBody');if(e)e.innerHTML='<div style="color:var(--bad);text-align:center;padding:40px">เชื่อมต่อไม่สำเร็จ</div>';});
   }
 
-  function leanlabView(){
+  // ----- Register (แชร์ลิงก์/QR → หน้า Landing) -----
+  function registerView(){
     return ''
-      + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Lean Lab</h1>'
-      +   '<p>บริหารผู้สมัคร ตรวจสลิป และยืนยันสิทธิ์ · Season 1</p></div>'
-      +   '<div style="display:flex;gap:10px"><button class="btn ghost" id="llRefresh">รีเฟรช ⟳</button><a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
-      + '<div class="kpis" id="llKpis">'
-      +   '<div class="kpi"><div class="lb">ผู้สมัครทั้งหมด</div><div class="v num" id="k_total">–</div><div class="s">สมาชิก <b id="k_members">–</b> คน</div></div>'
-      +   '<div class="kpi"><div class="lb">รอตรวจสลิป</div><div class="v num" id="k_pending" style="color:var(--warn)">–</div><div class="s">ต้องยืนยัน</div></div>'
-      +   '<div class="kpi"><div class="lb">ยืนยันแล้ว</div><div class="v num" id="k_confirmed" style="color:var(--good)">–</div><div class="s">พร้อมเข้าร่วม</div></div>'
-      +   '<div class="kpi"><div class="lb">ยอดยืนยันแล้ว</div><div class="v num" id="k_revenue">–</div><div class="s">ค่าสมัคร 3,900/คน</div></div>'
-      +   '<div class="kpi"><div class="lb">โปรโมชั่นพิเศษ 🎁</div><div class="v num" id="k_promo" style="color:var(--warn)">–</div><div class="s">เหลือ <b id="k_promo_left">–</b> สิทธิ์ · นับเฉพาะที่ยืนยันแล้ว</div></div>'
-      + '</div>'
+      + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Register</h1>'
+      +   '<p>แชร์ลิงก์หรือ QR Code ให้ลูกค้าไปหน้า Landing Page เพื่อสมัครเข้าร่วม Lean Lab</p></div>'
+      +   '<a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดหน้า Landing ↗</a></div>'
       + '<div class="panel">'
-      +   '<div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3><span style="font-size:.78rem;color:var(--muted)">แชร์ให้ลูกค้าสแกน → เปิดหน้าสมัคร Lean Lab</span></div>'
-      +   '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center">'
-      +     '<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;flex:none"><div id="llQrBox" style="width:150px;height:150px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem">QR…</div></div>'
-      +     '<div style="flex:1;min-width:240px"><label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์หน้าสมัคร (ลูกค้า)</label>'
-      +       '<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="llLink" readonly value="" style="flex:1;min-width:200px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;background:var(--soft);color:var(--ink)">'
-      +       '<button class="btn pri" id="llCopy" style="padding:0 18px">คัดลอกลิงก์</button>'
-      +       '<a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้า ↗</a></div>'
-      +       '<p style="font-size:.78rem;color:var(--muted);margin-top:10px">* ลูกค้าจะเห็นหน้าเว็บสวยแยก (Lean Lab) — คำสั่งสมัครจะเข้ามาที่ตารางด้านล่างแบบเรียลไทม์</p></div>'
+      +   '<div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3><span style="font-size:.78rem;color:var(--muted)">ลูกค้าสแกน → เปิดหน้าสมัคร Lean Lab</span></div>'
+      +   '<div style="display:flex;gap:26px;flex-wrap:wrap;align-items:center">'
+      +     '<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;flex:none"><div id="llQrBox" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem">QR…</div></div>'
+      +     '<div style="flex:1;min-width:260px"><label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์หน้าสมัคร (ลูกค้า)</label>'
+      +       '<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="llLink" readonly value="" style="flex:1;min-width:220px;padding:12px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;background:var(--soft);color:var(--ink)">'
+      +       '<button class="btn pri" id="llCopy" style="padding:0 18px">คัดลอกลิงก์</button></div>'
+      +       '<p style="font-size:.82rem;color:var(--muted);margin-top:14px;line-height:1.7">• ลูกค้าจะเห็นหน้า Landing สวย ๆ ของ Lean Lab แล้วสมัคร/ล็อกอิน<br>• คำสั่งซื้อจะเข้ามาที่เมนู <b>Payment Status › Order</b> แบบเรียลไทม์<br>• เมื่อลูกค้าชำระผ่าน จะย้ายไปเมนู <b>Member</b> ตามวันที่เลือกเริ่ม</p></div>'
       +   '</div>'
-      + '</div>'
-      + '<div class="panel">'
-      +   '<div class="ph"><h3>รายชื่อผู้สมัคร Lean Lab</h3><span class="pill lean" id="llCount">–</span></div>'
-      +   '<div style="overflow-x:auto"><table><thead><tr><th>ผู้สมัคร</th><th>ข้อมูล</th><th>รูปแบบเริ่ม</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       + '</div>';
+  }
+  function registerInit(){
+    var url=location.origin+'/leanlab';
+    var li=document.getElementById('llLink'); if(li)li.value=url;
+    var cp=document.getElementById('llCopy'); if(cp)cp.onclick=function(){try{navigator.clipboard.writeText(url);cp.textContent='คัดลอกแล้ว ✓';setTimeout(function(){cp.textContent='คัดลอกลิงก์';},1500);}catch(e){}};
+    var qb=document.getElementById('llQrBox'); if(qb&&window.QRCode){qb.innerHTML='';try{new QRCode(qb,{text:url,width:180,height:180,correctLevel:QRCode.CorrectLevel.M});}catch(e){qb.textContent='QR ไม่สำเร็จ';}}
+  }
+
+  // ----- Order (Payment Status — รายการทั้งหมด + Admin ตรวจหลักฐาน/ยืนยัน) -----
+  function orderView(){
+    return ''
+      + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Order · Payment Status</h1>'
+      +   '<p>รายการสั่งซื้อ/สั่งจองทั้งหมด · ตรวจหลักฐาน Option → อนุมัติให้ลูกค้าชำระ → เมื่อชำระผ่านจะย้ายเข้า Member</p></div>'
+      +   '<button class="btn ghost" id="llRefresh">รีเฟรช ⟳</button></div>'
+      + '<div class="panel" style="background:var(--warn-tint,#FFF6E6);border:1px solid var(--warn,#C77700)"><div style="font-size:.86rem;color:var(--ink);line-height:1.7"><b>ขั้นตอน Admin สำหรับลูกค้าที่รับสิทธิ์พิเศษ (Option ที่ต้องแนบหลักฐาน):</b><br>1) ลูกค้าแนบภาพ + รายละเอียดการซื้อ → สถานะ <span class="pill pend">รอตรวจหลักฐาน</span><br>2) Admin กด <b>✓ อนุมัติหลักฐาน</b> เมื่อตรวจว่าถูกต้อง → ลูกค้าจึงชำระเงินได้<br>3) เมื่อลูกค้าชำระผ่าน → ย้ายเข้า <b>Member</b> ตามวันเริ่มที่เลือก</div></div>'
+      + '<div class="panel">'
+      +   '<div class="ph"><h3>รายการทั้งหมด</h3><span class="pill lean" id="llCount">–</span></div>'
+      +   '<div style="overflow-x:auto"><table><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
+      + '</div>';
+  }
+  function orderInit(){ var rb=document.getElementById('llRefresh'); if(rb)rb.onclick=orderLoad; orderLoad(); }
+
+  // ----- Member (เฉพาะลูกค้าที่ชำระ/ยืนยันแล้ว แยกตาม Choice การเริ่ม) -----
+  function memberView(mode){
+    var isNow=mode==='now';
+    return ''
+      + '<div class="head"><div><h1><span class="pill '+(isNow?'lean':'ok')+'">MEMBER</span> '+(isNow?'Start Member':'After Member')+'</h1>'
+      +   '<p>'+(isNow?'ลูกค้าที่ชำระแล้ว และเลือกเริ่มลด ณ ตอนนี้':'ลูกค้าที่ชำระแล้ว และเลือกเริ่มวันที่ 8 พ.ย. 2569')+' · แสดงเฉพาะที่ยืนยันการชำระเงินแล้ว</p></div>'
+      +   '<button class="btn ghost" id="memRefresh" data-mode="'+mode+'">รีเฟรช ⟳</button></div>'
+      + '<div class="panel">'
+      +   '<div class="ph"><h3>รายชื่อสมาชิก</h3><span class="pill '+(isNow?'lean':'ok')+'" id="memCount">–</span></div>'
+      +   '<div style="overflow-x:auto"><table><thead><tr><th>สมาชิก</th><th>ข้อมูล</th><th>แพ็กเกจ/ยอด</th><th>'+(isNow?'ค่าตั้งต้น (Before)':'สถานะเริ่ม')+'</th><th>ยืนยันเมื่อ</th></tr></thead><tbody id="memBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
+      + '</div>';
+  }
+  function memberLoad(mode){
+    var rb=document.getElementById('memRefresh'); if(rb)rb.onclick=function(){memberLoad(mode);};
+    fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      var tb=document.getElementById('memBody'); if(!tb)return;
+      if(!j||!j.ok){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';return;}
+      var mem=(j.registrations||[]).filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
+      var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent=mem.length+' คน';
+      if(!mem.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">ยังไม่มีสมาชิกในกลุ่มนี้</td></tr>';return;}
+      tb.innerHTML=mem.map(function(r){
+        var ins=r.installment||null;
+        var pkg = ins?('Special · ผ่อน '+Number(ins.perMonth||7490).toLocaleString('en-US')+'×'+(ins.months||6)+' <span style="color:#2E86FF">('+(ins.paidCount||0)+'/'+(ins.months||6)+')</span>')
+          : (r.promoPlan==='full'?('Grand Slam · '+(r.promoTier||'')) : 'ค่าสมัครปกติ');
+        var amt=ins?(ins.total||44940):(r.fee||0);
+        var col4 = mode==='now'
+          ? (r.baseline?('<a class="pill new" style="text-decoration:none" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div style="font-size:.72rem;color:var(--muted);margin-top:4px">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>')
+          : '<span class="pill ok">เริ่ม 8 พ.ย. 69</span>';
+        return '<tr>'
+          +'<td><div style="font-weight:700">'+llEsc(r.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
+          +'<td style="font-size:.82rem">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+'ซม.</td>'
+          +'<td style="font-size:.84rem;font-weight:600">'+pkg+'<div style="font-size:.75rem;color:var(--muted);font-weight:500">฿'+Number(amt).toLocaleString('en-US')+'</div></td>'
+          +'<td>'+col4+'</td>'
+          +'<td style="font-size:.8rem;color:var(--muted)">'+llEsc((r.reviewedAt||r.createdAt||'').slice(0,10))+'</td>'
+          +'</tr>';
+      }).join('');
+    }).catch(function(){var tb=document.getElementById('memBody');if(tb)tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">เชื่อมต่อไม่สำเร็จ</td></tr>';});
   }
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function llLoad(){
+  function orderLoad(){
     fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
       if(!j||!j.ok)return;
       var c=j.counts||{};
-      var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
-      set('k_total',c.total||0);set('k_members',j.members||0);set('k_pending',c.pending_review||0);set('k_confirmed',c.confirmed||0);
-      set('k_revenue','฿'+Number(c.revenue||0).toLocaleString('en-US'));
-      var pr=j.promo||{};set('k_promo',(pr.used!=null?pr.used:0)+' / '+(pr.quota!=null?pr.quota:100));set('k_promo_left',pr.left!=null?pr.left:'–');
-      var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' คน';
+      var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' รายการ';
       var tb=document.getElementById('llBody');if(!tb)return;
       var regs=j.registrations||[];
       if(!regs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">ยังไม่มีผู้สมัคร</td></tr>';return;}
@@ -349,30 +407,22 @@
       }).join('');
     }).catch(function(){var tb=document.getElementById('llBody');if(tb)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';});
   }
-  function llInit(){
-    var url=location.origin+'/leanlab';
-    var li=document.getElementById('llLink'); if(li)li.value=url;
-    var cp=document.getElementById('llCopy'); if(cp)cp.onclick=function(){try{navigator.clipboard.writeText(url);cp.textContent='คัดลอกแล้ว ✓';setTimeout(function(){cp.textContent='คัดลอกลิงก์';},1500);}catch(e){}};
-    var rb=document.getElementById('llRefresh'); if(rb)rb.onclick=llLoad;
-    var qb=document.getElementById('llQrBox'); if(qb&&window.QRCode){qb.innerHTML='';try{new QRCode(qb,{text:url,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});}catch(e){qb.textContent='QR ไม่สำเร็จ';}}
-    llLoad();
-  }
   window.llDel=function(id){
     if(!confirm('ลบผู้สมัครนี้ถาวร? (รวมบัญชีสมาชิก)'))return;
     fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({withMember:true})})
-      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)llLoad();else alert('ลบไม่สำเร็จ');})
+      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('ลบไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
   window.llVerify=function(id,result){
     if(result==='rejected'&&!confirm('ปฏิเสธหลักฐานการซื้อของผู้สมัครนี้?'))return;
     fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/promo-verify',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({result:result})})
-      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)llLoad();else alert('อัปเดตไม่สำเร็จ');})
+      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('อัปเดตไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
   window.llSet=function(id,status){
     if(status==='rejected'&&!confirm('ยืนยันการปฏิเสธ/ยกเลิกผู้สมัครนี้?'))return;
     fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:status})})
-      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)llLoad();else alert('อัปเดตไม่สำเร็จ');})
+      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('อัปเดตไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
 
@@ -388,7 +438,10 @@
     document.querySelectorAll('.nav .group').forEach(function(g){g.classList.toggle('has-active', !!g.querySelector('.item.active'));});
     document.getElementById('crumbTitle').textContent=TITLES[v]||v;
     if(v==='lldash'){ gen.innerHTML=dashView(); dashLoad(); }
-    else if(v==='leanlab'){ gen.innerHTML=leanlabView(); llInit(); }
+    else if(v==='llreg'){ gen.innerHTML=registerView(); registerInit(); }
+    else if(v==='llmstart'){ gen.innerHTML=memberView('now'); memberLoad('now'); }
+    else if(v==='llmafter'){ gen.innerHTML=memberView('later'); memberLoad('later'); }
+    else if(v==='llorder'){ gen.innerHTML=orderView(); orderInit(); }
     else if(v==='tickets') gen.innerHTML=emptyView('Tickets','ระบบรับเรื่อง/ตั๋วช่วยเหลือลูกค้า กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='kb') gen.innerHTML=emptyView('ฐานความรู้','คลังบทความ/คู่มือช่วยเหลือ กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='settings') gen.innerHTML=emptyView('ตั้งค่า','ตั้งค่าฝ่ายซัพพอร์ต กำลังพัฒนา — เร็ว ๆ นี้');
