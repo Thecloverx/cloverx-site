@@ -192,7 +192,7 @@ module.exports = function (app, DATA_DIR) {
     res.json({
       lineLogin: !!(lineConfigured() || process.env.LINE_DEV_FAKE === '1'),
       liffId: process.env.LEANLAB_LIFF_ID || process.env.LINE_LIFF_ID || '',
-      googleLogin: googleConfigured()
+      googleLogin: false
     });
   });
 
