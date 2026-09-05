@@ -600,11 +600,7 @@
     +'  <div class="join-col"><div id="promoBadge"></div>'
     +'    <div class="join-card"><div id="sidePanel"></div></div>'
     +'  </div>'
-    +' </div></section>'
-    // ===== footer =====
-    +'<div class="llx-foot"><div class="llin llx-in"><a class="llx-logo" href="/leanlab" style="font-size:1.1rem">Lean Lab<svg class="lx" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></a>'
-    +'  <div class="fn"><a data-scroll="top">'+T('nav_over')+'</a><a data-scroll="prog">'+T('nav_prog')+'</a><a data-scroll="prize">'+T('nav_prize')+'</a></div>'
-    +'  <div class="sp" style="flex:1"></div><div class="cp">'+T('ft_tag')+' · © 2026 LEAN LAB by CloverX</div></div></div>';
+    +' </div></section>';
     // wiring
     L.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){scrollToJoin(b.getAttribute('data-go')==='login');};});
     L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',prog:'llProg',prize:'llPrize',faq:'llFaq'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
