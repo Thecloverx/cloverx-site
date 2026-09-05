@@ -280,6 +280,10 @@
   .llx-prize li .pi{flex:none;color:#ffcf6b}
 
   /* results */
+  .llx-res{padding:28px 24px 60px}
+  .res-img{display:block;width:100%;max-width:1200px;margin:0 auto;border-radius:18px}
+  @media(max-width:1240px){.res-img{border-radius:14px}}
+  @media(max-width:600px){.res-img{border-radius:10px}}
   .llx-res .llin{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:0 26px}
   @media(max-width:860px){.llx-res .llin{grid-template-columns:1fr;gap:28px}}
   .llx-res .scan{position:relative;border:1px solid var(--line2);border-radius:20px;min-height:360px;background:#0a1420 center/cover;background-image:var(--scan,none);overflow:hidden}
@@ -297,7 +301,7 @@
   .llx-res .quote{font-family:var(--ff-d);font-style:italic;font-size:1.25rem;color:var(--ink);margin-top:20px;border-left:3px solid var(--lime);padding-left:14px}
 
   /* join */
-  .llx-join{position:relative;border-top:1px solid var(--line);background:#03080f url('ll_join.jpg') no-repeat center center;background-size:cover;min-height:clamp(560px,46vw,720px);display:flex;align-items:center;justify-content:flex-end}
+  .llx-join{position:relative;border-top:1px solid var(--line);background:#03080f url('ll_join.jpg') no-repeat center center;background-size:100% auto;aspect-ratio:1837/856;min-height:680px;display:flex;align-items:center;justify-content:flex-end}
   .llx-join .join-inner{width:100%;max-width:1180px;margin:0 auto;padding:60px 26px;display:flex;justify-content:flex-end;box-sizing:border-box}
   .join-col{width:472px;max-width:100%;display:flex;flex-direction:column}
   .join-col #promoBadge:empty{display:none}
@@ -591,15 +595,7 @@
     +'  <div class="trophy" style="--trophy:url(\'ll_trophy.png\')"><span class="fb">🏆</span></div>'
     +' </div></section>'
     // ===== results =====
-    +'<section class="llx-sec llx-res"><div class="head"><span class="llx-eye">'+T('rs_eye')+'</span><h2>'+T('rs_h')+'</h2><p>'+T('rs_sub')+'</p></div>'
-    +' <div class="llin llx-in">'
-    +'   <div class="scan" style="--scan:url(\'ll_scan.jpg\')"><div class="fb">Before / After</div></div>'
-    +'   <div>'
-    +'     <div class="llx-rings">'+ring(68,'#56C8FF','-6.8kg',T('rs_r1'))+ring(74,'#9BE31A','-7.4%',T('rs_r2'))+ring(40,'#2E86FF','+12%',T('rs_r3'))+ring(94,'#ff5bb0','94%',T('rs_r4'))+'</div>'
-    +'     <div class="quote">'+T('rs_q')+'</div>'
-    +'     <div class="feats"><div class="f"><b>'+T('rs_f1')+'</b></div><div class="f"><b>'+T('rs_f2')+'</b></div><div class="f"><b>'+T('rs_f3')+'</b></div></div>'
-    +'   </div>'
-    +' </div></section>'
+    +'<section class="llx-sec llx-res"><img class="res-img" src="ll_results.jpg" alt="วัดผลจริง เห็นการเปลี่ยนแปลงจริง"></section>'
     // ===== join (real register form) =====
     +'<section class="llx-join" id="joinSec"><div class="join-inner">'
     +'  <div class="join-col"><div id="promoBadge"></div>'
