@@ -1,0 +1,237 @@
+<title>CloverX Support</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#EEF2F8;--panel:#FFFFFF;--ink:#1E2A44;--muted:#6B7793;--line:#E7ECF4;--soft:#F5F8FC;
+    --brand:#2563EB;--brand-tint:#E7EFFF;--brand-ink:#1B49C7;
+    --good:#12A67C;--good-tint:#E5F6EF;--warn:#D98A1A;--warn-tint:#FFF3E0;--bad:#E5484D;--bad-tint:#FDECEC;
+    --lean:#16A34A;--lean-tint:#E7F7EC;
+    --radius:14px;color-scheme:light;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,h4{font-weight:800;letter-spacing:-.01em;line-height:1.2}
+  .num{font-variant-numeric:tabular-nums}
+
+  .app{display:grid;grid-template-columns:262px 1fr;min-height:100vh}
+
+  /* SIDEBAR */
+  .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .brand{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px}
+  .brand .bmark{width:36px;height:36px;border-radius:9px;background:var(--brand);color:#fff;font-weight:800;font-size:1.05rem;display:flex;align-items:center;justify-content:center;flex:none}
+  .brand .btext{display:flex;flex-direction:column;min-width:0}
+  .brand .logo{display:flex;align-items:center;gap:7px;font-weight:800;font-size:1.32rem;letter-spacing:.04em}
+  .brand small{display:block;color:var(--muted);font-size:.72rem;font-weight:600;margin-top:4px;white-space:nowrap}
+  .wsbadge{margin:14px 16px 6px;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
+  .wsbadge .ic{width:34px;height:34px;border-radius:9px;background:#0EA5E9;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .wsbadge b{font-size:.92rem}.wsbadge span{display:block;font-size:.72rem;color:var(--muted)}
+  .nav{padding:8px 10px 12px;display:flex;flex-direction:column;gap:1px;flex:1;overflow:auto}
+  .nav .item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;color:var(--ink);font-weight:600;font-size:.88rem;cursor:pointer;transition:.14s;border:0;background:none;width:100%;text-align:left;font-family:inherit;position:relative}
+  .nav .item svg.i{width:18px;height:18px;flex:none;color:var(--muted)}
+  .nav .item .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav .item:hover{background:var(--soft)}
+  .nav .item.active{background:var(--brand-tint);color:var(--brand);font-weight:700;box-shadow:inset 2.5px 0 0 var(--brand)}
+  .nav .item.active svg.i{color:var(--brand)}
+  .nav .item .soon{font-size:.62rem;font-weight:700;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:1px 7px;margin-left:auto}
+  .nav .group{margin-top:5px}
+  .nav .group:first-child{margin-top:0}
+  .nav .ghead{font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted)}
+  .nav .ghead svg.i{width:16px;height:16px}
+  .nav .ghead:hover{background:var(--soft);color:var(--ink)}
+  .nav .item .caret{margin-left:auto;transition:transform .18s;color:var(--muted);flex:none;opacity:.7}
+  .nav .group.open>.ghead .caret{transform:rotate(90deg)}
+  .nav .children{display:none;flex-direction:column;gap:1px;margin:1px 0 2px}
+  .nav .group.open>.children{display:flex}
+  .nav .children .item{font-weight:600;padding-left:38px;font-size:.86rem;color:var(--ink)}
+  .nav .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45;flex:none}
+  .nav .navfoot{margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+  .nav .navfoot .item{margin-top:2px}
+
+  /* collapsible icon-rail (desktop) */
+  @media(min-width:901px){
+    .app{grid-template-columns:74px 1fr}
+    .side{width:74px;overflow:visible;z-index:45;transition:width .22s cubic-bezier(.4,0,.2,1)}
+    .side.expanded{width:262px;box-shadow:16px 0 44px -20px rgba(15,23,42,.30)}
+    .side:not(.expanded) .brand{justify-content:center;padding:16px 0}
+    .side:not(.expanded) .btext{display:none}
+    .side:not(.expanded) .wsbadge{margin:12px auto 6px;padding:8px;justify-content:center}
+    .side:not(.expanded) .wsbadge>div{display:none}
+    .side:not(.expanded) .nav .item{justify-content:center;padding:9px 0;gap:0}
+    .side:not(.expanded) .nav .item .lbl,.side:not(.expanded) .nav .item .caret,.side:not(.expanded) .nav .item .soon{display:none}
+    .side:not(.expanded) .nav .children{display:none!important}
+    .side:not(.expanded) .nav .group.has-active>.ghead{background:var(--brand-tint);color:var(--brand)}
+    .side:not(.expanded) .nav .group.has-active>.ghead svg.i{color:var(--brand)}
+    .side .nav{overflow-y:auto;overflow-x:hidden}
+  }
+  @media(max-width:900px){
+    .app{grid-template-columns:1fr}
+    .side{position:fixed;left:0;top:0;bottom:0;width:270px;z-index:60;transform:translateX(-100%);transition:transform .22s}
+    .side.open{transform:none}
+    .burger{display:block}
+    .scrim{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:50;display:none}
+    .scrim.show{display:block}
+  }
+  .scrim{display:none}
+
+  /* MAIN */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 26px;height:70px}
+  .burger{display:none;background:none;border:0;cursor:pointer;color:var(--ink)}
+  .crumb{font-size:.82rem;color:var(--muted)}
+  .crumb b{color:var(--ink);font-weight:700;font-size:1.02rem;display:block}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .user{display:flex;align-items:center;gap:10px}
+  .user .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,#38BDF8,#0369A1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex:none}
+  .user .info b{font-size:.88rem}.user .info span{display:block;font-size:.74rem;color:var(--muted)}
+  @media(max-width:560px){.user .info{display:none}}
+
+  .content{padding:26px;flex:1}
+  .wrapc{max-width:1200px;margin:0 auto}
+  .head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .head h1{font-size:1.6rem;display:flex;align-items:center;gap:10px}
+  .head p{color:var(--muted);margin-top:4px;font-size:.95rem}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;border:1px solid;text-decoration:none;transition:.15s}
+  .btn.pri{background:var(--lean);border-color:var(--lean);color:#fff}
+  .btn.pri:hover{filter:brightness(.95)}
+  .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+  .btn.ghost:hover{background:var(--soft)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .kpi .lb{font-size:.85rem;color:var(--muted)}
+  .kpi .v{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+  .kpi .s{font-size:.76rem;color:var(--muted);margin-top:4px}
+  @media(max-width:1000px){.kpis{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.kpis{grid-template-columns:1fr}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px}
+  .panel .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+  .panel h3{font-size:1.05rem}
+  .pill{font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+  .pill.ok{background:var(--good-tint);color:var(--good)}
+  .pill.lean{background:var(--lean-tint);color:var(--lean)}
+
+  /* embedded system frame */
+  .frame{width:100%;height:760px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--soft)}
+  .frame iframe{width:100%;height:100%;border:0;display:block}
+  .framebar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .framebar .u{font-size:.78rem;color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-family:ui-monospace,monospace}
+
+  .ph-empty{background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:44px;text-align:center;color:var(--muted)}
+  .ph-empty .ic{width:60px;height:60px;border-radius:16px;background:var(--soft);color:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .ph-empty h3{color:var(--ink);font-size:1.2rem;margin-bottom:6px}
+  .view{display:none}.view.active{display:block}
+</style>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side" id="side">
+    <a class="brand" href="center.html" title="กลับ CloverX Center">
+      <span class="bmark">C</span>
+      <span class="btext"><span class="logo">CLOVER</span><small>One Platform, All Departments</small></span>
+    </a>
+    <div class="wsbadge">
+      <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14a2 2 0 0 0 2 2h1v-5H6a2 2 0 0 0-2 2zM20 14a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2zM17 16v1a3 3 0 0 1-3 3h-2"/></svg></span>
+      <div><b>ฝ่ายซัพพอร์ต</b><span>Support</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <!-- อีเวนต์ -->
+      <div class="group open" id="g-events">
+        <button class="item ghead" data-toggle="g-events"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span class="lbl">อีเวนต์</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item active" data-view="leanlab"><span class="dot"></span><span class="lbl">Lean Lab</span></button>
+        </div>
+      </div>
+
+      <!-- ช่วยเหลือลูกค้า -->
+      <div class="group open" id="g-help">
+        <button class="item ghead" data-toggle="g-help"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lbl">ช่วยเหลือลูกค้า</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="tickets"><span class="dot"></span><span class="lbl">Tickets</span><span class="soon">เร็ว ๆ นี้</span></button>
+          <button class="item" data-view="kb"><span class="dot"></span><span class="lbl">ฐานความรู้</span><span class="soon">เร็ว ๆ นี้</span></button>
+        </div>
+      </div>
+
+      <div class="navfoot">
+        <button class="item" data-view="settings"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 17 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span class="lbl">ตั้งค่า</span></button>
+      </div>
+    </nav>
+  </aside>
+  <div class="scrim" id="scrim" onclick="toggleSide()"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="burger" onclick="toggleSide()" aria-label="เมนู"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="crumb">ฝ่ายซัพพอร์ต<b id="crumbTitle">Lean Lab</b></div>
+      <div class="right">
+        <div class="user"><div class="av">S</div><div class="info"><b>Support</b><span>CloverX</span></div></div>
+      </div>
+    </header>
+
+    <div class="content"><div class="wrapc" id="gen"></div></div>
+  </div>
+</div>
+
+<script>
+  var gen=document.getElementById('gen');
+  function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
+
+  // desktop icon-rail: expand on hover
+  (function(){var s=document.getElementById('side');
+    s.addEventListener('mouseenter',function(){if(window.innerWidth>900)s.classList.add('expanded');});
+    s.addEventListener('mouseleave',function(){s.classList.remove('expanded');});
+  })();
+
+  // group collapse toggles
+  document.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){
+    document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');
+  });});
+
+  var TITLES={leanlab:'Lean Lab',tickets:'Tickets',kb:'ฐานความรู้',settings:'ตั้งค่า'};
+
+  function leanlabView(){
+    return ''
+      + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Lean Lab</h1>'
+      +   '<p>โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ · Season 1 · ระบบสมาชิก + ลงทะเบียน + ชำระเงิน</p></div>'
+      +   '<a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดระบบเต็มหน้าจอ ↗</a></div>'
+      + '<div class="kpis">'
+      +   '<div class="kpi"><div class="lb">ค่าสมัคร</div><div class="v num">฿3,900</div><div class="s">โอนธนาคารเท่านั้น</div></div>'
+      +   '<div class="kpi"><div class="lb">เริ่มโปรแกรม (ตัวเลือก)</div><div class="v">8 พ.ย. 2569</div><div class="s">หรือ “เริ่มลด ณ ตอนนี้”</div></div>'
+      +   '<div class="kpi"><div class="lb">ที่นั่ง</div><div class="v num">200</div><div class="s">4 จุดนัดพบ</div></div>'
+      +   '<div class="kpi"><div class="lb">รางวัลรวม</div><div class="v num">฿280,000</div><div class="s">Season 1</div></div>'
+      + '</div>'
+      + '<div class="panel">'
+      +   '<div class="ph"><h3>ระบบสมาชิก & ลงทะเบียน Lean Lab</h3><span class="pill ok">เปิดรับสมัคร</span></div>'
+      +   '<div class="framebar"><span class="u">/leanlab</span><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดแท็บใหม่ ↗</a></div>'
+      +   '<div class="frame"><iframe src="/leanlab" title="Lean Lab" loading="lazy"></iframe></div>'
+      + '</div>';
+  }
+
+  function emptyView(title,desc){
+    return '<div class="head"><h1>'+title+'</h1></div>'
+      + '<div class="ph-empty"><div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4M12 16h.01M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg></div>'
+      + '<h3>'+title+'</h3><p>'+desc+'</p></div>';
+  }
+
+  function go(v){
+    document.querySelectorAll('.nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
+    // mark group has-active for collapsed rail
+    document.querySelectorAll('.nav .group').forEach(function(g){g.classList.toggle('has-active', !!g.querySelector('.item.active'));});
+    document.getElementById('crumbTitle').textContent=TITLES[v]||v;
+    if(v==='leanlab') gen.innerHTML=leanlabView();
+    else if(v==='tickets') gen.innerHTML=emptyView('Tickets','ระบบรับเรื่อง/ตั๋วช่วยเหลือลูกค้า กำลังพัฒนา — เร็ว ๆ นี้');
+    else if(v==='kb') gen.innerHTML=emptyView('ฐานความรู้','คลังบทความ/คู่มือช่วยเหลือ กำลังพัฒนา — เร็ว ๆ นี้');
+    else if(v==='settings') gen.innerHTML=emptyView('ตั้งค่า','ตั้งค่าฝ่ายซัพพอร์ต กำลังพัฒนา — เร็ว ๆ นี้');
+    else gen.innerHTML=emptyView(TITLES[v]||v,'กำลังพัฒนา');
+    if(window.innerWidth<=900){document.getElementById('side').classList.remove('open');document.getElementById('scrim').classList.remove('show');}
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
+
+  go('leanlab');
+</script>
