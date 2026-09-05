@@ -3,67 +3,115 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>(function(){try{var t=localStorage.getItem('clx_theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('clx_lang');if(l)document.documentElement.setAttribute('lang',l);}catch(e){}})();</script>
 <title>CloverX Thailand — Build the Future of Health With Us</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
 <style>
 :root{
-  --blue:#2E7FE4; --blue2:#1F6FDB; --ink:#12161d; --ink2:#3a4453;
-  --muted:#6b7688; --line:#e7ebf1; --bg:#ffffff; --soft:#f4f7fb;
+  --blue:#2E7FE4; --blue2:#1F6FDB;
+  --ink:#12161d; --ink2:#3a4453; --muted:#6b7688;
+  --line:#e7ebf1; --bg:#ffffff; --soft:#f4f7fb; --surface:#ffffff;
+  --header:rgba(255,255,255,.93); --navink:#222a35;
+  --foot-bg:#0f1830; --foot-ink:#cdd6e6; --foot-link:#9fc0ff;
+  --ctrl-bg:#f1f4f9; --ctrl-line:#e2e7ef;
+  --shadow-card:0 40px 90px -50px rgba(10,25,60,.75);
   --maxw:1240px;
+}
+:root[data-theme="dark"]{
+  --blue:#4f9bff; --blue2:#3d8cec;
+  --ink:#e9eef7; --ink2:#aeb9cc; --muted:#8493aa;
+  --line:#212a3e; --bg:#0a0f1b; --soft:#111a2b; --surface:#121b2d;
+  --header:rgba(10,15,27,.9); --navink:#cdd7e8;
+  --foot-bg:#070b14; --foot-ink:#aab6c8; --foot-link:#7fb2ff;
+  --ctrl-bg:#141d30; --ctrl-line:#243049;
+  --shadow-card:0 40px 90px -46px rgba(0,0,0,.8);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --blue:#4f9bff; --blue2:#3d8cec;
+    --ink:#e9eef7; --ink2:#aeb9cc; --muted:#8493aa;
+    --line:#212a3e; --bg:#0a0f1b; --soft:#111a2b; --surface:#121b2d;
+    --header:rgba(10,15,27,.9); --navink:#cdd7e8;
+    --foot-bg:#070b14; --foot-ink:#aab6c8; --foot-link:#7fb2ff;
+    --ctrl-bg:#141d30; --ctrl-line:#243049;
+    --shadow-card:0 40px 90px -46px rgba(0,0,0,.8);
+  }
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{font-family:"Noto Sans Thai","Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:"Noto Sans Thai","Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s,color .3s}
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 .eng{font-family:"Manrope","Noto Sans Thai",sans-serif}
 
 /* ============ HEADER ============ */
-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.nav{max-width:var(--maxw);margin:0 auto;height:72px;display:flex;align-items:center;gap:24px;padding:0 24px}
+header{position:sticky;top:0;z-index:50;background:var(--header);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:background .3s,border-color .3s}
+.nav{max-width:var(--maxw);margin:0 auto;height:72px;display:flex;align-items:center;gap:20px;padding:0 24px}
 .brand img{height:30px;width:auto}
-.nav .links{display:flex;gap:32px;margin-left:22px;font-family:"Manrope";font-weight:600;font-size:15px;color:#222a35}
+.brand .logo-d{display:none}
+:root[data-theme="dark"] .brand .logo-l{display:none}
+:root[data-theme="dark"] .brand .logo-d{display:block}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .brand .logo-l{display:none}
+  :root:not([data-theme="light"]) .brand .logo-d{display:block}
+}
+.nav .links{display:flex;gap:30px;margin-left:20px;font-family:"Manrope";font-weight:600;font-size:15px;color:var(--navink)}
 .nav .links a{position:relative;padding:6px 0;transition:color .18s}
 .nav .links a:hover{color:var(--blue)}
 .nav .links a::after{content:"";position:absolute;left:0;right:100%;bottom:-2px;height:2px;background:var(--blue);border-radius:2px;transition:right .22s}
 .nav .links a:hover::after{right:0}
-.nav .login{margin-left:auto;font-family:"Manrope";font-weight:600;font-size:15px;color:#222a35;padding:8px 18px;border-radius:999px;border:1.5px solid var(--line);transition:.18s}
+.navright{margin-left:auto;display:flex;align-items:center;gap:12px}
+.nav .login{font-family:"Manrope";font-weight:600;font-size:15px;color:var(--navink);padding:8px 18px;border-radius:999px;border:1.5px solid var(--line);transition:.18s;white-space:nowrap}
 .nav .login:hover{border-color:var(--blue);color:var(--blue)}
-.burger{display:none;margin-left:auto;width:42px;height:42px;border:1.5px solid var(--line);border-radius:11px;background:#fff;align-items:center;justify-content:center;cursor:pointer}
-.burger span,.burger span::before,.burger span::after{content:"";display:block;width:19px;height:2px;background:#222a35;border-radius:2px;position:relative}
+
+/* ---- controls: language + theme ---- */
+.ctrls{display:flex;align-items:center;gap:8px}
+.langseg{display:inline-flex;background:var(--ctrl-bg);border:1px solid var(--ctrl-line);border-radius:999px;padding:3px;gap:2px}
+.langseg button{border:0;background:transparent;font-family:"Manrope";font-weight:700;font-size:13px;color:var(--muted);padding:5px 11px;border-radius:999px;cursor:pointer;transition:.16s;line-height:1}
+.langseg button.on{background:var(--blue);color:#fff;box-shadow:0 4px 10px -4px rgba(46,127,228,.6)}
+.themebtn{width:38px;height:38px;border-radius:999px;border:1px solid var(--ctrl-line);background:var(--ctrl-bg);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.16s;flex:none}
+.themebtn:hover{border-color:var(--blue);color:var(--blue)}
+.themebtn svg{width:19px;height:19px}
+.themebtn .moon{display:none}.themebtn .sun{display:block}
+:root[data-theme="dark"] .themebtn .sun{display:none}:root[data-theme="dark"] .themebtn .moon{display:block}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .themebtn .sun{display:none}:root:not([data-theme="light"]) .themebtn .moon{display:block}}
+.burger{display:none;width:42px;height:42px;border:1.5px solid var(--line);border-radius:11px;background:var(--surface);align-items:center;justify-content:center;cursor:pointer;flex:none}
+.burger span,.burger span::before,.burger span::after{content:"";display:block;width:19px;height:2px;background:var(--navink);border-radius:2px;position:relative}
 .burger span::before{position:absolute;top:-6px}.burger span::after{position:absolute;top:6px}
 
-/* ============ HERO ============ */
-/* ===== DESKTOP HERO — original design image (nav cropped off) + HTML search box ===== */
-.dhero{position:relative;width:100%;min-height:calc(100vh - 74px);background:#fff}
+/* ============ DESKTOP HERO ============ */
+.dhero{position:relative;width:100%;min-height:calc(100vh - 74px);background:var(--bg)}
 .dhero .herowrap{position:relative;width:100%;font-size:0}
 .dhero .herobase{width:100%;height:auto;display:block;
   -webkit-mask-image:linear-gradient(to bottom,#000 88%,transparent 100%);
   mask-image:linear-gradient(to bottom,#000 88%,transparent 100%)}
+:root[data-theme="dark"] .dhero .herobase{filter:brightness(.82) contrast(1.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dhero .herobase{filter:brightness(.82) contrast(1.05)}}
 .hsearchbox{position:absolute;z-index:3;display:flex;align-items:center;
-  background:#fff;border:1.5px solid var(--line);border-radius:999px;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:999px;
   padding:0 0.9% 0 2.6%;box-shadow:0 20px 44px -26px rgba(20,60,130,.5)}
 .hsearchbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;
-  font-family:"Noto Sans Thai","Manrope",sans-serif;color:#1c2431;font-size:clamp(13px,1.1vw,17px)}
-.hsearchbox input::placeholder{color:#9aa4b3}
+  font-family:"Noto Sans Thai","Manrope",sans-serif;color:var(--ink);font-size:clamp(13px,1.1vw,17px)}
+.hsearchbox input::placeholder{color:var(--muted)}
 .hsearchbox button{flex:none;height:72%;aspect-ratio:1;border:0;border-radius:50%;cursor:pointer;
   background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;display:flex;align-items:center;justify-content:center;
   box-shadow:0 8px 18px -8px rgba(20,90,200,.7);transition:transform .15s}
 .hsearchbox button:hover{transform:scale(1.06)}
 .hsearchbox button svg{width:46%;height:46%}
 
-/* ===== MOBILE HERO (HTML, readable) — hidden on desktop ===== */
+/* ============ MOBILE HERO ============ */
 .mhero{display:none}
 .mhero .xmark{position:absolute;left:-70px;top:0;width:320px;height:320px;pointer-events:none;opacity:.09;z-index:0}
 .mhero .hleft{position:relative;z-index:2}
 .mhero .htitle{font-family:"Manrope";font-weight:800;letter-spacing:-.02em;line-height:1.03;font-size:clamp(34px,9vw,52px);color:var(--ink)}
 .mhero .htitle .b{color:var(--blue)}
 .mhero .hsub{margin-top:16px;font-size:16px;line-height:1.7;color:var(--ink2);font-weight:500}
-.mhero .search{margin-top:22px;display:flex;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 7px 6px 20px;box-shadow:0 18px 40px -26px rgba(20,60,130,.5)}
+.mhero .search{margin-top:22px;display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:6px 7px 6px 20px;box-shadow:0 18px 40px -26px rgba(20,60,130,.5)}
 .mhero .search input{flex:1;border:0;outline:0;font-family:"Noto Sans Thai","Manrope";font-size:16px;color:var(--ink);background:transparent}
-.mhero .search input::placeholder{color:#9aa4b3}
+.mhero .search input::placeholder{color:var(--muted)}
 .mhero .search button{flex:none;width:46px;height:46px;border:0;border-radius:50%;background:linear-gradient(180deg,#3D8CEC,#2472D8);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .mhero .hphoto{margin-top:20px;border-radius:18px;overflow:hidden}
 .mhero .hphoto img{width:100%;height:auto;display:block}
@@ -76,17 +124,12 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdro
 .about .lead + .lead{margin-top:18px}
 
 /* ============ CAROUSEL ============ */
-.eco{padding:4px 0 88px;position:relative;background:#ffffff}
-.eco .head{max-width:var(--maxw);margin:0 auto 8px;padding:0 24px;text-align:center}
-.eco .head .kk{font-family:"Manrope";font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--blue);text-transform:uppercase}
-.eco .head h3{font-family:"Manrope";font-weight:800;font-size:clamp(26px,3.4vw,40px);margin-top:8px;color:var(--ink)}
-.eco .head p{margin-top:10px;color:var(--muted);font-size:16px;font-weight:500}
-
+.eco{padding:4px 0 88px;position:relative;background:var(--bg)}
 .stage{position:relative;height:560px;margin-top:28px;perspective:2200px}
 .track{position:absolute;inset:0;transform-style:preserve-3d}
 .card{position:absolute;left:50%;top:50%;width:min(880px,86vw);aspect-ratio:16/8.6;
   transform:translate(-50%,-50%);border-radius:26px;overflow:hidden;cursor:pointer;
-  box-shadow:0 40px 90px -50px rgba(10,25,60,.75);
+  box-shadow:var(--shadow-card);
   transition:transform .55s cubic-bezier(.22,.61,.36,1),opacity .55s,filter .55s;
   will-change:transform,opacity}
 .card .bg{position:absolute;inset:0}
@@ -108,50 +151,57 @@ header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdro
 .card .links a:hover{background:rgba(46,127,228,.9);border-color:transparent}
 .card .links svg{width:15px;height:15px;fill:currentColor}
 
-/* focus / side states set inline by JS via data-pos */
 .card[data-pos="0"]{z-index:30;opacity:1;filter:none}
 .card[data-pos="-1"],.card[data-pos="1"]{z-index:20;opacity:.58;filter:saturate(.8) brightness(.62) blur(1.2px)}
 .card[data-pos="-2"],.card[data-pos="2"]{z-index:10;opacity:.3;filter:saturate(.7) brightness(.5) blur(2px)}
 .card[data-pos="hidden"]{opacity:0;pointer-events:none;z-index:1}
 
 .arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:40;width:56px;height:56px;border-radius:50%;
-  background:#fff;border:1px solid var(--line);box-shadow:0 14px 30px -14px rgba(20,50,110,.5);
+  background:var(--surface);border:1px solid var(--line);box-shadow:0 14px 30px -14px rgba(20,50,110,.5);
   display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s,background .15s}
-.arrow:hover{transform:translateY(-50%) scale(1.07);background:#f4f8ff}
-.arrow svg{width:22px;height:22px;stroke:#1c2431;stroke-width:2.4;fill:none}
+.arrow:hover{transform:translateY(-50%) scale(1.07);background:var(--soft)}
+.arrow svg{width:22px;height:22px;stroke:var(--ink);stroke-width:2.4;fill:none}
 .arrow.prev{left:max(16px,calc(50% - 560px))}
 .arrow.next{right:max(16px,calc(50% - 560px))}
 .dots{display:flex;gap:9px;justify-content:center;margin-top:30px}
-.dots button{width:9px;height:9px;border-radius:50%;border:0;background:#d3dbe6;cursor:pointer;padding:0;transition:.2s}
+.dots button{width:9px;height:9px;border-radius:50%;border:0;background:var(--line);cursor:pointer;padding:0;transition:.2s}
 .dots button.on{background:var(--blue);width:26px;border-radius:6px}
 
 /* ============ FOOTER ============ */
-footer{background:#0f1830;color:#cdd6e6;padding:44px 24px;text-align:center;font-size:14px;line-height:1.9}
+footer{background:var(--foot-bg);color:var(--foot-ink);padding:44px 24px;text-align:center;font-size:14px;line-height:1.9;transition:background .3s}
 footer .fx{font-family:"Manrope";font-weight:800;font-size:20px;color:#fff}
 footer .fx .x{color:#5aa0ff}
-footer a{color:#9fc0ff}
+footer a{color:var(--foot-link)}
 
 /* ============ RESPONSIVE ============ */
 [id]{scroll-margin-top:86px}
 @media (max-width:960px){
+  .nav{gap:12px;padding:0 16px}
   .nav .links,.nav .login{display:none}
   .burger{display:flex}
+  .navright{gap:8px}
   .dhero{display:none}
   .mhero{display:flex;position:relative;flex-direction:column;min-height:auto;
-    max-width:var(--maxw);margin:0 auto;padding:24px 20px 20px;gap:18px;overflow:hidden}
+    max-width:var(--maxw);margin:0 auto;padding:22px 18px 18px;gap:18px;overflow:hidden}
   .stage{height:470px}
   .arrow.prev{left:8px}.arrow.next{right:8px}
   .card{width:90vw;aspect-ratio:7/6}
   .card .lg{left:22px;top:20px}.card .body{left:22px;right:22px;bottom:22px}
   .card .body p{-webkit-line-clamp:3}
 }
+@media (max-width:560px){
+  .langseg button{padding:5px 9px;font-size:12px}
+  .themebtn{width:34px;height:34px}
+  .themebtn svg{width:17px;height:17px}
+  .about{padding:40px 20px 30px}
+}
 /* mobile drawer */
-.drawer{position:fixed;inset:0;z-index:100;background:rgba(12,18,30,.5);opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer{position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.55);opacity:0;pointer-events:none;transition:opacity .2s}
 .drawer.open{opacity:1;pointer-events:auto}
-.drawer .panel{position:absolute;top:0;right:0;height:100%;width:78%;max-width:320px;background:#fff;padding:26px 24px;display:flex;flex-direction:column;gap:6px;transform:translateX(100%);transition:transform .26s}
+.drawer .panel{position:absolute;top:0;right:0;height:100%;width:80%;max-width:330px;background:var(--surface);padding:24px 22px;display:flex;flex-direction:column;gap:4px;transform:translateX(100%);transition:transform .26s}
 .drawer.open .panel{transform:none}
-.drawer a{font-family:"Manrope";font-weight:600;font-size:18px;padding:14px 6px;border-bottom:1px solid var(--line);color:#1c2431}
-.drawer .cl{align-self:flex-end;font-size:26px;color:#6b7688;padding:4px 10px;cursor:pointer}
+.drawer a{font-family:"Manrope";font-weight:600;font-size:18px;padding:15px 6px;border-bottom:1px solid var(--line);color:var(--ink)}
+.drawer .cl{align-self:flex-end;font-size:26px;color:var(--muted);padding:4px 10px;cursor:pointer}
 @media (max-width:520px){
   .stage{height:460px}
   .card{aspect-ratio:6/5.6}
@@ -168,24 +218,36 @@ footer a{color:#9fc0ff}
 
 <header>
   <div class="nav">
-    <a class="brand" href="/"><img src="cloverx_logo.png" alt="CloverX"></a>
+    <a class="brand" href="/"><img class="logo-l" src="cloverx_logo_t.png" alt="CloverX"><img class="logo-d" src="cloverx_logo_d.png" alt="CloverX"></a>
     <nav class="links">
-      <a href="#about">About Us</a>
-      <a href="#life">Life at CloverX</a>
-      <a href="#jobs">Jobs</a>
-      <a href="#faqs">FAQs</a>
+      <a href="#about" data-i18n="nav_about">About Us</a>
+      <a href="#life" data-i18n="nav_life">Life at CloverX</a>
+      <a href="#jobs" data-i18n="nav_jobs">Jobs</a>
+      <a href="#faqs" data-i18n="nav_faqs">FAQs</a>
     </nav>
-    <a class="login" href="/operations">Login</a>
-    <button class="burger" id="burger" aria-label="menu"><span></span></button>
+    <div class="navright">
+      <div class="ctrls">
+        <div class="langseg" id="langSeg">
+          <button type="button" data-lang="th">TH</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <button type="button" class="themebtn" id="themeBtn" aria-label="Toggle theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A8.5 8.5 0 1111.2 3a6.6 6.6 0 009.8 9.8z"/></svg>
+        </button>
+      </div>
+      <a class="login" href="/operations" data-i18n="nav_login">Login</a>
+      <button class="burger" id="burger" aria-label="menu"><span></span></button>
+    </div>
   </div>
 </header>
 
-<!-- ============ DESKTOP HERO — original design image + HTML search box ============ -->
+<!-- DESKTOP HERO -->
 <section class="dhero">
   <div class="herowrap">
     <img class="herobase" src="heroimg_body.jpg" alt="Better Habits. Better Health. Better Life.">
     <form class="hsearchbox" action="#jobs" onsubmit="return false" style="left:6%;top:70.2%;width:26%;height:11%">
-      <input type="text" placeholder="Job title or keywords" aria-label="Search jobs">
+      <input type="text" data-i18n-ph="search_ph" placeholder="Job title or keywords" aria-label="Search jobs">
       <button type="submit" aria-label="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
       </button>
@@ -193,17 +255,17 @@ footer a{color:#9fc0ff}
   </div>
 </section>
 
-<!-- ============ MOBILE HERO — HTML (readable) ============ -->
+<!-- MOBILE HERO -->
 <section class="hero mhero">
   <svg class="xmark" viewBox="0 0 100 100" aria-hidden="true">
     <path d="M8 8 C 40 38, 60 38, 92 8 C 62 40, 62 60, 92 92 C 60 62, 40 62, 8 92 C 38 60, 38 40, 8 8 Z" fill="#2E7FE4"/>
   </svg>
-  <div class="hphoto"><img src="heroteam.jpg" alt="ทีมงาน CloverX"></div>
+  <div class="hphoto"><img src="heroteam.jpg" alt="CloverX team"></div>
   <div class="hleft">
     <h1 class="htitle eng">Better Habits.<br>Better Health.<br><span class="b">Better Life.</span></h1>
-    <p class="hsub">ร่วมเป็นส่วนหนึ่งกับบริษัทสุขภาพยุคใหม่<br>ที่ช่วยให้คนสุขภาพดีขึ้นและเติบโตไปด้วยกัน</p>
+    <p class="hsub" data-i18n="hero_sub">ร่วมเป็นส่วนหนึ่งกับบริษัทสุขภาพยุคใหม่ ที่ช่วยให้คนสุขภาพดีขึ้นและเติบโตไปด้วยกัน</p>
     <form class="search" action="#jobs" onsubmit="return false">
-      <input type="text" placeholder="Job title or keywords" aria-label="Search jobs">
+      <input type="text" data-i18n-ph="search_ph" placeholder="Job title or keywords" aria-label="Search jobs">
       <button type="submit" aria-label="search">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
       </button>
@@ -211,15 +273,15 @@ footer a{color:#9fc0ff}
   </div>
 </section>
 
-<!-- ============ ABOUT ============ -->
+<!-- ABOUT -->
 <section class="about" id="about">
-  <div class="k eng">About CloverX Thailand</div>
-  <h2 class="eng">Build the Future of Health With Us</h2>
-  <p class="lead eng">building an integrated health ecosystem where technology, data, nutrition and human guidance work together to help people live healthier lives.</p>
-  <p class="lead eng">We are looking for people who want more than just a job people who are ready to take ownership, challenge what is possible and build meaningful products that can shape the future of everyday health.</p>
+  <div class="k eng" data-i18n="about_k">About CloverX Thailand</div>
+  <h2 class="eng" data-i18n="about_h">Build the Future of Health With Us</h2>
+  <p class="lead eng" data-i18n="about_p1">building an integrated health ecosystem where technology, data, nutrition and human guidance work together to help people live healthier lives.</p>
+  <p class="lead eng" data-i18n="about_p2">We are looking for people who want more than just a job — people who are ready to take ownership, challenge what is possible and build meaningful products that can shape the future of everyday health.</p>
 </section>
 
-<!-- ============ COVERFLOW CAROUSEL ============ -->
+<!-- CAROUSEL -->
 <section class="eco" id="life">
   <div class="stage">
     <button class="arrow prev" id="prev" aria-label="previous"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button>
@@ -231,8 +293,8 @@ footer a{color:#9fc0ff}
 
 <footer>
   <div class="fx eng">CLOVER<span class="x">✕</span></div>
-  <div style="margin-top:10px">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด · CLOVERX (THAILAND) CO., LTD.</div>
-  <div>762/84 ซอยพัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพฯ 10250 · โทร 065-514-6576</div>
+  <div style="margin-top:10px" data-i18n="foot_co">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด · CLOVERX (THAILAND) CO., LTD.</div>
+  <div data-i18n="foot_addr">762/84 ซอยพัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพฯ 10250 · โทร 065-514-6576</div>
   <div style="margin-top:8px"><a href="mailto:info@cloverxth.com">info@cloverxth.com</a> · <a href="https://www.cloverxth.com">www.cloverxth.com</a></div>
 </footer>
 
@@ -240,110 +302,169 @@ footer a{color:#9fc0ff}
 <div class="drawer" id="drawer">
   <div class="panel">
     <span class="cl" id="cl">✕</span>
-    <a href="#about">About Us</a>
-    <a href="#life">Life at CloverX</a>
-    <a href="#jobs">Jobs</a>
-    <a href="#faqs">FAQs</a>
-    <a href="/operations">Login</a>
+    <a href="#about" data-i18n="nav_about">About Us</a>
+    <a href="#life" data-i18n="nav_life">Life at CloverX</a>
+    <a href="#jobs" data-i18n="nav_jobs">Jobs</a>
+    <a href="#faqs" data-i18n="nav_faqs">FAQs</a>
+    <a href="/operations" data-i18n="nav_login">Login</a>
   </div>
 </div>
 
 <script>
-/* ---------- icons ---------- */
+/* ================= i18n dictionary ================= */
+const I18N={
+  th:{
+    nav_about:'เกี่ยวกับเรา', nav_life:'ชีวิตที่ CloverX', nav_jobs:'ตำแหน่งงาน', nav_faqs:'คำถามที่พบบ่อย', nav_login:'เข้าสู่ระบบ',
+    search_ph:'ตำแหน่งงานหรือคำค้นหา',
+    hero_sub:'ร่วมเป็นส่วนหนึ่งกับบริษัทสุขภาพยุคใหม่ ที่ช่วยให้คนสุขภาพดีขึ้นและเติบโตไปด้วยกัน',
+    about_k:'เกี่ยวกับ CloverX ประเทศไทย',
+    about_h:'ร่วมสร้างอนาคตของสุขภาพไปกับเรา',
+    about_p1:'เรากำลังสร้างระบบนิเวศสุขภาพแบบครบวงจร ที่เทคโนโลยี ข้อมูล โภชนาการ และการดูแลโดยผู้เชี่ยวชาญ ทำงานร่วมกันเพื่อช่วยให้ผู้คนมีสุขภาพที่ดีขึ้น',
+    about_p2:'เรากำลังมองหาคนที่ต้องการมากกว่าแค่งานประจำ — คนที่พร้อมเป็นเจ้าของงาน กล้าท้าทายขีดจำกัด และสร้างผลิตภัณฑ์ที่มีความหมายซึ่งจะกำหนดอนาคตของสุขภาพในทุก ๆ วัน',
+    foot_co:'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด',
+    foot_addr:'762/84 ซอยพัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพฯ 10250 · โทร 065-514-6576',
+    lb_website:'เว็บไซต์', lb_learn:'ดูเพิ่มเติม', lb_jobs:'ตำแหน่งงาน'
+  },
+  en:{
+    nav_about:'About Us', nav_life:'Life at CloverX', nav_jobs:'Jobs', nav_faqs:'FAQs', nav_login:'Login',
+    search_ph:'Job title or keywords',
+    hero_sub:'Join a modern health company that helps people live healthier and grow together.',
+    about_k:'About CloverX Thailand',
+    about_h:'Build the Future of Health With Us',
+    about_p1:'We are building an integrated health ecosystem where technology, data, nutrition and human guidance work together to help people live healthier lives.',
+    about_p2:'We are looking for people who want more than just a job — people who are ready to take ownership, challenge what is possible and build meaningful products that can shape the future of everyday health.',
+    foot_co:'CLOVERX (THAILAND) CO., LTD.',
+    foot_addr:'762/84 Soi Pattanakarn 38, Suan Luang, Bangkok 10250 · Tel 065-514-6576',
+    lb_website:'Website', lb_learn:'Learn more', lb_jobs:'Jobs'
+  }
+};
+
+/* ================= icons ================= */
 const IC={
   web:'<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2c1.7 0 3.3 3 3.7 7H8.3C8.7 7 10.3 4 12 4zM6.3 11c.1-2 .6-3.9 1.4-5.4A8 8 0 004.3 11zm0 2H4.3a8 8 0 003.4 5.4C6.9 16.9 6.4 15 6.3 13zm2 0h7.4c-.4 4-2 7-3.7 7s-3.3-3-3.7-7zm9.4 0c-.1 2-.6 3.9-1.4 5.4a8 8 0 003.4-5.4zm0-2a8 8 0 00-3.4-5.4c.8 1.5 1.3 3.4 1.4 5.4z"/></svg>',
   fb:'<svg viewBox="0 0 24 24"><path d="M13 22v-8h2.7l.4-3H13V9c0-.9.3-1.5 1.6-1.5H16V4.8C15.7 4.8 14.8 4.7 13.7 4.7 11.4 4.7 10 6 10 8.6V11H7.4v3H10v8z"/></svg>',
   ig:'<svg viewBox="0 0 24 24"><path d="M12 8.8A3.2 3.2 0 1012 15.2 3.2 3.2 0 0012 8.8zm0 5.3a2.1 2.1 0 110-4.2 2.1 2.1 0 010 4.2zM16.9 8.7a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM19 8.8c0-1.2-.4-2.2-1.2-3-.8-.8-1.8-1.1-3-1.2C13.6 4.5 10.4 4.5 9.1 4.6c-1.2 0-2.2.4-3 1.2-.8.8-1.1 1.8-1.2 3C4.8 9.9 4.8 13.1 4.9 14.4c0 1.2.4 2.2 1.2 3 .8.8 1.8 1.1 3 1.2 1.3.1 4.5.1 5.8 0 1.2 0 2.2-.4 3-1.2.8-.8 1.1-1.8 1.2-3 .1-1.3.1-4.5 0-5.8zm-1.4 7a2.9 2.9 0 01-1.6 1.6c-1.1.4-3.8.3-5 .3s-3.9.1-5-.3a2.9 2.9 0 01-1.6-1.6c-.4-1.1-.3-3.8-.3-5s-.1-3.9.3-5A2.9 2.9 0 017 6.1c1.1-.4 3.8-.3 5-.3s3.9-.1 5 .3a2.9 2.9 0 011.6 1.6c.4 1.1.3 3.8.3 5s.1 3.9-.3 5z"/></svg>',
-  shop:'<svg viewBox="0 0 24 24"><path d="M7 4h-.8L5.4 2H2v2h2l2.6 9.6c.1.5.6.9 1.1.9h8.8c.5 0 1-.4 1.1-.9L20 6H6.4l.5 2H17l-1.2 4H8.3zM8 18a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>',
-  x:'<svg viewBox="0 0 24 24"><path d="M17.5 3h3l-6.6 7.6L22 21h-6l-4.7-6.2L5.9 21H3l7.1-8.1L2.5 3h6.1l4.3 5.7zm-1 16h1.6L7.6 4.7H5.9z"/></svg>'
+  shop:'<svg viewBox="0 0 24 24"><path d="M7 4h-.8L5.4 2H2v2h2l2.6 9.6c.1.5.6.9 1.1.9h8.8c.5 0 1-.4 1.1-.9L20 6H6.4l.5 2H17l-1.2 4H8.3zM8 18a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>'
 };
-function lnk(icon,label,href){return '<a href="'+(href||'#')+'" target="_blank" rel="noopener">'+IC[icon]+label+'</a>';}
 
-/* ---------- card data (แก้ไข/เพิ่มการ์ดได้ที่นี่) ---------- */
+/* ================= carousel data (TH/EN) ================= */
 const CARDS=[
   {mk:'CLOVER<span class="x">✕</span>', title:'CloverX (Thailand)', bg:'c1.jpg',
-   desc:'ผู้สร้างระบบนิเวศสุขภาพยุคใหม่ ที่รวมเทคโนโลยี ข้อมูล และการดูแลสุขภาพเข้าไว้ด้วยกัน เพื่อช่วยให้ผู้คนมีสุขภาพดีขึ้นและใช้ชีวิตได้ยาวนานขึ้น',
-   links:lnk('web','Website','https://www.cloverxth.com')+lnk('fb','Facebook')+lnk('ig','Instagram')},
+   desc:{th:'ผู้สร้างระบบนิเวศสุขภาพยุคใหม่ ที่รวมเทคโนโลยี ข้อมูล และการดูแลสุขภาพเข้าไว้ด้วยกัน เพื่อช่วยให้ผู้คนมีสุขภาพดีขึ้นและใช้ชีวิตได้ยาวนานขึ้น',
+          en:'The creator of a modern health ecosystem that brings together technology, data and care to help people live healthier and longer.'},
+   links:[['web','lb_website','https://www.cloverxth.com'],['fb','Facebook','#'],['ig','Instagram','#']]},
   {mk:'XIRCLE', title:'Xircle', bg:'c2.jpg',
-   desc:'แบรนด์อุปกรณ์สุขภาพอัจฉริยะของ CloverX ที่ช่วยติดตามการกิน การเคลื่อนไหว และการนอน (Eat · Move · Sleep) แบบเรียลไทม์ในที่เดียว',
-   links:lnk('shop','Pre-Order','/preorder')+lnk('ig','Instagram')+lnk('fb','Facebook')},
+   desc:{th:'แบรนด์อุปกรณ์สุขภาพอัจฉริยะของ CloverX ที่ช่วยติดตามการกิน การเคลื่อนไหว และการนอน (Eat · Move · Sleep) แบบเรียลไทม์ในที่เดียว',
+          en:"CloverX's smart health devices that track how you Eat, Move and Sleep in real time, all in one place."},
+   links:[['shop','Pre-Order','/preorder'],['ig','Instagram','#'],['fb','Facebook','#']]},
   {mk:'Eat·Move·Sleep', title:'Eat · Move · Sleep', bg:'c3.jpg',
-   desc:'โปรแกรมดูแลสุขภาพองค์รวม ที่เชื่อมข้อมูลสุขภาพของคุณให้เห็นภาพรวมในที่เดียว เปลี่ยนพฤติกรรมเล็ก ๆ ในแต่ละวันให้กลายเป็นสุขภาพที่ดีในระยะยาว',
-   links:lnk('web','Learn more','#')},
+   desc:{th:'โปรแกรมดูแลสุขภาพองค์รวม ที่เชื่อมข้อมูลสุขภาพของคุณให้เห็นภาพรวมในที่เดียว เปลี่ยนพฤติกรรมเล็ก ๆ ในแต่ละวันให้กลายเป็นสุขภาพที่ดีในระยะยาว',
+          en:'A holistic health program that connects your health data into one clear picture, turning small daily habits into lasting long-term health.'},
+   links:[['web','lb_learn','#']]},
   {mk:'Wellness', title:'Wellness & Longevity', bg:'c4.jpg',
-   desc:'ขับเคลื่อนนวัตกรรมด้านสุขภาพและการมีอายุยืนอย่างมีคุณภาพ ผ่านแพลตฟอร์มสำหรับผู้คน ธุรกิจ และชุมชน เพื่อปลดล็อกศักยภาพของการมีสุขภาพดีที่ยาวนานขึ้น',
-   links:lnk('web','Learn more','#')},
+   desc:{th:'ขับเคลื่อนนวัตกรรมด้านสุขภาพและการมีอายุยืนอย่างมีคุณภาพ ผ่านแพลตฟอร์มสำหรับผู้คน ธุรกิจ และชุมชน เพื่อปลดล็อกศักยภาพของการมีสุขภาพดีที่ยาวนานขึ้น',
+          en:'Driving innovation in health and healthy longevity through a platform for people, businesses and communities — unlocking the potential of a longer, healthier life.'},
+   links:[['web','lb_learn','#']]},
   {mk:'Life at CloverX', title:'Life at CloverX', bg:'c5.jpg',
-   desc:'ทีมเล็กที่ทำงานเร็ว ข้ามสายงาน และเป็นเจ้าของงานจริง ๆ เราใช้ AI และเทคโนโลยีเพื่อสร้างสิ่งใหม่ และเติบโตไปด้วยกันในทุก ๆ วัน',
-   links:lnk('fb','Facebook')+lnk('ig','Instagram')+lnk('web','Jobs','#jobs')},
+   desc:{th:'ทีมเล็กที่ทำงานเร็ว ข้ามสายงาน และเป็นเจ้าของงานจริง ๆ เราใช้ AI และเทคโนโลยีเพื่อสร้างสิ่งใหม่ และเติบโตไปด้วยกันในทุก ๆ วัน',
+          en:'A small team that moves fast, works across functions and truly owns its work. We use AI and technology to build new things and grow together every day.'},
+   links:[['fb','Facebook','#'],['ig','Instagram','#'],['web','lb_jobs','#jobs']]}
 ];
 
-/* ---------- build cards ---------- */
-const track=document.getElementById('track');
-const els=CARDS.map((c,i)=>{
-  const d=document.createElement('div');
+/* ================= theme + language ================= */
+var LANG='th';
+function T(k){return (I18N[LANG]&&I18N[LANG][k])||(I18N.en&&I18N.en[k])||k;}
+function lget(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lset(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  lset('clx_theme',t);
+}
+function applyLang(l){
+  LANG=(l==='en')?'en':'th';
+  document.documentElement.setAttribute('lang',LANG);
+  lset('clx_lang',LANG);
+  document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');if(I18N[LANG][k]!=null)el.textContent=I18N[LANG][k];});
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){var k=el.getAttribute('data-i18n-ph');if(I18N[LANG][k]!=null)el.placeholder=I18N[LANG][k];});
+  document.querySelectorAll('#langSeg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-lang')===LANG);});
+  buildCardContent();
+}
+
+/* ================= build cards ================= */
+var track=document.getElementById('track');
+function linkHTML(l){var label=(I18N.th[l[1]]||I18N.en[l[1]])?T(l[1]):l[1];return '<a href="'+(l[2]||'#')+'"'+(l[2]&&l[2].charAt(0)!=='#'?' target="_blank" rel="noopener"':'')+'>'+(IC[l[0]]||'')+label+'</a>';}
+var els=CARDS.map(function(c,i){
+  var d=document.createElement('div');
   d.className='card';
-  d.innerHTML=
-    '<div class="bg"><img src="'+c.bg+'" alt=""></div>'+
-    '<div class="scrim"></div>'+
-    '<div class="lg"><span class="mk">'+c.mk+'</span></div>'+
-    '<div class="body"><h4>'+c.title+'</h4><p>'+c.desc+'</p><div class="links">'+c.links+'</div></div>';
-  d.addEventListener('click',e=>{ if(e.target.closest('a'))return; go(i); });
+  d.addEventListener('click',function(e){ if(e.target.closest('a'))return; go(i); });
   track.appendChild(d);
   return d;
 });
+function buildCardContent(){
+  CARDS.forEach(function(c,i){
+    var links=c.links.map(linkHTML).join('');
+    els[i].innerHTML=
+      '<div class="bg"><img src="'+c.bg+'" alt=""></div>'+
+      '<div class="scrim"></div>'+
+      '<div class="lg"><span class="mk">'+c.mk+'</span></div>'+
+      '<div class="body"><h4>'+c.title+'</h4><p>'+c.desc[LANG]+'</p><div class="links">'+links+'</div></div>';
+  });
+}
 
-/* ---------- coverflow layout ---------- */
-let cur=0; const N=CARDS.length;
-const STEP=[0,255,470];        // px translateX per position step
-const SCALE=[1,.80,.64];
-const ROT=[0,26,34];           // deg
-const TZ=[90,-40,-130];        // px translateZ — push focused card forward, sides back
+/* ================= coverflow ================= */
+var cur=0; var N=CARDS.length;
+var STEP=[0,255,470], SCALE=[1,.80,.64], ROT=[0,26,34], TZ=[90,-40,-130];
 function layout(){
-  els.forEach((el,i)=>{
-    let off=i-cur;
-    // wrap to nearest (carousel feel)
+  els.forEach(function(el,i){
+    var off=i-cur;
     if(off> N/2) off-=N;
     if(off<-N/2) off+=N;
-    const a=Math.min(Math.abs(off),2), s=Math.sign(off);
+    var a=Math.min(Math.abs(off),2), s=Math.sign(off);
     if(Math.abs(off)>2){ el.dataset.pos='hidden'; el.style.transform='translate(-50%,-50%) translateZ(-260px) scale(.55)'; return; }
     el.dataset.pos=String(off);
-    const tx=s*STEP[a], sc=SCALE[a], ry=-s*ROT[a], tz=TZ[a];
+    var tx=s*STEP[a], sc=SCALE[a], ry=-s*ROT[a], tz=TZ[a];
     el.style.transform='translate(-50%,-50%) translateZ('+tz+'px) translateX('+tx+'px) scale('+sc+') rotateY('+ry+'deg)';
   });
-  document.querySelectorAll('#dots button').forEach((b,i)=>b.classList.toggle('on',i===cur));
+  document.querySelectorAll('#dots button').forEach(function(b,i){b.classList.toggle('on',i===cur);});
 }
 function go(i){ cur=(i%N+N)%N; layout(); }
 function next(){ go(cur+1); }
 function prev(){ go(cur-1); }
 document.getElementById('next').addEventListener('click',next);
 document.getElementById('prev').addEventListener('click',prev);
+var dots=document.getElementById('dots');
+CARDS.forEach(function(_,i){var b=document.createElement('button');b.addEventListener('click',function(){go(i);});dots.appendChild(b);});
+window.addEventListener('keydown',function(e){ if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); });
+var sx=null;
+var stage=document.querySelector('.stage');
+stage.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+stage.addEventListener('touchend',function(e){ if(sx===null)return; var dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>45){dx<0?next():prev();} sx=null; });
+var mdown=false,mx=0;
+stage.addEventListener('mousedown',function(e){mdown=true;mx=e.clientX;});
+window.addEventListener('mouseup',function(e){ if(!mdown)return; var dx=e.clientX-mx; if(Math.abs(dx)>60){dx<0?next():prev();} mdown=false; });
 
-/* dots */
-const dots=document.getElementById('dots');
-CARDS.forEach((_,i)=>{const b=document.createElement('button');b.addEventListener('click',()=>go(i));dots.appendChild(b);});
+/* ================= drawer ================= */
+var drawer=document.getElementById('drawer');
+var burger=document.getElementById('burger');
+if(burger){ burger.addEventListener('click',function(){drawer.classList.add('open');}); }
+document.getElementById('cl').addEventListener('click',function(){drawer.classList.remove('open');});
+drawer.addEventListener('click',function(e){ if(e.target===drawer||e.target.tagName==='A')drawer.classList.remove('open'); });
 
-/* keyboard */
-window.addEventListener('keydown',e=>{ if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); });
+/* ================= controls wiring ================= */
+document.getElementById('langSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;applyLang(b.getAttribute('data-lang'));});
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var isDark=cur==='dark' || (cur!=='light' && window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  applyTheme(isDark?'light':'dark');
+});
 
-/* swipe */
-let sx=null;
-const stage=document.querySelector('.stage');
-stage.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
-stage.addEventListener('touchend',e=>{ if(sx===null)return; const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>45){dx<0?next():prev();} sx=null; });
-/* mouse drag */
-let mdown=false,mx=0;
-stage.addEventListener('mousedown',e=>{mdown=true;mx=e.clientX;});
-window.addEventListener('mouseup',e=>{ if(!mdown)return; const dx=e.clientX-mx; if(Math.abs(dx)>60){dx<0?next():prev();} mdown=false; });
-
-layout();
-
-/* ---------- mobile drawer ---------- */
-const drawer=document.getElementById('drawer');
-const burger=document.getElementById('burger');
-if(burger){ burger.addEventListener('click',()=>drawer.classList.add('open')); }
-document.getElementById('cl').addEventListener('click',()=>drawer.classList.remove('open'));
-drawer.addEventListener('click',e=>{ if(e.target===drawer||e.target.tagName==='A')drawer.classList.remove('open'); });
+/* ================= init ================= */
+(function(){
+  var st=lget('clx_theme'); if(st==='dark'||st==='light') applyTheme(st); else document.documentElement.removeAttribute('data-theme');
+  applyLang(lget('clx_lang')||'th');
+  layout();
+})();
 </script>
 </body>
 </html>
