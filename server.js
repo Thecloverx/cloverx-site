@@ -152,10 +152,11 @@ function receiptEmailHTML(o, link) {
   var z = function (n) { return (n < 10 ? '0' : '') + n; };
   var fmt = function (iso) { if (!iso) return '-'; var d = new Date(iso); if (isNaN(d)) return String(iso); var b = new Date(d.getTime() + 7 * 3600 * 1000); return z(b.getUTCDate()) + '/' + z(b.getUTCMonth() + 1) + '/' + (b.getUTCFullYear() + 543) + ' ' + z(b.getUTCHours()) + ':' + z(b.getUTCMinutes()) + ' น.'; };
   var orderWhen = fmt(o.at);
-  var payWhen = o.pay === 'card'
+  var payViaStripe = (o.pay === 'card' || o.pay === 'promptpay');
+  var payWhen = payViaStripe
     ? (o.stripe && o.stripe.at ? fmt(o.stripe.at) : orderWhen)
     : (o.transfer && (o.transfer.date || o.transfer.time) ? ((o.transfer.date || '') + ' ' + (o.transfer.time || '')).trim() : fmt(o.confirmedAt || o.invoiceAt));
-  var payLabel = o.pay === 'card' ? 'บัตรเครดิต/เดบิต' : 'โอนเงินผ่านธนาคาร';
+  var payLabel = o.pay === 'card' ? 'บัตรเครดิต/เดบิต' : (o.pay === 'promptpay' ? 'PromptPay (QR ล็อกยอด)' : 'โอนเงินผ่านธนาคาร');
   var total = (Number(o.total) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   var items = (o.items || []).map(function (it) { return '<tr><td style="padding:5px 0;color:#374151">• ' + String(it.nm) + (it.fam ? ' (ครอบครัว)' : '') + '</td><td style="padding:5px 0;text-align:right;color:#374151;white-space:nowrap">฿' + (Number(it.price) || 0).toLocaleString('en-US') + '</td></tr>'; }).join('');
   return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:580px;margin:0 auto;color:#111">'
@@ -206,13 +207,16 @@ function sendReceiptEmail(o, base) {
 // สร้างลิงก์ชำระเงิน Stripe รวมทุกชิ้นในออเดอร์เป็นลิงก์เดียว + ผูก client_reference_id = เลขออเดอร์
 // เพื่อให้ webhook จับคู่การชำระเงินแบบเรียลไทม์ได้ (ไม่ต้องแยกลิงก์ตามสินค้าอีก)
 function stripeConfigured() { return !!process.env.STRIPE_SECRET_KEY; }
-function createCheckoutSession(o, base) {
+function createCheckoutSession(o, base, opts) {
   return new Promise(function (resolve) {
     if (!stripeConfigured()) { resolve(null); return; }
+    opts = opts || {};
     var items = (o.items || []).filter(function (it) { return (Number(it.price) || 0) > 0; });
     if (!items.length) { resolve(null); return; }
     var params = [];
     params.push(['mode', 'payment']);
+    // PromptPay: บังคับใช้ PromptPay อย่างเดียว → Stripe สร้าง QR ที่ "ล็อกยอด" ให้ลูกค้าสแกน (แก้ยอดเองไม่ได้ กันโอนเกิน/ขาด)
+    if (opts.method === 'promptpay') { params.push(['payment_method_types[0]', 'promptpay']); }
     params.push(['client_reference_id', o.id]);
     params.push(['success_url', base + '/preorder?paid=' + encodeURIComponent(o.id)]);
     params.push(['cancel_url', base + '/preorder']);
@@ -362,10 +366,12 @@ app.post('/api/orders', (req, res) => {
     if (_m) { var _base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host); try { autoVerifyBank(rec.id, _m[1], _base); } catch (e) {} }
   }
 
-  // บัตรเครดิต: สร้างลิงก์ชำระเงิน Stripe รวมยอดทั้งออเดอร์ (ทุกชิ้น) เป็นลิงก์เดียวอัตโนมัติ
-  if (rec.pay === 'card' && stripeConfigured()) {
+  // บัตรเครดิต / PromptPay: สร้างลิงก์ชำระเงิน Stripe รวมยอดทั้งออเดอร์เป็นลิงก์เดียวอัตโนมัติ
+  // - card: หน้า Stripe จะโชว์ทุกวิธีที่เปิดไว้ในแดชบอร์ด
+  // - promptpay: บังคับ PromptPay QR แบบล็อกยอด (ลูกค้าสแกนแล้วยอดล็อก แก้ไม่ได้) — ยืนยันอัตโนมัติผ่าน webhook
+  if ((rec.pay === 'card' || rec.pay === 'promptpay') && stripeConfigured()) {
     const base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host);
-    createCheckoutSession(rec, base).then(function (s) {
+    createCheckoutSession(rec, base, { method: rec.pay === 'promptpay' ? 'promptpay' : 'card' }).then(function (s) {
       if (s) {
         const l = read(); const x = l.find(function (y) { return y.id === rec.id; });
         if (x) { x.stripe = Object.assign({}, x.stripe, { checkoutSessionId: s.id, checkoutUrl: s.url }); write(l); }
@@ -397,7 +403,7 @@ function maskOrder(o){
 function sweepExpiredCard(list) {
   var now = Date.now(), MS = 3 * 24 * 3600 * 1000, changed = false;
   list.forEach(function (o) {
-    if (o.pay === 'card' && o.status === 'pending' && !(o.stripe && o.stripe.paymentIntent)) {
+    if ((o.pay === 'card' || o.pay === 'promptpay') && o.status === 'pending' && !(o.stripe && o.stripe.paymentIntent)) {
       var t = new Date(o.at).getTime();
       if (!isNaN(t) && (now - t) > MS) {
         o.status = 'cancelled';
@@ -504,7 +510,7 @@ app.post('/api/orders/:id/refund', (req, res) => {
     write(list);
   }
   const pi = o.stripe && o.stripe.paymentIntent;
-  if (o.pay === 'card' && pi) {
+  if ((o.pay === 'card' || o.pay === 'promptpay') && pi) {
     createRefund(pi, Math.round(amount * 100), { order_id: o.id, category: body.category || '', sub: body.subReason || '', note: body.note || '' }).then(function (r) {
       if (r.ok) { record('stripe', r.refund && r.refund.id); res.json({ ok: true, method: 'stripe', order: o }); }
       else { res.status(502).json({ ok: false, error: r.error || 'stripe_refund_failed' }); }
@@ -627,10 +633,12 @@ function invoiceHTML(o) {
   var total = Number(o.total) || 0;
   var paid = (o.status === 'confirmed' || o.status === 'paid');
   var isTransfer = (o.pay !== 'card');
+  var payViaStripe = (o.pay === 'card' || o.pay === 'promptpay');
   var payWhen = '';
-  if (o.pay === 'card' && o.stripe && o.stripe.at) { payWhen = fmtDT(new Date(o.stripe.at)); }
+  if (payViaStripe && o.stripe && o.stripe.at) { payWhen = fmtDT(new Date(o.stripe.at)); }
   else if (o.transfer && (o.transfer.date || o.transfer.time)) { payWhen = esc(((o.transfer.date || '') + ' ' + (o.transfer.time || '')).trim()); }
-  var refLine = o.pay === 'card' ? ('บัตรเครดิต/เดบิต · Stripe' + (o.stripe && o.stripe.paymentIntent ? (' · ' + esc(o.stripe.paymentIntent)) : '')) : 'ธนาคารกสิกรไทย (KBank)';
+  var refLine = o.pay === 'card' ? ('บัตรเครดิต/เดบิต · Stripe' + (o.stripe && o.stripe.paymentIntent ? (' · ' + esc(o.stripe.paymentIntent)) : ''))
+    : (o.pay === 'promptpay' ? ('PromptPay · Stripe' + (o.stripe && o.stripe.paymentIntent ? (' · ' + esc(o.stripe.paymentIntent)) : '')) : 'ธนาคารกสิกรไทย (KBank)');
   var items = o.items || [];
   var rows = '';
   var minRows = 6;

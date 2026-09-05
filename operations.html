@@ -1688,10 +1688,12 @@
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}var act=document.querySelector('#nav .item[data-view].active');var av=act?act.getAttribute('data-view'):'';if(av&&(av.indexOf('exam-')===0||av.indexOf('reg-')===0)){EXAM_QINFO=null;examRefresh();}else{poRefresh();}}}catch(e){}}
   function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
-  // "ต้องตรวจสอบ" = pending ที่ต้องให้เจ้าหน้าที่ตรวจ (โอนธนาคาร) — ไม่รวมบัตรที่ลูกค้ายังไม่จ่าย
-  function poNeeds(o){return o.status==='pending' && o.pay!=='card';}
-  // บัตรที่ยังไม่ชำระ (รอลูกค้าจ่าย)
-  function poAwaitPay(o){return o.pay==='card' && o.status==='pending';}
+  // ชำระผ่าน Stripe (ยืนยันอัตโนมัติ ไม่ต้องให้เจ้าหน้าที่ตรวจ) = บัตร + PromptPay QR
+  function poStripe(o){return o.pay==='card'||o.pay==='promptpay';}
+  // "ต้องตรวจสอบ" = pending ที่ต้องให้เจ้าหน้าที่ตรวจ (โอนธนาคาร) — ไม่รวมบัตร/PromptPay ที่ลูกค้ายังไม่จ่าย
+  function poNeeds(o){return o.status==='pending' && !poStripe(o);}
+  // บัตร/PromptPay ที่ยังไม่ชำระ (รอลูกค้าจ่าย)
+  function poAwaitPay(o){return poStripe(o) && o.status==='pending';}
   function poCopy(){var t=document.getElementById('poLinkInput');if(!t)return;t.select();try{document.execCommand('copy');}catch(e){}
     var b=document.getElementById('poCopyBtn');if(b){var o=b.textContent;b.textContent='คัดลอกแล้ว ✓';setTimeout(function(){b.textContent=o;},1500);}}
   function poSlip(u){if(u)window.open(u,'_blank');}
@@ -1779,7 +1781,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
             'สถานะ':s[0],
             'ยอดรวม (บาท)':Number(o.total)||0,
             'คืนเงินแล้ว (บาท)':refunded,
-            'ช่องทางชำระ':o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร',
+            'ช่องทางชำระ':o.pay==='card'?'บัตรเครดิต':(o.pay==='promptpay'?'PromptPay QR':'โอนธนาคาร'),
             'ทีม':o.team||'',
             'ผู้แนะนำ':o.ref||'',
             'การจัดส่ง':o.ship==='pickup'?'รับหน้างาน':'จัดส่ง',
@@ -1831,9 +1833,9 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       rows=PO_ORDERS.map(function(o){
         var s=PO_ST[o.status]||['-','pend'];
         if(poAwaitPay(o)) s=['รอลูกค้าชำระ','wait'];
-        var ch=o.pay==='card'?'บัตรเครดิต':'โอนธนาคาร';
+        var ch=o.pay==='card'?'บัตรเครดิต':(o.pay==='promptpay'?'PromptPay QR':'โอนธนาคาร');
         var isSettled=(o.status==='paid'||o.status==='confirmed');
-        var cardCaptured=(o.pay==='card'&&o.stripe&&o.stripe.paymentIntent);
+        var cardCaptured=(poStripe(o)&&o.stripe&&o.stripe.paymentIntent);
         var refundedTot=Number(o.refundedTotal)||0, totalAmt=Number(o.total)||0;
         // เคยเก็บเงินจริง (ยืนยัน/ชำระ/คืนบางส่วน หรือมี invoice หรือมี Stripe PI) — ใช้ตัดสินว่าคืนเงินได้ไหม
         var everSettled=(!!o.invoiceNo||isSettled||o.status==='partially_refunded'||cardCaptured);
@@ -1932,7 +1934,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var rev=orders.filter(function(o){return PAID.indexOf(o.status)>=0;});
     var totalRev=rev.reduce(function(a,o){return a+(Number(o.total)||0);},0);
     var nTotal=orders.length, nRev=rev.length;
-    var nPending=orders.filter(function(o){return o.status==='pending'&&o.pay!=='card';}).length;
+    var nPending=orders.filter(function(o){return o.status==='pending'&&o.pay!=='card'&&o.pay!=='promptpay';}).length;
     var aov=nRev?totalRev/nRev:0;
     var conv=nTotal?Math.round(nRev/nTotal*100):0;
     // KPI row
@@ -1956,9 +1958,9 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     rev.forEach(function(o){(o.items||[]).forEach(function(it){var nm=it.nm||'-';if(!prodMap[nm])prodMap[nm]={q:0,amt:0};prodMap[nm].q++;prodMap[nm].amt+=(Number(it.price)||0);});});
     var prodArr=Object.keys(prodMap).map(function(k){return {label:k,value:prodMap[k].amt,sub:prodMap[k].q+' ชิ้น · '+pdMoney(prodMap[k].amt)};}).sort(function(a,b){return b.value-a.value;});
     // Payment channel
-    var payMap={bank:{n:0,amt:0},card:{n:0,amt:0}};
-    rev.forEach(function(o){var k=o.pay==='card'?'card':'bank';payMap[k].n++;payMap[k].amt+=(Number(o.total)||0);});
-    var payArr=[{label:'โอนธนาคาร',value:payMap.bank.amt,sub:payMap.bank.n+' ออเดอร์ · '+pdMoney(payMap.bank.amt)},{label:'บัตรเครดิต',value:payMap.card.amt,sub:payMap.card.n+' ออเดอร์ · '+pdMoney(payMap.card.amt)}];
+    var payMap={bank:{n:0,amt:0},card:{n:0,amt:0},promptpay:{n:0,amt:0}};
+    rev.forEach(function(o){var k=o.pay==='card'?'card':(o.pay==='promptpay'?'promptpay':'bank');payMap[k].n++;payMap[k].amt+=(Number(o.total)||0);});
+    var payArr=[{label:'โอนธนาคาร',value:payMap.bank.amt,sub:payMap.bank.n+' ออเดอร์ · '+pdMoney(payMap.bank.amt)},{label:'PromptPay QR',value:payMap.promptpay.amt,sub:payMap.promptpay.n+' ออเดอร์ · '+pdMoney(payMap.promptpay.amt)},{label:'บัตรเครดิต',value:payMap.card.amt,sub:payMap.card.n+' ออเดอร์ · '+pdMoney(payMap.card.amt)}];
     // Status
     var stOrder=['pending','paid','confirmed','rejected'];
     var stMap={pending:0,paid:0,confirmed:0,rejected:0};
@@ -2080,10 +2082,10 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     e.textContent='';
     var sub=(c==='อื่น ๆ')?document.getElementById('rfOther').value.trim():(RF_SUB[c]?document.getElementById('rfSub').value:'');
     RF.amount=amt;RF.category=c;RF.subReason=sub;RF.note=document.getElementById('rfNote').value.trim();
-    var methodNote=(RF.pay==='card')?'💳 จะคืนเงินผ่าน Stripe ให้ลูกค้าอัตโนมัติ':'🏦 ชำระโดยโอนธนาคาร — ระบบจะบันทึกการคืนเงิน แต่ต้องโอนคืนให้ลูกค้าเอง';
+    var methodNote=(RF.pay==='card'||RF.pay==='promptpay')?'💳 จะคืนเงินผ่าน Stripe ให้ลูกค้าอัตโนมัติ':'🏦 ชำระโดยโอนธนาคาร — ระบบจะบันทึกการคืนเงิน แต่ต้องโอนคืนให้ลูกค้าเอง';
     var lbl=(RF.kind==='reg')?'ผู้สมัคร':'ออเดอร์';var who=(RF.kind==='reg'&&RF.nm)?RF.nm:RF.id;
     document.getElementById('rfSum').innerHTML='<div class="rf-sr"><span>'+lbl+'</span><b>'+who+'</b></div><div class="rf-sr"><span>ยอดคืน</span><b>฿'+amt.toLocaleString('en-US')+(RF.full?' (เต็มจำนวน)':' (บางส่วน)')+'</b></div><div class="rf-sr"><span>เหตุผล</span><b>'+c+(sub?(' · '+sub):'')+'</b></div>'+(RF.note?('<div class="rf-sr"><span>หมายเหตุ</span><b>'+RF.note+'</b></div>'):'')+'<div class="rf-method">'+methodNote+'</div>';
-    document.getElementById('rfWarn').textContent=(RF.pay==='card')?'⚠️ ยืนยันการคืนเงิน — เมื่อยืนยันแล้วระบบจะคืนเงินผ่าน Stripe ให้ลูกค้าทันที และย้อนกลับไม่ได้':'⚠️ ยืนยันการคืนเงิน — ระบบจะบันทึกว่าคืนเงินแล้วเท่านั้น (ไม่ได้โอนคืนอัตโนมัติ) กรุณาโอนเงินคืนลูกค้าผ่านธนาคารเอง · ย้อนกลับไม่ได้';
+    document.getElementById('rfWarn').textContent=(RF.pay==='card'||RF.pay==='promptpay')?'⚠️ ยืนยันการคืนเงิน — เมื่อยืนยันแล้วระบบจะคืนเงินผ่าน Stripe ให้ลูกค้าทันที และย้อนกลับไม่ได้':'⚠️ ยืนยันการคืนเงิน — ระบบจะบันทึกว่าคืนเงินแล้วเท่านั้น (ไม่ได้โอนคืนอัตโนมัติ) กรุณาโอนเงินคืนลูกค้าผ่านธนาคารเอง · ย้อนกลับไม่ได้';
     document.getElementById('rfStep1').style.display='none';document.getElementById('rfStep2').style.display='block';
   }
   function poRefundBack(){document.getElementById('rfStep2').style.display='none';document.getElementById('rfStep1').style.display='block';}

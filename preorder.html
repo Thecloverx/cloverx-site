@@ -520,8 +520,10 @@
           <div id="cardWarn" class="note warn" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>คำสั่งซื้อมากกว่า 1 รายการ กรุณาชำระผ่านการโอนเงิน (บัตรเครดิตรองรับ 1 รายการ)</span></div>
           <div id="cardEmailWrap" style="display:none;margin-top:12px">
             <div class="field"><label class="fld">อีเมลที่ใช้ตอนชำระเงิน <span class="req">*</span></label><input class="in" id="f_cardEmail" inputmode="email" placeholder="อีเมลเดียวกับตอนชำระบัตรเครดิต"><div class="err">กรุณากรอกอีเมลที่ใช้ชำระเงิน</div><div class="note">รบกวนระบุอีเมลเดียวกับตอนชำระบัตรเครดิต</div></div>
-            
+
           </div>
+          <div class="opt" data-pay="promptpay" id="ppOpt" style="margin-top:12px"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17.5 17.5V21M21 14v3.5M21 21h-3.5"/></svg></span><div class="ot"><b>PromptPay QR (ล็อกยอด)</b><span>สแกนจ่ายยอดเป๊ะ กันโอนเกิน · ยืนยันอัตโนมัติ</span></div></div>
+          <div id="ppNote" class="note" style="display:none;padding:6px 2px 0">ระบบจะสร้าง QR ที่<b>ล็อกยอดไว้แล้ว</b> — ลูกค้าสแกนด้วยแอปธนาคาร ยอดจะเป๊ะ แก้เองไม่ได้ (กันโอนเกิน/ขาด) และ<b>ยืนยันการชำระเงินอัตโนมัติทันที</b> ใบรับเงินจะส่งไปที่อีเมลด้านบน</div>
         </div>
         <div class="card">
           
@@ -811,6 +813,7 @@
     byId('bankFields').style.display=state.pay==='bank'?'block':'none';
     byId('cardNote').style.display=state.pay==='card'?'block':'none';
     byId('cardEmailWrap').style.display=state.pay==='card'?'block':'none';
+    if(byId('ppNote'))byId('ppNote').style.display=state.pay==='promptpay'?'block':'none';
     if(state.pay==='card'&&byId('f_cardDate')&&!byId('f_cardDate').value)byId('f_cardDate').value=todayISO();
     update();
   });});
@@ -848,8 +851,8 @@
       lines.innerHTML=h;}
     byId('sumTotal').innerHTML=THB(t);
     var can=state.main.length>0;
-    var label=can?(state.pay==='card'?'ชำระด้วยบัตร':'ยืนยันคำสั่งจอง'):'เลือกเซตหลักก่อน';
-    var ic=state.pay==='card'
+    var label=can?(state.pay==='card'?'ชำระด้วยบัตร':(state.pay==='promptpay'?'สร้าง QR ชำระเงิน':'ยืนยันคำสั่งจอง')):'เลือกเซตหลักก่อน';
+    var ic=(state.pay==='card'||state.pay==='promptpay')
       ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> '
       :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> ';
     [byId('cta'),byId('ctaDesk')].forEach(function(b){b.disabled=!can;b.innerHTML=can?(ic+label):label;});
@@ -979,20 +982,21 @@
       .then(function(r){return r.json();})
       .then(function(res){
         var oid=res&&res.id?res.id:'PO-'+Date.now().toString().slice(-6);
-        if(state.pay==='card'){
+        if(state.pay==='card'||state.pay==='promptpay'){
           if(res&&res.payUrl){
             // ลิงก์ Stripe รวมยอดทั้งออเดอร์ (ทุกชิ้น) ที่เซิร์ฟเวอร์สร้างให้ — ผูกเลขคำสั่งซื้อไว้แล้ว
+            // promptpay = หน้า Stripe จะโชว์ QR ที่ล็อกยอดไว้แล้วให้ลูกค้าสแกน
             state.payUrl=res.payUrl;
-          } else if(payBase&&res&&res.id){
+          } else if(state.pay==='card'&&payBase&&res&&res.id){
             // สำรอง: ลิงก์สินค้าเดี่ยวแบบเดิม (กรณียังไม่ตั้งค่า STRIPE_SECRET_KEY)
             var sep=payBase.indexOf('?')>=0?'&':'?';
             var cem=byId('f_cardEmail').value.trim();
             state.payUrl=payBase+sep+'client_reference_id='+encodeURIComponent(res.id)+(cem?('&prefilled_email='+encodeURIComponent(cem)):'');
           }
         }
-        // ลูกค้าสั่งเอง + บัตร + มีลิงก์ Stripe → พาไปหน้าชำระเงินอัตโนมัติ
+        // ลูกค้าสั่งเอง + บัตร/PromptPay + มีลิงก์ Stripe → พาไปหน้าชำระเงินอัตโนมัติ
         // โหมดตัวแทน → แสดงกล่องคัดลอกลิงก์ให้ตัวแทนส่งต่อ (ไม่เด้งออก)
-        if(state.pay==='card' && state.payUrl && !AGENT_MODE){
+        if((state.pay==='card'||state.pay==='promptpay') && state.payUrl && !AGENT_MODE){
           showRedirecting(state.payUrl, oid);
           setTimeout(function(){ window.location.href = state.payUrl; }, 1600);
           return;
@@ -1390,6 +1394,8 @@
           <div class="fld"><label>แนบสลิป *</label><label class="slipbox" id="mf_slipBox"><span id="mf_slipTxt">📎 แตะเพื่อแนบสลิปโอนเงิน</span><input type="file" id="mf_slip" accept="image/*" hidden></label></div>
         </div>
         <div class="paopt" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
+        <div class="paopt" id="payPromptPay" onclick="MX.setPay('promptpay')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17.5 17.5V21M21 14v3.5M21 21h-3.5"/></svg></div><div class="pt"><b>PromptPay QR (ล็อกยอด)</b><small>สแกนจ่ายยอดเป๊ะ กันโอนเกิน · ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
+        <div id="ppBox" style="display:none;font-size:.8rem;color:#5b6b8c;padding:8px 2px 0;line-height:1.5">ระบบจะสร้าง QR ที่<b>ล็อกยอดไว้แล้ว</b> ลูกค้าสแกนด้วยแอปธนาคาร ยอดเป๊ะแก้ไม่ได้ (กันโอนเกิน/ขาด) และยืนยันอัตโนมัติทันที · ใบรับเงินส่งไปที่อีเมลด้านบน</div>
       </div>
     </div>
     <div class="m-buy"><div class="pr" id="coTotal"><span class="thb">฿</span>0</div>
@@ -1486,7 +1492,7 @@
 
   // CHECKOUT / SUBMIT
   function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());var a=byId('mf_amt');if(a&&!a.value)a.value=cartTotal();setPay(pay);}
-  function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');var bb=byId('bankBox');if(bb)bb.style.display=(p==='bank')?'block':'none';}
+  function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');var pp=byId('payPromptPay');if(pp)pp.classList.toggle('on',p==='promptpay');var bb=byId('bankBox');if(bb)bb.style.display=(p==='bank')?'block':'none';var pb=byId('ppBox');if(pb)pb.style.display=(p==='promptpay')?'block':'none';}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
   function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;if(pay==='bank'){['mf_amt','mf_date','mf_time'].forEach(function(id){var el=byId(id),bad=!el.value.trim();el.classList.toggle('bad',bad);if(bad)ok=false;});var sb=byId('mf_slipBox'),sbad=!mSlipData;sb.classList.toggle('bad',sbad);if(sbad)ok=false;}return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
@@ -1499,7 +1505,7 @@
     byId('coBtn').disabled=true;
     fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildOrder())}).then(function(r){return r.json();}).then(function(res){
       var oid=(res&&res.id)?res.id:'PO-'+Date.now().toString().slice(-6);
-      if(pay==='card'&&res&&res.payUrl){showRedirect(oid,res.payUrl);setTimeout(function(){location.href=res.payUrl;},1500);return;}
+      if((pay==='card'||pay==='promptpay')&&res&&res.payUrl){showRedirect(oid,res.payUrl);setTimeout(function(){location.href=res.payUrl;},1500);return;}
       if(pay==='bank'&&window.showBank){window.showBank(oid);}else{showDone(oid,!!(res&&res.id),'bank');}
     }).catch(function(){showDone('PO-'+Date.now().toString().slice(-6),false,'bank');});
   }
