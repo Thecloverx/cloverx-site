@@ -142,6 +142,35 @@
   .linkpill.proof{background:var(--warn-tint);color:var(--warn)}
   .linkpill.before{background:var(--good-tint);color:var(--good)}
 
+  /* kebab actions menu */
+  .kebab{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;line-height:1}
+  .kebab:hover{background:var(--soft);color:var(--ink);border-color:var(--brand)}
+  .kebab.on{background:var(--brand-tint);color:var(--brand);border-color:var(--brand)}
+  .menuwrap{position:relative;display:inline-block}
+  .menu{position:absolute;right:0;top:calc(100% + 6px);z-index:60;min-width:210px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px -14px rgba(15,23,42,.28);padding:6px;display:none}
+  .menu.open{display:block}
+  .menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;font-family:inherit;font-size:.86rem;font-weight:600;color:var(--ink);padding:9px 11px;border-radius:8px;cursor:pointer}
+  .menu button:hover{background:var(--soft)}
+  .menu button .mi{width:18px;text-align:center;flex:none}
+  .menu button.danger{color:var(--bad)}
+  .menu button.ok{color:var(--good)}
+  .menu button.warn{color:var(--warn)}
+  .menu .sep{height:1px;background:var(--line);margin:5px 2px}
+  .menu .mlabel{font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:6px 11px 3px}
+
+  /* modal */
+  .lmodal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+  .lmodal.on{display:flex}
+  .lmodal .bk{position:absolute;inset:0;background:rgba(15,23,42,.5)}
+  .lmodal .mc{position:relative;background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;box-shadow:0 30px 70px -20px rgba(15,23,42,.4)}
+  .lmodal h3{font-size:1.2rem;margin-bottom:6px}
+  .lmodal p.sub{color:var(--muted);font-size:.88rem;margin-bottom:16px}
+  .lmodal label{display:block;font-size:.82rem;font-weight:700;margin:12px 0 6px;color:var(--ink)}
+  .lmodal input,.lmodal select,.lmodal textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;color:var(--ink);background:#fff}
+  .lmodal input:focus,.lmodal select:focus,.lmodal textarea:focus{outline:none;border-color:var(--brand)}
+  .lmodal .mrow{display:flex;gap:10px;margin-top:20px}
+  .lmodal .mrow .btn{flex:1;justify-content:center}
+
   /* embedded system frame */
   .frame{width:100%;height:760px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--soft)}
   .frame iframe{width:100%;height:100%;border:0;display:block}
@@ -383,7 +412,7 @@
       }).join('');
     }).catch(function(){var tb=document.getElementById('memBody');if(tb)tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">เชื่อมต่อไม่สำเร็จ</td></tr>';});
   }
-  var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad']};
+  var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function orderLoad(){
     fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
@@ -392,6 +421,7 @@
       var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' รายการ';
       var tb=document.getElementById('llBody');if(!tb)return;
       var regs=j.registrations||[];
+      window.LL_REGS={};regs.forEach(function(r){LL_REGS[r.id]=r;});
       if(!regs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">ยังไม่มีผู้สมัคร</td></tr>';return;}
       tb.innerHTML=regs.map(function(r){
         var s=LL_ST[r.status]||[r.status,'pend'];
@@ -407,12 +437,6 @@
         } else {
           promoInfo=r.promo?('<div class="cell-sub" style="color:var(--warn)">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'):'';
         }
-        var act='';
-        if(r.status==='promo_review'){act+='<button class="btn pri" onclick="llVerify(\''+r.id+'\',\'verified\')">✓ อนุมัติหลักฐาน</button><button class="btn ghost" onclick="llVerify(\''+r.id+'\',\'rejected\')">ปฏิเสธ</button>';}
-        if(r.status==='pending_review'||r.status==='rejected'||r.status==='promo_rejected'){act+='<button class="btn pri" onclick="llSet(\''+r.id+'\',\'confirmed\')">ยืนยัน</button>';}
-        if(r.status==='pending_review'){act+='<button class="btn ghost" onclick="llSet(\''+r.id+'\',\'rejected\')">ปฏิเสธ</button>';}
-        if(r.status==='confirmed'){act+='<button class="btn ghost" onclick="llSet(\''+r.id+'\',\'rejected\')">ยกเลิก</button>';}
-        act+='<button class="btn ghost icon" title="ลบ" onclick="llDel(\''+r.id+'\')">🗑</button>';
         var payCell = (r.promoPlan==='special'&&ins)
           ? ('<div class="cell-amt">฿'+Number(ins.total||44940).toLocaleString('en-US')+'</div><div class="cell-sub" style="color:#2563EB">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div class="cell-sub">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div class="cell-sub" style="color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':''))
           : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">โอนธนาคาร</div>'+(slip||proof?('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>'):'<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>'));
@@ -422,14 +446,77 @@
           +'<td style="min-width:150px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span>'+promoInfo+'</td>'
           +'<td style="min-width:120px">'+base+'</td>'
           +'<td style="min-width:130px">'+payCell+'</td>'
-          +'<td><span class="pill '+s[1]+'">'+s[0]+'</span></td>'
-          +'<td><div class="acts">'+(act||'<span style="color:var(--muted)">—</span>')+'</div></td>'
+          +'<td><span class="pill '+s[1]+'">'+s[0]+'</span>'+(r.cancelReason?'<div class="cell-sub" style="color:var(--bad)">'+llEsc(r.cancelReason)+'</div>':'')+(r.rejectReason?'<div class="cell-sub" style="color:var(--bad)">'+llEsc(r.rejectReason)+'</div>':'')+(r.refund?'<div class="cell-sub" style="color:var(--warn)">คืนเงิน ฿'+Number(r.refund.amount||0).toLocaleString('en-US')+' ('+(r.refund.mode==='partial'?'บางส่วน':'เต็มจำนวน')+')</div>':'')+'</td>'
+          +'<td>'+llMenuHtml(r)+'</td>'
           +'</tr>';
       }).join('');
     }).catch(function(){var tb=document.getElementById('llBody');if(tb)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';});
   }
+  // ----- kebab actions menu -----
+  function mi(cls,icon,label,fn){return '<button class="'+cls+'" onclick="llCloseMenus();'+fn+'"><span class="mi">'+icon+'</span>'+label+'</button>';}
+  function llMenuHtml(r){
+    var id=r.id, items='', sep='<div class="sep"></div>';
+    var card=(r.pay==='card'), instm=!!r.installment;
+    if(r.status==='promo_review'){ items+=mi('ok','✓','อนุมัติหลักฐาน','llVerify(\''+id+'\',\'verified\')')+mi('danger','✕','ปฏิเสธหลักฐาน','llReject(\''+id+'\')')+sep; }
+    if(r.status==='pending_review'){ items+=mi('ok','✓','ยืนยันการชำระ','llSet(\''+id+'\',\'confirmed\')')+mi('danger','✕','ปฏิเสธ (ใส่เหตุผล)','llReject(\''+id+'\')')+sep; }
+    if(r.slipUrl) items+=mi('','📄','ดูสลิปการโอน','window.open(\''+r.slipUrl+'\',\'_blank\')');
+    if(r.promoProofUrl) items+=mi('','📄','ดูหลักฐานการซื้อ','window.open(\''+r.promoProofUrl+'\',\'_blank\')');
+    if(r.slipUrl||r.promoProofUrl) items+=sep;
+    if(r.status==='confirmed'){ if(card||instm) items+=mi('warn','↩','คืนเงิน','llRefund(\''+id+'\')'); items+=mi('','🧾','ใบรับเงินมัดจำ','llReceipt(\''+id+'\')'); }
+    if(['cancelled','refunded'].indexOf(r.status)<0) items+=mi('danger','✕','ยกเลิกคำสั่งซื้อ','llCancel(\''+id+'\')');
+    items+=sep+mi('','✏️','แก้ไขข้อมูลลูกค้า','llEdit(\''+id+'\')')+mi('danger','🗑','ลบข้อมูล','llDel(\''+id+'\')');
+    return '<div class="menuwrap"><button class="kebab" onclick="llMenu(this)" aria-label="จัดการ">⋮</button><div class="menu">'+items+'</div></div>';
+  }
+  window.llMenu=function(btn){var menu=btn.nextElementSibling,open=menu.classList.contains('open');llCloseMenus();if(open)return;
+    var rc=btn.getBoundingClientRect();menu.style.position='fixed';menu.style.right='auto';menu.style.left=Math.max(10,rc.right-210)+'px';
+    menu.classList.add('open');btn.classList.add('on');
+    var h=menu.offsetHeight;menu.style.top=((rc.bottom+6+h>window.innerHeight-10)?(rc.top-h-6):(rc.bottom+6))+'px';};
+  window.llCloseMenus=function(){document.querySelectorAll('.menu.open').forEach(function(m){m.classList.remove('open');});document.querySelectorAll('.kebab.on').forEach(function(k){k.classList.remove('on');});};
+  document.addEventListener('click',function(e){if(!e.target.closest('.menuwrap'))llCloseMenus();});
+  window.addEventListener('scroll',function(){llCloseMenus();},true);
+  // ----- modal + post helpers -----
+  function llPost(id,path,body){return fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})}).then(function(r){return r.json();});}
+  function llModal(html){var m=document.getElementById('llModal');if(!m){m=document.createElement('div');m.id='llModal';m.className='lmodal';document.body.appendChild(m);}m.innerHTML='<div class="bk" onclick="llCloseModal()"></div><div class="mc">'+html+'</div>';m.classList.add('on');}
+  window.llCloseModal=function(){var m=document.getElementById('llModal');if(m)m.classList.remove('on');};
+  window.llReject=function(id){
+    var r=LL_REGS[id]||{}, isPromo=r.status==='promo_review';
+    llModal('<h3>ปฏิเสธ'+(isPromo?'หลักฐานการซื้อ':'การชำระเงิน')+'</h3><p class="sub">เลือกเหตุผล — ลูกค้าจะเห็นเหตุผลนี้และแนบใหม่ได้</p>'
+      +'<label>เหตุผล</label><select id="rjR"><option>หลักฐานไม่ครบ</option><option>หลักฐานไม่ชัดเจน</option><option>หลักฐานไม่ถูกต้อง</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
+      +'<div id="rjOW" style="display:none"><label>ระบุเหตุผล</label><input id="rjO" placeholder="ระบุเหตุผล"></div>'
+      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="rjG">ยืนยันปฏิเสธ</button></div>');
+    var sel=document.getElementById('rjR');sel.onchange=function(){document.getElementById('rjOW').style.display=sel.value==='__o'?'block':'none';};
+    document.getElementById('rjG').onclick=function(){var reason=sel.value==='__o'?(document.getElementById('rjO').value.trim()||'อื่น ๆ'):sel.value;
+      var p=isPromo?llPost(id,'/promo-verify',{result:'rejected',reason:reason}):llPost(id,'',{status:'rejected',reason:reason});
+      p.then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
+  };
+  window.llCancel=function(id){
+    llModal('<h3>ยกเลิกคำสั่งซื้อ / สิทธิ์จอง</h3><p class="sub">ระบุเหตุผลการยกเลิก</p>'
+      +'<label>เหตุผล</label><select id="cnR"><option>ลูกค้าเปลี่ยนใจ</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
+      +'<div id="cnOW" style="display:none"><label>ระบุเหตุผล</label><input id="cnO"></div>'
+      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="cnG">ยืนยันยกเลิก</button></div>');
+    var sel=document.getElementById('cnR');sel.onchange=function(){document.getElementById('cnOW').style.display=sel.value==='__o'?'block':'none';};
+    document.getElementById('cnG').onclick=function(){var reason=sel.value==='__o'?(document.getElementById('cnO').value.trim()||'อื่น ๆ'):sel.value;
+      llPost(id,'/cancel',{reason:reason}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ยกเลิกไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
+  };
+  window.llEdit=function(id){var r=LL_REGS[id]||{};
+    llModal('<h3>แก้ไขข้อมูลลูกค้า</h3><label>ชื่อ–นามสกุล</label><input id="edN" value="'+llEsc(r.name||'')+'"><label>เบอร์โทร</label><input id="edP" value="'+llEsc(r.phone||'')+'" placeholder="08x-xxx-xxxx"><div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');
+    document.getElementById('edG').onclick=function(){llPost(id,'/edit',{name:document.getElementById('edN').value,phone:document.getElementById('edP').value}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert(j&&j.error==='not_found'?'ไม่พบข้อมูล':'บันทึกไม่สำเร็จ (ชื่อสั้นเกินไป?)');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
+  };
+  window.llRefund=function(id){var r=LL_REGS[id]||{};var max=r.installment?((r.installment.perMonth||0)*(r.installment.paidCount||0)):(r.promoAmount||r.fee||0);
+    llModal('<h3>คืนเงิน (บัตรเครดิต)</h3><p class="sub">คืนผ่าน Stripe'+(r.installment?' · แผนผ่อน: หากมีหลายงวดอาจต้องทำใน Stripe Dashboard':'')+'</p>'
+      +'<label>รูปแบบ</label><select id="rfM"><option value="full">เต็มจำนวน (฿'+Number(max).toLocaleString("en-US")+')</option><option value="partial">บางส่วน</option></select>'
+      +'<div id="rfAW" style="display:none"><label>จำนวนเงิน (บาท)</label><input id="rfA" type="number" placeholder="เช่น 1000"></div>'
+      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="rfG">ยืนยันคืนเงิน</button></div>');
+    var sel=document.getElementById('rfM');sel.onchange=function(){document.getElementById('rfAW').style.display=sel.value==='partial'?'block':'none';};
+    document.getElementById('rfG').onclick=function(){var b=this,body={mode:sel.value};if(sel.value==='partial')body.amount=Number(document.getElementById('rfA').value);b.disabled=true;b.textContent='กำลังคืนเงิน…';
+      llPost(id,'/refund',body).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent='ยืนยันคืนเงิน';alert(j&&j.error==='installment_refund_manual'?'แผนผ่อน: กรุณาคืนเงินผ่าน Stripe Dashboard':j&&j.error==='no_card_payment'?'รายการนี้ไม่ได้ชำระผ่านบัตร':j&&j.error==='bad_amount'?'จำนวนเงินไม่ถูกต้อง':'คืนเงินไม่สำเร็จ');}}).catch(function(){b.disabled=false;b.textContent='ยืนยันคืนเงิน';alert('เชื่อมต่อไม่สำเร็จ');});};
+  };
+  window.llReceipt=function(id){var r=LL_REGS[id]||{};var amt=r.installment?(r.installment.total||44940):(r.promoAmount||r.fee||0);var w=window.open('','_blank');if(!w){alert('เบราว์เซอร์บล็อกป๊อปอัพ');return;}
+    w.document.write('<html><head><meta charset="utf-8"><title>ใบรับเงิน '+id+'</title><style>body{font-family:"Noto Sans Thai",sans-serif;padding:44px;color:#1E2A44;max-width:560px;margin:0 auto}h1{color:#16A34A;font-size:1.5rem}.r{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.r b{font-weight:700}</style></head><body><h1>ใบรับเงิน — Lean Lab</h1><p style="color:#6B7793">เลขที่ '+id+' · '+new Date().toLocaleDateString("th-TH")+'</p><div class="r"><span>ผู้สมัคร</span><b>'+llEsc(r.name||"")+'</b></div><div class="r"><span>อีเมล</span><b>'+llEsc(r.email||"")+'</b></div><div class="r"><span>รายการ</span><b>Lean Lab Season 1'+(r.promoPlan?" · "+llEsc(r.promoPlan):"")+'</b></div><div class="r"><span>จำนวนเงิน</span><b>฿'+Number(amt).toLocaleString("en-US")+'</b></div><div class="r"><span>สถานะ</span><b style="color:#16A34A">ยืนยันแล้ว</b></div><p style="margin-top:28px;color:#6B7793">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</p><button onclick="window.print()" style="margin-top:16px;padding:10px 22px;background:#2563EB;color:#fff;border:0;border-radius:8px;cursor:pointer">พิมพ์</button></body></html>');w.document.close();
+  };
+
   window.llDel=function(id){
-    if(!confirm('ลบผู้สมัครนี้ถาวร? (รวมบัญชีสมาชิก)'))return;
+    if(!confirm('ยืนยันการลบข้อมูลนี้ถาวร? เมื่อกดยืนยัน ข้อมูลจะหายไป (รวมบัญชีสมาชิก)'))return;
     fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({withMember:true})})
       .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('ลบไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});

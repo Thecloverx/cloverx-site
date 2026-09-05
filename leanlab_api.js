@@ -576,11 +576,24 @@ module.exports = function (app, DATA_DIR) {
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, total: r.installment.total, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null, subId: r.installment.subId || null, nextChargeTs: r.installment.nextChargeTs || null, lastFail: r.installment.lastFail || null } : null,
-      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
+      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null,
+      cancelReason: r.cancelReason || null, rejectReason: r.rejectReason || null, refund: r.refund || null, autoCancelled: !!r.autoCancelled
     };
   }
+  // ยกเลิกอัตโนมัติ: ใบสมัครที่รอชำระเงินเกิน 1 วัน (ยังไม่จ่าย) → cancelled
+  function autoCancelSweep(l) {
+    var now = Date.now(), changed = false;
+    l.forEach(function (r) {
+      if (r.status === 'awaiting_payment' && !r.slipUrl) {
+        var t = new Date(r.updatedAt || r.createdAt || 0).getTime();
+        if (t && now - t > 24 * 3600 * 1000) { r.status = 'cancelled'; r.autoCancelled = true; r.cancelReason = 'ไม่ชำระเงินภายใน 1 วัน (ระบบยกเลิกอัตโนมัติ)'; r.cancelledAt = new Date().toISOString(); changed = true; }
+      }
+    });
+    return changed;
+  }
   app.get('/api/leanlab/admin/registrations', function (req, res) {
-    var regs = readR(); var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    var regs = readR(); if (autoCancelSweep(regs)) writeR(regs);
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     var list = regs.map(function (r) { return adminReg(r, byId); }).sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
     var counts = { total: list.length, awaiting_payment: 0, pending_review: 0, confirmed: 0, rejected: 0, revenue: 0 };
     list.forEach(function (r) { if (counts[r.status] != null) counts[r.status]++; if (r.status === 'confirmed') counts.revenue += (Number(r.fee) || 0); });
@@ -592,6 +605,7 @@ module.exports = function (app, DATA_DIR) {
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     r.status = st; r.reviewedAt = new Date().toISOString();
+    if (st === 'rejected') r.rejectReason = String(b.reason || '').slice(0, 200) || 'หลักฐานไม่ถูกต้อง';
     writeR(l);
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
@@ -604,12 +618,58 @@ module.exports = function (app, DATA_DIR) {
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     r.promoVerify = result;
     r.status = (result === 'verified') ? 'awaiting_payment' : 'promo_rejected';
+    if (result === 'rejected') r.rejectReason = String((req.body || {}).reason || '').slice(0, 200) || 'หลักฐานไม่ถูกต้อง';
+    else r.rejectReason = null;
     r.reviewedAt = new Date().toISOString();
     writeR(l);
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
-  // ลบผู้สมัคร (ลบทั้งใบสมัคร + บัญชีสมาชิก ถ้า withMember=1) — ใช้เคลียร์ข้อมูลทดสอบ/ยกเลิก
+  // ยกเลิกคำสั่งซื้อ/สิทธิ์จอง (ใส่เหตุผล)
+  app.post('/api/leanlab/admin/registration/:id/cancel', function (req, res) {
+    var b = req.body || {};
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    r.status = 'cancelled'; r.cancelReason = String(b.reason || '').slice(0, 200) || 'ยกเลิกโดยแอดมิน'; r.cancelledAt = new Date().toISOString(); r.autoCancelled = false;
+    writeR(l);
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    res.json({ ok: true, registration: adminReg(r, byId) });
+  });
+  // แก้ไขข้อมูลลูกค้า (ชื่อ / เบอร์โทร)
+  app.post('/api/leanlab/admin/registration/:id/edit', function (req, res) {
+    var b = req.body || {};
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (typeof b.name === 'string' && b.name.trim().length >= 2) r.name = b.name.trim().slice(0, 80);
+    if (typeof b.phone === 'string') r.phone = b.phone.trim().slice(0, 30);
+    r.updatedAt = new Date().toISOString();
+    writeR(l);
+    if (r.memberId) { var ml = readM(); var mm = ml.find(function (m) { return m.id === r.memberId; }); if (mm) { mm.name = r.name; if (r.phone) mm.phone = r.phone; writeM(ml); } }
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    res.json({ ok: true, registration: adminReg(r, byId) });
+  });
+  // คืนเงิน (บัตรเครดิต) — เต็มจำนวน หรือบางส่วน
+  app.post('/api/leanlab/admin/registration/:id/refund', function (req, res) {
+    var b = req.body || {};
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    var pi = r.stripe && r.stripe.paymentIntent;
+    if (!pi) return res.status(400).json({ ok: false, error: (r.installment ? 'installment_refund_manual' : 'no_card_payment') });
+    var params = [['payment_intent', pi]];
+    if (b.mode === 'partial') {
+      var amt = Number(b.amount);
+      if (!(amt > 0)) return res.status(400).json({ ok: false, error: 'bad_amount' });
+      params.push(['amount', String(Math.round(amt * 100))]);
+    }
+    stripeApi('POST', '/v1/refunds', params).then(function (j) {
+      if (!j || !j.id) return res.status(502).json({ ok: false, error: 'stripe_error' });
+      var l2 = readR(); var r2 = l2.find(function (x) { return x.id === req.params.id; });
+      if (r2) { r2.refund = { id: j.id, amount: (j.amount != null ? j.amount / 100 : null), mode: (b.mode === 'partial' ? 'partial' : 'full'), at: new Date().toISOString() }; if (b.mode !== 'partial') r2.status = 'refunded'; writeR(l2); }
+      var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+      res.json({ ok: true, registration: adminReg(r2, byId) });
+    });
+  });
+  // ลบผู้สมัคร (ลบทั้งใบสมัคร + บัญชีสมาชิก ถ้า withMember=1)
   app.post('/api/leanlab/admin/registration/:id/delete', function (req, res) {
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
