@@ -767,7 +767,7 @@
   var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   var TH_DOW=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
   function fmtDateTH(iso){if(!iso)return '—';var d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;return TH_DOW[d.getDay()]+'ที่ '+d.getDate()+' '+TH_MON[d.getMonth()]+' '+(d.getFullYear()+543);}
-  function roundLink(code){return location.origin+'/xvisor?round='+code;}
+  function roundLink(code){return location.origin+'/xvisor?round='+code+'&openExternalBrowser=1';}
   function nextRoundNo(){return (EXAM_ROUNDS&&EXAM_ROUNDS.length)?Math.max.apply(null,EXAM_ROUNDS.map(function(r){return r.no||0;}))+1:1;}
   function roundsDemo(){return [
     {id:'d1',code:'RDEMO14',no:14,date:'2026-09-10',topic:'Certification',status:'open',candidates:6,inProgress:2,awaiting:1,verified:1},
