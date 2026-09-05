@@ -450,7 +450,11 @@ app.patch('/api/orders/:id', (req, res) => {
   const list = read();
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ ok: false });
-  if (req.body && req.body.status) o.status = req.body.status;
+  const b = req.body || {};
+  if (b.status) o.status = b.status;
+  // แก้ไขข้อมูลลูกค้า/รายการ (จากหน้าแอดมิน) — อัปเดตเฉพาะฟิลด์ที่ส่งมาและอยู่ในรายการที่อนุญาต
+  ['name', 'phone', 'email', 'addr', 'note'].forEach(function (k) { if (typeof b[k] === 'string') o[k] = b[k].slice(0, 500); });
+  if (typeof b.itemName === 'string' && Array.isArray(o.items) && o.items[0]) o.items[0].nm = b.itemName.slice(0, 200);
   const nowPaid = (o.status === 'confirmed' || o.status === 'paid');
   // ยืนยันชำระเงินแล้ว → ออกเลขที่ใบกำกับภาษี
   if (nowPaid && !o.invoiceNo) { o.invoiceNo = nextInvoiceNo(); o.invoiceAt = new Date().toISOString(); }
