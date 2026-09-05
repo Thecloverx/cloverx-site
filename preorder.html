@@ -216,6 +216,7 @@
   /* Shopee-style color sub-SKU chooser */
   .prod .cpk-h{font-size:.68rem;font-weight:700;color:var(--muted);margin-top:11px;letter-spacing:.02em}
   .prod .colorpick{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
+  .prod .sizepick .chip{padding:6px 13px;justify-content:center;min-width:46px}
   .prod .chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px 5px 8px;font-family:inherit;font-size:.76rem;font-weight:700;color:var(--ink);cursor:pointer;transition:border-color .14s,background .14s,box-shadow .14s;-webkit-tap-highlight-color:transparent}
   .prod .chip i{width:13px;height:13px;border-radius:50%;display:inline-block;flex:0 0 auto}
   .prod .chip i.black{background:#22262e;border:1px solid #0b0e16}
@@ -647,9 +648,11 @@
   FAM_P.sort(function(a,b){return a.price-b.price;});
   // แปลง Parent -> map ของ variant (Sub SKU) เพื่อให้ตะกร้า/สรุป/ลิงก์ชำระเงินทำงานต่อได้เหมือนเดิม
   function buildVariants(parents){var m={};parents.forEach(function(p){
-    if(p.colors){p.colors.forEach(function(cv){m[cv.id]={id:cv.id,parent:p.id,nm:p.nm+' · สี'+cv.c,color:cv.c,desc:p.desc,price:p.price,was:p.was,url:cv.url,ic:p.ic};});}
+    if(p.colors){p.colors.forEach(function(cv){m[cv.id]={id:cv.id,parent:p.id,nm:p.nm+(p.isSize?(' · ไซซ์ '+cv.c):(' · สี'+cv.c)),color:cv.c,size:p.isSize?cv.c:'',desc:p.desc,price:p.price,was:p.was,url:cv.url,ic:p.ic};});}
     else{m[p.id]={id:p.id,parent:p.id,nm:p.nm,desc:p.desc,price:p.price,was:p.was,url:p.url,ic:p.ic};}
   });return m;}
+  // [POLO] เสื้อยืดโปโล X-Visor สีกรมท่า — เลือกไซซ์ (SS–3XL), 1 ตัว/คน; ใช้กลไก variant เดิม (สี → ไซซ์)
+  MAIN_P.push({id:'polo',nm:'[POLO] เสื้อยืดโปโล X-Visor สีกรมท่า',desc:'เสื้อยืดโปโล สีกรมท่า CloverX & X-Visor · ระบุไซซ์',price:290,was:590,ic:'band',img:'/polo.jpg',hot:true,isSize:true,colors:[{c:'SS',id:'polo-SS'},{c:'S',id:'polo-S'},{c:'M',id:'polo-M'},{c:'L',id:'polo-L'},{c:'XL',id:'polo-XL'},{c:'2XL',id:'polo-2XL'},{c:'3XL',id:'polo-3XL'}]});
   var VMAIN=buildVariants(MAIN_P),VFAM=buildVariants(FAM_P);
   var ICONS={
     band:'<path d="M8 7V4h8v3M8 17v3h8v-3M6 7h12v10H6z" fill="none" stroke="currentColor" stroke-width="2"/>',
@@ -730,9 +733,11 @@
     var on,chips='';
     if(p.colors){
       on=p.colors.some(function(cv){return arr.indexOf(cv.id)>=0});
-      chips='<div class="cpk-h">เลือกสี</div><div class="colorpick">'+p.colors.map(function(cv){
+      chips='<div class="cpk-h">'+(p.isSize?'เลือกไซซ์':'เลือกสี')+'</div><div class="colorpick'+(p.isSize?' sizepick':'')+'">'+p.colors.map(function(cv){
         var sel=arr.indexOf(cv.id)>=0;
-        return '<button type="button" class="chip'+(sel?' sel':'')+'" data-vid="'+cv.id+'"><i class="'+(cv.c==='ครีม'?'cream':'black')+'"></i>สี'+cv.c+'</button>';
+        return p.isSize
+          ? '<button type="button" class="chip'+(sel?' sel':'')+'" data-vid="'+cv.id+'">'+cv.c+'</button>'
+          : '<button type="button" class="chip'+(sel?' sel':'')+'" data-vid="'+cv.id+'"><i class="'+(cv.c==='ครีม'?'cream':'black')+'"></i>สี'+cv.c+'</button>';
       }).join('')+'</div>';
     } else { on=arr.indexOf(p.id)>=0; }
     return '<div class="prod'+(multi?' multi':'')+(on?' on':'')+(p.colors?' hascolor':'')+'" data-pid="'+p.id+'">'+badge
@@ -1394,7 +1399,7 @@
   <div class="col-sheet" id="colSheet">
     <div class="col-back" onclick="MX.closeCol()"></div>
     <div class="col-panel">
-      <div class="col-h"><b>เลือกสี — <span id="colProd"></span></b><button type="button" class="geo-x" onclick="MX.closeCol()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="col-h"><b><span id="colTitle">เลือกสี</span> — <span id="colProd"></span></b><button type="button" class="geo-x" onclick="MX.closeCol()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="col-opts" id="colOpts"></div>
       <button type="button" class="cta" id="colConfirm" onclick="MX.confirmCol()" disabled>เพิ่มลงตะกร้า</button>
     </div>
@@ -1431,6 +1436,10 @@
   };
   var ORDER=['triple','duo','routinex','band','scale'];
   var FAM_ORDER=['fam-band'];var curTab='main';TH['fam-band']=TH.band;
+  // [POLO] เสื้อยืดโปโล X-Visor สีกรมท่า — เลือกไซซ์, 1 ตัว/คน
+  P.polo={nm:'[POLO] เสื้อยืดโปโล X-Visor สีกรมท่า',desc:'เสื้อยืดโปโล สีกรมท่า CloverX & X-Visor · ระบุไซซ์',price:290,was:590,max:1,hot:true};
+  ORDER.push('polo');TH.polo='/polo.jpg';
+  var SIZES={polo:['SS','S','M','L','XL','2XL','3XL']};
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
   var cart=[],pay='bank',curPid=null,detailQty=1;var geoSel=null,geoData=null,mSlipData=null;
@@ -1448,7 +1457,7 @@
     byId('mlist').innerHTML=list.map(function(id){var p=P[id];
       var badge=p.save?'<span class="rib" style="background:#16a34a">★ ลด 5%</span>':(p.hot?'<span class="rib">★ ยอดนิยม</span>':'');
       var price=THB(p.price)+(p.was?' <span style="font-size:.82rem;color:#9aa6c0;text-decoration:line-through;font-weight:600">'+THB(p.was)+'</span>':'');
-      var act=p.fam?('MX.quickAdd(\''+id+'\')'):('MX.open(\''+id+'\')');
+      var act=(p.fam||SIZES[id])?('MX.quickAdd(\''+id+'\')'):('MX.open(\''+id+'\')');
       return '<div class="m-row" onclick="'+act+'"><div class="th"><img src="'+TH[id]+'" alt="'+p.nm+'"></div>'
       +'<div class="mid">'+badge+'<h3>'+p.nm+'</h3><div class="d">'+p.desc+'</div><div class="pr">'+price+'</div></div>'
       +'<button class="cb" onclick="event.stopPropagation();MX.quickAdd(\''+id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l1.9 12.2a1.7 1.7 0 0 0 1.68 1.45h8.1"/><path d="M6.4 7.5H20l-1.3 6.6a1.5 1.5 0 0 1-1.47 1.2H8.2"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" stroke="none"/></svg></button></div>';
@@ -1463,8 +1472,8 @@
     el.querySelectorAll('.hs').forEach(function(b){b.addEventListener('click',function(){var a=b.getAttribute('data-a');if(a==='home')go('home');else buyDetail();});});}
   function open(pid){curPid=pid;detailQty=1;byId('dImg').src=SCREEN[pid];byId('dPrice').innerHTML=THB(P[pid].price);var qc=byId('dQtyCtrl');var pl=byId('dPlusLock');if(pid==='routinex'){qc.style.display='block';byId('dQtyNum').textContent='1';pl.style.display='none';}else{qc.style.display='none';if(DPLUS[pid]){var s=DPLUS[pid],bx=byId('dPlusBox');bx.style.left=s.l+'%';bx.style.top=s.t+'%';bx.style.width=s.w+'%';bx.style.height=s.h+'%';pl.style.display='block';}else{pl.style.display='none';}}renderDetailSpots();go('detail');}
   function dq(d){if(curPid!=='routinex')return;var nv=Math.max(1,Math.min(2,detailQty+d));if(d>0&&nv===detailQty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}detailQty=nv;byId('dQtyNum').textContent=detailQty;byId('dPrice').innerHTML=THB(P.routinex.price*detailQty);}
-  function buyDetail(){if(COLORS[curPid]){openCol(curPid,'buy');return;}var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));go('cart');}
-  function quickAdd(pid){if(COLORS[pid]){openCol(pid,'add');return;}var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));}
+  function buyDetail(){if(COLORS[curPid]||SIZES[curPid]){openCol(curPid,'buy');return;}var p=P[curPid];var q=(curPid==='routinex')?detailQty:1;var ch=addToCart(curPid,q);toast(ch?'เพิ่มลงตะกร้าแล้ว':('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));go('cart');}
+  function quickAdd(pid){if(COLORS[pid]||SIZES[pid]){openCol(pid,'add');return;}var p=P[pid];var ch=addToCart(pid,1);toast(ch?(p.nm+' · เพิ่มลงตะกร้าแล้ว'):('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว'));}
 
   // CART
   function renderCart(){
@@ -1473,7 +1482,7 @@
     sum.style.display='block';
     body.innerHTML=cart.map(function(l,idx){var p=P[l.pid];var max=p.max||1;
       var qctrl='<div class="mini"><button onclick="MX.cq('+idx+',-1)"'+(l.qty<=1?' disabled':'')+'>−</button><span class="q'+(max<=1?' gray':'')+'">'+l.qty+'</span><button class="plus'+(l.qty>=max?' pmax':'')+'" onclick="MX.cq('+idx+',1)">+</button></div>';
-      return '<div class="c-item"><div class="th"><img src="'+TH[l.pid]+'"></div><div class="mid"><h4>'+p.nm+'</h4><div class="v">'+((l.color||p.color)?('สี: '+(l.color||p.color)):(max>1?('สูงสุด '+max+' ชิ้น'):'จอง'))+'</div><div class="b">'+qctrl+'<div class="price">'+THB(p.price*l.qty)+'</div></div></div><button class="mini" style="align-self:flex-start;background:none;padding:6px" onclick="MX.rm('+idx+')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3c0d6" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
+      return '<div class="c-item"><div class="th"><img src="'+TH[l.pid]+'"></div><div class="mid"><h4>'+p.nm+'</h4><div class="v">'+((l.color||p.color)?((SIZES[l.pid]?'ไซซ์: ':'สี: ')+(l.color||p.color)):(max>1?('สูงสุด '+max+' ชิ้น'):'จอง'))+'</div><div class="b">'+qctrl+'<div class="price">'+THB(p.price*l.qty)+'</div></div></div><button class="mini" style="align-self:flex-start;background:none;padding:6px" onclick="MX.rm('+idx+')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b3c0d6" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>';
     }).join('');
     sum.innerHTML='<div class="sline">ยอดสินค้า ('+cartQty()+' ชิ้น) <b>'+THB(cartTotal())+'</b></div><div class="sline">ค่าจัดส่ง <b style="color:var(--accent-2)">ฟรี</b></div><div class="depnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> ชำระเพื่อจอง — เมื่อสำเร็จ ระบบส่งใบรับเงินมัดจำทางอีเมล</div><div class="sline total">ยอดชำระวันนี้ <span class="amt">'+THB(cartTotal())+'</span></div><button class="cta" style="margin-top:14px;width:100%" onclick="MX.go(\'checkout\')">ดำเนินการชำระเงิน <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
   }
@@ -1484,7 +1493,7 @@
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
   function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;if(pay==='bank'){var sb=byId('mf_slipBox'),sbad=!mSlipData;sb.classList.toggle('bad',sbad);if(sbad)ok=false;}return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
-  function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+((l.color||p.color)?(' · สี'+(l.color||p.color)):''),price:p.price,fam:false});});
+  function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+((l.color||p.color)?((SIZES[l.pid]?' · ไซซ์ ':' · สี')+(l.color||p.color)):''),price:p.price,fam:false});});
     var note=byId('mf_note').value.trim();
     var o={name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};if(pay==='bank'){o.slip=mSlipData||null;}return o;}
   function submit(){
@@ -1527,12 +1536,16 @@
   var COLORS={triple:['ดำ','ครีม'],duo:['ดำ','ครีม'],band:['ดำ','ครีม'],'fam-band':['ดำ','ครีม']};
   var SW={'ดำ':'#1c2433','ครีม':'#E7DBC4'};
   var colPid=null,colMode='add',colSel='';
-  function openCol(pid,mode){colPid=pid;colMode=mode;colSel='';byId('colProd').textContent=(pid==='band'||pid==='fam-band')?P[pid].nm:('Xircle Band · '+P[pid].nm);
-    byId('colOpts').innerHTML=COLORS[pid].map(function(c){return '<button type="button" class="col-opt" onclick="MX.pickCol(this,\''+c+'\')"><span class="sw" style="background:'+SW[c]+'"></span>'+c+'</button>';}).join('');
+  function openCol(pid,mode){colPid=pid;colMode=mode;colSel='';
+    var isSize=!!SIZES[pid];
+    if(byId('colTitle'))byId('colTitle').textContent=isSize?'เลือกไซซ์':'เลือกสี';
+    byId('colProd').textContent=isSize?P[pid].nm:((pid==='band'||pid==='fam-band')?P[pid].nm:('Xircle Band · '+P[pid].nm));
+    var opts=isSize?SIZES[pid]:COLORS[pid];
+    byId('colOpts').innerHTML=opts.map(function(c){return '<button type="button" class="col-opt" onclick="MX.pickCol(this,\''+c+'\')">'+(isSize?'':('<span class="sw" style="background:'+SW[c]+'"></span>'))+c+'</button>';}).join('');
     byId('colConfirm').disabled=true;byId('colSheet').classList.add('on');}
   function pickCol(el,c){colSel=c;Array.prototype.forEach.call(document.querySelectorAll('#colOpts .col-opt'),function(b){b.classList.remove('on');});el.classList.add('on');byId('colConfirm').disabled=false;}
   function closeCol(){byId('colSheet').classList.remove('on');}
-  function confirmCol(){if(!colSel)return;addToCart(colPid,1,colSel);closeCol();if(colMode==='buy'){go('cart');}else{toast(P[colPid].nm+' ('+colSel+') · เพิ่มลงตะกร้าแล้ว');}}
+  function confirmCol(){if(!colSel)return;addToCart(colPid,1,colSel);var isSize=!!SIZES[colPid];closeCol();if(colMode==='buy'){go('cart');}else{toast(P[colPid].nm+' ('+(isSize?'ไซซ์ ':'')+colSel+') · เพิ่มลงตะกร้าแล้ว');}}
   function copyAcct(){try{navigator.clipboard.writeText('231-1-71119-1');toast('คัดลอกเลขบัญชีแล้ว');}catch(e){}}
   function plusMax(){toast('คุณเพิ่มจำนวนสูงสุดแล้ว');}
   function openGeo(){byId('geoSheet').classList.add('on');var s=byId('geoSearch');loadGeo(function(){renderGeo(s.value);});setTimeout(function(){s.focus();},60);}
