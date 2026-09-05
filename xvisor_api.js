@@ -9,6 +9,7 @@ module.exports = function (app, DATA) {
   if (!fs.existsSync(XV)) fs.mkdirSync(XV, { recursive: true });
   const QF = path.join(XV, 'questions.json');
   const QF_ROOT = path.join(DATA, '..', 'xvisor_questions.json'); // repo-root fallback (flat deploy)
+  const QF_APP = path.join(__dirname, 'xvisor_questions.json');   // app-dir fallback (works regardless of DATA_DIR / volume mount)
   const SF = path.join(XV, 'sessions.json');
   const RF = path.join(XV, 'rounds.json');
   const REGF = path.join(XV, 'registrations.json');
@@ -21,6 +22,7 @@ module.exports = function (app, DATA) {
   const bank = () => {
     let b = rd(QF, null);
     if (!b || !b.bank || !Object.keys(b.bank).length) b = rd(QF_ROOT, null);
+    if (!b || !b.bank || !Object.keys(b.bank).length) b = rd(QF_APP, null);
     return b && b.bank ? b : { names: {}, bank: {} };
   };
 
