@@ -756,7 +756,7 @@
     else arr.push(vid);
   }
   function renderMain(){
-    byId('prodsMain').innerHTML=MAIN_P.map(function(p){return pcard(p,false,state.main)}).join('');
+    byId('prodsMain').innerHTML=MAIN_P.filter(function(p){return p.id==='polo';}).map(function(p){return pcard(p,false,state.main)}).join('');
     byId('prodsMain').querySelectorAll('.prod').forEach(function(c){
       var pid=c.getAttribute('data-pid');var p=MAIN_P.find(function(x){return x.id===pid});
       var after=function(){byId('famWrap').classList.toggle('locked',state.main.length===0);renderMain();update();};
@@ -851,7 +851,7 @@
       lines.innerHTML=h;}
     byId('sumTotal').innerHTML=THB(t);
     var can=state.main.length>0;
-    var label=can?(state.pay==='card'?'ชำระด้วยบัตร':(state.pay==='promptpay'?'สร้าง QR ชำระเงิน':'ยืนยันคำสั่งจอง')):'เลือกเซตหลักก่อน';
+    var label=can?(state.pay==='card'?'ชำระด้วยบัตร':(state.pay==='promptpay'?'สร้าง QR ชำระเงิน':'ยืนยันคำสั่งจอง')):'เลือกไซซ์เสื้อก่อน';
     var ic=(state.pay==='card'||state.pay==='promptpay')
       ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> '
       :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> ';
@@ -977,29 +977,32 @@
     fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildOrder())})
       .then(function(r){return r.json();})
       .then(function(res){
-        var oid=res&&res.id?res.id:'PO-'+Date.now().toString().slice(-6);
+        // เซิร์ฟเวอร์ต้องยืนยันด้วย "เลขคำสั่งซื้อจริง" เท่านั้น — ถ้าไม่มี id = บันทึกไม่สำเร็จ ห้ามโชว์ว่าสำเร็จ/ห้ามให้โอนเงิน
+        if(!res || !res.id){ orderFailed(res); return; }
+        var oid=res.id;
         if(state.pay==='card'||state.pay==='promptpay'){
-          if(res&&res.payUrl){
-            // ลิงก์ Stripe รวมยอดทั้งออเดอร์ (ทุกชิ้น) ที่เซิร์ฟเวอร์สร้างให้ — ผูกเลขคำสั่งซื้อไว้แล้ว
-            // promptpay = หน้า Stripe จะโชว์ QR ที่ล็อกยอดไว้แล้วให้ลูกค้าสแกน
-            state.payUrl=res.payUrl;
-          } else if(state.pay==='card'&&payBase&&res&&res.id){
-            // สำรอง: ลิงก์สินค้าเดี่ยวแบบเดิม (กรณียังไม่ตั้งค่า STRIPE_SECRET_KEY)
+          if(res.payUrl){
+            state.payUrl=res.payUrl; // ลิงก์ Stripe รวมยอดทั้งออเดอร์ (promptpay = QR ล็อกยอด)
+          } else if(state.pay==='card'&&payBase){
             var sep=payBase.indexOf('?')>=0?'&':'?';
             var cem=byId('f_cardEmail').value.trim();
             state.payUrl=payBase+sep+'client_reference_id='+encodeURIComponent(res.id)+(cem?('&prefilled_email='+encodeURIComponent(cem)):'');
           }
         }
-        // ลูกค้าสั่งเอง + บัตร/PromptPay + มีลิงก์ Stripe → พาไปหน้าชำระเงินอัตโนมัติ
-        // โหมดตัวแทน → แสดงกล่องคัดลอกลิงก์ให้ตัวแทนส่งต่อ (ไม่เด้งออก)
         if((state.pay==='card'||state.pay==='promptpay') && state.payUrl && !AGENT_MODE){
           showRedirecting(state.payUrl, oid);
           setTimeout(function(){ window.location.href = state.payUrl; }, 1600);
           return;
         }
-        if(state.pay==='bank'&&window.showBank){window.showBank(oid);}else{showDone(oid, !!(res&&res.id));}
+        if(state.pay==='bank'&&window.showBank){window.showBank(oid);}else{showDone(oid, true);}
       })
-      .catch(function(){ showDone('PO-'+Date.now().toString().slice(-6), false); });
+      .catch(function(){ orderFailed(null); });
+  }
+  // บันทึกออเดอร์ไม่สำเร็จ (เซิร์ฟเวอร์ล่ม/รีสตาร์ท/ปิดรับ) — เปิดปุ่มให้กดใหม่ + เตือนอย่าเพิ่งโอน (กันเงินเข้าแต่ไม่มีออเดอร์)
+  function orderFailed(res){
+    [byId('cta'),byId('ctaDesk')].forEach(function(b){if(b)b.disabled=false;});
+    var msg=(res&&res.error==='preorder_closed')?(res.message||'ขณะนี้ปิดรับพรีออเดอร์ชั่วคราว'):'บันทึกคำสั่งซื้อไม่สำเร็จ กรุณากด “ยืนยัน” อีกครั้ง\n\n⚠️ อย่าเพิ่งโอนเงิน จนกว่าจะได้เลขคำสั่งซื้อจากระบบ';
+    try{alert(msg);}catch(e){}
   }
   byId('cta').addEventListener('click',submit);
   byId('ctaDesk').addEventListener('click',submit);
@@ -1008,6 +1011,12 @@
   });
 
   renderMain();renderFam();update();
+  // เปิดพรีออเดอร์เฉพาะเสื้อโปโล (สินค้าอื่นหมด) — ซ่อนสเตปเซตครอบครัว + ปรับหัวข้อ/ปุ่มเป็น "สินค้า"
+  (function(){try{
+    var fw=byId('famWrap'); if(fw){var card=fw.closest('.card'); if(card)card.style.display='none';}
+    var s1=document.querySelector('#prodsMain'); if(s1){var st=s1.closest('.card'); if(st){var h=st.querySelector('.step h3'); if(h)h.textContent='เลือกสินค้า'; var hint=st.querySelector('.step .hint'); if(hint)hint.textContent='เปิดพรีออเดอร์เฉพาะเสื้อโปโล X-Visor';}}
+    ['ctaDesk','cta'].forEach(function(id){var b=byId(id); if(b&&/เลือกเซตหลักก่อน/.test(b.textContent))b.textContent='เลือกไซซ์เสื้อก่อน';});
+  }catch(e){}})();
 
   // ===== หน้า "ชำระเงินสำเร็จ" เมื่อลูกค้ากลับมาจาก Stripe (success_url = /preorder?paid=<id>) =====
   function showPaidSuccess(id){
@@ -1210,6 +1219,8 @@
 #mapp .col-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;border:1.6px solid #e5ebf5;border-radius:14px;padding:14px;background:#fff;font-family:inherit;font-size:1rem;font-weight:700;color:var(--ink);cursor:pointer}
 #mapp .col-opt.on{border-color:var(--accent);background:#F2F6FF;box-shadow:0 0 0 3px rgba(47,111,237,.12)}
 #mapp .col-opt .sw{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(0,0,0,.12);flex:none}
+#mapp .col-opts.sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+#mapp .col-opts.sizes .col-opt{flex:none;padding:13px 6px;font-size:.98rem}
 #mapp #colConfirm{width:100%;padding:15px}
 #mapp #colConfirm:disabled{opacity:.45}
 #mapp .geo-sheet{position:fixed;inset:0;z-index:120;display:none}
@@ -1438,8 +1449,10 @@
   var FAM_ORDER=['fam-band'];var curTab='main';TH['fam-band']=TH.band;
   // [POLO] เสื้อยืดโปโล X-Visor สีกรมท่า — เลือกไซซ์, 1 ตัว/คน
   P.polo={nm:'[POLO] เสื้อยืดโปโล X-Visor สีกรมท่า',desc:'เสื้อยืดโปโล สีกรมท่า CloverX & X-Visor · ระบุไซซ์',price:290,was:590,max:1,hot:true};
-  ORDER.push('polo');TH.polo='/polo.jpg';
+  TH.polo='/polo.jpg';
   var SIZES={polo:['SS','S','M','L','XL','2XL','3XL']};
+  // เปิดพรีออเดอร์เฉพาะเสื้อโปโล (สินค้าอื่นหมด): แสดงเฉพาะเสื้อ + ซ่อนแท็บเซตหลัก/ครอบครัว
+  ORDER.length=0;ORDER.push('polo');FAM_ORDER.length=0;
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
   var cart=[],pay='bank',curPid=null,detailQty=1;var geoSel=null,geoData=null,mSlipData=null;
@@ -1501,11 +1514,18 @@
     if(!validate()){toast('กรอกข้อมูลให้ครบ');var b=document.querySelector('#m-checkout .bad');b&&b.scrollIntoView({behavior:'smooth',block:'center'});return;}
     byId('coBtn').disabled=true;
     fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildOrder())}).then(function(r){return r.json();}).then(function(res){
-      var oid=(res&&res.id)?res.id:'PO-'+Date.now().toString().slice(-6);
-      if((pay==='card'||pay==='promptpay')&&res&&res.payUrl){showRedirect(oid,res.payUrl);setTimeout(function(){location.href=res.payUrl;},1500);return;}
-      if(pay==='bank'&&window.showBank){window.showBank(oid);}else{showDone(oid,!!(res&&res.id),'bank');}
-    }).catch(function(){showDone('PO-'+Date.now().toString().slice(-6),false,'bank');});
+      // ต้องได้เลขคำสั่งซื้อจริงจากเซิร์ฟเวอร์เท่านั้น — ไม่มี id = บันทึกไม่สำเร็จ ห้ามโชว์ว่าสำเร็จ/ห้ามให้โอน
+      if(!res||!res.id){orderFailed(res);return;}
+      var oid=res.id;
+      if((pay==='card'||pay==='promptpay')&&res.payUrl){showRedirect(oid,res.payUrl);setTimeout(function(){location.href=res.payUrl;},1500);return;}
+      if(pay==='bank'&&window.showBank){window.showBank(oid);}else{showDone(oid,true,'bank');}
+    }).catch(function(){orderFailed(null);});
   }
+  // บันทึกไม่สำเร็จ (ปิดรับ/เซิร์ฟเวอร์ล่ม) — เปิดปุ่มให้กดใหม่ + เตือนอย่าเพิ่งโอน (กันเงินเข้าแต่ไม่มีออเดอร์)
+  function orderFailed(res){var b=byId('coBtn');if(b)b.disabled=false;
+    if(res&&res.error==='preorder_closed'){toast(res.message||'ขณะนี้ปิดรับพรีออเดอร์ชั่วคราว');try{alert(res.message||'ขณะนี้ปิดรับพรีออเดอร์ชั่วคราว');}catch(e){}return;}
+    var m='บันทึกคำสั่งซื้อไม่สำเร็จ กรุณากดยืนยันอีกครั้ง\n\n⚠️ อย่าเพิ่งโอนเงิน จนกว่าจะได้เลขคำสั่งซื้อจากระบบ';toast('บันทึกไม่สำเร็จ กรุณาลองใหม่ — อย่าเพิ่งโอน');try{alert(m);}catch(e){}}
+
   function showPaidConfirm(oid){var url='/invoice/'+encodeURIComponent(oid);byId('m-done').innerHTML='<div class="done"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ชำระเงินเรียบร้อยแล้ว!</h2><p>คุณทำรายการชำระเงินเรียบร้อยแล้ว<br>คำสั่งซื้อ <span class="oid">'+oid+'</span><br>กำลังพาไปดูรายการสั่งซื้อของคุณ…</p><div class="spin"></div><p style="font-size:.82rem;margin-top:14px"><a href="'+url+'" style="color:var(--accent);font-weight:800">ดูคำสั่งซื้อของฉัน ↗</a></p></div>';cart=[];updateBadges();go('done');setTimeout(function(){location.href=url;},3500);}
   function showRedirect(oid,url){byId('m-done').innerHTML='<div class="done"><div class="big" style="background:#EAF1FC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="color:var(--accent)"><path d="M20 6 9 17l-5-5"/></svg></div><h2>บันทึกคำสั่งซื้อแล้ว</h2><p>เลขที่ <span class="oid">'+oid+'</span><br>กำลังพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe…</p><div class="spin"></div><p style="font-size:.8rem">ถ้าไม่เด้ง <a href="'+url+'" style="color:var(--accent);font-weight:800">กดที่นี่ ↗</a></p></div>';go('done');}
   function showDone(oid,saved,mode){var msg=mode==='bank'?'คำสั่งจอง <span class="oid">'+oid+'</span> ถูกบันทึกแล้ว<br>โอนเงินแล้วแนบสลิปเพื่อยืนยัน เมื่อยืนยันสำเร็จ ระบบจะส่งใบรับเงินมัดจำทางอีเมล':'คำสั่งซื้อ <span class="oid">'+oid+'</span> ได้รับการชำระเงินแล้ว<br>เราได้ส่งใบรับเงินมัดจำไปที่อีเมลของคุณแล้ว';
@@ -1541,6 +1561,7 @@
     if(byId('colTitle'))byId('colTitle').textContent=isSize?'เลือกไซซ์':'เลือกสี';
     byId('colProd').textContent=isSize?P[pid].nm:((pid==='band'||pid==='fam-band')?P[pid].nm:('Xircle Band · '+P[pid].nm));
     var opts=isSize?SIZES[pid]:COLORS[pid];
+    byId('colOpts').classList.toggle('sizes',isSize);
     byId('colOpts').innerHTML=opts.map(function(c){return '<button type="button" class="col-opt" onclick="MX.pickCol(this,\''+c+'\')">'+(isSize?'':('<span class="sw" style="background:'+SW[c]+'"></span>'))+c+'</button>';}).join('');
     byId('colConfirm').disabled=true;byId('colSheet').classList.add('on');}
   function pickCol(el,c){colSel=c;Array.prototype.forEach.call(document.querySelectorAll('#colOpts .col-opt'),function(b){b.classList.remove('on');});el.classList.add('on');byId('colConfirm').disabled=false;}
@@ -1562,6 +1583,8 @@
   window.MX={go:go,open:open,quickAdd:quickAdd,openBand:openBand,bpick:bpick,bq:bq,bdAdd:bdAdd,bdBuyNow:bdBuyNow,bdAdmin:bdAdmin,tab:tab,buyNow:buyDetail,dq:dq,plusMax:plusMax,copyAcct:copyAcct,openCol:openCol,pickCol:pickCol,closeCol:closeCol,confirmCol:confirmCol,setPay:setPay,sameRecv:sameRecv,submit:submit,reset:reset,openGeo:openGeo,closeGeo:closeGeo,pickGeo:pickGeo,
     cq:function(idx,d){var l=cart[idx];var max=P[l.pid].max||1;var nv=Math.max(1,Math.min(max,l.qty+d));if(d>0&&nv===l.qty){toast('คุณเพิ่มจำนวนสินค้าสูงสุดแล้ว');return;}l.qty=nv;renderCart();},
     rm:function(idx){cart.splice(idx,1);renderCart();}};
+  // เปิดพรีออเดอร์เฉพาะเสื้อ: ซ่อนแท็บเซตหลัก/ครอบครัว (เหลือสินค้าเดียว)
+  (function(){try{var t=byId('tabMain');if(t){var box=t.closest('.m-tabs')||t.parentElement;if(box)box.style.display='none';}curTab='main';}catch(e){}})();
   renderHome();updateBadges();
   (function(){var s=byId('geoSearch');if(s)s.addEventListener('input',function(){renderGeo(this.value);});var sl=byId('mf_slip');if(sl)sl.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){mSlipData=ev.target.result;byId('mf_slipTxt').textContent='✅ '+f.name;byId('mf_slipBox').classList.add('has');byId('mf_slipBox').classList.remove('bad');};r.readAsDataURL(f);});})();
   var m=location.search.match(/[?&]paid=([^&]+)/);if(m){}
