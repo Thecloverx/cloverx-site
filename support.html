@@ -144,7 +144,8 @@
       <div class="group open" id="g-events">
         <button class="item ghead" data-toggle="g-events"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span class="lbl">อีเวนต์</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item active" data-view="leanlab"><span class="dot"></span><span class="lbl">Lean Lab</span></button>
+          <button class="item active" data-view="lldash"><span class="dot"></span><span class="lbl">Dashboard</span></button>
+          <button class="item" data-view="leanlab"><span class="dot"></span><span class="lbl">Lean Lab · ผู้สมัคร</span></button>
         </div>
       </div>
 
@@ -193,7 +194,83 @@
     document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');
   });});
 
-  var TITLES={leanlab:'Lean Lab',tickets:'Tickets',kb:'ฐานความรู้',settings:'ตั้งค่า'};
+  var TITLES={lldash:'Dashboard',leanlab:'Lean Lab · ผู้สมัคร',tickets:'Tickets',kb:'ฐานความรู้',settings:'ตั้งค่า'};
+
+  // ---------- DASHBOARD (Lean Lab event overview) ----------
+  function dashView(){
+    return '<div class="head"><div><h1><span class="pill lean">EVENT</span> Dashboard — Lean Lab</h1>'
+      + '<p>ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
+      + '<div style="display:flex;gap:10px"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
+      + '<div id="dashBody"><div style="text-align:center;color:var(--muted);padding:52px 0">กำลังโหลดข้อมูล…</div></div>';
+  }
+  function dbar(label,value,max,color,suffix){
+    var pct=max>0?Math.round(value/max*100):0;
+    return '<div style="display:flex;align-items:center;gap:12px;margin:10px 0">'
+      + '<div style="width:180px;font-size:.85rem;color:var(--ink);flex:none">'+label+'</div>'
+      + '<div style="flex:1;min-width:60px;height:20px;background:var(--soft);border-radius:6px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+color+';min-width:3px"></div></div>'
+      + '<div class="num" style="width:78px;text-align:right;font-weight:800;font-size:.92rem">'+value+(suffix||'')+'</div></div>';
+  }
+  function dashLoad(){
+    var rb=document.getElementById('dashRefresh'); if(rb)rb.onclick=dashLoad;
+    fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      var body=document.getElementById('dashBody'); if(!body)return;
+      if(!j||!j.ok){body.innerHTML='<div style="color:var(--bad);text-align:center;padding:40px">โหลดข้อมูลไม่สำเร็จ</div>';return;}
+      var R=j.registrations||[], TARGET=300, promo=j.promo||{quota:100,used:0,left:100};
+      var total=R.length;
+      var confirmed=R.filter(function(x){return x.status==='confirmed';});
+      var pending=R.filter(function(x){return x.status==='pending_review'||x.status==='promo_review';}).length;
+      var pastdue=R.filter(function(x){return x.installment&&x.installment.status==='past_due';}).length;
+      var received=0, projected=0;
+      confirmed.forEach(function(x){ if(x.installment){received+=(x.installment.perMonth||0)*(x.installment.paidCount||0);projected+=(x.installment.total||0);} else {received+=(x.fee||0);projected+=(x.fee||0);} });
+      var now=R.filter(function(x){return x.startChoice==='now';}).length;
+      var later=R.filter(function(x){return x.startChoice==='later';}).length;
+      var std=R.filter(function(x){return !x.promo;}).length;
+      var full={t0:0,t1:0,t2:0,t3:0}, special=0;
+      R.forEach(function(x){ if(x.promoPlan==='full'&&x.promoTier){full[x.promoTier]=(full[x.promoTier]||0)+1;} else if(x.promoPlan==='special'){special++;} });
+      var male=R.filter(function(x){return x.gender==='ชาย';}).length;
+      var female=R.filter(function(x){return x.gender==='หญิง';}).length;
+      var ab={a:0,b:0,c:0,d:0};
+      R.forEach(function(x){var a=Number(x.age); if(!(a>0))return; if(a<=24)ab.a++; else if(a<=34)ab.b++; else if(a<=44)ab.c++; else ab.d++;});
+      var pctT=Math.min(100,Math.round(total/TARGET*100));
+      var mPay=Math.max(std,full.t0,full.t1,full.t2,full.t3,special,1);
+      var mAge=Math.max(ab.a,ab.b,ab.c,ab.d,1), mG=Math.max(male,female,1), mS=Math.max(now,later,1);
+      var pctOf=function(n){return total?Math.round(n/total*100):0;};
+      body.innerHTML=''
+        + '<div class="kpis">'
+        +   '<div class="kpi"><div class="lb">ผู้สมัครทั้งหมด</div><div class="v num">'+total+' <span style="font-size:.5em;color:var(--muted)">/ '+TARGET+'</span></div><div class="s"><div style="height:7px;background:var(--soft);border-radius:5px;margin:6px 0 4px;overflow:hidden"><div style="height:100%;width:'+pctT+'%;background:var(--good)"></div></div>'+pctT+'% ของเป้าหมาย</div></div>'
+        +   '<div class="kpi"><div class="lb">ยืนยันแล้ว</div><div class="v num" style="color:var(--good)">'+confirmed.length+'</div><div class="s">รอตรวจ <b>'+pending+'</b> คน'+(pastdue?' · <b style="color:var(--bad)">ตัดบัตรค้าง '+pastdue+'</b>':'')+'</div></div>'
+        +   '<div class="kpi"><div class="lb">รับเงินจริงแล้ว</div><div class="v num">฿'+received.toLocaleString('en-US')+'</div><div class="s">คาดเต็มโครงการ ฿'+projected.toLocaleString('en-US')+'</div></div>'
+        +   '<div class="kpi"><div class="lb">สิทธิ์โปรโมชั่นคงเหลือ 🎁</div><div class="v num" style="color:var(--warn)">'+promo.left+' <span style="font-size:.5em;color:var(--muted)">/ '+promo.quota+'</span></div><div class="s">ใช้ไป <b>'+promo.used+'</b> · นับเฉพาะยืนยันแล้ว</div></div>'
+        + '</div>'
+        + '<div class="panel"><div class="ph"><h3>รูปแบบการเริ่ม</h3><span style="font-size:.78rem;color:var(--muted)">จากผู้สมัครทั้งหมด '+total+' คน</span></div>'
+        +   dbar('เริ่มเลย ณ ตอนนี้',now,mS,'var(--good)',' ('+pctOf(now)+'%)')
+        +   dbar('เริ่ม 8 พ.ย. 69',later,mS,'#2E86FF',' ('+pctOf(later)+'%)')
+        + '</div>'
+        + '<div class="panel"><div class="ph"><h3>เงื่อนไขการชำระเงิน</h3><span style="font-size:.78rem;color:var(--muted)">แยกตามตัวเลือกที่ลูกค้าเลือก</span></div>'
+        +   dbar('ชำระเลย 3,900',std,mPay,'#56C8FF',' คน')
+        +   dbar('Grand Slam · 44,940 (t0)',full.t0,mPay,'#C8F56A',' คน')
+        +   dbar('Grand Slam · 39,950 (t1)',full.t1,mPay,'#C8F56A',' คน')
+        +   dbar('Grand Slam · 37,450 (t2)',full.t2,mPay,'#C8F56A',' คน')
+        +   dbar('Grand Slam · 32,460 (t3)',full.t3,mPay,'#C8F56A',' คน')
+        +   dbar('Special · ผ่อน 6 งวด',special,mPay,'#a98bff',' คน')
+        +   '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:.88rem;color:var(--muted)">สิทธิ์โปรโมชั่นคงเหลือ <b class="num" style="color:var(--warn)">'+promo.left+'</b> / '+promo.quota+' สิทธิ์ (นับเฉพาะที่ชำระ/ยืนยันแล้ว)</div>'
+        + '</div>'
+        + '<div class="panel"><div class="ph"><h3>สัดส่วนผู้สมัคร</h3></div>'
+        +   '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px">'
+        +     '<div><div style="font-size:.82rem;color:var(--muted);font-weight:700;margin-bottom:8px">เพศ</div>'
+        +       dbar('ชาย',male,mG,'#2E86FF',' ('+pctOf(male)+'%)')
+        +       dbar('หญิง',female,mG,'#ff5bb0',' ('+pctOf(female)+'%)')
+        +     '</div>'
+        +     '<div><div style="font-size:.82rem;color:var(--muted);font-weight:700;margin-bottom:8px">ช่วงอายุ</div>'
+        +       dbar('18–24 ปี',ab.a,mAge,'#56C8FF',' คน')
+        +       dbar('25–34 ปี',ab.b,mAge,'#56C8FF',' คน')
+        +       dbar('35–44 ปี',ab.c,mAge,'#56C8FF',' คน')
+        +       dbar('45 ปีขึ้นไป',ab.d,mAge,'#56C8FF',' คน')
+        +     '</div>'
+        +   '</div>'
+        + '</div>';
+    }).catch(function(){var e=document.getElementById('dashBody');if(e)e.innerHTML='<div style="color:var(--bad);text-align:center;padding:40px">เชื่อมต่อไม่สำเร็จ</div>';});
+  }
 
   function leanlabView(){
     return ''
@@ -310,7 +387,8 @@
     // mark group has-active for collapsed rail
     document.querySelectorAll('.nav .group').forEach(function(g){g.classList.toggle('has-active', !!g.querySelector('.item.active'));});
     document.getElementById('crumbTitle').textContent=TITLES[v]||v;
-    if(v==='leanlab'){ gen.innerHTML=leanlabView(); llInit(); }
+    if(v==='lldash'){ gen.innerHTML=dashView(); dashLoad(); }
+    else if(v==='leanlab'){ gen.innerHTML=leanlabView(); llInit(); }
     else if(v==='tickets') gen.innerHTML=emptyView('Tickets','ระบบรับเรื่อง/ตั๋วช่วยเหลือลูกค้า กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='kb') gen.innerHTML=emptyView('ฐานความรู้','คลังบทความ/คู่มือช่วยเหลือ กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='settings') gen.innerHTML=emptyView('ตั้งค่า','ตั้งค่าฝ่ายซัพพอร์ต กำลังพัฒนา — เร็ว ๆ นี้');
@@ -320,5 +398,5 @@
   }
   document.querySelectorAll('.nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
 
-  go('leanlab');
+  go('lldash');
 </script>
