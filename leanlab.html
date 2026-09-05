@@ -6,14 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap">
 <style>
   :root{
     --bg:#03080f;--bg2:#070f1a;--panel:#0c1622;--panel2:#111e2e;--line:#1e2c3d;--line2:#28394e;
     --ink:#eef4fc;--muted:#8a99ad;--dim:#5f6f83;
     --lime:#C8F56A;--lime-d:#9BE31A;--lime-ink:#0a1400;
     --blue:#2E86FF;--sky:#56C8FF;--orange:#ffc46b;--danger:#ff6b6b;
-    --ff:"IBM Plex Sans Thai",system-ui,sans-serif;--ff-d:"Kanit",sans-serif;
+    --ff:"Anuphan",system-ui,sans-serif;--ff-d:"Anuphan",system-ui,sans-serif;
     --radius:18px;color-scheme:dark;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -228,8 +228,9 @@
   .llx-hero{position:relative;overflow:hidden;min-height:clamp(540px,82vh,760px);display:flex;align-items:center;border-bottom:1px solid var(--line)}
   .llx-hero .hbg{position:absolute;inset:0;z-index:0;background:#050c16 center right/cover no-repeat;background-image:var(--hero-img,none)}
   .llx-hero .hscrim{position:absolute;inset:0;z-index:1;background:
-     linear-gradient(90deg,var(--bg) 8%,rgba(3,8,15,.72) 42%,rgba(3,8,15,.25) 66%,rgba(3,8,15,.55) 100%),
-     linear-gradient(0deg,var(--bg) 2%,transparent 26%)}
+     linear-gradient(90deg,var(--bg) 22%,rgba(3,8,15,.88) 46%,rgba(3,8,15,.4) 72%,rgba(3,8,15,.5) 100%),
+     linear-gradient(0deg,var(--bg) 2%,transparent 30%)}
+  .llx-hero .xglow{display:none}
   .llx-hero .xglow{position:absolute;z-index:1;right:8%;top:50%;width:min(520px,46vw);height:min(520px,46vw);transform:translateY(-50%);pointer-events:none;opacity:.9;
      background:
        linear-gradient(45deg,transparent 46%,rgba(86,200,255,.55) 49%,rgba(86,200,255,.85) 50%,rgba(86,200,255,.55) 51%,transparent 54%),
@@ -329,6 +330,36 @@
   .llx-foot .fn a{cursor:pointer}.llx-foot .fn a:hover{color:var(--ink)}
   .llx-foot .cp{color:var(--dim);font-size:.78rem}
 
+  /* ---- coverflow carousel (CloverX ecosystem) ---- */
+  .cf-stage{position:relative;height:520px;margin-top:30px;perspective:2200px}
+  .cf-track{position:absolute;inset:0;transform-style:preserve-3d}
+  .cf-card{position:absolute;left:50%;top:50%;width:min(860px,86vw);aspect-ratio:16/8.6;transform:translate(-50%,-50%);border-radius:24px;overflow:hidden;cursor:pointer;box-shadow:0 40px 90px -50px #000;transition:transform .55s cubic-bezier(.22,.61,.36,1),opacity .55s,filter .55s;will-change:transform,opacity;border:1px solid var(--line2)}
+  .cf-card .bg{position:absolute;inset:0}
+  .cf-card .bg img{width:100%;height:100%;object-fit:cover}
+  .cf-card .scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,8,15,.8) 0%,rgba(3,8,15,.32) 42%,rgba(3,8,15,0) 72%),linear-gradient(0deg,rgba(3,8,15,.88) 0%,rgba(3,8,15,.4) 30%,rgba(3,8,15,0) 62%)}
+  .cf-card .lg{position:absolute;left:32px;top:28px;z-index:2}
+  .cf-card .lg .mk{font-family:var(--ff-d);font-weight:800;font-size:24px;letter-spacing:.02em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .cf-card .lg .mk .x{color:var(--sky)}
+  .cf-card .body{position:absolute;left:32px;right:32px;bottom:28px;z-index:2;color:#fff}
+  .cf-card .body h4{font-family:var(--ff-d);font-weight:800;font-size:clamp(20px,2.4vw,28px)}
+  .cf-card .body p{margin-top:9px;font-size:clamp(13px,1.15vw,15px);line-height:1.55;color:rgba(255,255,255,.9);max-width:46em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .cf-card .links{margin-top:14px;display:flex;gap:9px;flex-wrap:wrap}
+  .cf-card .links a{display:inline-flex;align-items:center;gap:7px;background:rgba(18,22,30,.62);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(6px);color:#fff;font-weight:600;font-size:13px;padding:8px 15px;border-radius:999px;transition:.16s}
+  .cf-card .links a:hover{background:var(--sky);color:#04121f;border-color:transparent}
+  .cf-card .links svg{width:14px;height:14px;fill:currentColor}
+  .cf-card[data-pos="0"]{z-index:30;opacity:1;filter:none}
+  .cf-card[data-pos="-1"],.cf-card[data-pos="1"]{z-index:20;opacity:.5;filter:saturate(.8) brightness(.55) blur(1.2px)}
+  .cf-card[data-pos="-2"],.cf-card[data-pos="2"]{z-index:10;opacity:.26;filter:saturate(.7) brightness(.45) blur(2px)}
+  .cf-card[data-pos="hidden"]{opacity:0;pointer-events:none;z-index:1}
+  .cf-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:40;width:54px;height:54px;border-radius:50%;background:var(--panel2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+  .cf-arrow:hover{background:var(--panel);border-color:var(--sky);transform:translateY(-50%) scale(1.07)}
+  .cf-arrow svg{width:21px;height:21px;stroke:var(--ink);stroke-width:2.4;fill:none}
+  .cf-arrow.prev{left:max(10px,calc(50% - 540px))}.cf-arrow.next{right:max(10px,calc(50% - 540px))}
+  .cf-dots{display:flex;gap:9px;justify-content:center;margin-top:26px}
+  .cf-dots button{width:9px;height:9px;border-radius:50%;border:0;background:var(--line2);cursor:pointer;padding:0;transition:.2s}
+  .cf-dots button.on{background:var(--sky);width:26px;border-radius:6px}
+  @media(max-width:720px){.cf-stage{height:430px}.cf-card{width:90vw;aspect-ratio:7/6}.cf-arrow{width:44px;height:44px}.cf-card .body p{-webkit-line-clamp:2}}
+
   @media(max-width:820px){
     .llx-mnav,.llx-login{display:none}
     .llx-burger{display:flex}
@@ -415,6 +446,12 @@
       h_sub:'โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ วัดจริงทุกครั้งที่เจอกัน',cta_detail:'ดูรายละเอียด',
       st_week:'สัปดาห์',st_meet:'จุดนัดพบ',st_seat:'ที่นั่ง',
       po_eye:'Program Overview',po_h:'เส้นทางสู่การเปลี่ยนแปลงที่แท้จริง',po_sub:'สี่ขั้นตอน สู่การเปลี่ยนแปลงที่ยั่งยืน',
+      eco_eye:'Ecosystem',eco_h:'ระบบนิเวศสุขภาพของ CloverX',eco_sub:'เทคโนโลยี ข้อมูล และการดูแล ที่เชื่อมโยงกันเพื่อสุขภาพที่ดีกว่า',
+      c1:'ผู้สร้างระบบนิเวศสุขภาพยุคใหม่ ที่รวมเทคโนโลยี ข้อมูล และการดูแลสุขภาพเข้าไว้ด้วยกัน เพื่อช่วยให้ผู้คนมีสุขภาพดีขึ้นและใช้ชีวิตได้ยาวนานขึ้น',
+      c2:'แบรนด์อุปกรณ์สุขภาพอัจฉริยะของ CloverX ที่ช่วยติดตามการกิน การเคลื่อนไหว และการนอน (Eat · Move · Sleep) แบบเรียลไทม์ในที่เดียว',
+      c3:'โปรแกรมดูแลสุขภาพองค์รวม ที่เชื่อมข้อมูลสุขภาพของคุณให้เห็นภาพรวมในที่เดียว เปลี่ยนพฤติกรรมเล็ก ๆ ในแต่ละวันให้กลายเป็นสุขภาพที่ดีในระยะยาว',
+      c4:'ขับเคลื่อนนวัตกรรมด้านสุขภาพและการมีอายุยืนอย่างมีคุณภาพ ผ่านแพลตฟอร์มสำหรับผู้คน ธุรกิจ และชุมชน',
+      c5:'ทีมเล็กที่ทำงานเร็ว ข้ามสายงาน และเป็นเจ้าของงานจริง ๆ เราใช้ AI และเทคโนโลยีเพื่อสร้างสิ่งใหม่ และเติบโตไปด้วยกันในทุก ๆ วัน',
       j1t:'รู้จักตัวเอง ตั้งเป้าหมาย',j1d:'เรียนรู้จากข้อมูลร่างกายจริง และประสบการณ์จากผู้เชี่ยวชาญ',j1l:'Data Analysis · Personal Goal',
       j2t:'กินให้ดี ขยับให้สุด พักให้พอ',j2d:'สร้างนิสัยที่ทำได้จริงในชีวิตประจำวัน',j2l:'Nutrition · Movement · Recovery',
       j3t:'เปลี่ยนวันนี้ ให้เป็นคุณที่ดีกว่าเดิม',j3d:'ลงมือทำอย่างต่อเนื่อง พร้อมการดูแลจากผู้เชี่ยวชาญ',j3l:'Guidance · Community · Real Progress',
@@ -435,6 +472,12 @@
       h_sub:'A 10-week body transformation program, measured for real every time you meet.',cta_detail:'Learn more',
       st_week:'weeks',st_meet:'check-ins',st_seat:'seats',
       po_eye:'Program Overview',po_h:'A Journey Built For Real Change',po_sub:'Four stages toward lasting change',
+      eco_eye:'Ecosystem',eco_h:'The CloverX Health Ecosystem',eco_sub:'Technology, data and care connected for a healthier you',
+      c1:'The creator of a modern health ecosystem that brings together technology, data and care to help people live healthier and longer.',
+      c2:"CloverX's smart health devices that track how you Eat, Move and Sleep in real time, all in one place.",
+      c3:'A holistic health program that connects your health data into one clear picture, turning small daily habits into lasting long-term health.',
+      c4:'Driving innovation in health and healthy longevity through a platform for people, businesses and communities.',
+      c5:'A small team that moves fast, works across functions and truly owns its work — using AI and technology to build and grow every day.',
       j1t:'Know yourself, set your goal',j1d:'Learn from your real body data and expert guidance',j1l:'Data Analysis · Personal Goal',
       j2t:'Eat well, move fully, rest enough',j2d:'Build habits that actually fit your daily life',j2l:'Nutrition · Movement · Recovery',
       j3t:'Change today into a better you',j3d:'Consistent action with expert support along the way',j3l:'Guidance · Community · Real Progress',
@@ -462,6 +505,57 @@
       +'<div class="lbls">'+T('j'+n+'l')+'</div></div></div>';
   }
   function ring(v,rc,val,cap){return '<div class="ring"><div class="dial" style="--v:'+v+';--rc:'+rc+'"><b>'+val+'</b></div><div class="cap">'+cap+'</div></div>';}
+
+  // ---------- coverflow carousel (CloverX ecosystem) ----------
+  var cfIC={
+    web:'<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2c1.7 0 3.3 3 3.7 7H8.3C8.7 7 10.3 4 12 4zM6.3 11c.1-2 .6-3.9 1.4-5.4A8 8 0 004.3 11zm0 2H4.3a8 8 0 003.4 5.4C6.9 16.9 6.4 15 6.3 13zm2 0h7.4c-.4 4-2 7-3.7 7s-3.3-3-3.7-7zm9.4 0c-.1 2-.6 3.9-1.4 5.4a8 8 0 003.4-5.4zm0-2a8 8 0 00-3.4-5.4c.8 1.5 1.3 3.4 1.4 5.4z"/></svg>',
+    fb:'<svg viewBox="0 0 24 24"><path d="M13 22v-8h2.7l.4-3H13V9c0-.9.3-1.5 1.6-1.5H16V4.8C15.7 4.8 14.8 4.7 13.7 4.7 11.4 4.7 10 6 10 8.6V11H7.4v3H10v8z"/></svg>',
+    ig:'<svg viewBox="0 0 24 24"><path d="M12 8.8A3.2 3.2 0 1012 15.2 3.2 3.2 0 0012 8.8zm0 5.3a2.1 2.1 0 110-4.2 2.1 2.1 0 010 4.2zM16.9 8.7a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM19 8.8c0-1.2-.4-2.2-1.2-3-.8-.8-1.8-1.1-3-1.2C13.6 4.5 10.4 4.5 9.1 4.6c-1.2 0-2.2.4-3 1.2-.8.8-1.1 1.8-1.2 3C4.8 9.9 4.8 13.1 4.9 14.4c0 1.2.4 2.2 1.2 3 .8.8 1.8 1.1 3 1.2 1.3.1 4.5.1 5.8 0 1.2 0 2.2-.4 3-1.2.8-.8 1.1-1.8 1.2-3 .1-1.3.1-4.5 0-5.8z"/></svg>',
+    shop:'<svg viewBox="0 0 24 24"><path d="M7 4h-.8L5.4 2H2v2h2l2.6 9.6c.1.5.6.9 1.1.9h8.8c.5 0 1-.4 1.1-.9L20 6H6.4l.5 2H17l-1.2 4H8.3zM8 18a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>'
+  };
+  var cfCards=[
+    {mk:'CLOVER<span class="x">✕</span>',title:'CloverX (Thailand)',bg:'c1.jpg',desc:'c1',links:[['web','','https://www.cloverxth.com'],['fb','Facebook','#'],['ig','Instagram','#']]},
+    {mk:'XIRCLE',title:'Xircle',bg:'c2.jpg',desc:'c2',links:[['shop','Pre-Order','/preorder'],['ig','Instagram','#'],['fb','Facebook','#']]},
+    {mk:'Eat·Move·Sleep',title:'Eat · Move · Sleep',bg:'c3.jpg',desc:'c3',links:[]},
+    {mk:'Wellness',title:'Wellness & Longevity',bg:'c4.jpg',desc:'c4',links:[]},
+    {mk:'Life at CloverX',title:'Life at CloverX',bg:'c5.jpg',desc:'c5',links:[['fb','Facebook','#'],['ig','Instagram','#']]}
+  ];
+  var cfCur=0, cfSTEP=[0,250,460], cfSCALE=[1,.8,.64], cfROT=[0,26,34], cfTZ=[90,-40,-130];
+  function buildCf(){
+    var track=document.getElementById('cfTrack'); if(!track)return;
+    var lblWeb=(LANG==='en')?'Website':'เว็บไซต์';
+    track.innerHTML='';
+    cfCards.forEach(function(c,i){
+      var links=c.links.map(function(l){var lb=(l[0]==='web')?lblWeb:l[1];var ext=l[2]&&l[2].charAt(0)!=='#';return '<a href="'+(l[2]||'#')+'"'+(ext?' target="_blank" rel="noopener"':'')+'>'+(cfIC[l[0]]||'')+lb+'</a>';}).join('');
+      var d=document.createElement('div'); d.className='cf-card';
+      d.innerHTML='<div class="bg"><img src="'+c.bg+'" alt=""></div><div class="scrim"></div><div class="lg"><span class="mk">'+c.mk+'</span></div><div class="body"><h4>'+c.title+'</h4><p>'+T(c.desc)+'</p><div class="links">'+links+'</div></div>';
+      d.addEventListener('click',function(e){if(e.target.closest('a'))return;cfGo(i);});
+      track.appendChild(d);
+    });
+    var dots=document.getElementById('cfDots'); if(dots){dots.innerHTML='';cfCards.forEach(function(_,i){var b=document.createElement('button');b.addEventListener('click',function(){cfGo(i);});dots.appendChild(b);});}
+    var pv=document.getElementById('cfPrev'),nx=document.getElementById('cfNext');
+    if(pv)pv.onclick=function(){cfGo(cfCur-1);}; if(nx)nx.onclick=function(){cfGo(cfCur+1);};
+    var stage=document.querySelector('.cf-stage');
+    if(stage&&!stage.dataset.sw){stage.dataset.sw='1';var sx=null;
+      stage.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+      stage.addEventListener('touchend',function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45){dx<0?cfGo(cfCur+1):cfGo(cfCur-1);}sx=null;});
+    }
+    cfCur=0; cfLayout();
+  }
+  function cfLayout(){
+    var track=document.getElementById('cfTrack'); if(!track)return;
+    var els=track.children, N=cfCards.length;
+    for(var i=0;i<els.length;i++){
+      var el=els[i], off=i-cfCur;
+      if(off>N/2)off-=N; if(off<-N/2)off+=N;
+      var a=Math.min(Math.abs(off),2), s=(off>0?1:(off<0?-1:0));
+      if(Math.abs(off)>2){el.dataset.pos='hidden';el.style.transform='translate(-50%,-50%) translateZ(-260px) scale(.55)';continue;}
+      el.dataset.pos=String(off);
+      el.style.transform='translate(-50%,-50%) translateZ('+cfTZ[a]+'px) translateX('+(s*cfSTEP[a])+'px) scale('+cfSCALE[a]+') rotateY('+(-s*cfROT[a])+'deg)';
+    }
+    var db=document.querySelectorAll('#cfDots button'); for(var k=0;k<db.length;k++)db[k].classList.toggle('on',k===cfCur);
+  }
+  function cfGo(i){var N=cfCards.length;cfCur=(i%N+N)%N;cfLayout();}
 
   function vLanding(){
     showLanding();
@@ -497,6 +591,10 @@
     +   jcard(3,'TRANSFORM YOUR X','#ff5bb0','rgba(255,91,176,.32)','ll_transform.jpg')
     +   jcard(4,'UNLOCK YOUR X','#a98bff','rgba(169,139,255,.32)','ll_unlock.jpg')
     +' </div></section>'
+    // ===== ecosystem carousel (coverflow) =====
+    +'<section class="llx-sec" id="llEco"><div class="head"><span class="llx-eye">'+T('eco_eye')+'</span><h2>'+T('eco_h')+'</h2><p>'+T('eco_sub')+'</p></div>'
+    +' <div class="cf-stage"><button class="cf-arrow prev" id="cfPrev" aria-label="prev"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button><div class="cf-track" id="cfTrack"></div><button class="cf-arrow next" id="cfNext" aria-label="next"><svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></svg></button></div>'
+    +' <div class="cf-dots" id="cfDots"></div></section>'
     // ===== prizes =====
     +'<section class="llx-prize" id="llPrize"><div class="llin llx-in">'
     +'  <div><span class="llx-eye" style="color:#ffcf6b">'+T('pz_eye')+'</span><div style="color:var(--muted);margin-top:8px">'+T('pz_h')+'</div>'
@@ -539,6 +637,7 @@
     L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',prog:'llProg',prize:'llPrize',faq:'llFaq'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
     var lang=document.getElementById('llxLang');if(lang)lang.querySelectorAll('button').forEach(function(b){b.onclick=function(){setLang(b.getAttribute('data-l'));};});
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
+    buildCf();
     fillSide();
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
