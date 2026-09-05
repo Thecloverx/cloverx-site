@@ -224,27 +224,19 @@
   .llx-cta:hover{background:var(--lime-d)}
   .llx-burger{display:none;width:40px;height:40px;border:1px solid var(--line2);border-radius:10px;background:var(--bg2);color:var(--ink);align-items:center;justify-content:center;cursor:pointer;flex:none}
 
-  /* hero */
-  .llx-hero{position:relative;overflow:hidden;min-height:clamp(540px,82vh,760px);display:flex;align-items:center;border-bottom:1px solid var(--line)}
-  .llx-hero .hbg{position:absolute;inset:0;z-index:0;background:#050c16 center right/cover no-repeat;background-image:var(--hero-img,none)}
-  .llx-hero .hscrim{position:absolute;inset:0;z-index:1;background:
-     linear-gradient(90deg,var(--bg) 22%,rgba(3,8,15,.88) 46%,rgba(3,8,15,.4) 72%,rgba(3,8,15,.5) 100%),
-     linear-gradient(0deg,var(--bg) 2%,transparent 30%)}
-  .llx-hero .xglow{display:none}
-  .llx-hero .xglow{position:absolute;z-index:1;right:8%;top:50%;width:min(520px,46vw);height:min(520px,46vw);transform:translateY(-50%);pointer-events:none;opacity:.9;
-     background:
-       linear-gradient(45deg,transparent 46%,rgba(86,200,255,.55) 49%,rgba(86,200,255,.85) 50%,rgba(86,200,255,.55) 51%,transparent 54%),
-       linear-gradient(-45deg,transparent 46%,rgba(155,227,26,.5) 49%,rgba(200,245,106,.8) 50%,rgba(155,227,26,.5) 51%,transparent 54%);
-     filter:blur(1px) drop-shadow(0 0 22px rgba(86,200,255,.5))}
-  .llx-hero .llin{position:relative;z-index:2;width:100%;padding-top:44px;padding-bottom:44px}
-  .llx-hero .hpre{display:block;color:var(--sky);font-family:var(--ff-d);font-weight:700;letter-spacing:.16em;font-size:.74rem;text-transform:uppercase;margin-bottom:16px}
-  .llx-hero h1{font-size:clamp(2.5rem,6vw,4.4rem);line-height:1.02;max-width:15ch}
-  .llx-hero h1 .g{background:linear-gradient(100deg,var(--sky),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .llx-hero .hsub{color:var(--muted);font-size:1.1rem;margin-top:18px;max-width:40ch;line-height:1.6}
-  .llx-hero .hbtns{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap}
-  .llx-hero .hstats{display:flex;gap:36px;margin-top:40px;flex-wrap:wrap}
-  .llx-hero .hstats .s b{font-family:var(--ff-d);font-size:2.2rem;color:#fff;display:block;line-height:1}
-  .llx-hero .hstats .s span{font-size:.82rem;color:var(--muted)}
+  /* hero — full image, nothing overlaid */
+  .llx-hero{position:relative;background:var(--bg);line-height:0}
+  .llx-hero .hero-img{display:block;width:100%;height:auto}
+  /* hero text/CTA bar (below the image, not overlaid) */
+  .llx-herobar{background:var(--bg);border-bottom:1px solid var(--line);padding:38px 0 46px;text-align:center;line-height:1.5}
+  .llx-herobar .hpre{display:block;color:var(--sky);font-family:var(--ff-d);font-weight:700;letter-spacing:.16em;font-size:.74rem;text-transform:uppercase;margin-bottom:14px}
+  .llx-herobar h1{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.08}
+  .llx-herobar h1 .g{background:linear-gradient(100deg,var(--sky),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .llx-herobar .hsub{color:var(--muted);font-size:1.05rem;margin:16px auto 0;max-width:48ch;line-height:1.6}
+  .llx-herobar .hbtns{display:flex;gap:14px;margin-top:24px;flex-wrap:wrap;justify-content:center}
+  .llx-herobar .hstats{display:inline-flex;gap:40px;margin-top:32px;flex-wrap:wrap;justify-content:center;text-align:center}
+  .llx-herobar .hstats .s b{font-family:var(--ff-d);font-size:2.2rem;color:#fff;display:block;line-height:1}
+  .llx-herobar .hstats .s span{font-size:.82rem;color:var(--muted)}
 
   /* pillars strip */
   .llx-pil{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--line);color:var(--sky);font-family:var(--ff-d);font-weight:700;letter-spacing:.16em;font-size:.78rem;text-transform:uppercase;flex-wrap:wrap;text-align:center}
@@ -572,15 +564,8 @@
     +'   <button class="llx-login" data-go="login">'+T('login')+'</button>'
     +'   <button class="llx-cta" data-go="join">'+T('join')+'</button>'
     +' </div></div></div>'
-    // ===== hero =====
-    +'<section class="llx-hero" id="llTop"><div class="hbg" style="--hero-img:url(\'ll_hero.jpg\')"></div><div class="hscrim"></div><div class="xglow"></div>'
-    +' <div class="llin llx-in">'
-    +'   <span class="hpre">'+T('h_pre')+'</span>'
-    +'   <h1>'+T('h1a')+'<br><span class="g">'+T('h1b')+'</span></h1>'
-    +'   <p class="hsub">'+T('h_sub')+'</p>'
-    +'   <div class="hbtns"><button class="llx-cta" data-go="join" style="padding:13px 26px;font-size:1rem">'+T('join')+' →</button><button class="btn ghost" data-scroll="prog">'+T('cta_detail')+'</button></div>'
-    +'   <div class="hstats"><div class="s"><b>10</b><span>'+T('st_week')+'</span></div><div class="s"><b>4</b><span>'+T('st_meet')+'</span></div><div class="s"><b>200</b><span>'+T('st_seat')+'</span></div></div>'
-    +' </div></section>'
+    // ===== hero — image only, nothing else =====
+    +'<section class="llx-hero" id="llTop"><img class="hero-img" src="ll_hero.jpg" alt="Lean Lab X"></section>'
     // ===== pillars =====
     +'<div class="llx-pil">DATA <span class="ekg">·</span> KNOWLEDGE <span class="ekg">·</span> COMMUNITY <span class="ekg">·</span> ACTION</div>'
     // ===== journey =====
