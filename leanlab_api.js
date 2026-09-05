@@ -215,7 +215,8 @@ module.exports = function (app, DATA_DIR) {
     res.json({
       lineLogin: !!(lineConfigured() || process.env.LINE_DEV_FAKE === '1'),
       liffId: process.env.LEANLAB_LIFF_ID || process.env.LINE_LIFF_ID || '',
-      googleLogin: false
+      googleLogin: false,
+      card: !!process.env.STRIPE_SECRET_KEY
     });
   });
 
@@ -368,6 +369,57 @@ module.exports = function (app, DATA_DIR) {
     if (!fs.existsSync(p)) return res.status(404).end();
     res.sendFile(p);
   });
+
+  // ---- Card payment via Stripe Checkout (สำหรับโปรโมชั่น Full Option) ----
+  function stripeCfg() { return !!process.env.STRIPE_SECRET_KEY; }
+  function createCard(reg, base) {
+    return new Promise(function (resolve) {
+      if (!stripeCfg()) { resolve(null); return; }
+      var amount = Number(reg.fee) || 0;
+      if (!(amount > 0)) { resolve(null); return; }
+      var name = 'Lean Lab · Grand Slam Offer' + (reg.promoTier ? (' (' + reg.promoTier + ')') : '');
+      var params = [];
+      params.push(['mode', 'payment']);
+      params.push(['client_reference_id', 'LL:' + reg.id]);
+      params.push(['success_url', base + '/leanlab?paid=' + encodeURIComponent(reg.id)]);
+      params.push(['cancel_url', base + '/leanlab']);
+      params.push(['metadata[leanlab_reg]', reg.id]);
+      if (reg.email) params.push(['customer_email', reg.email]);
+      params.push(['line_items[0][price_data][currency]', 'thb']);
+      params.push(['line_items[0][price_data][product_data][name]', name]);
+      params.push(['line_items[0][price_data][unit_amount]', String(Math.round(amount * 100))]);
+      params.push(['line_items[0][quantity]', '1']);
+      var body = params.map(function (p) { return encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1]); }).join('&');
+      var r = https.request({ hostname: 'api.stripe.com', path: '/v1/checkout/sessions', method: 'POST', headers: { 'Authorization': 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) } }, function (resp) {
+        var b = ''; resp.on('data', function (d) { b += d; });
+        resp.on('end', function () { try { var j = JSON.parse(b); if (resp.statusCode >= 200 && resp.statusCode < 300 && j.url) resolve({ url: j.url, id: j.id }); else { console.log('[lean-lab] stripe fail', resp.statusCode, b.slice(0, 160)); resolve(null); } } catch (e) { resolve(null); } });
+      });
+      r.on('error', function () { resolve(null); }); r.write(body); r.end();
+    });
+  }
+  app.post('/api/leanlab/register/pay/card', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    if (!stripeCfg()) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
+    var r = readR().find(function (x) { return x.memberId === m.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (r.status !== 'awaiting_payment') return res.status(400).json({ ok: false, error: 'not_ready' });
+    createCard(r, baseUrl(req)).then(function (s) {
+      if (!s || !s.url) return res.status(502).json({ ok: false, error: 'stripe_error' });
+      var l = readR(); var x = l.find(function (y) { return y.id === r.id; }); if (x) { x.cardSessionId = s.id; writeR(l); }
+      res.json({ ok: true, url: s.url });
+    });
+  });
+  // เรียกจาก Stripe webhook (server.js) เมื่อชำระบัตรสำเร็จ → ยืนยันอัตโนมัติ
+  app.locals.leanlabStripePaid = function (regId, s) {
+    var l = readR(); var r = l.find(function (x) { return x.id === regId; });
+    if (!r) return false;
+    r.status = 'confirmed'; r.pay = 'card';
+    r.stripe = { sessionId: (s && s.id) || null, paymentIntent: (s && s.payment_intent) || null, amount: (s && s.amount_total != null ? s.amount_total / 100 : null), at: new Date().toISOString() };
+    r.reviewedAt = new Date().toISOString();
+    writeR(l);
+    console.log('[lean-lab] registration ' + regId + ' paid by card (webhook) → confirmed');
+    return true;
+  };
 
   // ---- Back-office (Support dept manages Lean Lab) ----
   function adminReg(r, byId) {

@@ -69,7 +69,10 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
     const oid = s.client_reference_id;
     // ชำระผ่านบัตรจะ paid ทันที; หากเป็นวิธีชำระแบบ async ที่ยังไม่ paid ให้รอ event async_payment_succeeded
     const settled = (s.payment_status === 'paid' || s.payment_status === 'no_payment_required' || type === 'checkout.session.async_payment_succeeded');
-    if (oid && settled) {
+    if (oid && settled && String(oid).indexOf('LL:') === 0) {
+      // Lean Lab registration paid by card
+      try { if (req.app.locals.leanlabStripePaid) req.app.locals.leanlabStripePaid(String(oid).slice(3), s); } catch (e) { console.log('[lean-lab] webhook err', e.message); }
+    } else if (oid && settled) {
       const list = read();
       const o = list.find(function (x) { return x.id === oid; });
       if (o) {

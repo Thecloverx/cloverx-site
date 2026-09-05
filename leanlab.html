@@ -579,21 +579,40 @@
   // ---------- PAYMENT ----------
   function vPay(){
     var bk=EVENT.bank||{};
+    var amt=thb((REG&&REG.fee)||EVENT.fee);
+    var canCard=!!(CFG.card && REG && REG.promo && REG.promoPlan); // บัตร: เฉพาะโปรโมชั่น Full Option
+    var toggle=canCard?('<div class="choice" style="margin-bottom:18px">'
+      +'<button type="button" class="cch on" id="mBank" style="padding:14px 16px"><h3 style="font-size:1.02rem">โอนธนาคาร</h3><p>แนบสลิป · ทีมงานยืนยัน</p></button>'
+      +'<button type="button" class="cch" id="mCard" style="padding:14px 16px"><h3 style="font-size:1.02rem">บัตรเครดิต/เดบิต</h3><p>ยืนยันอัตโนมัติทันที</p></button>'
+      +'</div>'):'';
     app.innerHTML='<div class="card">'
-    +'<h2 class="tt">ชำระค่าสมัคร</h2><p class="sub">โอนเงินตามยอดด้านล่าง แล้วแนบสลิปเพื่อยืนยันสิทธิ์</p>'
-    +'<div style="text-align:center;margin:6px 0 18px"><div class="fee">'+thb((REG&&REG.fee)||EVENT.fee)+'</div><div class="sub" style="margin:2px 0 0">ชำระผ่านการโอนธนาคารเท่านั้น</div></div>'
-    +'<div class="bank">'
-    + '<div class="r"><span>ธนาคาร</span><b>'+esc(bk.bankName||'กสิกรไทย (KBank)')+'</b></div>'
-    + '<div class="r"><span>เลขที่บัญชี</span><b><span id="acct">'+esc(bk.accountNo||'231-1-71119-1')+'</span> <button class="copy" id="copyBtn">คัดลอก</button></b></div>'
-    + '<div class="r"><span>ชื่อบัญชี</span><b>'+esc(bk.accountName||'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด')+'</b></div>'
+    +'<h2 class="tt">ชำระค่าสมัคร</h2><p class="sub">'+(canCard?'เลือกวิธีชำระเงินที่ต้องการ':'โอนเงินตามยอดด้านล่าง แล้วแนบสลิปเพื่อยืนยันสิทธิ์')+'</p>'
+    +'<div style="text-align:center;margin:6px 0 18px"><div class="fee">'+amt+'</div><div class="sub" style="margin:2px 0 0">'+(canCard?'เลือกโอนธนาคาร หรือ บัตรเครดิต/เดบิต':'ชำระผ่านการโอนธนาคารเท่านั้น')+'</div></div>'
+    +toggle
+    +'<div id="bankPane">'
+    + '<div class="bank">'
+    +   '<div class="r"><span>ธนาคาร</span><b>'+esc(bk.bankName||'กสิกรไทย (KBank)')+'</b></div>'
+    +   '<div class="r"><span>เลขที่บัญชี</span><b><span id="acct">'+esc(bk.accountNo||'231-1-71119-1')+'</span> <button class="copy" id="copyBtn">คัดลอก</button></b></div>'
+    +   '<div class="r"><span>ชื่อบัญชี</span><b>'+esc(bk.accountName||'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด')+'</b></div>'
+    + '</div>'
+    + '<div class="field" style="margin-top:18px" id="fSlip"><label>แนบสลิปการโอน <span class="req">*</span></label>'
+    +   '<label class="upl" id="slipBox"><input type="file" id="slipFile" accept="image/*" hidden><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><div id="slipTxt">แตะเพื่อแนบสลิปโอนเงิน</div></label>'
+    +   '<div class="err">กรุณาแนบสลิป</div></div>'
+    + '<div class="msg" id="payMsg"></div>'
+    + '<button class="btn lime block lg" id="paySubmit">ยืนยันการชำระเงิน</button>'
+    + '<p class="hint" style="text-align:center;margin-top:12px">⚠️ กรุณาโอนตามยอด '+amt+' แล้วแนบสลิป — ทีมงานจะตรวจสอบและยืนยันสิทธิ์</p>'
     +'</div>'
-    +'<div class="field" style="margin-top:18px" id="fSlip"><label>แนบสลิปการโอน <span class="req">*</span></label>'
-    + '<label class="upl" id="slipBox"><input type="file" id="slipFile" accept="image/*" hidden><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><div id="slipTxt">แตะเพื่อแนบสลิปโอนเงิน</div></label>'
-    + '<div class="err">กรุณาแนบสลิป</div></div>'
-    +'<div class="msg" id="payMsg"></div>'
-    +'<button class="btn lime block lg" id="paySubmit">ยืนยันการชำระเงิน</button>'
-    +'<p class="hint" style="text-align:center;margin-top:12px">⚠️ กรุณาโอนตามยอด '+thb((REG&&REG.fee)||EVENT.fee)+' แล้วแนบสลิป — ทีมงานจะตรวจสอบและยืนยันสิทธิ์</p>'
+    +'<div id="cardPane" hidden><button class="btn lime block lg" id="cardBtn">ชำระผ่านบัตร '+amt+' ↗</button><p class="hint" style="text-align:center;margin-top:12px">จะพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe · ยืนยันสิทธิ์อัตโนมัติเมื่อชำระสำเร็จ</p><div class="msg" id="cardMsg"></div></div>'
     +'</div>';
+    if(canCard){
+      $('#mBank').onclick=function(){$('#mBank').classList.add('on');$('#mCard').classList.remove('on');$('#bankPane').hidden=false;$('#cardPane').hidden=true;};
+      $('#mCard').onclick=function(){$('#mCard').classList.add('on');$('#mBank').classList.remove('on');$('#bankPane').hidden=true;$('#cardPane').hidden=false;};
+      $('#cardBtn').onclick=function(){var b=$('#cardBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';
+        fetch('/api/leanlab/register/pay/card',{method:'POST',credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+          if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เริ่มการชำระเงินไม่สำเร็จ ลองใหม่');}
+        }).catch(function(){b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+      };
+    }
     $('#copyBtn').onclick=function(){try{navigator.clipboard.writeText(($('#acct').textContent||'').trim());$('#copyBtn').textContent='คัดลอกแล้ว ✓';setTimeout(function(){$('#copyBtn').textContent='คัดลอก';},1500);}catch(e){}};
     var slipData=null;
     $('#slipBox').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var box=$('#slipBox');box.innerHTML='<div>กำลังประมวลผล…</div>';
@@ -640,10 +659,20 @@
       CFG=Object.assign(CFG,a[0]||{});
       EVENT=Object.assign(EVENT,a[1]||{});
       ME=a[2]||{loggedIn:false};
+      var paid=(location.search.match(/[?&]paid=([^&]+)/)||[])[1];
       if(ME.loggedIn){
-        fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||null;route();}).catch(function(){REG=null;route();});
+        fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||null;if(paid){vPaidReturn(0);}else{route();}}).catch(function(){REG=null;route();});
       } else { route(); }
     });
+  }
+  // กลับจากหน้าชำระเงินบัตร (Stripe) — webhook ยืนยันแบบ async จึง poll สถานะสักครู่
+  function vPaidReturn(tries){
+    header();
+    if(REG&&REG.status==='confirmed'){ history.replaceState(null,'','/leanlab'); route(); return; }
+    if(tries>=6){ history.replaceState(null,'','/leanlab'); route(); return; }
+    app.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ได้รับการชำระเงินแล้ว 🎉</h2><p>กำลังยืนยันสิทธิ์ของคุณ… โปรดรอสักครู่</p><div style="margin:20px auto 0;width:32px;height:32px;border:3px solid var(--line2);border-top-color:var(--lime);border-radius:50%;animation:llspin .8s linear infinite"></div></div></div>';
+    if(!document.getElementById('llspinkf')){var st=document.createElement('style');st.id='llspinkf';st.textContent='@keyframes llspin{to{transform:rotate(360deg)}}';document.head.appendChild(st);}
+    setTimeout(function(){fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||REG;vPaidReturn((tries||0)+1);}).catch(function(){vPaidReturn((tries||0)+1);});},2000);
   }
 
   window.LL={closeConfirm:closeConfirm};
