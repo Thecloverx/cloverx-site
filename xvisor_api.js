@@ -14,12 +14,14 @@ module.exports = function (app, DATA) {
   const RF = path.join(XV, 'rounds.json');
   const REGF = path.join(XV, 'registrations.json');
   const AUDITF = path.join(XV, 'audit.json'); // append-only admin action log
+  const QSETF = path.join(XV, 'qsets.json'); // named question sets (each round picks one)
   const REGUP = path.join(XV, 'reguploads'); // slip / id-card images
   if (!fs.existsSync(REGUP)) { try { fs.mkdirSync(REGUP, { recursive: true }); } catch (e) {} }
 
   const rd = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
   const wr = (f, d) => { try { fs.writeFileSync(f, JSON.stringify(d, null, 2)); } catch (e) {} };
-  const bank = () => {
+  // legacy single-file question bank (used to seed the first set on first run)
+  const bankFile = () => {
     let b = rd(QF, null);
     if (!b || !b.bank || !Object.keys(b.bank).length) b = rd(QF_ROOT, null);
     if (!b || !b.bank || !Object.keys(b.bank).length) b = rd(QF_APP, null);
@@ -30,10 +32,10 @@ module.exports = function (app, DATA) {
      The JSON file is ALWAYS written too (a durable backup + the fallback source read
      before Postgres finishes hydrating), so switching to or from Postgres never loses
      data. Each collection (sessions/rounds/registrations) is one JSONB blob row. */
-  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF };
-  const COLLS = ['sessions', 'rounds', 'registrations', 'audit'];
+  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF, qsets: QSETF };
+  const COLLS = ['sessions', 'rounds', 'registrations', 'audit', 'qsets'];
   const USE_PG = !!process.env.DATABASE_URL;
-  const mem = { sessions: [], rounds: [], registrations: [], audit: [] };
+  const mem = { sessions: [], rounds: [], registrations: [], audit: [], qsets: [] };
   let pool = null, pgReady = false;
   const persistQ = {};
   const pgPersist = (coll) => {
@@ -137,7 +139,8 @@ module.exports = function (app, DATA) {
   const pubRound = (r) => Object.assign({
     id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt,
     mode: r.mode || 'online', fee: r.fee != null ? r.fee : 500, capacity: parseInt(r.capacity, 10) || 0,
-    waitlist: !!r.waitlist, venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || ''
+    waitlist: !!r.waitlist, venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || '',
+    setId: r.setId || '', setName: (function () { if (!r.setId) return ''; const s = (readColl('qsets') || []).find(x => x.id === r.setId); return s ? s.name : ''; })()
   }, roundSeats(r));
   // save a data-url image to disk, return its public path (or '' if none/invalid)
   const saveRegImage = (dataUrl, tag) => {
@@ -211,6 +214,32 @@ module.exports = function (app, DATA) {
   const adminOk = (req) => true;
   const genId = () => crypto.randomBytes(9).toString('hex');
 
+  /* ---------------- question SETS (each round picks one; keys stay server-side) ---------------- */
+  const nextSetNo = () => { const s = readColl('qsets'); return s.length ? Math.max.apply(null, s.map(x => x.no || 0)) + 1 : 1; };
+  // lazily create the first set from the legacy file bank so nothing is lost on upgrade
+  const ensureSets = () => {
+    let sets = readColl('qsets');
+    if (!sets.length) {
+      const b = bankFile();
+      if (b.bank && Object.keys(b.bank).length) {
+        sets = [{ id: genId(), no: 1, name: 'ชุดที่ 1 · ผู้เตรียมสอบเป็น X-Visor', names: b.names || {}, bank: b.bank, createdAt: Date.now() }];
+        writeColl('qsets', sets);
+      }
+    }
+    return sets;
+  };
+  const getSet = (setId) => {
+    const sets = ensureSets();
+    if (setId) { const s = sets.find(x => x.id === setId); if (s) return s; }
+    if (sets.length) return sets[0]; // default = first set
+    const b = bankFile(); return { id: 'legacy', no: 1, name: 'ชุดที่ 1', names: b.names || {}, bank: b.bank || {} };
+  };
+  const bank = () => getSet(null); // backward-compatible single-bank accessor (default set)
+  const setCounts = (s) => { const c = {}; [1, 2, 3, 4, 5].forEach(p => { c[p] = (((s.bank && (s.bank[p] || s.bank[String(p)])) || []).length); }); return c; };
+  const setTotal = (s) => [1, 2, 3, 4, 5].reduce((a, p) => a + (((s.bank && (s.bank[p] || s.bank[String(p)])) || []).length), 0);
+  const setReady = (s) => { const c = setCounts(s); return [1, 2, 3, 4, 5].every(p => (c[p] || 0) > 0); };
+  const pubSet = (s) => ({ id: s.id, no: s.no, name: s.name, names: s.names || {}, counts: setCounts(s), total: setTotal(s), ready: setReady(s), createdAt: s.createdAt });
+
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function buildPaper(B, parts) {
     const paper = {};
@@ -256,18 +285,20 @@ module.exports = function (app, DATA) {
   app.post('/api/xv/start', (req, res) => {
     const b = req.body || {};
     if (!b.firstName || !b.lastName || !b.phone) return res.status(400).json({ ok: false, error: 'missing_fields' });
-    const B = bank();
-    if (!B.bank || Object.keys(B.bank).length < 5) return res.status(400).json({ ok: false, error: 'no_questions' });
     // resolve round (accept roundId or round code); gate closed rounds
     let round = null;
     if (b.roundId) round = findR(b.roundId);
     if (!round && b.roundCode) round = findRByCode(b.roundCode);
     if (round && round.status !== 'open') return res.status(403).json({ ok: false, error: 'round_closed' });
+    // pick the question set assigned to this round (falls back to the default/first set)
+    const B = getSet(round ? round.setId : null);
+    if (!B.bank || Object.keys(B.bank).length < 5) return res.status(400).json({ ok: false, error: 'no_questions' });
     const paper = buildPaper(B, PARTS);
     const s = {
       id: genId(), token: crypto.randomBytes(12).toString('hex'),
       candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: b.mode === 'onsite' ? 'onsite' : 'online' },
       code: 'XV' + (Date.now() % 1000000),
+      setId: B.id || null,
       roundId: round ? round.id : null, roundNo: round ? round.no : null,
       phase: 'first', paper, answers: {}, results: [], status: 'in_progress',
       startedAt: Date.now(), remaining: TOTAL, pauseUsed: 0, staffVerified: false, createdAt: Date.now()
@@ -311,7 +342,7 @@ module.exports = function (app, DATA) {
   app.post('/api/xv/remedial/start', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'remedial_required') return res.status(400).json({ ok: false });
-    const np = buildPaper(bank(), s.remedialQueue);
+    const np = buildPaper(getSet(s.setId), s.remedialQueue);
     s.remedialQueue.forEach(p => { s.paper[p] = np[p]; for (let q = 0; q < QPP; q++) delete s.answers[p + '-' + q]; });
     s.phase = 'remedial'; s.status = 'in_progress'; s.remaining = TOTAL; s.startedAt = Date.now();
     writeS(all);
@@ -431,6 +462,7 @@ module.exports = function (app, DATA) {
       fee: b.fee != null && b.fee !== '' ? (parseInt(b.fee, 10) || 0) : 500,
       capacity: parseInt(b.capacity, 10) || 0,
       waitlist: !!b.waitlist,
+      setId: b.setId ? String(b.setId) : '',
       venue: String(b.venue || '').slice(0, 200),
       timeslot: String(b.timeslot || '').slice(0, 60),
       regCloseAt: String(b.regCloseAt || '').slice(0, 10),
@@ -454,6 +486,7 @@ module.exports = function (app, DATA) {
     if (b.fee != null && b.fee !== '') r.fee = parseInt(b.fee, 10) || 0;
     if (b.capacity != null && b.capacity !== '') r.capacity = parseInt(b.capacity, 10) || 0;
     if (b.waitlist != null) r.waitlist = !!b.waitlist;
+    if (b.setId != null) r.setId = String(b.setId);
     if (b.venue != null) r.venue = String(b.venue).slice(0, 200);
     if (b.timeslot != null) r.timeslot = String(b.timeslot).slice(0, 60);
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
@@ -681,11 +714,10 @@ module.exports = function (app, DATA) {
     res.json({ ok: true, audit: list.slice(0, limit) });
   });
 
-  app.post('/api/xv/admin/import-questions', (req, res) => {
-    if (!adminOk(req)) return res.status(403).json({ ok: false });
-    const b = req.body || {}; const data = b.bank ? b : { names: {}, bank: b.questions || b };
-    if (!data.bank || Object.keys(data.bank).length < 1) return res.status(400).json({ ok: false, error: 'expected {names,bank}' });
-    // validate structure so a bad import can't corrupt the exam
+  // validate + clean an imported {names,bank}; returns {clean} or {errs}
+  const cleanImport = (body) => {
+    const data = body && body.bank ? body : { names: {}, bank: (body && body.questions) || body };
+    if (!data.bank || Object.keys(data.bank).length < 1) return { errs: ['expected {names,bank}'] };
     const errs = [];
     Object.keys(data.bank).forEach(p => {
       const arr = data.bank[p];
@@ -696,19 +728,81 @@ module.exports = function (app, DATA) {
         else if (!(Number.isInteger(it.c) && it.c >= 0 && it.c < 4)) errs.push('part ' + p + ' q' + (i + 1) + ': bad answer index');
       });
     });
-    if (errs.length) return res.status(400).json({ ok: false, error: 'invalid_bank', details: errs.slice(0, 10) });
-    // keep only q/o/c per item; clamp names to strings
+    if (errs.length) return { errs };
     const clean = { names: {}, bank: {} };
     Object.keys(data.names || {}).forEach(p => { clean.names[p] = String(data.names[p]).slice(0, 120); });
     Object.keys(data.bank).forEach(p => { clean.bank[p] = data.bank[p].map(it => ({ q: String(it.q), o: it.o.map(String), c: it.c | 0 })); });
-    wr(QF, clean);
-    res.json({ ok: true, parts: Object.keys(clean.bank).length, questions: Object.keys(clean.bank).reduce((a, p) => a + clean.bank[p].length, 0) });
+    return { clean };
+  };
+
+  // legacy import → writes into the DEFAULT set (keeps old callers working)
+  app.post('/api/xv/admin/import-questions', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const r = cleanImport(req.body);
+    if (r.errs) return res.status(400).json({ ok: false, error: 'invalid_bank', details: r.errs.slice(0, 10) });
+    const sets = ensureSets(); const target = sets[0];
+    if (target) { target.names = r.clean.names; target.bank = r.clean.bank; writeColl('qsets', sets); }
+    else { const s = { id: genId(), no: 1, name: 'ชุดที่ 1 · ผู้เตรียมสอบเป็น X-Visor', names: r.clean.names, bank: r.clean.bank, createdAt: Date.now() }; writeColl('qsets', [s]); }
+    res.json({ ok: true, parts: Object.keys(r.clean.bank).length, questions: Object.keys(r.clean.bank).reduce((a, p) => a + r.clean.bank[p].length, 0) });
   });
 
+  // list all question SETS (no answer keys) — for the admin คลังข้อสอบ list
+  app.get('/api/xv/admin/qsets', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    res.json({ ok: true, sets: ensureSets().map(pubSet) });
+  });
+  // one set's detail: parts with names, counts, and question TEXT (options included, answer keys stripped)
+  app.get('/api/xv/admin/qsets/:id', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const s = ensureSets().find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
+    const parts = [1, 2, 3, 4, 5].map(p => {
+      const arr = (s.bank && (s.bank[p] || s.bank[String(p)])) || [];
+      return { part: p, name: (s.names && (s.names[p] || s.names[String(p)])) || ('พาร์ท ' + p), count: arr.length, questions: arr.map(it => ({ q: it.q, o: it.o })) };
+    });
+    res.json({ ok: true, id: s.id, no: s.no, name: s.name, total: setTotal(s), ready: setReady(s), parts });
+  });
+  // create a new (empty) set
+  app.post('/api/xv/admin/qsets', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const b = req.body || {}; const sets = ensureSets();
+    const s = { id: genId(), no: nextSetNo(), name: String(b.name || ('ชุดที่ ' + nextSetNo())).slice(0, 120), names: {}, bank: {}, createdAt: Date.now() };
+    sets.push(s); writeColl('qsets', sets);
+    logAudit('qset_create', 'qset', s.id, s.name, null, 'created', '', 'staff');
+    res.json({ ok: true, set: pubSet(s) });
+  });
+  // rename a set
+  app.post('/api/xv/admin/qsets/:id', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const sets = ensureSets(); const s = sets.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
+    const b = req.body || {}; if (b.name != null) s.name = String(b.name).slice(0, 120);
+    writeColl('qsets', sets); res.json({ ok: true, set: pubSet(s) });
+  });
+  // import questions INTO a specific set (replaces that set's bank)
+  app.post('/api/xv/admin/qsets/:id/import', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const sets = ensureSets(); const s = sets.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
+    const r = cleanImport(req.body);
+    if (r.errs) return res.status(400).json({ ok: false, error: 'invalid_bank', details: r.errs.slice(0, 10) });
+    s.names = r.clean.names; s.bank = r.clean.bank; writeColl('qsets', sets);
+    logAudit('qset_import', 'qset', s.id, s.name, null, setTotal(s) + ' ข้อ', '', 'staff');
+    res.json({ ok: true, set: pubSet(s) });
+  });
+  // delete a set (keep at least one; block if a round still uses it)
+  app.delete('/api/xv/admin/qsets/:id', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const sets = ensureSets(); const s = sets.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
+    if (sets.length <= 1) return res.status(400).json({ ok: false, error: 'need_one_set' });
+    if (readR().some(r => r.setId === s.id)) return res.status(409).json({ ok: false, error: 'set_in_use' });
+    writeColl('qsets', sets.filter(x => x.id !== s.id));
+    logAudit('qset_delete', 'qset', s.id, s.name, s.name, 'deleted', '', 'staff');
+    res.json({ ok: true });
+  });
+
+  // default-set counts (backward compatible with the old Exam Session bank panel)
   app.get('/api/xv/admin/questions', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
-    const B = bank(); res.json({ ok: true, names: B.names, counts: Object.keys(B.bank).reduce((o, p) => (o[p] = B.bank[p].length, o), {}) });
+    const B = bank(); res.json({ ok: true, names: B.names, counts: setCounts(B) });
   });
 
-  console.log('[x-visor] exam API mounted (' + Object.keys(bank().bank || {}).length + ' parts loaded)');
+  console.log('[x-visor] exam API mounted');
 };
