@@ -69,7 +69,10 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
     const oid = s.client_reference_id;
     // ชำระผ่านบัตรจะ paid ทันที; หากเป็นวิธีชำระแบบ async ที่ยังไม่ paid ให้รอ event async_payment_succeeded
     const settled = (s.payment_status === 'paid' || s.payment_status === 'no_payment_required' || type === 'checkout.session.async_payment_succeeded');
-    if (oid && settled && String(oid).indexOf('LL:') === 0) {
+    if (oid && settled && String(oid).indexOf('LLI:') === 0) {
+      // Lean Lab Special Option — งวดแรกของแผนผ่อนชำระ (subscription)
+      try { if (req.app.locals.leanlabInstallmentCheckout) req.app.locals.leanlabInstallmentCheckout(String(oid).slice(4), s); } catch (e) { console.log('[lean-lab] installment webhook err', e.message); }
+    } else if (oid && settled && String(oid).indexOf('LL:') === 0) {
       // Lean Lab registration paid by card
       try { if (req.app.locals.leanlabStripePaid) req.app.locals.leanlabStripePaid(String(oid).slice(3), s); } catch (e) { console.log('[lean-lab] webhook err', e.message); }
     } else if (oid && settled) {
@@ -131,6 +134,19 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
     const list = read();
     const o = list.find(function (x) { return x.stripe && x.stripe.paymentIntent === piObj.id; });
     if (o && o.status === 'pending') { o.status = 'failed'; o.failedAt = new Date().toISOString(); write(list); console.log('[stripe] order ' + o.id + ' payment_failed'); }
+  }
+  // Lean Lab Special Option — งวดผ่อนถัดไป (subscription invoices)
+  if (type === 'invoice.paid' || type === 'invoice.payment_succeeded') {
+    const inv = (evt.data && evt.data.object) || {};
+    if (inv.subscription && (inv.status === 'paid' || type === 'invoice.paid')) {
+      try { if (req.app.locals.leanlabInstallmentInvoicePaid) req.app.locals.leanlabInstallmentInvoicePaid(inv.subscription, inv); } catch (e) { console.log('[lean-lab] inv.paid err', e.message); }
+    }
+  }
+  if (type === 'invoice.payment_failed') {
+    const inv = (evt.data && evt.data.object) || {};
+    if (inv.subscription) {
+      try { if (req.app.locals.leanlabInstallmentInvoiceFailed) req.app.locals.leanlabInstallmentInvoiceFailed(inv.subscription, inv); } catch (e) { console.log('[lean-lab] inv.failed err', e.message); }
+    }
   }
   res.json({ received: true });
 });

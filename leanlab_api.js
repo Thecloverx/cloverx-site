@@ -45,10 +45,10 @@ module.exports = function (app, DATA_DIR) {
       ]
     },
     special: {
-      key: 'special', name: 'Special Option', valueTotal: 4950, available: false,
+      key: 'special', name: 'Special Option', valueTotal: 44940, available: true,
       items: ['Lean Lab Event', 'Shaker', 'Tumbler'],
-      conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินแบบผ่อนกับบริษัท (แบ่งจ่าย 6 เดือน)'],
-      installment: { months: 6, perMonth: 7490 }
+      conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินแบบผ่อนกับบริษัท (แบ่งจ่าย 6 เดือน)', 'ผ่อนผ่านบัตรเครดิต/เดบิต — งวดแรกตัดทันที งวดที่ 2-6 ตัดทุกวันที่ที่เลือก', 'รายการ Protein ไม่เข้าร่วมโปรโมชั่นทุกกรณี'],
+      installment: { months: 6, perMonth: 7490, total: 44940 }
     }
   };
   function fullTier(k) { return PROMO.full.tiers.filter(function (t) { return t.key === k; })[0] || null; }
@@ -243,6 +243,7 @@ module.exports = function (app, DATA_DIR) {
       id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
+      installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null } : null,
       slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt
     };
   }
@@ -288,6 +289,24 @@ module.exports = function (app, DATA_DIR) {
     r.updatedAt = new Date().toISOString();
     writeR(l);
     res.json({ ok: true, registration: publicReg(r), needProof: !!t.needProof });
+  });
+
+  // เลือกแพ็กเกจ Special Option (ผ่อน 6 งวด) + วันตัดบัตรที่ลูกค้าเลือก (1-28)
+  app.post('/api/leanlab/register/promo/special', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    if (!PROMO.special.available) return res.status(400).json({ ok: false, error: 'special_not_available' });
+    var day = Math.floor(Number((req.body || {}).billingDay));
+    if (!(day >= 1 && day <= 28)) return res.status(400).json({ ok: false, error: 'bad_day' }); // 1-28 เท่านั้น (ทุกเดือนมีวันนี้)
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    var ins = PROMO.special.installment;
+    r.promo = true; r.promoPlan = 'special'; r.promoTier = 'special'; r.promoAmount = ins.total;
+    r.fee = ins.perMonth; r.pay = 'installment'; r.promoVerify = 'not_required';
+    r.installment = { months: ins.months, perMonth: ins.perMonth, total: ins.total, day: day, paidCount: 0, status: 'pending' };
+    r.status = 'awaiting_payment';
+    r.updatedAt = new Date().toISOString();
+    writeR(l);
+    res.json({ ok: true, registration: publicReg(r) });
   });
 
   // แนบหลักฐานการซื้อ (สำหรับระดับราคาที่มีส่วนลด) → รอทีมงานตรวจสอบ
@@ -421,6 +440,133 @@ module.exports = function (app, DATA_DIR) {
     return true;
   };
 
+  // ---- Special Option: ผ่อนชำระผ่าน Stripe Subscription (6 งวด) ----
+  // เรียก Stripe API แบบดิบ (form-encoded) — คืน object ที่ parse แล้ว หรือ null เมื่อพลาด
+  function stripeApi(method, apiPath, params) {
+    return new Promise(function (resolve) {
+      if (!process.env.STRIPE_SECRET_KEY) { resolve(null); return; }
+      var body = (params || []).map(function (p) { return encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1]); }).join('&');
+      var opt = { hostname: 'api.stripe.com', path: apiPath, method: method, headers: { 'Authorization': 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) } };
+      var rq = https.request(opt, function (resp) {
+        var b = ''; resp.on('data', function (d) { b += d; });
+        resp.on('end', function () { try { var j = JSON.parse(b); if (resp.statusCode >= 200 && resp.statusCode < 300) resolve(j); else { console.log('[lean-lab] stripe ' + method + ' ' + apiPath + ' fail', resp.statusCode, b.slice(0, 180)); resolve(null); } } catch (e) { resolve(null); } });
+      });
+      rq.on('error', function () { resolve(null); }); rq.write(body); rq.end();
+    });
+  }
+  // วันตัดบัตรงวดถัดไป: วันที่ D ของเดือน (โซนเวลาไทย) ที่ห่างจากตอนนี้อย่างน้อย ~18 วัน
+  function nextBillingTs(day) {
+    var TZ = 7 * 3600 * 1000;                     // Asia/Bangkok = UTC+7
+    var now = Date.now();
+    for (var add = 0; add <= 2; add++) {
+      var d = new Date(now + TZ);                  // เวลาไทยตอนนี้
+      var y = d.getUTCFullYear(), mo = d.getUTCMonth() + add;
+      // 03:00 UTC = 10:00 น. ตามเวลาไทย ของวันที่ D
+      var ts = Date.UTC(y, mo, day, 3, 0, 0);
+      if (ts >= now + 18 * 86400000) return Math.floor(ts / 1000);
+    }
+    return Math.floor((Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth() + 2, day, 3, 0, 0)) / 1000);
+  }
+  function createInstallment(reg, base) {
+    var perMonth = (reg.installment && reg.installment.perMonth) || 7490;
+    var params = [];
+    params.push(['mode', 'subscription']);
+    params.push(['client_reference_id', 'LLI:' + reg.id]);
+    params.push(['success_url', base + '/leanlab?paid=' + encodeURIComponent(reg.id)]);
+    params.push(['cancel_url', base + '/leanlab']);
+    if (reg.email) params.push(['customer_email', reg.email]);
+    params.push(['line_items[0][price_data][currency]', 'thb']);
+    params.push(['line_items[0][price_data][recurring][interval]', 'month']);
+    params.push(['line_items[0][price_data][product_data][name]', 'Lean Lab · Special Option (ผ่อน 6 งวด งวดละ ' + perMonth.toLocaleString('en-US') + ' บาท)']);
+    params.push(['line_items[0][price_data][unit_amount]', String(Math.round(perMonth * 100))]);
+    params.push(['line_items[0][quantity]', '1']);
+    params.push(['subscription_data[metadata][leanlab_reg]', reg.id]);
+    params.push(['subscription_data[metadata][leanlab_day]', String((reg.installment && reg.installment.day) || '')]);
+    params.push(['subscription_data[metadata][leanlab_months]', String((reg.installment && reg.installment.months) || 6)]);
+    return stripeApi('POST', '/v1/checkout/sessions', params).then(function (j) { return (j && j.url) ? { url: j.url, id: j.id } : null; });
+  }
+  app.post('/api/leanlab/register/pay/installment', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    if (!process.env.STRIPE_SECRET_KEY) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
+    var r = readR().find(function (x) { return x.memberId === m.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (r.promoPlan !== 'special' || !r.installment) return res.status(400).json({ ok: false, error: 'not_special' });
+    if (r.status !== 'awaiting_payment') return res.status(400).json({ ok: false, error: 'not_ready' });
+    createInstallment(r, baseUrl(req)).then(function (s) {
+      if (!s || !s.url) return res.status(502).json({ ok: false, error: 'stripe_error' });
+      var l = readR(); var x = l.find(function (y) { return y.id === r.id; }); if (x && x.installment) { x.installment.checkoutId = s.id; writeR(l); }
+      res.json({ ok: true, url: s.url });
+    });
+  });
+  // webhook: checkout.session.completed (subscription) → งวดแรกชำระแล้ว → ยืนยันสิทธิ์ + เลื่อนวันตัดบัตรงวดถัดไปเป็นวันที่ลูกค้าเลือก
+  app.locals.leanlabInstallmentCheckout = function (regId, s) {
+    var l = readR(); var r = l.find(function (x) { return x.id === regId; });
+    if (!r || !r.installment) return false;
+    var subId = (s && s.subscription) || null;
+    r.installment.subId = subId;
+    r.installment.customerId = (s && s.customer) || null;
+    r.installment.paidCount = 1;                  // งวดแรกชำระตอน checkout
+    r.installment.status = 'active';
+    r.installment.firstPaidAt = new Date().toISOString();
+    r.status = 'confirmed'; r.pay = 'installment';
+    r.stripe = { checkoutId: (s && s.id) || null, subscriptionId: subId, at: new Date().toISOString() };
+    r.reviewedAt = new Date().toISOString();
+    writeR(l);
+    console.log('[lean-lab] installment ' + regId + ' first payment ok (webhook) → confirmed, sub=' + subId);
+    // เลื่อนงวดถัดไปไปวันที่ลูกค้าเลือก โดยไม่คิดเงินระหว่างทาง (trial_end + proration none) — ไม่กระทบงวดแรกที่จ่ายแล้ว
+    // และตั้ง cancel_at เป็นเพดานความปลอดภัย: หยุดตัดบัตรหลังงวดที่ 6 เสมอ แม้ webhook งวดถัดไปจะพลาด
+    if (subId && r.installment.day) {
+      var ts = nextBillingTs(r.installment.day);              // งวดที่ 2
+      var aD = new Date(ts * 1000);
+      var months = r.installment.months || 6;
+      // งวด 2..months = ts + (0..months-2) เดือน → งวดสุดท้าย = ts + (months-2) เดือน; cancel หลังจากนั้น 2 วัน
+      var cancelTs = Math.floor(Date.UTC(aD.getUTCFullYear(), aD.getUTCMonth() + (months - 2), aD.getUTCDate() + 2, 3, 0, 0) / 1000);
+      stripeApi('POST', '/v1/subscriptions/' + encodeURIComponent(subId), [['trial_end', String(ts)], ['proration_behavior', 'none'], ['cancel_at', String(cancelTs)]]).then(function (j) {
+        var l2 = readR(); var r2 = l2.find(function (x) { return x.id === regId; });
+        if (r2 && r2.installment) { r2.installment.nextChargeTs = ts; r2.installment.cancelAtTs = cancelTs; r2.installment.rescheduled = !!j; writeR(l2); }
+        console.log('[lean-lab] installment ' + regId + ' next charge @' + aD.toISOString() + ' cancel_at @' + new Date(cancelTs * 1000).toISOString() + ' ' + (j ? 'ok' : 'FAILED'));
+      });
+    }
+    return true;
+  };
+  // หา reg จาก subscription id
+  function findRegBySub(subId) { var l = readR(); return { l: l, r: l.find(function (x) { return x.installment && x.installment.subId === subId; }) }; }
+  // webhook: invoice.paid — นับเฉพาะรอบบิลถัดไป (subscription_cycle) เป็นงวด 2-6; ครบ 6 งวด → ยกเลิก subscription
+  app.locals.leanlabInstallmentInvoicePaid = function (subId, inv) {
+    var f = findRegBySub(subId); var r = f.r; if (!r || !r.installment) return false;
+    var reason = (inv && inv.billing_reason) || '';
+    if (reason === 'subscription_create') return false; // งวดแรกนับไปแล้วตอน checkout
+    var invId = (inv && inv.id) || '';
+    r.installment.seen = r.installment.seen || [];
+    if (invId && r.installment.seen.indexOf(invId) >= 0) return false; // กัน event ซ้ำ
+    if (invId) r.installment.seen.push(invId);
+    r.installment.paidCount = (r.installment.paidCount || 0) + 1;
+    r.installment.lastPaidAt = new Date().toISOString();
+    if (r.installment.lastFail) delete r.installment.lastFail;
+    var months = r.installment.months || 6;
+    writeR(f.l);
+    console.log('[lean-lab] installment ' + r.id + ' paid งวด ' + r.installment.paidCount + '/' + months);
+    if (r.installment.paidCount >= months) {
+      // ครบแล้ว → ยกเลิก subscription ไม่ให้ตัดต่อ
+      stripeApi('DELETE', '/v1/subscriptions/' + encodeURIComponent(subId), []).then(function (j) {
+        var l2 = readR(); var r2 = l2.find(function (x) { return x.id === r.id; });
+        if (r2 && r2.installment) { r2.installment.status = 'completed'; r2.installment.completedAt = new Date().toISOString(); writeR(l2); }
+        console.log('[lean-lab] installment ' + r.id + ' complete (6/6) → subscription cancelled ' + (j ? 'ok' : 'FAILED'));
+      });
+    }
+    return true;
+  };
+  // webhook: invoice.payment_failed — บันทึกไว้ให้ทีมงานติดตาม (Stripe จะ retry ตาม dunning เอง)
+  app.locals.leanlabInstallmentInvoiceFailed = function (subId, inv) {
+    var f = findRegBySub(subId); var r = f.r; if (!r || !r.installment) return false;
+    if ((inv && inv.billing_reason) === 'subscription_create') return false;
+    r.installment.lastFail = { at: new Date().toISOString(), amount: (inv && inv.amount_due != null ? inv.amount_due / 100 : null), attempt: (inv && inv.attempt_count) || null };
+    r.installment.status = 'past_due';
+    writeR(f.l);
+    console.log('[lean-lab] installment ' + r.id + ' payment FAILED (งวดถัดไป) attempt=' + ((inv && inv.attempt_count) || '?'));
+    return true;
+  };
+
   // ---- Back-office (Support dept manages Lean Lab) ----
   function adminReg(r, byId) {
     var mem = byId[r.memberId] || {};
@@ -429,6 +575,7 @@ module.exports = function (app, DATA_DIR) {
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
+      installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, total: r.installment.total, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null, subId: r.installment.subId || null, nextChargeTs: r.installment.nextChargeTs || null, lastFail: r.installment.lastFail || null } : null,
       slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
     };
   }

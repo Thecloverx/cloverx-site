@@ -143,6 +143,14 @@
   .tierbtn .tneed{font-size:.72rem;font-weight:700;color:var(--orange);background:rgba(255,196,107,.12);padding:4px 10px;border-radius:999px;flex:none}
   .specialnote{margin-top:16px;padding:12px 14px;border:1px dashed var(--line2);border-radius:12px;color:var(--muted);font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
   .specialnote .soon{font-size:.68rem;font-weight:700;background:rgba(255,255,255,.08);padding:2px 8px;border-radius:99px;color:var(--dim)}
+  .tierbtn .tsplit{font-size:.72rem;font-weight:700;color:var(--blue);background:rgba(46,134,255,.14);padding:4px 10px;border-radius:999px;flex:none}
+  .daypick{margin-top:12px;padding:14px 16px;border:1.5px solid var(--line2);border-radius:13px;background:var(--bg2)}
+  .daypick label{display:block;font-size:.86rem;font-weight:700;margin-bottom:9px;color:var(--ink)}
+  .daypick .dsel{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .daypick select{font-family:var(--ff);font-size:1.05rem;font-weight:700;color:var(--ink);background:var(--bg);border:1.5px solid var(--line2);border-radius:10px;padding:10px 14px;cursor:pointer;min-width:96px}
+  .daypick select:focus{outline:none;border-color:var(--lime)}
+  .daypick .dhint{font-size:.78rem;color:var(--muted);margin-top:10px;line-height:1.55}
+  .daypick .dhint b{color:var(--lime)}
   .promotag{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--orange);background:rgba(255,196,107,.12);border:1px solid rgba(255,196,107,.3);padding:5px 12px;border-radius:999px;margin-top:16px}
   .promotag.full{color:var(--danger);background:rgba(255,107,107,.10);border-color:rgba(255,107,107,.3)}
   .cch .ic{width:44px;height:44px;border-radius:12px;background:rgba(200,245,106,.14);color:var(--lime);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
@@ -299,7 +307,15 @@
     } else if(st==='pending_review'){
       p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ</p></div></div>';
     } else if(st==='confirmed'){
-      p.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ยืนยันสิทธิ์แล้ว! 🎉</h2><p>คุณเข้าร่วม Lean Lab Season 1 เรียบร้อย ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบ</p></div></div>';
+      var insBox='';
+      if(REG.installment&&REG.promoPlan==='special'){var ins=REG.installment;var paid=ins.paidCount||0;var mo=ins.months||6;
+        insBox='<div class="bank" style="margin-top:16px;gap:8px;text-align:left">'
+         +'<div class="r"><span>แผนผ่อน</span><b>'+thb(ins.perMonth||7490)+' × '+mo+' งวด</b></div>'
+         +'<div class="r"><span>ชำระแล้ว</span><b style="color:var(--lime)">'+paid+' / '+mo+' งวด</b></div>'
+         +'<div class="r"><span>วันตัดบัตร</span><b>ทุกวันที่ '+(ins.day||'-')+' ของเดือน</b></div>'
+         +(paid>=mo?'<div class="r"><span>สถานะ</span><b style="color:var(--lime)">ผ่อนครบแล้ว ✓</b></div>':'')+'</div>';
+      }
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ยืนยันสิทธิ์แล้ว! 🎉</h2><p>คุณเข้าร่วม Lean Lab Season 1 เรียบร้อย ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบ</p></div>'+insBox+'</div>';
     } else {
       p.innerHTML='<div class="card"><h2 class="tt">Lean Lab</h2><p class="sub">สถานะการสมัคร: '+esc(st||'-')+'</p></div>';
     }
@@ -522,32 +538,61 @@
     fetch('/api/leanlab/promo/plans',{credentials:'same-origin'}).then(function(r){return r.json();})
       .then(function(j){renderPromo((j&&j.plans)||{});}).catch(function(){renderPromo({});});
   }
+  var promoPlanSel=null; // 'full' | 'special'
   function renderPromo(plans){
     var full=plans.full||{items:[],tiers:[],conditions:[],valueTotal:12180};
+    var sp=plans.special||{items:[],conditions:[],valueTotal:44940,installment:{months:6,perMonth:7490,total:44940},available:true};
     var itemsHtml=(full.items||[]).map(function(i){return '<li>'+esc(i)+'</li>';}).join('');
     var condHtml=(full.conditions||[]).map(function(c){return '<li>'+esc(c)+'</li>';}).join('');
     var tiersHtml=(full.tiers||[]).map(function(t){
-      return '<button type="button" class="tierbtn" data-tier="'+t.key+'"><div class="tl"><b>'+thb(t.amount)+'</b><span>'+esc(t.label)+'</span></div>'+(t.needProof?'<span class="tneed">แนบหลักฐาน</span>':'<span class="tnow">จ่ายได้เลย</span>')+'</button>';
+      return '<button type="button" class="tierbtn" data-plan="full" data-tier="'+t.key+'"><div class="tl"><b>'+thb(t.amount)+'</b><span>'+esc(t.label)+'</span></div>'+(t.needProof?'<span class="tneed">แนบหลักฐาน</span>':'<span class="tnow">จ่ายได้เลย</span>')+'</button>';
     }).join('');
+    var ins=sp.installment||{months:6,perMonth:7490,total:44940};
+    var spItems=(sp.items||[]).map(function(i){return esc(i);}).join(' · ');
+    // ตัวเลือก Special (ผ่อน) — เป็นปุ่มเลือกได้เหมือน tier
+    var specialBtn=sp.available?('<button type="button" class="tierbtn" data-plan="special"><div class="tl"><b>'+thb(ins.perMonth)+'<span style="font-size:.9rem;font-weight:600;color:var(--muted)"> ×'+(ins.months||6)+' เดือน</span></b><span>ผ่อนบัตรเครดิต/เดบิต · รวม '+thb(ins.total||44940)+'</span></div><span class="tsplit">ผ่อน 6 งวด</span></button>'):'';
+    // day picker (ซ่อนไว้ก่อน โผล่เมื่อเลือก Special)
+    var dayOpts='';for(var d=1;d<=28;d++){dayOpts+='<option value="'+d+'">'+d+'</option>';}
+    var dayPick='<div class="daypick" id="dayPick" hidden><label>เลือกวันที่ตัดบัตรของงวดที่ 2-6 (ทุกเดือน)</label>'
+      +'<div class="dsel"><span>ทุกวันที่</span><select id="billDay">'+dayOpts+'</select><span>ของเดือน</span></div>'
+      +'<div class="dhint">งวดแรก <b>'+thb(ins.perMonth)+'</b> ตัดบัตรทันทีที่ยืนยัน · จากนั้นงวดที่ 2-6 ตัดอัตโนมัติทุกวันที่ที่เลือก จนครบ '+(ins.months||6)+' งวด (รวม '+thb(ins.total||44940)+')</div></div>';
     app.innerHTML='<div class="card">'
-     +'<span class="eyebrow" style="color:var(--orange);background:rgba(255,196,107,.1);border-color:rgba(255,196,107,.3)">Grand Slam Offer · Full Option</span>'
+     +'<span class="eyebrow" style="color:var(--orange);background:rgba(255,196,107,.1);border-color:rgba(255,196,107,.3)">Grand Slam Offer</span>'
      +'<h2 class="tt" style="margin-top:12px">รับของรวมมูลค่า '+thb(full.valueTotal)+' ฟรี 🎁</h2>'
      +'<ul class="plist">'+itemsHtml+'</ul>'
      +'<div class="cond"><b>เงื่อนไข</b><ul>'+condHtml+'</ul></div>'
-     +'<h3 style="font-family:var(--ff-d);margin:18px 0 10px;font-size:1.05rem">เลือกยอดชำระ (ติ๊ก 1 รายการ)</h3>'
+     +'<h3 style="font-family:var(--ff-d);margin:18px 0 10px;font-size:1.05rem">เลือกรูปแบบการชำระ (ติ๊ก 1 รายการ)</h3>'
+     +'<div class="eyebrow" style="margin:0 0 8px;color:var(--muted);background:transparent;border:0;padding:0;font-size:.72rem">◦ Full Option — จ่ายครั้งเดียว รับของครบทุกชิ้น</div>'
      +'<div class="tiers">'+tiersHtml+'</div>'
-     +'<div class="specialnote">Special Option · ผ่อน 6 เดือน (7,490/เดือน) <span class="soon">เร็ว ๆ นี้</span></div>'
+     +(sp.available?('<div class="eyebrow" style="margin:16px 0 8px;color:var(--blue);background:transparent;border:0;padding:0;font-size:.72rem">◦ Special Option — ผ่อนบัตร 6 งวด ('+spItems+')</div><div class="tiers">'+specialBtn+'</div>'+dayPick):'')
      +'<div class="msg" id="pmMsg"></div>'
      +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmNext" disabled>ดำเนินการต่อ</button></div>'
      +'</div>';
-    promoTierSel=null;
-    app.querySelectorAll('.tierbtn').forEach(function(b){b.onclick=function(){promoTierSel=b.getAttribute('data-tier');app.querySelectorAll('.tierbtn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');$('#pmNext').disabled=false;};});
+    promoTierSel=null;promoPlanSel=null;
+    app.querySelectorAll('.tierbtn').forEach(function(b){b.onclick=function(){
+      app.querySelectorAll('.tierbtn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
+      promoPlanSel=b.getAttribute('data-plan');
+      promoTierSel=(promoPlanSel==='full')?b.getAttribute('data-tier'):null;
+      var dp=$('#dayPick'); if(dp) dp.hidden=(promoPlanSel!=='special');
+      $('#pmNext').disabled=false;
+    };});
     $('#pmBack').onclick=vChoosePay;
     $('#pmNext').onclick=submitPromoPlan;
   }
   function submitPromoPlan(){
-    if(!promoTierSel)return;
+    if(!promoPlanSel)return;
     var b=$('#pmNext');b.disabled=true;var old=b.textContent;b.textContent='กำลังดำเนินการ…';clearMsg($('#pmMsg'));
+    if(promoPlanSel==='special'){
+      var day=parseInt(($('#billDay')&&$('#billDay').value)||'0',10);
+      if(!(day>=1&&day<=28)){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','กรุณาเลือกวันตัดบัตร');}
+      fetch('/api/leanlab/register/promo/special',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({billingDay:day})})
+        .then(function(r){return r.json();}).then(function(j){
+          if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
+          REG=j.registration;vPay();
+        }).catch(function(){b.disabled=false;b.textContent=old;msg($('#pmMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+      return;
+    }
+    if(!promoTierSel){b.disabled=false;b.textContent=old;return;}
     fetch('/api/leanlab/register/promo/plan',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({plan:'full',tier:promoTierSel})})
       .then(function(r){return r.json();}).then(function(j){
         if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
@@ -578,6 +623,8 @@
 
   // ---------- PAYMENT ----------
   function vPay(){
+    // Special Option — ผ่อนชำระผ่านบัตร (Stripe subscription) เท่านั้น
+    if(REG&&REG.promoPlan==='special'&&REG.installment){ return vPayInstallment(); }
     var bk=EVENT.bank||{};
     var amt=thb((REG&&REG.fee)||EVENT.fee);
     var canCard=!!(CFG.card && REG && REG.promo && REG.promoPlan); // บัตร: เฉพาะโปรโมชั่น Full Option
@@ -627,6 +674,31 @@
         .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';
           if(!j||!j.ok){return msg($('#payMsg'),'err','ส่งสลิปไม่สำเร็จ ลองใหม่');}REG=j.registration;vStatus();})
         .catch(function(){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';msg($('#payMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+    };
+  }
+
+  // ---------- PAYMENT · Special Option (ผ่อน 6 งวด) ----------
+  function vPayInstallment(){
+    var ins=REG.installment||{};var per=ins.perMonth||7490;var months=ins.months||6;var total=ins.total||44940;var day=ins.day;
+    app.innerHTML='<div class="card">'
+    +'<span class="eyebrow" style="color:var(--blue);background:rgba(46,134,255,.1);border-color:rgba(46,134,255,.3)">Special Option · ผ่อน '+months+' งวด</span>'
+    +'<h2 class="tt" style="margin-top:12px">ผ่อนชำระผ่านบัตร</h2><p class="sub">ยืนยันบัตรครั้งเดียว ระบบตัดให้อัตโนมัติจนครบ '+months+' งวด</p>'
+    +'<div style="text-align:center;margin:8px 0 16px"><div class="fee">'+thb(per)+'<span style="font-size:1.1rem;font-weight:600;color:var(--muted)"> / เดือน</span></div><div class="sub" style="margin:2px 0 0">รวมทั้งหมด '+thb(total)+' ('+months+' งวด)</div></div>'
+    +'<div class="bank" style="gap:10px">'
+    +  '<div class="r"><span>งวดที่ 1 (วันนี้)</span><b style="color:var(--lime)">'+thb(per)+' · ตัดทันที</b></div>'
+    +  '<div class="r"><span>งวดที่ 2-'+months+'</span><b>'+thb(per)+' · ทุกวันที่ '+day+' ของเดือน</b></div>'
+    +  '<div class="r"><span>วิธีชำระ</span><b>บัตรเครดิต/เดบิต (อัตโนมัติ)</b></div>'
+    +'</div>'
+    +'<button class="btn lime block lg" id="insBtn" style="margin-top:18px">เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗</button>'
+    +'<p class="hint" style="text-align:center;margin-top:12px">จะพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe · งวดแรกตัดทันที ยืนยันสิทธิ์อัตโนมัติ แล้วงวดถัดไปตัดเองทุกวันที่ '+day+'</p>'
+    +'<div class="msg" id="insMsg"></div>'
+    +'<button class="btn ghost block" id="insBack" style="margin-top:10px">ย้อนกลับ</button>'
+    +'</div>';
+    $('#insBack').onclick=vPromo;
+    $('#insBtn').onclick=function(){var b=$('#insBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';clearMsg($('#insMsg'));
+      fetch('/api/leanlab/register/pay/installment',{method:'POST',credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+        if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';msg($('#insMsg'),'err','เริ่มการชำระเงินไม่สำเร็จ ลองใหม่');}
+      }).catch(function(){b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';msg($('#insMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     };
   }
 

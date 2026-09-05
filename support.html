@@ -244,7 +244,14 @@
         var slip=r.slipUrl?('<a class="pill new" style="text-decoration:none" href="'+llEsc(r.slipUrl)+'" target="_blank" rel="noopener">ดูสลิป ↗</a>'):'';
         var proof=r.promoProofUrl?('<a class="pill" style="text-decoration:none;background:var(--warn-tint);color:var(--warn)" href="'+llEsc(r.promoProofUrl)+'" target="_blank" rel="noopener">📄 หลักฐาน ↗</a>'):'';
         var TIER={t0:'44,940 (ไม่มีประวัติ)',t1:'39,950',t2:'37,450 (RoutineX)',t3:'32,460 (Brand+Scale+RoutineX)'};
-        var promoInfo=r.promo?('<div style="font-size:.72rem;color:var(--warn);margin-top:3px">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'):'';
+        var ins=r.installment||null;
+        var promoInfo;
+        if(r.promoPlan==='special'&&ins){
+          var mo=ins.months||6,pd=ins.paidCount||0;
+          promoInfo='<div style="font-size:.72rem;color:#2E86FF;margin-top:3px">Special · ผ่อน '+Number(ins.perMonth||7490).toLocaleString('en-US')+'×'+mo+' · ตัดทุกวันที่ '+(ins.day||'-')+'</div>';
+        } else {
+          promoInfo=r.promo?('<div style="font-size:.72rem;color:var(--warn);margin-top:3px">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'):'';
+        }
         var act='';
         if(r.status==='promo_review'){act+='<button class="btn pri" style="padding:6px 12px;font-size:.8rem" onclick="llVerify(\''+r.id+'\',\'verified\')">✓ อนุมัติหลักฐาน</button> <button class="btn ghost" style="padding:6px 12px;font-size:.8rem" onclick="llVerify(\''+r.id+'\',\'rejected\')">ปฏิเสธ</button> ';}
         if(r.status==='pending_review'||r.status==='rejected'||r.status==='promo_rejected'){act+='<button class="btn pri" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'confirmed\')">ยืนยัน</button> ';}
@@ -256,7 +263,9 @@
           +'<td style="font-size:.82rem">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+'ซม.</td>'
           +'<td><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span>'+promoInfo+'</td>'
           +'<td>'+base+'</td>'
-          +'<td style="font-weight:700">฿'+Number(r.fee||0).toLocaleString('en-US')+'<div style="font-size:.72rem;font-weight:500;color:var(--muted)">โอนธนาคาร</div>'+(slip||proof?(slip+' '+proof):'<span style="color:var(--muted);font-size:.72rem">ยังไม่แนบ</span>')+'</td>'
+          +(r.promoPlan==='special'&&ins
+            ?('<td style="font-weight:700">฿'+Number(ins.total||44940).toLocaleString('en-US')+'<div style="font-size:.72rem;font-weight:500;color:#2E86FF">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div style="font-size:.68rem;color:var(--muted)">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div style="font-size:.66rem;color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':'')+'</td>')
+            :('<td style="font-weight:700">฿'+Number(r.fee||0).toLocaleString('en-US')+'<div style="font-size:.72rem;font-weight:500;color:var(--muted)">โอนธนาคาร</div>'+(slip||proof?(slip+' '+proof):'<span style="color:var(--muted);font-size:.72rem">ยังไม่แนบ</span>')+'</td>'))
           +'<td><span class="pill '+s[1]+'">'+s[0]+'</span></td>'
           +'<td style="white-space:nowrap">'+(act||'<span style="color:var(--muted)">—</span>')+'</td>'
           +'</tr>';
