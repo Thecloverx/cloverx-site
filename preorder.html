@@ -499,11 +499,20 @@
         </div>
         <div class="card">
           <div class="step"><span class="n">5</span><h3>วิธีชำระเงิน</h3></div>
-          <div class="opt on" data-pay="promptpay" id="ppOpt"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17.5 17.5V21M21 14v3.5M21 21h-3.5"/></svg></span><div class="ot"><b>PromptPay QR (ล็อกยอด)</b><span>สแกนจ่ายยอดเป๊ะ กันโอนเกิน · ยืนยันอัตโนมัติ</span></div></div>
-          <div id="ppNote" class="note" style="padding:6px 2px 0">ระบบจะสร้าง QR ที่<b>ล็อกยอดไว้แล้ว</b> — ลูกค้าสแกนด้วยแอปธนาคาร ยอดจะเป๊ะ แก้เองไม่ได้ (กันโอนเกิน/ขาด) และ<b>ยืนยันการชำระเงินอัตโนมัติทันที</b> ใบรับเงินจะส่งไปที่อีเมลด้านบน</div>
+          <div class="opt on" data-pay="bank" id="bankOpt"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 10h16M5 10 12 4l7 6M6 10v11M10 10v11M14 10v11M18 10v11"/></svg></span><div class="ot"><b>โอนเงินผ่านธนาคาร</b><span>โอนแล้วแนบสลิป · ระบบตรวจสอบและยืนยันอัตโนมัติ</span></div></div>
+          <div id="bankFields" class="bankbox" style="margin-top:10px">
+            <div class="r"><span>ธนาคาร</span><b>กสิกรไทย (KBank)</b></div>
+            <div class="r"><span>เลขที่บัญชี</span><b><span id="acctNo">231-1-71119-1</span> <button type="button" id="acctCopy" onclick="copyAcct()" style="border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:8px;padding:3px 9px;font-family:inherit;font-size:.76rem;font-weight:700;cursor:pointer;vertical-align:middle;display:inline-flex;align-items:center;gap:5px"><span id="acctCopyIcon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span>คัดลอก</button></b></div>
+            <div class="r"><span>ชื่อบัญชี</span><b>บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</b></div>
+            <div class="field" style="margin-top:12px;margin-bottom:0"><label class="fld">แนบสลิปการโอน <span class="req">*</span></label>
+              <input type="file" id="f_slip" accept="image/*" style="width:100%;padding:10px;border:1.5px dashed var(--line);border-radius:10px;background:#fff;font-family:inherit;font-size:.84rem;cursor:pointer">
+              <div id="slipTxt" class="note" style="margin-top:5px">แนบรูปสลิปหลังจากโอนเงินตามยอดรวมด้านบน</div>
+              <div class="err">กรุณาแนบสลิปการโอนเงิน</div>
+            </div>
+          </div>
           <div class="opt" data-pay="card" id="cardOpt" style="margin-top:12px"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><div class="ot"><b>บัตรเครดิต / เดบิต</b></div></div>
           <div id="cardNote" class="note" style="display:none;padding:6px 2px 0">จะพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe ตามสินค้าที่เลือก</div>
-          <div id="cardWarn" class="note warn" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>คำสั่งซื้อมากกว่า 1 รายการ กรุณาชำระผ่าน PromptPay (บัตรเครดิตรองรับ 1 รายการ)</span></div>
+          <div id="cardWarn" class="note warn" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span>คำสั่งซื้อมากกว่า 1 รายการ กรุณาชำระผ่านการโอนเงิน (บัตรเครดิตรองรับ 1 รายการ)</span></div>
           <div id="cardEmailWrap" style="display:none;margin-top:12px">
             <div class="field"><label class="fld">อีเมลที่ใช้ตอนชำระเงิน <span class="req">*</span></label><input class="in" id="f_cardEmail" inputmode="email" placeholder="อีเมลเดียวกับตอนชำระบัตรเครดิต"><div class="err">กรุณากรอกอีเมลที่ใช้ชำระเงิน</div><div class="note">รบกวนระบุอีเมลเดียวกับตอนชำระบัตรเครดิต</div></div>
           </div>
@@ -648,7 +657,7 @@
     duo:'<rect x="3" y="7" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="10" y="4" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>',
     triple:'<path d="M12 2 2 7l10 5 10-5-10-5ZM2 12l10 5 10-5M2 17l10 5 10-5" fill="none" stroke="currentColor" stroke-width="2"/>'
   };
-  var state={main:[],fam:[],ship:'post',pay:'promptpay',slip:null,famInfo:{},payUrl:null,rxQty:1};
+  var state={main:[],fam:[],ship:'post',pay:'bank',slip:null,slipData:null,famInfo:{},payUrl:null,rxQty:1};
   var THB=function(n){return '<span class="cur">฿</span>'+Number(n).toLocaleString('en-US')};
   var byId=function(id){return document.getElementById(id)};
   var todayISO=function(){var d=new Date(),z=function(n){return(n<10?'0':'')+n;};return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());};
@@ -801,10 +810,11 @@
     document.querySelectorAll('.opt[data-pay]').forEach(function(x){x.classList.remove('on')});o.classList.add('on');state.pay=o.getAttribute('data-pay');
     byId('cardNote').style.display=state.pay==='card'?'block':'none';
     byId('cardEmailWrap').style.display=state.pay==='card'?'block':'none';
-    if(byId('ppNote'))byId('ppNote').style.display=state.pay==='promptpay'?'block':'none';
+    if(byId('bankFields'))byId('bankFields').style.display=state.pay==='bank'?'block':'none';
     if(state.pay==='card'&&byId('f_cardDate')&&!byId('f_cardDate').value)byId('f_cardDate').value=todayISO();
     update();
   });});
+  (function(){var slipEl=byId('f_slip');if(slipEl)slipEl.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){state.slipData=ev.target.result;var st=byId('slipTxt');if(st)st.textContent='✅ '+f.name;var fw=byId('f_slip').closest('.field');if(fw)fw.classList.remove('bad');};r.readAsDataURL(f);});})();
   (byId('taxToggle')||{addEventListener:function(){}}).addEventListener('click',function(){
     var on=byId('taxFields').style.display!=='block';
     byId('taxFields').style.display=on?'block':'none';
@@ -818,9 +828,9 @@
     var cardOpt=byId('cardOpt');
     cardOpt.classList.toggle('disabled',!cardAllowed);
     byId('cardWarn').style.display='none';
-    if(!cardAllowed&&state.pay==='card'){state.pay='promptpay';document.querySelectorAll('.opt[data-pay]').forEach(function(x){x.classList.remove('on')});
-      var ppo=document.querySelector('.opt[data-pay="promptpay"]');if(ppo)ppo.classList.add('on');
-      byId('cardNote').style.display='none';byId('cardEmailWrap').style.display='none';if(byId('ppNote'))byId('ppNote').style.display='block';}
+    if(!cardAllowed&&state.pay==='card'){state.pay='bank';document.querySelectorAll('.opt[data-pay]').forEach(function(x){x.classList.remove('on')});
+      var bko=document.querySelector('.opt[data-pay="bank"]');if(bko)bko.classList.add('on');
+      byId('cardNote').style.display='none';byId('cardEmailWrap').style.display='none';if(byId('bankFields'))byId('bankFields').style.display='block';}
     var t=total();
     byId('totVal').innerHTML=THB(t);
     var mo=mainObjs(),fo=famObjs();
@@ -863,7 +873,10 @@
     }
     if(state.pay==='card'){
       ok=markBad('f_cardEmail',!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(byId('f_cardEmail').value.trim()))&&ok;
-      
+
+    }
+    if(state.pay==='bank'){
+      var sbad=!state.slipData;var sf=byId('f_slip');if(sf){var sfw=sf.closest('.field');if(sfw)sfw.classList.toggle('bad',sbad);}if(sbad)ok=false;
     }
     if(byId('taxFields').style.display==='block'){
       ok=markBad('tax_name',!byId('tax_name').value.trim())&&ok;
@@ -1376,8 +1389,15 @@
       <div class="fld"><label>หมายเหตุถึงแบรนด์ (ถ้ามี)</label><textarea id="mf_note" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม เช่น การ์ดอวยพรวันเกิด"></textarea></div>
       <div class="seclbl">วิธีชำระเงิน</div>
       <div class="pay">
-        <div class="paopt on" id="payPromptPay" onclick="MX.setPay('promptpay')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17.5 17.5V21M21 14v3.5M21 21h-3.5"/></svg></div><div class="pt"><b>PromptPay QR (ล็อกยอด)</b><small>สแกนจ่ายยอดเป๊ะ กันโอนเกิน · ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
-        <div id="ppBox" style="font-size:.8rem;color:#5b6b8c;padding:8px 2px 0;line-height:1.5">ระบบจะสร้าง QR ที่<b>ล็อกยอดไว้แล้ว</b> ลูกค้าสแกนด้วยแอปธนาคาร ยอดเป๊ะแก้ไม่ได้ (กันโอนเกิน/ขาด) และยืนยันอัตโนมัติทันที · ใบรับเงินส่งไปที่อีเมลด้านบน</div>
+        <div class="paopt on" id="payBank" onclick="MX.setPay('bank')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 10h16M5 10 12 4l7 6M6 10v11M10 10v11M14 10v11M18 10v11"/></svg></div><div class="pt"><b>โอนเงินผ่านธนาคาร</b><small>โอนแล้วแนบสลิป · ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
+        <div id="bankBox" style="padding:8px 2px 2px">
+          <div style="background:linear-gradient(150deg,#F3F7FF,#EAF1FF);border:1px solid #DCE8FF;border-radius:14px;padding:14px">
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:.86rem"><span style="color:#5b6b8c">ธนาคาร</span><b>กสิกรไทย (KBank)</b></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:.86rem;align-items:center"><span style="color:#5b6b8c">เลขที่บัญชี</span><b style="display:inline-flex;align-items:center;gap:8px">231-1-71119-1 <button type="button" onclick="MX.copyAcct()" style="border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:8px;padding:4px 10px;font-family:inherit;font-size:.76rem;font-weight:700">คัดลอก</button></b></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:.86rem"><span style="color:#5b6b8c">ชื่อบัญชี</span><b style="text-align:right">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</b></div>
+          </div>
+          <label class="slipbox" id="mf_slipBox" style="margin-top:10px"><span id="mf_slipTxt">📎 แตะเพื่อแนบสลิปโอนเงิน</span><input type="file" id="mf_slip" accept="image/*" style="display:none"></label>
+        </div>
         <div class="paopt" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
       </div>
     </div>
@@ -1434,7 +1454,7 @@
   ORDER.length=0;ORDER.push('polo');FAM_ORDER.length=0;
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
-  var cart=[],pay='promptpay',curPid=null,detailQty=1;var geoSel=null,geoData=null,mSlipData=null;var shipMode='post';
+  var cart=[],pay='bank',curPid=null,detailQty=1;var geoSel=null,geoData=null,mSlipData=null;var shipMode='post';
   function setShip(s){shipMode=s;var h=byId('shipHome'),p=byId('shipPickup');if(h)h.classList.toggle('on',s==='post');if(p)p.classList.toggle('on',s==='pickup');var hf=byId('homeFields'),pb=byId('pickupBox');if(hf)hf.style.display=(s==='post')?'block':'none';if(pb)pb.style.display=(s==='pickup')?'block':'none';}
   var DPLUS={band:{l:83,t:72.66,w:9,h:3.9},scale:{l:83,t:72.66,w:9,h:3.9},duo:{l:83,t:72.66,w:9,h:3.9},triple:{l:83,t:72.4,w:9,h:3.9}};
 
@@ -1482,11 +1502,12 @@
 
   // CHECKOUT / SUBMIT
   function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());setPay(pay);}
-  function setPay(p){pay=p;var pc=byId('payCard');if(pc)pc.classList.toggle('on',p==='card');var pp=byId('payPromptPay');if(pp)pp.classList.toggle('on',p==='promptpay');var pb=byId('ppBox');if(pb)pb.style.display=(p==='promptpay')?'block':'none';}
+  function setPay(p){pay=p;var pc=byId('payCard');if(pc)pc.classList.toggle('on',p==='card');var pbk=byId('payBank');if(pbk)pbk.classList.toggle('on',p==='bank');var bx=byId('bankBox');if(bx)bx.style.display=(p==='bank')?'block':'none';}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
   function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});
     if(shipMode==='pickup'){var pk=byId('mf_pickup'),pbad=!pk.value.trim();pk.classList.toggle('bad',pbad);if(pbad)ok=false;}
     else{var a=byId('mf_addr1'),abad=!a.value.trim();a.classList.toggle('bad',abad);if(abad)ok=false;var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;}
+    if(pay==='bank'&&!mSlipData){var sb=byId('mf_slipBox');if(sb)sb.classList.add('bad');ok=false;}
     return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
   function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+((l.color||p.color)?((SIZES[l.pid]?' · ไซซ์ ':' · สี')+(l.color||p.color)):''),price:p.price,fam:false});});
@@ -1521,7 +1542,7 @@
     var showNav=(scr==='home'||scr==='cart');byId('mnav').style.display=showNav?'flex':'none';
     document.querySelectorAll('#mnav .t').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-nav')===scr);});
     if(scr==='cart')renderCart();if(scr==='checkout')renderCheckout();window.scrollTo(0,0);}
-  function reset(){cart=[];updateBadges();setPay('promptpay');setShip('post');['mf_name','mf_phone','mf_email','mf_addr1','mf_pickup','mf_note','mf_team','mf_ref','mf_amt','mf_date','mf_time'].forEach(function(id){var e=byId(id);if(e)e.value='';});mSlipData=null;var st=byId('mf_slipTxt');if(st)st.textContent='📎 แตะเพื่อแนบสลิปโอนเงิน';var sb=byId('mf_slipBox');if(sb)sb.classList.remove('has');geoSel=null;var gt=byId('mf_geoTxt');if(gt){gt.textContent='จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์';gt.className='ph';}go('home');}
+  function reset(){cart=[];updateBadges();setPay('bank');setShip('post');['mf_name','mf_phone','mf_email','mf_addr1','mf_pickup','mf_note','mf_team','mf_ref','mf_amt','mf_date','mf_time'].forEach(function(id){var e=byId(id);if(e)e.value='';});mSlipData=null;var st=byId('mf_slipTxt');if(st)st.textContent='📎 แตะเพื่อแนบสลิปโอนเงิน';var sb=byId('mf_slipBox');if(sb)sb.classList.remove('has');geoSel=null;var gt=byId('mf_geoTxt');if(gt){gt.textContent='จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์';gt.className='ph';}go('home');}
 
   function loadGeo(cb){
     if(geoData){cb();return;}
