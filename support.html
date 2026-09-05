@@ -153,18 +153,18 @@
             <button class="item ghead lvl2" data-toggle="g-ll"><span class="dot"></span><span class="lbl">Lean Lab</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
             <div class="children">
               <button class="item lvl3 active" data-view="lldash"><span class="dot"></span><span class="lbl">Dashboard</span></button>
-              <button class="item lvl3" data-view="llreg"><span class="dot"></span><span class="lbl">Register</span></button>
               <div class="group open" id="g-mem">
                 <button class="item ghead lvl3" data-toggle="g-mem"><span class="dot"></span><span class="lbl">Member</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
                 <div class="children">
                   <button class="item lvl4" data-view="llmstart"><span class="dot"></span><span class="lbl">Start Member</span></button>
                   <button class="item lvl4" data-view="llmafter"><span class="dot"></span><span class="lbl">After Member</span></button>
+                  <button class="item lvl4" data-view="llreg"><span class="dot"></span><span class="lbl">Registration</span></button>
                 </div>
               </div>
-              <div class="group open" id="g-pay">
-                <button class="item ghead lvl3" data-toggle="g-pay"><span class="dot"></span><span class="lbl">Payment Status</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+              <div class="group open" id="g-order">
+                <button class="item ghead lvl3" data-toggle="g-order"><span class="dot"></span><span class="lbl">Order</span><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
                 <div class="children">
-                  <button class="item lvl4" data-view="llorder"><span class="dot"></span><span class="lbl">Order</span></button>
+                  <button class="item lvl4" data-view="llorder"><span class="dot"></span><span class="lbl">Management</span></button>
                 </div>
               </div>
             </div>
@@ -208,7 +208,7 @@
     document.getElementById(b.getAttribute('data-toggle')).classList.toggle('open');
   });});
 
-  var TITLES={lldash:'Dashboard',llreg:'Register',llmstart:'Start Member',llmafter:'After Member',llorder:'Order · Payment Status',tickets:'Tickets',kb:'ฐานความรู้',settings:'ตั้งค่า'};
+  var TITLES={lldash:'Dashboard',llreg:'Registration',llmstart:'Start Member',llmafter:'After Member',llorder:'Order · Management',settings:'ตั้งค่า'};
 
   // ---------- DASHBOARD (Lean Lab event overview) ----------
   function dashView(){
@@ -289,7 +289,7 @@
   // ----- Register (แชร์ลิงก์/QR → หน้า Landing) -----
   function registerView(){
     return ''
-      + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Register</h1>'
+      + '<div class="head"><div><h1><span class="pill lean">MEMBER</span> Registration</h1>'
       +   '<p>แชร์ลิงก์หรือ QR Code ให้ลูกค้าไปหน้า Landing Page เพื่อสมัครเข้าร่วม Lean Lab</p></div>'
       +   '<a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดหน้า Landing ↗</a></div>'
       + '<div class="panel">'
@@ -313,8 +313,8 @@
   // ----- Order (Payment Status — รายการทั้งหมด + Admin ตรวจหลักฐาน/ยืนยัน) -----
   function orderView(){
     return ''
-      + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Order · Payment Status</h1>'
-      +   '<p>รายการสั่งซื้อ/สั่งจองทั้งหมด · ตรวจหลักฐาน Option → อนุมัติให้ลูกค้าชำระ → เมื่อชำระผ่านจะย้ายเข้า Member</p></div>'
+      + '<div class="head"><div><h1><span class="pill lean">ORDER</span> Management</h1>'
+      +   '<p>จัดการคำสั่งซื้อ/จัดการการจองสิทธิ์ · ตรวจหลักฐาน Option → อนุมัติให้ลูกค้าชำระ → เมื่อชำระผ่านจะย้ายเข้า Member</p></div>'
       +   '<button class="btn ghost" id="llRefresh">รีเฟรช ⟳</button></div>'
       + '<div class="panel" style="background:var(--warn-tint,#FFF6E6);border:1px solid var(--warn,#C77700)"><div style="font-size:.86rem;color:var(--ink);line-height:1.7"><b>ขั้นตอน Admin สำหรับลูกค้าที่รับสิทธิ์พิเศษ (Option ที่ต้องแนบหลักฐาน):</b><br>1) ลูกค้าแนบภาพ + รายละเอียดการซื้อ → สถานะ <span class="pill pend">รอตรวจหลักฐาน</span><br>2) Admin กด <b>✓ อนุมัติหลักฐาน</b> เมื่อตรวจว่าถูกต้อง → ลูกค้าจึงชำระเงินได้<br>3) เมื่อลูกค้าชำระผ่าน → ย้ายเข้า <b>Member</b> ตามวันเริ่มที่เลือก</div></div>'
       + '<div class="panel">'
