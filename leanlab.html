@@ -637,8 +637,8 @@
 
   function renderAuth(){
     var c=$('#sidePanel');
+    authMode='signup';
     c.innerHTML=''
-    +'<div class="authtabs"><button id="tS" class="'+(authMode==='signup'?'on':'')+'">สมัครสมาชิก</button><button id="tL" class="'+(authMode==='login'?'on':'')+'">เข้าสู่ระบบ</button></div>'
     +'<h2 class="tt">'+(authMode==='signup'?'สมัครเข้าร่วม Lean Lab':'ยินดีต้อนรับกลับมา')+'</h2>'
     +'<p class="sub">'+(authMode==='signup'?'สร้างบัญชีด้วยอีเมล ใช้เวลาไม่ถึงนาที':'เข้าสู่ระบบเพื่อสมัครและติดตามผล')+'</p>'
     +'<form id="authForm">'
@@ -651,8 +651,6 @@
     +'<div class="oauth">'
     + '<button class="obtn line'+(CFG.lineLogin?'':' dis')+'" id="btnLine"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 5.7 2 10.2c0 4 3.6 7.4 8.4 8 .3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6 1.1-.5 6-3.5 8.2-6C21.3 13.6 22 11.9 22 10.2 22 5.7 18 2 12 2z"/></svg><span>'+(CFG.lineLogin?'ดำเนินการด้วย LINE':'LINE <span class="soon">เร็ว ๆ นี้</span>')+'</span></button>'
     +'</div>';
-    $('#tS').onclick=function(){authMode='signup';renderAuth();};
-    $('#tL').onclick=function(){authMode='login';renderAuth();};
     $('#authForm').onsubmit=submitAuth;
     if(CFG.lineLogin)$('#btnLine').onclick=function(){location.href='/auth/leanlab/line/login';};
     showOAuthError();
