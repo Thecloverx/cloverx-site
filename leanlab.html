@@ -563,7 +563,7 @@
     // ===== header =====
     +'<div class="llx-hd"><div class="llin">'
     +' <a class="llx-logo" href="/leanlab"><img src="ll_logo.png" alt="Lean Lab X" class="llx-logoimg"></a>'
-    +' <nav class="llx-mnav"><a data-scroll="top">About Us</a><a data-scroll="goal">Project Goal</a><a data-scroll="prog">The Path</a><a data-scroll="prize">The Reward</a></nav>'
+    +' <nav class="llx-mnav"><a data-scroll="top">About Us</a><a data-scroll="goal">Project Goal</a><a data-scroll="prog">The Journey</a><a data-scroll="prize">The Reward</a></nav>'
     +' <div class="sp"></div>'
     +' <div class="llx-acts">'
     +'   <button class="llx-login" data-go="login">'+T('login')+'</button>'
@@ -571,16 +571,8 @@
     +' </div></div></div>'
     // ===== hero — image only, nothing else =====
     +'<section class="llx-hero" id="llTop"><img class="hero-img" src="ll_hero.jpg" alt="Lean Lab X"></section>'
-    // ===== pillars =====
-    +'<div class="llx-pil" id="llGoal">DATA <span class="ekg">·</span> KNOWLEDGE <span class="ekg">·</span> COMMUNITY <span class="ekg">·</span> ACTION</div>'
-    // ===== journey =====
-    +'<section class="llx-sec llx-in" id="llProg"><div class="head"><span class="llx-eye">'+T('po_eye')+'</span><h2>'+T('po_h')+'</h2><p>'+T('po_sub')+'</p></div>'
-    +' <div class="llx-jgrid">'
-    +   jcard(1,'KNOW YOUR X','#56C8FF','rgba(86,200,255,.35)','ll_know.jpg','ll_know.jpg')
-    +   jcard(2,'BUILD YOUR X','#9BE31A','rgba(155,227,26,.32)','ll_build.jpg','ll_build.jpg')
-    +   jcard(3,'TRANSFORM YOUR X','#ff5bb0','rgba(255,91,176,.32)','ll_transform.jpg','ll_transform.jpg')
-    +   jcard(4,'UNLOCK YOUR X','#a98bff','rgba(169,139,255,.32)','ll_unlock.jpg','ll_unlock.jpg')
-    +' </div></section>'
+    // ===== program overview (full poster: pillars + journey) =====
+    +'<section class="llx-res" id="llProg"><img class="res-img" src="ll_journey.jpg" alt="Onsite Journey 4 — เส้นทางการเปลี่ยนพฤติกรรมสุขภาพของผู้เข้าร่วม"></section>'
     // ===== ecosystem carousel (coverflow) =====
     +'<section class="llx-sec" id="llEco"><div class="head"><span class="llx-eye">'+T('eco_eye')+'</span><h2>'+T('eco_h')+'</h2><p>'+T('eco_sub')+'</p></div>'
     +' <div class="cf-stage"><button class="cf-arrow prev" id="cfPrev" aria-label="prev"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button><div class="cf-track" id="cfTrack"></div><button class="cf-arrow next" id="cfNext" aria-label="next"><svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></svg></button></div>'
@@ -602,7 +594,7 @@
     +' </div></section>';
     // wiring
     L.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){scrollToJoin(b.getAttribute('data-go')==='login');};});
-    L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',goal:'llGoal',prog:'llProg',prize:'llPrize'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
+    L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',goal:'llProg',prog:'llProg',prize:'llPrize'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
     var lang=document.getElementById('llxLang');if(lang)lang.querySelectorAll('button').forEach(function(b){b.onclick=function(){setLang(b.getAttribute('data-l'));};});
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
     buildCf();
