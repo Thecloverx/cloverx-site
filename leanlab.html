@@ -211,6 +211,8 @@
   .llx-hd .llin{max-width:1180px;margin:0 auto;padding:13px 26px;display:flex;align-items:center;gap:20px}
   .llx-logo{display:flex;align-items:center;gap:9px;font-family:var(--ff-d);font-weight:800;font-size:1.28rem;letter-spacing:.02em;color:var(--ink)}
   .llx-logo .lx{width:22px;height:22px}
+  .llx-logoimg{height:46px;width:auto;display:block}
+  @media(max-width:560px){.llx-logoimg{height:36px}}
   .llx-mnav{display:flex;gap:24px;margin-left:12px;font-weight:600;font-size:.9rem;color:var(--muted)}
   .llx-mnav a{cursor:pointer}.llx-mnav a:hover{color:var(--ink)}
   .llx-hd .sp{flex:1}
@@ -249,10 +251,10 @@
   .llx-sec .head p{color:var(--muted);margin-top:12px;font-size:1.02rem}
 
   /* journey */
-  .llx-jgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-  @media(max-width:980px){.llx-jgrid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:560px){.llx-jgrid{grid-template-columns:1fr}}
-  .jc{position:relative;border:1px solid var(--line2);border-radius:18px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column;min-height:360px;transition:.18s}
+  .llx-jgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  @media(max-width:980px){.llx-jgrid{grid-template-columns:repeat(2,1fr);gap:20px}}
+  @media(max-width:560px){.llx-jgrid{grid-template-columns:1fr;max-width:420px;margin:0 auto}}
+  .jc{position:relative;border:1px solid var(--line2);border-radius:18px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column;aspect-ratio:7/9;transition:.18s}
   .jc:hover{transform:translateY(-4px);border-color:var(--jc)}
   .jc .pic{position:relative;height:170px;background:#0a1420 center/cover;background-image:var(--pic,none)}
   .jc .pic::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,8,15,.15),var(--panel) 96%),linear-gradient(120deg,var(--jc-t),transparent 60%)}
@@ -263,6 +265,8 @@
   .jc .th{color:var(--ink);font-weight:600;font-size:.98rem;margin-top:8px}
   .jc .ds{color:var(--muted);font-size:.86rem;margin-top:8px;line-height:1.5;flex:1}
   .jc .lbls{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--jc);font-family:var(--ff-d);font-weight:600;letter-spacing:.08em;font-size:.68rem;text-transform:uppercase;line-height:1.7}
+  .jc-full{border:none;background:transparent;padding:0;min-height:0;aspect-ratio:7/9;overflow:visible}
+  .jc-full img{display:block;width:100%;height:100%;object-fit:cover;border-radius:18px}
 
   /* prizes */
   .llx-prize{background:radial-gradient(700px 360px at 50% 0%,rgba(255,196,107,.10),transparent 60%),var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -488,7 +492,8 @@
   function T(k){return (I18[LANG]&&I18[LANG][k])||I18.en[k]||k;}
   function setLang(l){LANG=(l==='en')?'en':'th';try{localStorage.setItem('ll_lang',LANG);}catch(e){}document.documentElement.setAttribute('lang',LANG);vLanding();}
 
-  function jcard(n,key,color,tint,img){
+  function jcard(n,key,color,tint,img,full){
+    if(full) return '<div class="jc jc-full" style="--jc:'+color+'"><img src="'+full+'" alt="'+key+'" loading="lazy"></div>';
     return '<div class="jc" style="--jc:'+color+';--jc-t:'+tint+';--pic:url(\''+img+'\')">'
       +'<div class="pic"></div><div class="num">0'+n+'</div>'
       +'<div class="body"><h3>'+key.replace(' X',' <span class="x">X</span>')+'</h3>'
@@ -555,8 +560,8 @@
     L.innerHTML=''
     // ===== header =====
     +'<div class="llx-hd"><div class="llin">'
-    +' <a class="llx-logo" href="/leanlab">Lean Lab<svg class="lx" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></a>'
-    +' <nav class="llx-mnav"><a data-scroll="top">'+T('nav_over')+'</a><a data-scroll="prog">'+T('nav_prog')+'</a><a data-scroll="prize">'+T('nav_prize')+'</a></nav>'
+    +' <a class="llx-logo" href="/leanlab"><img src="ll_logo.png" alt="Lean Lab X" class="llx-logoimg"></a>'
+    +' <nav class="llx-mnav"><a data-scroll="top">About Us</a><a data-scroll="goal">Project Goal</a><a data-scroll="prog">The Path</a><a data-scroll="prize">The Reward</a></nav>'
     +' <div class="sp"></div>'
     +' <div class="llx-acts">'
     +'   <button class="llx-login" data-go="login">'+T('login')+'</button>'
@@ -565,14 +570,14 @@
     // ===== hero — image only, nothing else =====
     +'<section class="llx-hero" id="llTop"><img class="hero-img" src="ll_hero.jpg" alt="Lean Lab X"></section>'
     // ===== pillars =====
-    +'<div class="llx-pil">DATA <span class="ekg">·</span> KNOWLEDGE <span class="ekg">·</span> COMMUNITY <span class="ekg">·</span> ACTION</div>'
+    +'<div class="llx-pil" id="llGoal">DATA <span class="ekg">·</span> KNOWLEDGE <span class="ekg">·</span> COMMUNITY <span class="ekg">·</span> ACTION</div>'
     // ===== journey =====
     +'<section class="llx-sec llx-in" id="llProg"><div class="head"><span class="llx-eye">'+T('po_eye')+'</span><h2>'+T('po_h')+'</h2><p>'+T('po_sub')+'</p></div>'
     +' <div class="llx-jgrid">'
-    +   jcard(1,'KNOW YOUR X','#56C8FF','rgba(86,200,255,.35)','ll_know.jpg')
-    +   jcard(2,'BUILD YOUR X','#9BE31A','rgba(155,227,26,.32)','ll_build.jpg')
-    +   jcard(3,'TRANSFORM YOUR X','#ff5bb0','rgba(255,91,176,.32)','ll_transform.jpg')
-    +   jcard(4,'UNLOCK YOUR X','#a98bff','rgba(169,139,255,.32)','ll_unlock.jpg')
+    +   jcard(1,'KNOW YOUR X','#56C8FF','rgba(86,200,255,.35)','ll_know.jpg','ll_know.jpg')
+    +   jcard(2,'BUILD YOUR X','#9BE31A','rgba(155,227,26,.32)','ll_build.jpg','ll_build.jpg')
+    +   jcard(3,'TRANSFORM YOUR X','#ff5bb0','rgba(255,91,176,.32)','ll_transform.jpg','ll_transform.jpg')
+    +   jcard(4,'UNLOCK YOUR X','#a98bff','rgba(169,139,255,.32)','ll_unlock.jpg','ll_unlock.jpg')
     +' </div></section>'
     // ===== ecosystem carousel (coverflow) =====
     +'<section class="llx-sec" id="llEco"><div class="head"><span class="llx-eye">'+T('eco_eye')+'</span><h2>'+T('eco_h')+'</h2><p>'+T('eco_sub')+'</p></div>'
@@ -603,7 +608,7 @@
     +' </div></section>';
     // wiring
     L.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){scrollToJoin(b.getAttribute('data-go')==='login');};});
-    L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',prog:'llProg',prize:'llPrize',faq:'llFaq'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
+    L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',goal:'llGoal',prog:'llProg',prize:'llPrize'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
     var lang=document.getElementById('llxLang');if(lang)lang.querySelectorAll('button').forEach(function(b){b.onclick=function(){setLang(b.getAttribute('data-l'));};});
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
     buildCf();
