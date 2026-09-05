@@ -3,6 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --bg:#EEF2F8;--panel:#FFFFFF;--ink:#1E2A44;--muted:#6B7793;--line:#E7ECF4;--soft:#F5F8FC;
@@ -197,20 +198,78 @@
   function leanlabView(){
     return ''
       + '<div class="head"><div><h1><span class="pill lean">EVENT</span> Lean Lab</h1>'
-      +   '<p>โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ · Season 1 · ระบบสมาชิก + ลงทะเบียน + ชำระเงิน</p></div>'
-      +   '<a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดระบบเต็มหน้าจอ ↗</a></div>'
-      + '<div class="kpis">'
-      +   '<div class="kpi"><div class="lb">ค่าสมัคร</div><div class="v num">฿3,900</div><div class="s">โอนธนาคารเท่านั้น</div></div>'
-      +   '<div class="kpi"><div class="lb">เริ่มโปรแกรม (ตัวเลือก)</div><div class="v">8 พ.ย. 2569</div><div class="s">หรือ “เริ่มลด ณ ตอนนี้”</div></div>'
-      +   '<div class="kpi"><div class="lb">ที่นั่ง</div><div class="v num">200</div><div class="s">4 จุดนัดพบ</div></div>'
-      +   '<div class="kpi"><div class="lb">รางวัลรวม</div><div class="v num">฿280,000</div><div class="s">Season 1</div></div>'
+      +   '<p>บริหารผู้สมัคร ตรวจสลิป และยืนยันสิทธิ์ · Season 1</p></div>'
+      +   '<div style="display:flex;gap:10px"><button class="btn ghost" id="llRefresh">รีเฟรช ⟳</button><a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
+      + '<div class="kpis" id="llKpis">'
+      +   '<div class="kpi"><div class="lb">ผู้สมัครทั้งหมด</div><div class="v num" id="k_total">–</div><div class="s">สมาชิก <b id="k_members">–</b> คน</div></div>'
+      +   '<div class="kpi"><div class="lb">รอตรวจสลิป</div><div class="v num" id="k_pending" style="color:var(--warn)">–</div><div class="s">ต้องยืนยัน</div></div>'
+      +   '<div class="kpi"><div class="lb">ยืนยันแล้ว</div><div class="v num" id="k_confirmed" style="color:var(--good)">–</div><div class="s">พร้อมเข้าร่วม</div></div>'
+      +   '<div class="kpi"><div class="lb">ยอดยืนยันแล้ว</div><div class="v num" id="k_revenue">–</div><div class="s">ค่าสมัคร 3,900/คน</div></div>'
       + '</div>'
       + '<div class="panel">'
-      +   '<div class="ph"><h3>ระบบสมาชิก & ลงทะเบียน Lean Lab</h3><span class="pill ok">เปิดรับสมัคร</span></div>'
-      +   '<div class="framebar"><span class="u">/leanlab</span><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดแท็บใหม่ ↗</a></div>'
-      +   '<div class="frame"><iframe src="/leanlab" title="Lean Lab" loading="lazy"></iframe></div>'
+      +   '<div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3><span style="font-size:.78rem;color:var(--muted)">แชร์ให้ลูกค้าสแกน → เปิดหน้าสมัคร Lean Lab</span></div>'
+      +   '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center">'
+      +     '<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;flex:none"><div id="llQrBox" style="width:150px;height:150px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.78rem">QR…</div></div>'
+      +     '<div style="flex:1;min-width:240px"><label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์หน้าสมัคร (ลูกค้า)</label>'
+      +       '<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="llLink" readonly value="" style="flex:1;min-width:200px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;background:var(--soft);color:var(--ink)">'
+      +       '<button class="btn pri" id="llCopy" style="padding:0 18px">คัดลอกลิงก์</button>'
+      +       '<a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้า ↗</a></div>'
+      +       '<p style="font-size:.78rem;color:var(--muted);margin-top:10px">* ลูกค้าจะเห็นหน้าเว็บสวยแยก (Lean Lab) — คำสั่งสมัครจะเข้ามาที่ตารางด้านล่างแบบเรียลไทม์</p></div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="panel">'
+      +   '<div class="ph"><h3>รายชื่อผู้สมัคร Lean Lab</h3><span class="pill lean" id="llCount">–</span></div>'
+      +   '<div style="overflow-x:auto"><table><thead><tr><th>ผู้สมัคร</th><th>ข้อมูล</th><th>รูปแบบเริ่ม</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       + '</div>';
   }
+  var LL_ST={awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad']};
+  function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function llLoad(){
+    fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      if(!j||!j.ok)return;
+      var c=j.counts||{};
+      var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+      set('k_total',c.total||0);set('k_members',j.members||0);set('k_pending',c.pending_review||0);set('k_confirmed',c.confirmed||0);
+      set('k_revenue','฿'+Number(c.revenue||0).toLocaleString('en-US'));
+      var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' คน';
+      var tb=document.getElementById('llBody');if(!tb)return;
+      var regs=j.registrations||[];
+      if(!regs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">ยังไม่มีผู้สมัคร</td></tr>';return;}
+      tb.innerHTML=regs.map(function(r){
+        var s=LL_ST[r.status]||[r.status,'pend'];
+        var start=r.startChoice==='now'?'เริ่มตอนนี้':'8 พ.ย. 2569';
+        var base=r.baseline?('<a class="pill new" style="text-decoration:none" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div style="font-size:.72rem;color:var(--muted);margin-top:4px">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>';
+        var slip=r.slipUrl?('<a class="pill new" style="text-decoration:none" href="'+llEsc(r.slipUrl)+'" target="_blank" rel="noopener">ดูสลิป ↗</a>'):'<span style="color:var(--muted)">ยังไม่แนบ</span>';
+        var act='';
+        if(r.status==='pending_review'||r.status==='rejected'){act+='<button class="btn pri" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'confirmed\')">ยืนยัน</button> ';}
+        if(r.status==='pending_review'){act+='<button class="btn ghost" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'rejected\')">ปฏิเสธ</button>';}
+        if(r.status==='confirmed'){act+='<button class="btn ghost" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'rejected\')">ยกเลิก</button>';}
+        return '<tr>'
+          +'<td><div style="font-weight:700">'+llEsc(r.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
+          +'<td style="font-size:.82rem">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+'ซม.</td>'
+          +'<td><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span></td>'
+          +'<td>'+base+'</td>'
+          +'<td style="font-weight:700">฿'+Number(r.fee||0).toLocaleString('en-US')+'<div style="font-size:.72rem;font-weight:500;color:var(--muted)">โอนธนาคาร</div>'+slip+'</td>'
+          +'<td><span class="pill '+s[1]+'">'+s[0]+'</span></td>'
+          +'<td style="white-space:nowrap">'+(act||'<span style="color:var(--muted)">—</span>')+'</td>'
+          +'</tr>';
+      }).join('');
+    }).catch(function(){var tb=document.getElementById('llBody');if(tb)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';});
+  }
+  function llInit(){
+    var url=location.origin+'/leanlab';
+    var li=document.getElementById('llLink'); if(li)li.value=url;
+    var cp=document.getElementById('llCopy'); if(cp)cp.onclick=function(){try{navigator.clipboard.writeText(url);cp.textContent='คัดลอกแล้ว ✓';setTimeout(function(){cp.textContent='คัดลอกลิงก์';},1500);}catch(e){}};
+    var rb=document.getElementById('llRefresh'); if(rb)rb.onclick=llLoad;
+    var qb=document.getElementById('llQrBox'); if(qb&&window.QRCode){qb.innerHTML='';try{new QRCode(qb,{text:url,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});}catch(e){qb.textContent='QR ไม่สำเร็จ';}}
+    llLoad();
+  }
+  window.llSet=function(id,status){
+    if(status==='rejected'&&!confirm('ยืนยันการปฏิเสธ/ยกเลิกผู้สมัครนี้?'))return;
+    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:status})})
+      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)llLoad();else alert('อัปเดตไม่สำเร็จ');})
+      .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
+  };
 
   function emptyView(title,desc){
     return '<div class="head"><h1>'+title+'</h1></div>'
@@ -223,7 +282,7 @@
     // mark group has-active for collapsed rail
     document.querySelectorAll('.nav .group').forEach(function(g){g.classList.toggle('has-active', !!g.querySelector('.item.active'));});
     document.getElementById('crumbTitle').textContent=TITLES[v]||v;
-    if(v==='leanlab') gen.innerHTML=leanlabView();
+    if(v==='leanlab'){ gen.innerHTML=leanlabView(); llInit(); }
     else if(v==='tickets') gen.innerHTML=emptyView('Tickets','ระบบรับเรื่อง/ตั๋วช่วยเหลือลูกค้า กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='kb') gen.innerHTML=emptyView('ฐานความรู้','คลังบทความ/คู่มือช่วยเหลือ กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='settings') gen.innerHTML=emptyView('ตั้งค่า','ตั้งค่าฝ่ายซัพพอร์ต กำลังพัฒนา — เร็ว ๆ นี้');

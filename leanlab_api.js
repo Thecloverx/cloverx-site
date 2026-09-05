@@ -15,8 +15,20 @@ const crypto = require('crypto');
 module.exports = function (app, DATA_DIR) {
   const DIR = path.join(DATA_DIR, 'leanlab');
   const MEMBERS = path.join(DIR, 'members.json');
-  try { fs.mkdirSync(DIR, { recursive: true }); } catch (e) {}
+  const REGS = path.join(DIR, 'registrations.json');
+  const UP = path.join(DIR, 'uploads');
+  try { fs.mkdirSync(UP, { recursive: true }); } catch (e) {}
   if (!fs.existsSync(MEMBERS)) { try { fs.writeFileSync(MEMBERS, '[]'); } catch (e) {} }
+  if (!fs.existsSync(REGS)) { try { fs.writeFileSync(REGS, '[]'); } catch (e) {} }
+
+  // ---- Lean Lab event config (Season 1) ----
+  const EVENT = {
+    season: 1,
+    fee: 3900,
+    minAge: 18,
+    startLaterLabel: '8 พ.ย. 2569',      // choice "เริ่มวันที่ 08/11/69"
+    bank: { bankName: 'กสิกรไทย (KBank)', accountNo: '231-1-71119-1', accountName: 'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด' }
+  };
 
   // SESSION_SECRET: ควรตั้งใน env เพื่อไม่ให้ session หลุดตอน deploy/restart
   const SECRET = process.env.SESSION_SECRET || process.env.LEANLAB_SESSION_SECRET
@@ -182,6 +194,122 @@ module.exports = function (app, DATA_DIR) {
       liffId: process.env.LEANLAB_LIFF_ID || process.env.LINE_LIFF_ID || '',
       googleLogin: googleConfigured()
     });
+  });
+
+  // ============================ LEAN LAB EVENT REGISTRATION ============================
+  function calcAge(dobStr) {
+    var d = new Date(dobStr); if (isNaN(d.getTime())) return null;
+    var t = new Date(); var a = t.getFullYear() - d.getFullYear();
+    var m = t.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && t.getDate() < d.getDate())) a--;
+    return a;
+  }
+  function saveImg(dataUrl, prefix) {
+    var m = String(dataUrl || '').match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/);
+    if (!m) return null;
+    var ext = (m[1] === 'jpeg' ? 'jpg' : m[1].replace(/[^a-z0-9]/gi, '')) || 'png';
+    var fn = prefix + '-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex') + '.' + ext;
+    try { fs.writeFileSync(path.join(UP, fn), Buffer.from(m[2], 'base64')); return '/api/leanlab/file/' + fn; } catch (e) { return null; }
+  }
+  function readR() { try { return JSON.parse(fs.readFileSync(REGS, 'utf8')) || []; } catch (e) { return []; } }
+  function writeR(l) { try { fs.writeFileSync(REGS, JSON.stringify(l, null, 2)); } catch (e) {} }
+  function genRid() { return 'LLR-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
+  function publicReg(r) {
+    if (!r) return null;
+    return { id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null, fee: r.fee, pay: r.pay, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt };
+  }
+
+  app.get('/api/leanlab/event', function (req, res) {
+    res.json({ season: EVENT.season, fee: EVENT.fee, minAge: EVENT.minAge, startLaterLabel: EVENT.startLaterLabel, bank: EVENT.bank });
+  });
+
+  app.get('/api/leanlab/register/me', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var r = readR().find(function (x) { return x.memberId === m.id; });
+    res.json({ ok: true, registration: publicReg(r) });
+  });
+
+  app.post('/api/leanlab/register', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var b = req.body || {};
+    var name = String(b.name || '').trim();
+    var dob = String(b.dob || '').trim();
+    var gender = String(b.gender || '').trim();
+    var heightCm = Number(b.heightCm);
+    var choice = (b.startChoice === 'now') ? 'now' : (b.startChoice === 'later' ? 'later' : '');
+    if (name.length < 2) return res.status(400).json({ ok: false, error: 'bad_name' });
+    var age = calcAge(dob);
+    if (age == null) return res.status(400).json({ ok: false, error: 'bad_dob' });
+    if (age < EVENT.minAge) return res.status(400).json({ ok: false, error: 'underage', minAge: EVENT.minAge });
+    if (['ชาย', 'หญิง'].indexOf(gender) < 0) return res.status(400).json({ ok: false, error: 'bad_gender' });
+    if (!(heightCm >= 100 && heightCm <= 250)) return res.status(400).json({ ok: false, error: 'bad_height' });
+    if (!choice) return res.status(400).json({ ok: false, error: 'bad_choice' });
+    var baseline = null;
+    if (choice === 'now') {
+      var weightKg = Number(b.weightKg), fatPct = Number(b.fatPct), vFat = Number(b.vFat), muscleKg = Number(b.muscleKg), waterPct = Number(b.waterPct);
+      if (!(weightKg > 0) || !(fatPct >= 0) || !(vFat >= 0) || !(muscleKg >= 0) || !(waterPct >= 0)) return res.status(400).json({ ok: false, error: 'bad_measurements' });
+      var photoUrl = null;
+      if (typeof b.beforePhoto === 'string' && /^data:image\//.test(b.beforePhoto)) photoUrl = saveImg(b.beforePhoto, 'before-' + m.id);
+      if (!photoUrl) return res.status(400).json({ ok: false, error: 'bad_photo' });
+      baseline = { weightKg: weightKg, fatPct: fatPct, vFat: vFat, muscleKg: muscleKg, waterPct: waterPct, beforePhotoUrl: photoUrl };
+    }
+    var l = readR();
+    var r = l.find(function (x) { return x.memberId === m.id; });
+    if (r && r.status === 'confirmed') return res.status(409).json({ ok: false, error: 'already_registered', registration: publicReg(r) });
+    if (!r) { r = { id: genRid(), memberId: m.id, season: EVENT.season, createdAt: new Date().toISOString() }; l.push(r); }
+    r.name = name.slice(0, 80); r.dob = dob; r.age = age; r.gender = gender; r.heightCm = heightCm;
+    r.startChoice = choice; r.baseline = baseline; r.fee = EVENT.fee; r.pay = 'bank';
+    r.email = m.email || ''; r.phone = m.phone || '';
+    if (!r.slipUrl) r.status = 'awaiting_payment';
+    r.updatedAt = new Date().toISOString();
+    writeR(l);
+    // sync member name if empty
+    var ml = readM(); var mm = ml.find(function (x) { return x.id === m.id; }); if (mm && !mm.name) { mm.name = name.slice(0, 80); writeM(ml); }
+    res.json({ ok: true, registration: publicReg(r), bank: EVENT.bank });
+  });
+
+  app.post('/api/leanlab/register/slip', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var b = req.body || {};
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (!(typeof b.slip === 'string' && /^data:image\//.test(b.slip))) return res.status(400).json({ ok: false, error: 'bad_slip' });
+    var url = saveImg(b.slip, 'slip-' + m.id); if (!url) return res.status(400).json({ ok: false, error: 'save_failed' });
+    r.slipUrl = url; r.status = 'pending_review'; r.slipAt = new Date().toISOString();
+    writeR(l);
+    res.json({ ok: true, registration: publicReg(r) });
+  });
+
+  app.get('/api/leanlab/file/:fn', function (req, res) {
+    var fn = path.basename(req.params.fn); var p = path.join(UP, fn);
+    if (!fs.existsSync(p)) return res.status(404).end();
+    res.sendFile(p);
+  });
+
+  // ---- Back-office (Support dept manages Lean Lab) ----
+  function adminReg(r, byId) {
+    var mem = byId[r.memberId] || {};
+    return {
+      id: r.id, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
+      age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      fee: r.fee, pay: r.pay, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
+    };
+  }
+  app.get('/api/leanlab/admin/registrations', function (req, res) {
+    var regs = readR(); var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    var list = regs.map(function (r) { return adminReg(r, byId); }).sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+    var counts = { total: list.length, awaiting_payment: 0, pending_review: 0, confirmed: 0, rejected: 0, revenue: 0 };
+    list.forEach(function (r) { if (counts[r.status] != null) counts[r.status]++; if (r.status === 'confirmed') counts.revenue += (Number(r.fee) || 0); });
+    res.json({ ok: true, registrations: list, counts: counts, members: readM().length });
+  });
+  app.post('/api/leanlab/admin/registration/:id', function (req, res) {
+    var b = req.body || {}; var st = b.status;
+    if (['confirmed', 'rejected', 'pending_review', 'awaiting_payment'].indexOf(st) < 0) return res.status(400).json({ ok: false, error: 'bad_status' });
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    r.status = st; r.reviewedAt = new Date().toISOString();
+    writeR(l);
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    res.json({ ok: true, registration: adminReg(r, byId) });
   });
 
   // ============================ LINE LOGIN (OAuth2) ============================

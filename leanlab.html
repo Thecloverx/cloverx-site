@@ -2,292 +2,510 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>LEAN LAB — สมัครสมาชิก / เข้าสู่ระบบ</title>
+<title>LEAN LAB — สมัครเข้าร่วมโครงการ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@500;600;700;800&display=swap">
 <style>
   :root{
-    --bg:#0B1220;--ink:#0E1626;--paper:#FFFFFF;--muted:#5B6b86;--line:#E5EAF2;--soft:#F4F7FC;
-    --brand:#16A34A;--brand-d:#15803D;--brand-tint:#E7F7EC;--accent:#22C55E;
-    --line-green:#06C755;--danger:#E5484D;--radius:16px;color-scheme:light;
+    --bg:#03080f;--bg2:#070f1a;--panel:#0c1622;--panel2:#111e2e;--line:#1e2c3d;--line2:#28394e;
+    --ink:#eef4fc;--muted:#8a99ad;--dim:#5f6f83;
+    --lime:#C8F56A;--lime-d:#9BE31A;--lime-ink:#0a1400;
+    --blue:#2E86FF;--sky:#56C8FF;--orange:#ffc46b;--danger:#ff6b6b;
+    --ff:"IBM Plex Sans Thai",system-ui,sans-serif;--ff-d:"Kanit",sans-serif;
+    --radius:18px;color-scheme:dark;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"Noto Sans Thai",system-ui,sans-serif;color:var(--ink);background:var(--soft);line-height:1.55;-webkit-font-smoothing:antialiased}
-  .wrap{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr}
-  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
+  body{background:var(--bg);color:var(--ink);font-family:var(--ff);line-height:1.6;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(900px 500px at 85% -10%,rgba(200,245,106,.10),transparent 60%),radial-gradient(700px 500px at -5% 10%,rgba(46,134,255,.10),transparent 55%)}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{font-family:var(--ff-d);font-weight:700;line-height:1.08;letter-spacing:-.01em}
+  img{max-width:100%}
+  .num{font-variant-numeric:tabular-nums}
+  [hidden]{display:none!important}
 
-  /* ---- LEFT: brand panel ---- */
-  .brandside{position:relative;overflow:hidden;background:
-     radial-gradient(1200px 500px at -10% -10%,rgba(34,197,94,.35),transparent 60%),
-     radial-gradient(900px 500px at 120% 120%,rgba(6,199,85,.25),transparent 55%),
-     linear-gradient(160deg,#0B1220 0%,#0F2A1E 60%,#0B1B14 100%);
-     color:#EAF6EE;padding:52px 48px;display:flex;flex-direction:column;justify-content:space-between}
-  @media(max-width:860px){.brandside{padding:34px 26px;min-height:auto}}
-  .logo{font-family:"Sora",sans-serif;font-weight:800;letter-spacing:.06em;font-size:1.5rem;display:flex;align-items:center;gap:10px}
-  .logo .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(34,197,94,.25)}
-  .season{margin-top:8px;font-size:.82rem;color:#9FD8B4;font-weight:600;letter-spacing:.02em}
-  .headline{margin:auto 0}
-  .headline h1{font-family:"Sora",sans-serif;font-weight:800;font-size:clamp(2.1rem,4.6vw,3.4rem);line-height:1.05;letter-spacing:-.02em}
-  .headline h1 span{color:var(--accent)}
-  .headline p{margin-top:16px;font-size:1.02rem;color:#C9E4D3;max-width:34ch}
-  .stats{display:flex;gap:26px;margin-top:26px;flex-wrap:wrap}
-  .stat b{font-family:"Sora",sans-serif;display:block;font-size:1.5rem;color:#fff}
-  .stat span{font-size:.78rem;color:#9FD8B4}
-  .foot{font-size:.76rem;color:#7FB495}
+  /* header */
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(3,8,15,.72);border-bottom:1px solid var(--line)}
+  .hd{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:14px 22px}
+  .logo{font-family:var(--ff-d);font-weight:800;letter-spacing:.04em;font-size:1.25rem;display:flex;align-items:center;gap:9px}
+  .logo .dot{width:11px;height:11px;border-radius:50%;background:var(--lime);box-shadow:0 0 14px var(--lime)}
+  .hd .sp{flex:1}
+  .hd .who{font-size:.84rem;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .lnk{color:var(--muted);font-size:.86rem;cursor:pointer;font-weight:600}
+  .lnk:hover{color:var(--ink)}
 
-  /* ---- RIGHT: auth card ---- */
-  .authside{display:flex;align-items:center;justify-content:center;padding:40px 26px;background:var(--soft)}
-  .card{width:100%;max-width:410px;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:32px 30px;box-shadow:0 30px 60px -40px rgba(11,18,32,.4)}
-  .tabs{display:flex;background:var(--soft);border-radius:12px;padding:4px;margin-bottom:22px}
-  .tabs button{flex:1;border:0;background:none;font-family:inherit;font-weight:700;font-size:.92rem;color:var(--muted);padding:9px;border-radius:9px;cursor:pointer;transition:.15s}
-  .tabs button.on{background:var(--paper);color:var(--ink);box-shadow:0 2px 8px -3px rgba(11,18,32,.25)}
-  h2.tt{font-family:"Sora",sans-serif;font-weight:700;font-size:1.35rem;margin-bottom:4px}
-  .sub{font-size:.86rem;color:var(--muted);margin-bottom:20px}
-  .field{margin-bottom:14px}
-  .field label{display:block;font-size:.82rem;font-weight:600;margin-bottom:6px}
-  .field input{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:.94rem;transition:.15s;background:#fff}
-  .field input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .field .hint{font-size:.75rem;color:var(--muted);margin-top:5px}
-  .field.bad input{border-color:var(--danger);background:#FEF2F2}
-  .field .err{display:none;color:var(--danger);font-size:.76rem;margin-top:5px}
+  .wrap{max-width:1120px;margin:0 auto;padding:26px 22px 60px}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:13px;font-family:var(--ff);font-weight:700;font-size:.98rem;cursor:pointer;border:1px solid transparent;transition:.15s}
+  .btn.lime{background:var(--lime);color:var(--lime-ink)}
+  .btn.lime:hover{background:var(--lime-d)}
+  .btn.lime:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:transparent;border-color:var(--line2);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--lime);color:var(--lime)}
+  .btn.block{width:100%}
+  .btn.lg{padding:15px 26px;font-size:1.05rem}
+
+  /* landing */
+  .land{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:start}
+  @media(max-width:900px){.land{grid-template-columns:1fr;gap:26px}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.8rem;letter-spacing:.06em;color:var(--lime);background:rgba(200,245,106,.08);border:1px solid rgba(200,245,106,.25);padding:6px 13px;border-radius:999px;text-transform:uppercase}
+  .hero h1{font-size:clamp(2.4rem,5.6vw,4rem);margin:18px 0 0}
+  .hero h1 em{font-style:normal;color:var(--lime)}
+  .hero .lead{color:var(--muted);font-size:1.08rem;margin-top:16px;max-width:44ch}
+  .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:26px}
+  .stat b{font-family:var(--ff-d);font-size:1.9rem;display:block;color:#fff}
+  .stat span{font-size:.8rem;color:var(--muted)}
+  .prize{margin-top:26px;background:linear-gradient(120deg,rgba(200,245,106,.12),rgba(46,134,255,.10));border:1px solid var(--line2);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+  .prize .big{font-family:var(--ff-d);font-size:1.5rem;color:var(--lime)}
+  .prize .t{font-size:.86rem;color:var(--muted)}
+  .path{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap}
+  .cp{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:12px 14px}
+  .cp .n{font-family:var(--ff-d);color:var(--sky);font-size:.86rem}
+  .cp .l{font-size:.82rem;color:var(--muted);margin-top:2px}
+
+  /* card / panel */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;box-shadow:0 30px 60px -40px #000}
+  .card.pad0{padding:0;overflow:hidden}
+
+  /* auth */
+  .authtabs{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:20px}
+  .authtabs button{flex:1;border:0;background:none;color:var(--muted);font-family:var(--ff);font-weight:700;font-size:.92rem;padding:9px;border-radius:9px;cursor:pointer}
+  .authtabs button.on{background:var(--panel2);color:var(--ink);box-shadow:0 2px 8px -3px #000}
+  h2.tt{font-size:1.5rem}
+  .sub{color:var(--muted);font-size:.9rem;margin:4px 0 18px}
+
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:.83rem;font-weight:600;margin-bottom:7px;color:var(--ink)}
+  .field .req{color:var(--lime)}
+  .in{width:100%;padding:12px 13px;border:1.5px solid var(--line2);border-radius:11px;font-family:var(--ff);font-size:.95rem;background:var(--bg2);color:var(--ink);transition:.15s}
+  .in:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 3px rgba(200,245,106,.15)}
+  .in::placeholder{color:var(--dim)}
+  select.in{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a99ad' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+  .hint{font-size:.76rem;color:var(--dim);margin-top:5px}
+  .err{display:none;color:var(--danger);font-size:.77rem;margin-top:5px}
+  .field.bad .in{border-color:var(--danger);background:rgba(255,107,107,.08)}
   .field.bad .err{display:block}
-  .cta{width:100%;padding:13px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-family:inherit;font-weight:700;font-size:.98rem;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
-  .cta:hover{background:var(--brand-d)}
-  .cta:disabled{opacity:.6;cursor:default}
-  .msg{font-size:.84rem;margin:12px 0 0;padding:10px 12px;border-radius:10px;display:none}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr}}
+
+  .msg{font-size:.85rem;margin-top:12px;padding:11px 13px;border-radius:10px;display:none}
   .msg.show{display:block}
-  .msg.err{background:#FEF2F2;color:#B4272B;border:1px solid #F6C9CB}
-  .msg.ok{background:var(--brand-tint);color:var(--brand-d);border:1px solid #BBE9C8}
-  .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:.78rem}
+  .msg.err{background:rgba(255,107,107,.10);color:#ffb3b3;border:1px solid rgba(255,107,107,.3)}
+  .msg.ok{background:rgba(200,245,106,.10);color:var(--lime);border:1px solid rgba(200,245,106,.3)}
+
+  .divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--dim);font-size:.78rem}
   .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
   .oauth{display:flex;flex-direction:column;gap:10px}
-  .obtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-family:inherit;font-weight:600;font-size:.92rem;color:var(--ink);cursor:pointer;transition:.15s;text-decoration:none}
-  .obtn:hover{background:var(--soft)}
-  .obtn.line{background:var(--line-green);border-color:var(--line-green);color:#fff}
-  .obtn.line:hover{filter:brightness(.95)}
-  .obtn:disabled,.obtn.dis{opacity:.5;cursor:not-allowed;pointer-events:none}
-  .obtn .soon{font-size:.68rem;font-weight:700;background:rgba(0,0,0,.08);color:inherit;padding:1px 7px;border-radius:99px}
-  .obtn.line .soon{background:rgba(255,255,255,.25)}
-  .foothint{text-align:center;font-size:.78rem;color:var(--muted);margin-top:18px}
-  .foothint a{color:var(--brand);font-weight:600;cursor:pointer}
+  .obtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1.5px solid var(--line2);border-radius:12px;background:var(--bg2);font-family:var(--ff);font-weight:600;font-size:.92rem;color:var(--ink);cursor:pointer;transition:.15s}
+  .obtn:hover{border-color:var(--lime)}
+  .obtn.line{background:#06C755;border-color:#06C755;color:#fff}
+  .obtn.dis{opacity:.45;cursor:not-allowed;pointer-events:none}
+  .obtn .soon{font-size:.66rem;font-weight:700;background:rgba(255,255,255,.12);padding:1px 7px;border-radius:99px}
 
-  /* logged-in view */
-  .me{text-align:center}
-  .me .av{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;background:var(--brand-tint);color:var(--brand-d);display:flex;align-items:center;justify-content:center;font-family:"Sora";font-weight:800;font-size:1.6rem;object-fit:cover;overflow:hidden}
-  .me .av img{width:100%;height:100%;object-fit:cover}
-  .me h2{font-family:"Sora";font-size:1.3rem}
-  .me .email{color:var(--muted);font-size:.86rem;margin-top:2px}
-  .badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:.78rem;color:var(--muted);font-weight:600}
-  .ghost{width:100%;margin-top:16px;padding:11px;border:1.5px solid var(--line);border-radius:11px;background:#fff;font-family:inherit;font-weight:600;font-size:.9rem;color:var(--ink);cursor:pointer}
-  .ghost:hover{background:var(--soft)}
-  [hidden]{display:none!important}
+  /* chips (gender / choice) */
+  .chips{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{border:1.5px solid var(--line2);background:var(--bg2);color:var(--ink);border-radius:11px;padding:11px 20px;font-family:var(--ff);font-weight:600;font-size:.92rem;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--lime)}
+  .chip.on{border-color:var(--lime);background:rgba(200,245,106,.12);color:var(--lime)}
+
+  /* stepper */
+  .steps{display:flex;align-items:center;gap:6px;margin-bottom:22px;flex-wrap:wrap}
+  .stp{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:.82rem;font-weight:600}
+  .stp .b{width:26px;height:26px;border-radius:50%;border:1.6px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--ff-d);font-size:.82rem;flex:none}
+  .stp.on{color:var(--lime)} .stp.on .b{border-color:var(--lime);background:rgba(200,245,106,.12);color:var(--lime)}
+  .stp.done{color:var(--ink)} .stp.done .b{border-color:var(--lime);background:var(--lime);color:var(--lime-ink)}
+  .stp .ln{width:22px;height:1.6px;background:var(--line2)}
+  @media(max-width:640px){.stp .lbl{display:none}.stp .ln{width:14px}}
+
+  /* choice cards */
+  .choice{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.choice{grid-template-columns:1fr}}
+  .cch{text-align:left;border:1.5px solid var(--line2);background:var(--bg2);border-radius:15px;padding:20px;cursor:pointer;transition:.15s;font-family:var(--ff);color:var(--ink)}
+  .cch:hover{border-color:var(--lime)}
+  .cch.on{border-color:var(--lime);background:rgba(200,245,106,.10);box-shadow:0 0 0 3px rgba(200,245,106,.12)}
+  .cch .ic{width:44px;height:44px;border-radius:12px;background:rgba(200,245,106,.14);color:var(--lime);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+  .cch h3{font-size:1.12rem}
+  .cch p{color:var(--muted);font-size:.85rem;margin-top:6px}
+
+  /* upload */
+  .upl{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:130px;border:1.6px dashed var(--line2);border-radius:14px;background:var(--bg2);color:var(--muted);cursor:pointer;flex-direction:column;text-align:center;padding:16px;transition:.15s}
+  .upl:hover{border-color:var(--lime);color:var(--ink)}
+  .upl.has{border-style:solid;border-color:var(--lime)}
+  .upl img{max-height:180px;border-radius:10px}
+
+  /* review */
+  .rev{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:6px 16px}
+  .rev .r{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:.9rem}
+  .rev .r:first-child{border-top:0}
+  .rev .r span{color:var(--muted)}.rev .r b{text-align:right;font-weight:700}
+
+  /* bank box */
+  .bank{background:linear-gradient(150deg,rgba(46,134,255,.10),rgba(86,200,255,.06));border:1px solid var(--line2);border-radius:15px;padding:18px}
+  .bank .r{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:.92rem}
+  .bank .r span{color:var(--muted)} .bank .r b{text-align:right}
+  .copy{border:1px solid var(--lime);background:transparent;color:var(--lime);border-radius:8px;padding:3px 10px;font-family:var(--ff);font-size:.76rem;font-weight:700;cursor:pointer}
+  .fee{font-family:var(--ff-d);font-size:2.4rem;color:var(--lime)}
+
+  /* status */
+  .stbig{text-align:center;padding:14px 0}
+  .stbig .ic{width:84px;height:84px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
+  .stbig .ic.ok{background:rgba(200,245,106,.14);color:var(--lime)}
+  .stbig .ic.wait{background:rgba(255,196,107,.14);color:var(--orange)}
+  .stbig h2{font-size:1.7rem}
+  .stbig p{color:var(--muted);margin-top:8px}
+  .oid{font-family:var(--ff-d);color:var(--lime)}
+
+  .rowbtns{display:flex;gap:12px;margin-top:22px}
+  @media(max-width:520px){.rowbtns{flex-direction:column}}
+
+  /* confirm modal */
+  .modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.on{display:flex}
+  .modal .bk{position:absolute;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(3px)}
+  .modal .mc{position:relative;background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:26px;max-width:400px;width:100%;text-align:center}
+  .modal .mc .ic{width:60px;height:60px;border-radius:16px;background:rgba(200,245,106,.14);color:var(--lime);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .modal .mc h3{font-size:1.25rem}
+  .modal .mc p{color:var(--muted);font-size:.9rem;margin-top:8px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <!-- LEFT -->
-  <section class="brandside">
-    <div>
-      <div class="logo"><span class="dot"></span>LEAN&nbsp;LAB</div>
-      <div class="season">SEASON 1 · โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ · โดย CloverX</div>
+<header>
+  <div class="hd">
+    <div class="logo"><span class="dot"></span>LEAN&nbsp;LAB</div>
+    <div class="sp"></div>
+    <div class="who" id="who"></div>
+  </div>
+</header>
+
+<div class="wrap" id="app"></div>
+
+<!-- double-confirm modal -->
+<div class="modal" id="confirmModal">
+  <div class="bk" onclick="LL.closeConfirm()"></div>
+  <div class="mc">
+    <div class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+    <h3>ยืนยันอีกครั้ง</h3>
+    <p>ตรวจสอบข้อมูลเรียบร้อยแล้วใช่ไหม? เมื่อยืนยันแล้วจะเข้าสู่ขั้นตอนชำระเงิน</p>
+    <div class="rowbtns">
+      <button class="btn ghost block" onclick="LL.closeConfirm()">กลับไปแก้</button>
+      <button class="btn lime block" id="confirmYes">ยืนยันส่งข้อมูล</button>
     </div>
-    <div class="headline">
-      <h1>เปลี่ยนร่างกาย<br>ให้เป็น<span> เวอร์ชันที่ดีที่สุด</span></h1>
-      <p>วัดจริงทุกครั้งที่เจอกันด้วยเครื่องเดียวกัน 4 จุดนัดพบ พร้อมชิงรางวัลรวมกว่า 280,000 บาท</p>
-      <div class="stats">
-        <div class="stat"><b>10</b><span>สัปดาห์</span></div>
-        <div class="stat"><b>4</b><span>จุดนัดพบ</span></div>
-        <div class="stat"><b>200</b><span>ที่นั่ง</span></div>
-      </div>
-    </div>
-    <div class="foot">© 2569 บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด · CloverX</div>
-  </section>
-
-  <!-- RIGHT -->
-  <section class="authside">
-    <div class="card">
-
-      <!-- ===== AUTH (signup / login) ===== -->
-      <div id="authView">
-        <div class="tabs">
-          <button id="tabLogin" class="on" onclick="LL.tab('login')">เข้าสู่ระบบ</button>
-          <button id="tabSignup" onclick="LL.tab('signup')">สมัครสมาชิก</button>
-        </div>
-
-        <h2 class="tt" id="ttl">ยินดีต้อนรับกลับมา</h2>
-        <p class="sub" id="subttl">เข้าสู่ระบบเพื่อสมัครและติดตามผล Lean Lab</p>
-
-        <form id="authForm" onsubmit="return LL.submit(event)">
-          <div class="field" id="fEmail">
-            <label for="email">อีเมล</label>
-            <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com">
-            <div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div>
-          </div>
-          <div class="field" id="fPass">
-            <label for="password">รหัสผ่าน</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน">
-            <div class="hint" id="passHint" hidden>อย่างน้อย 6 ตัวอักษร</div>
-            <div class="err">รหัสผ่านอย่างน้อย 6 ตัวอักษร</div>
-          </div>
-          <button class="cta" id="submitBtn" type="submit">เข้าสู่ระบบ</button>
-          <div class="msg" id="authMsg"></div>
-        </form>
-
-        <div class="divider">หรือดำเนินการต่อด้วย</div>
-        <div class="oauth">
-          <a class="obtn" id="btnGoogle" href="/auth/leanlab/google/login">
-            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35.5 24 35.5 17.6 35.5 12.5 30.4 12.5 24S17.6 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.9 6.5 29.2 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.3-.3-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.9 6.5 29.2 4.5 24 4.5 16.3 4.5 9.7 8.9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.6 2.4-7.2 2.4-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C9.6 39 16.2 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.4l6.2 5.2C41 35.5 43.5 30.3 43.5 24c0-1.2-.1-2.3-.3-3.5z"/></svg>
-            <span>เข้าสู่ระบบด้วย Google</span>
-          </a>
-          <a class="obtn line" id="btnLine" href="/auth/leanlab/line/login">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 5.7 2 10.2c0 4 3.6 7.4 8.4 8 .3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6 1.1-.5 6-3.5 8.2-6h0c1.5-1.6 2.2-3.3 2.2-5.1C22.5 5.7 18 2 12 2z"/></svg>
-            <span>เข้าสู่ระบบด้วย LINE</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- ===== PROFILE step (needsProfile) ===== -->
-      <div id="profileView" hidden>
-        <h2 class="tt">อีกนิดเดียว 👋</h2>
-        <p class="sub">กรอกชื่อและเบอร์ติดต่อเพื่อใช้สมัคร Lean Lab</p>
-        <form id="profForm" onsubmit="return LL.saveProfile(event)">
-          <div class="field" id="fName">
-            <label for="pname">ชื่อ–นามสกุล</label>
-            <input id="pname" type="text" autocomplete="name" placeholder="ชื่อ นามสกุล">
-            <div class="err">กรุณากรอกชื่อ</div>
-          </div>
-          <div class="field" id="fPhone">
-            <label for="pphone">เบอร์โทรศัพท์</label>
-            <input id="pphone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08x-xxx-xxxx">
-            <div class="err">กรุณากรอกเบอร์โทรให้ถูกต้อง</div>
-          </div>
-          <button class="cta" id="profBtn" type="submit">บันทึกและเริ่มใช้งาน</button>
-          <div class="msg" id="profMsg"></div>
-        </form>
-      </div>
-
-      <!-- ===== Logged-in ===== -->
-      <div id="meView" hidden class="me">
-        <div class="av" id="meAv">L</div>
-        <h2 id="meName">สมาชิก</h2>
-        <div class="email" id="meEmail"></div>
-        <div class="badge" id="meBadge">เข้าสู่ระบบแล้ว</div>
-        <button class="ghost" onclick="LL.logout()">ออกจากระบบ</button>
-        <div class="foothint" style="margin-top:20px">ระบบสมัครอีเวนต์ Lean Lab กำลังจะเปิดเร็ว ๆ นี้ 🎯</div>
-      </div>
-
-    </div>
-  </section>
+  </div>
 </div>
 
 <script>
 (function(){
-  var $=function(id){return document.getElementById(id);};
-  var mode='login', CFG={lineLogin:false,googleLogin:false};
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var app=$('#app');
+  var CFG={lineLogin:false,googleLogin:false}, EVENT={fee:3900,startLaterLabel:'8 พ.ย. 2569',bank:{}}, ME={loggedIn:false}, REG=null;
+  var authMode='signup';
+  var W={};  // wizard data
 
-  function show(view){ ['authView','profileView','meView'].forEach(function(v){ $(v).hidden = (v!==view); }); }
-  function msg(el,type,text){ el.className='msg show '+type; el.textContent=text; }
-  function clearMsg(el){ el.className='msg'; el.textContent=''; }
-  function bad(id,on){ var f=$(id); if(f) f.classList.toggle('bad',on); return !on; }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function thb(n){return '฿'+Number(n||0).toLocaleString('en-US');}
+  function msg(el,type,text){el.className='msg show '+type;el.textContent=text;}
+  function clearMsg(el){if(el){el.className='msg';el.textContent='';}}
+  function bad(f,on){if(f)f.classList.toggle('bad',on);return !on;}
 
-  function tab(m){
-    mode=m;
-    $('tabLogin').classList.toggle('on',m==='login');
-    $('tabSignup').classList.toggle('on',m==='signup');
-    $('ttl').textContent = m==='login'?'ยินดีต้อนรับกลับมา':'สร้างบัญชี Lean Lab';
-    $('subttl').textContent = m==='login'?'เข้าสู่ระบบเพื่อสมัครและติดตามผล Lean Lab':'สมัครด้วยอีเมล ใช้เวลาไม่ถึงนาที';
-    $('submitBtn').textContent = m==='login'?'เข้าสู่ระบบ':'สมัครสมาชิก';
-    $('password').setAttribute('autocomplete', m==='login'?'current-password':'new-password');
-    $('passHint').hidden = m!=='signup';
-    clearMsg($('authMsg')); $('fEmail').classList.remove('bad'); $('fPass').classList.remove('bad');
+  function calcAge(dob){var d=new Date(dob);if(isNaN(d.getTime()))return null;var t=new Date();var a=t.getFullYear()-d.getFullYear();var m=t.getMonth()-d.getMonth();if(m<0||(m===0&&t.getDate()<d.getDate()))a--;return a;}
+
+  // client-side image compression → dataURL (keep decent quality)
+  function compress(file, maxPx, q){return new Promise(function(res,rej){
+    var r=new FileReader(); r.onerror=rej;
+    r.onload=function(e){var img=new Image(); img.onerror=rej; img.onload=function(){
+      var w=img.width,h=img.height,s=Math.min(1,maxPx/Math.max(w,h));
+      var cw=Math.round(w*s),ch=Math.round(h*s);
+      var cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+      cv.getContext('2d').drawImage(img,0,0,cw,ch);
+      res(cv.toDataURL('image/jpeg',q||0.85));
+    }; img.src=e.target.result;};
+    r.readAsDataURL(file);
+  });}
+
+  function header(){
+    var w=$('#who');
+    if(ME.loggedIn){ w.innerHTML='<span>'+esc((ME.member&&(ME.member.name||ME.member.email))||'สมาชิก')+'</span><span class="lnk" id="logoutBtn">ออกจากระบบ</span>';
+      $('#logoutBtn').onclick=logout;
+    } else { w.innerHTML=''; }
   }
 
-  function submit(e){
+  // ---------- LANDING (hero + auth) ----------
+  function vLanding(){
+    app.innerHTML=''
+    +'<div class="land">'
+    + '<div class="hero">'
+    +   '<span class="eyebrow">Season 1 · โดย CloverX</span>'
+    +   '<h1>เปลี่ยนร่างกาย<br>ให้เป็น<em> เวอร์ชันที่ดีที่สุด</em></h1>'
+    +   '<p class="lead">โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ วัดจริงทุกครั้งที่เจอกันด้วยเครื่องเดียวกันโดยเจ้าหน้าที่ 4 จุดนัดพบ</p>'
+    +   '<div class="stats"><div class="stat"><b>10</b><span>สัปดาห์</span></div><div class="stat"><b>4</b><span>จุดนัดพบ</span></div><div class="stat"><b>200</b><span>ที่นั่ง</span></div></div>'
+    +   '<div class="prize"><div class="big">฿280,000</div><div class="t">รางวัลรวมตลอดโครงการ · จัดอันดับชาย/หญิง + Big Change</div></div>'
+    +   '<div class="path">'
+    +     '<div class="cp"><div class="n">ครั้งที่ 1</div><div class="l">วัด &amp; ตรวจร่างกาย</div></div>'
+    +     '<div class="cp"><div class="n">ครั้งที่ 2–3</div><div class="l">อัพเดทความคืบหน้า</div></div>'
+    +     '<div class="cp"><div class="n">ครั้งที่ 4</div><div class="l">วัดผลรอบสุดท้าย</div></div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="card" id="authCard"></div>'
+    +'</div>';
+    renderAuth();
+  }
+
+  function renderAuth(){
+    var c=$('#authCard');
+    c.innerHTML=''
+    +'<div class="authtabs"><button id="tS" class="'+(authMode==='signup'?'on':'')+'">สมัครสมาชิก</button><button id="tL" class="'+(authMode==='login'?'on':'')+'">เข้าสู่ระบบ</button></div>'
+    +'<h2 class="tt">'+(authMode==='signup'?'สมัครเข้าร่วม Lean Lab':'ยินดีต้อนรับกลับมา')+'</h2>'
+    +'<p class="sub">'+(authMode==='signup'?'สร้างบัญชีด้วยอีเมล ใช้เวลาไม่ถึงนาที':'เข้าสู่ระบบเพื่อสมัครและติดตามผล')+'</p>'
+    +'<form id="authForm">'
+    + '<div class="field" id="fEmail"><label>อีเมล <span class="req">*</span></label><input class="in" id="email" type="email" inputmode="email" placeholder="you@email.com"><div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div></div>'
+    + '<div class="field" id="fPass"><label>รหัสผ่าน <span class="req">*</span></label><input class="in" id="password" type="password" placeholder="รหัสผ่าน"><div class="hint" id="passHint"'+(authMode==='signup'?'':' hidden')+'>อย่างน้อย 6 ตัวอักษร</div><div class="err">รหัสผ่านอย่างน้อย 6 ตัวอักษร</div></div>'
+    + '<button class="btn lime block lg" id="authSubmit" type="submit">'+(authMode==='signup'?'สมัครสมาชิก':'เข้าสู่ระบบ')+'</button>'
+    + '<div class="msg" id="authMsg"></div>'
+    +'</form>'
+    +'<div class="divider">หรือดำเนินการต่อด้วย</div>'
+    +'<div class="oauth">'
+    + '<button class="obtn'+(CFG.googleLogin?'':' dis')+'" id="btnGoogle"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35.5 24 35.5 17.6 35.5 12.5 30.4 12.5 24S17.6 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.9 6.5 29.2 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.3-.3-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.9 6.5 29.2 4.5 24 4.5 16.3 4.5 9.7 8.9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.6 2.4-7.2 2.4-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C9.6 39 16.2 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.4l6.2 5.2C41 35.5 43.5 30.3 43.5 24c0-1.2-.1-2.3-.3-3.5z"/></svg><span>'+(CFG.googleLogin?'ดำเนินการด้วย Google':'Google <span class="soon">เร็ว ๆ นี้</span>')+'</span></button>'
+    + '<button class="obtn line'+(CFG.lineLogin?'':' dis')+'" id="btnLine"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 5.7 2 10.2c0 4 3.6 7.4 8.4 8 .3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6 1.1-.5 6-3.5 8.2-6C21.3 13.6 22 11.9 22 10.2 22 5.7 18 2 12 2z"/></svg><span>'+(CFG.lineLogin?'ดำเนินการด้วย LINE':'LINE <span class="soon">เร็ว ๆ นี้</span>')+'</span></button>'
+    +'</div>';
+    $('#tS').onclick=function(){authMode='signup';renderAuth();};
+    $('#tL').onclick=function(){authMode='login';renderAuth();};
+    $('#authForm').onsubmit=submitAuth;
+    if(CFG.googleLogin)$('#btnGoogle').onclick=function(){location.href='/auth/leanlab/google/login';};
+    if(CFG.lineLogin)$('#btnLine').onclick=function(){location.href='/auth/leanlab/line/login';};
+    showOAuthError();
+  }
+
+  function submitAuth(e){
     e.preventDefault();
-    var email=$('email').value.trim(), pw=$('password').value;
-    var ok=true;
-    ok=bad('fEmail', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))&&ok;
-    ok=bad('fPass', pw.length< (mode==='signup'?6:1))&&ok;
-    if(!ok) return false;
-    var btn=$('submitBtn'); btn.disabled=true; var old=btn.textContent; btn.textContent='กำลังดำเนินการ…'; clearMsg($('authMsg'));
-    var url = mode==='signup' ? '/api/leanlab/auth/register' : '/api/leanlab/auth/login';
+    var email=$('#email').value.trim(), pw=$('#password').value, ok=true;
+    ok=bad($('#fEmail'),!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))&&ok;
+    ok=bad($('#fPass'),pw.length<(authMode==='signup'?6:1))&&ok;
+    if(!ok)return false;
+    var btn=$('#authSubmit');btn.disabled=true;var old=btn.textContent;btn.textContent='กำลังดำเนินการ…';clearMsg($('#authMsg'));
+    var url=authMode==='signup'?'/api/leanlab/auth/register':'/api/leanlab/auth/login';
     fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email:email,password:pw})})
-      .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
-      .then(function(res){
-        btn.disabled=false; btn.textContent=old;
-        if(!res.j || !res.j.ok){
-          var m={bad_email:'อีเมลไม่ถูกต้อง',weak_password:'รหัสผ่านอย่างน้อย 6 ตัวอักษร',email_taken:'อีเมลนี้ถูกใช้แล้ว ลองเข้าสู่ระบบแทน',bad_credentials:'อีเมลหรือรหัสผ่านไม่ถูกต้อง'}[(res.j&&res.j.error)]||'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง';
-          return msg($('authMsg'),'err',m);
-        }
-        if(res.j.needsProfile){ show('profileView'); }
-        else { renderMe(res.j.member); show('meView'); }
-      })
-      .catch(function(){ btn.disabled=false; btn.textContent=old; msg($('authMsg'),'err','เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'); });
-    return false;
-  }
-
-  function saveProfile(e){
-    e.preventDefault();
-    var name=$('pname').value.trim(), phone=$('pphone').value.trim();
-    var ok=true;
-    ok=bad('fName', !name)&&ok;
-    ok=bad('fPhone', !/^[0-9\-\s]{9,}$/.test(phone))&&ok;
-    if(!ok) return false;
-    var btn=$('profBtn'); btn.disabled=true; var old=btn.textContent; btn.textContent='กำลังบันทึก…';
-    fetch('/api/leanlab/people',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({name:name,phone:phone})})
       .then(function(r){return r.json();})
-      .then(function(j){ btn.disabled=false; btn.textContent=old; if(j&&j.ok){ renderMe(j.member); show('meView'); } else { msg($('profMsg'),'err','บันทึกไม่สำเร็จ ลองใหม่'); } })
-      .catch(function(){ btn.disabled=false; btn.textContent=old; msg($('profMsg'),'err','เชื่อมต่อไม่สำเร็จ'); });
+      .then(function(j){
+        btn.disabled=false;btn.textContent=old;
+        if(!j||!j.ok){var m={bad_email:'อีเมลไม่ถูกต้อง',weak_password:'รหัสผ่านอย่างน้อย 6 ตัวอักษร',email_taken:'อีเมลนี้ถูกใช้แล้ว ลองเข้าสู่ระบบแทน',bad_credentials:'อีเมลหรือรหัสผ่านไม่ถูกต้อง'}[j&&j.error]||'เกิดข้อผิดพลาด ลองใหม่';return msg($('#authMsg'),'err',m);}
+        boot();
+      })
+      .catch(function(){btn.disabled=false;btn.textContent=old;msg($('#authMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     return false;
   }
+  function showOAuthError(){var m=(location.search.match(/[?&]err=([^&]+)/)||[])[1];if(!m||!$('#authMsg'))return;var map={line_state:'เซสชัน LINE หมดอายุ ลองใหม่',google_state:'เซสชัน Google หมดอายุ ลองใหม่',line_token:'เชื่อมต่อ LINE ไม่สำเร็จ',google_token:'เชื่อมต่อ Google ไม่สำเร็จ'};msg($('#authMsg'),'err',map[m]||'เข้าสู่ระบบด้วยโซเชียลไม่สำเร็จ');}
 
-  function renderMe(m){
-    m=m||{};
-    $('meName').textContent = m.name || 'สมาชิก Lean Lab';
-    $('meEmail').textContent = m.email || '';
-    var prov={email:'อีเมล',line:'LINE',google:'Google'}[m.provider]||'บัญชี';
-    $('meBadge').textContent = 'เข้าสู่ระบบด้วย '+prov;
-    var av=$('meAv');
-    if(m.picture){ av.innerHTML='<img src="'+m.picture+'" alt="">'; }
-    else { av.textContent=(m.name||m.email||'L').trim().charAt(0).toUpperCase()||'L'; }
+  function logout(){fetch('/api/leanlab/auth/logout',{method:'POST',credentials:'same-origin'}).then(function(){location.href='/leanlab';}).catch(function(){location.href='/leanlab';});}
+
+  // ---------- WIZARD ----------
+  function stepper(cur){
+    var steps=[[1,'ข้อมูล'],[2,'รูปแบบ']];
+    if(W.startChoice==='now')steps.push([3,'ค่าตั้งต้น']);
+    steps.push([4,'ยืนยัน']);
+    var h='<div class="steps">';
+    steps.forEach(function(s,i){var st=s[0]===cur?'on':(s[0]<cur?'done':'');
+      if(i)h+='<div class="ln"></div>';
+      h+='<div class="stp '+st+'"><span class="b">'+s[0]+'</span><span class="lbl">'+s[1]+'</span></div>';});
+    return h+'</div>';
   }
 
-  function logout(){
-    fetch('/api/leanlab/auth/logout',{method:'POST',credentials:'same-origin'})
-      .then(function(){ location.href='/leanlab'; })
-      .catch(function(){ location.href='/leanlab'; });
+  function vStep1(){
+    app.innerHTML='<div class="card">'+stepper(1)
+    +'<h2 class="tt">ข้อมูลผู้สมัคร</h2><p class="sub">กรอกข้อมูลพื้นฐานเพื่อสมัครเข้าร่วม Lean Lab</p>'
+    +'<div class="field" id="fName"><label>ชื่อ–นามสกุล <span class="req">*</span></label><input class="in" id="w_name" placeholder="ชื่อ นามสกุล" value="'+esc(W.name||'')+'"><div class="err">กรุณากรอกชื่อ</div></div>'
+    +'<div class="grid2">'
+    + '<div class="field" id="fDob"><label>วัน/เดือน/ปีเกิด <span class="req">*</span></label><input class="in" id="w_dob" type="date" value="'+esc(W.dob||'')+'"><div class="hint" id="ageHint"></div><div class="err">กรุณาระบุวันเกิด (อายุ 18 ปีขึ้นไป)</div></div>'
+    + '<div class="field" id="fHeight"><label>ส่วนสูง (ซม.) <span class="req">*</span></label><input class="in" id="w_height" type="number" inputmode="decimal" placeholder="เช่น 170" value="'+esc(W.heightCm||'')+'"><div class="err">กรอกส่วนสูง</div></div>'
+    +'</div>'
+    +'<div class="field" id="fGender"><label>เพศโดยกำเนิด <span class="req">*</span></label><div class="chips" id="genderChips"><button type="button" class="chip'+(W.gender==='ชาย'?' on':'')+'" data-g="ชาย">ชาย</button><button type="button" class="chip'+(W.gender==='หญิง'?' on':'')+'" data-g="หญิง">หญิง</button></div><div class="err">เลือกเพศ</div></div>'
+    +'<div class="rowbtns"><a class="btn ghost block" href="/leanlab">ยกเลิก</a><button class="btn lime block" id="s1next">ถัดไป</button></div>'
+    +'</div>';
+    function updAge(){var a=calcAge($('#w_dob').value);$('#ageHint').textContent=(a!=null&&a>=0)?('อายุ '+a+' ปี'):'';}
+    $('#w_dob').addEventListener('change',updAge);updAge();
+    $('#genderChips').querySelectorAll('.chip').forEach(function(b){b.onclick=function(){W.gender=b.getAttribute('data-g');$('#genderChips').querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');$('#fGender').classList.remove('bad');};});
+    $('#s1next').onclick=function(){
+      W.name=$('#w_name').value.trim();W.dob=$('#w_dob').value;W.heightCm=$('#w_height').value;
+      var age=calcAge(W.dob),ok=true;
+      ok=bad($('#fName'),W.name.length<2)&&ok;
+      ok=bad($('#fDob'),!(age!=null&&age>=18))&&ok;
+      ok=bad($('#fHeight'),!(Number(W.heightCm)>=100&&Number(W.heightCm)<=250))&&ok;
+      ok=bad($('#fGender'),!W.gender)&&ok;
+      if(!ok)return;W.age=age;vStep2();
+    };
   }
 
-  function applyConfig(){
-    // Google
-    var g=$('btnGoogle');
-    if(!CFG.googleLogin){ g.classList.add('dis'); g.removeAttribute('href'); g.querySelector('span').innerHTML='Google <span class="soon">เร็ว ๆ นี้</span>'; }
-    // LINE
-    var l=$('btnLine');
-    if(!CFG.lineLogin){ l.classList.add('dis'); l.removeAttribute('href'); l.querySelector('span').innerHTML='LINE <span class="soon">เร็ว ๆ นี้</span>'; }
+  function vStep2(){
+    app.innerHTML='<div class="card">'+stepper(2)
+    +'<h2 class="tt">เลือกรูปแบบการเริ่ม</h2><p class="sub">คุณต้องการเริ่มลดเมื่อไหร่?</p>'
+    +'<div class="choice">'
+    + '<button type="button" class="cch'+(W.startChoice==='now'?' on':'')+'" data-c="now"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></div><h3>เริ่มลด ณ ตอนนี้</h3><p>บันทึกค่าตั้งต้น (น้ำหนัก/ไขมัน/กล้ามเนื้อ) + แนบรูป Before แล้วเริ่มได้เลย</p></button>'
+    + '<button type="button" class="cch'+(W.startChoice==='later'?' on':'')+'" data-c="later"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div><h3>เริ่มวันที่ '+esc(EVENT.startLaterLabel)+'</h3><p>ยังไม่ต้องกรอกค่าตั้งต้นตอนนี้ ไปชำระเงินเพื่อจองสิทธิ์ได้เลย</p></button>'
+    +'</div>'
+    +'<div class="rowbtns"><button class="btn ghost block" id="s2back">ย้อนกลับ</button><button class="btn lime block" id="s2next">ถัดไป</button></div>'
+    +'</div>';
+    app.querySelectorAll('.cch').forEach(function(b){b.onclick=function(){W.startChoice=b.getAttribute('data-c');app.querySelectorAll('.cch').forEach(function(x){x.classList.remove('on');});b.classList.add('on');};});
+    $('#s2back').onclick=vStep1;
+    $('#s2next').onclick=function(){if(!W.startChoice){alert('กรุณาเลือกรูปแบบการเริ่ม');return;}if(W.startChoice==='now')vStep3();else vConfirm();};
   }
 
-  function showOAuthError(){
-    var m=(location.search.match(/[?&]err=([^&]+)/)||[])[1];
-    if(!m) return;
-    var map={line_not_configured:'ยังไม่ได้เปิดใช้ LINE',google_not_configured:'ยังไม่ได้เปิดใช้ Google',line_state:'เซสชัน LINE หมดอายุ ลองใหม่',google_state:'เซสชัน Google หมดอายุ ลองใหม่',line_token:'เชื่อมต่อ LINE ไม่สำเร็จ',google_token:'เชื่อมต่อ Google ไม่สำเร็จ',line_profile:'ดึงข้อมูล LINE ไม่สำเร็จ',google_profile:'ดึงข้อมูล Google ไม่สำเร็จ'};
-    msg($('authMsg'),'err', map[m]||'เข้าสู่ระบบด้วยโซเชียลไม่สำเร็จ');
+  function vStep3(){
+    app.innerHTML='<div class="card">'+stepper(3)
+    +'<h2 class="tt">ค่าตั้งต้น (Before)</h2><p class="sub">กรอกค่าจากเครื่องวัด และแนบรูปถ่าย Before ความละเอียดสูง</p>'
+    +'<div class="grid2">'
+    + '<div class="field" id="fW"><label>น้ำหนัก (กก.) <span class="req">*</span></label><input class="in" id="w_weight" type="number" inputmode="decimal" placeholder="เช่น 78.5" value="'+esc(W.weightKg||'')+'"><div class="err">กรอกน้ำหนัก</div></div>'
+    + '<div class="field" id="fFat"><label>ไขมัน (%) <span class="req">*</span></label><input class="in" id="w_fat" type="number" inputmode="decimal" placeholder="เช่น 28.4" value="'+esc(W.fatPct||'')+'"><div class="err">กรอกไขมัน</div></div>'
+    + '<div class="field" id="fV"><label>V Fat (ไขมันในช่องท้อง) <span class="req">*</span></label><input class="in" id="w_vfat" type="number" inputmode="decimal" placeholder="เช่น 9" value="'+esc(W.vFat||'')+'"><div class="err">กรอก V Fat</div></div>'
+    + '<div class="field" id="fM"><label>กล้ามเนื้อ (กก.) <span class="req">*</span></label><input class="in" id="w_muscle" type="number" inputmode="decimal" placeholder="เช่น 52.1" value="'+esc(W.muscleKg||'')+'"><div class="err">กรอกกล้ามเนื้อ</div></div>'
+    + '<div class="field" id="fWa"><label>มวลน้ำในร่างกาย (%) <span class="req">*</span></label><input class="in" id="w_water" type="number" inputmode="decimal" placeholder="เช่น 55" value="'+esc(W.waterPct||'')+'"><div class="err">กรอกมวลน้ำ</div></div>'
+    +'</div>'
+    +'<div class="field" id="fPhoto"><label>รูปภาพ Before (ความละเอียดสูง) <span class="req">*</span></label>'
+    + '<label class="upl'+(W.beforePhoto?' has':'')+'" id="uplBox"><input type="file" id="w_photo" accept="image/*" hidden>'
+    +   (W.beforePhoto?'<img src="'+W.beforePhoto+'" alt="">':'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 4 4 4-6 4 6M3 20h18M3 4h18v16H3z"/></svg><div id="uplTxt">แตะเพื่อแนบรูป Before</div>')
+    + '</label><div class="err">กรุณาแนบรูป Before</div></div>'
+    +'<div class="rowbtns"><button class="btn ghost block" id="s3back">ย้อนกลับ</button><button class="btn lime block" id="s3next">ถัดไป</button></div>'
+    +'</div>';
+    $('#uplBox').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var box=$('#uplBox');box.innerHTML='<div>กำลังประมวลผลรูป…</div>';
+      compress(f,1800,0.88).then(function(d){W.beforePhoto=d;box.classList.add('has');box.innerHTML='<img src="'+d+'" alt="">';$('#fPhoto').classList.remove('bad');
+        var inp=document.createElement('input');inp.type='file';inp.id='w_photo';inp.accept='image/*';inp.hidden=true;box.appendChild(inp);
+        box.addEventListener('change',arguments.callee&&function(){},false);
+      }).catch(function(){box.innerHTML='<div>อ่านรูปไม่สำเร็จ ลองใหม่</div>';});
+    });
+    $('#s3back').onclick=vStep2;
+    $('#s3next').onclick=function(){
+      W.weightKg=$('#w_weight').value;W.fatPct=$('#w_fat').value;W.vFat=$('#w_vfat').value;W.muscleKg=$('#w_muscle').value;W.waterPct=$('#w_water').value;
+      var ok=true;
+      ok=bad($('#fW'),!(Number(W.weightKg)>0))&&ok;
+      ok=bad($('#fFat'),!(Number(W.fatPct)>=0&&W.fatPct!==''))&&ok;
+      ok=bad($('#fV'),!(Number(W.vFat)>=0&&W.vFat!==''))&&ok;
+      ok=bad($('#fM'),!(Number(W.muscleKg)>=0&&W.muscleKg!==''))&&ok;
+      ok=bad($('#fWa'),!(Number(W.waterPct)>=0&&W.waterPct!==''))&&ok;
+      ok=bad($('#fPhoto'),!W.beforePhoto)&&ok;
+      if(!ok)return;vConfirm();
+    };
   }
 
-  // init
-  Promise.all([
-    fetch('/api/leanlab/config',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {};}),
-    fetch('/api/leanlab/me',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {};})
-  ]).then(function(a){
-    CFG=Object.assign(CFG,a[0]||{}); applyConfig();
-    var me=a[1]||{};
-    if(me.loggedIn){ if(me.needsProfile){ show('profileView'); } else { renderMe(me.member); show('meView'); } }
-    else { show('authView'); showOAuthError(); }
-  });
+  function vConfirm(){
+    var rows='<div class="r"><span>ชื่อ–นามสกุล</span><b>'+esc(W.name)+'</b></div>'
+      +'<div class="r"><span>อายุ</span><b>'+esc(W.age)+' ปี</b></div>'
+      +'<div class="r"><span>เพศ</span><b>'+esc(W.gender)+'</b></div>'
+      +'<div class="r"><span>ส่วนสูง</span><b>'+esc(W.heightCm)+' ซม.</b></div>'
+      +'<div class="r"><span>รูปแบบการเริ่ม</span><b>'+(W.startChoice==='now'?'เริ่มลด ณ ตอนนี้':'เริ่มวันที่ '+esc(EVENT.startLaterLabel))+'</b></div>';
+    if(W.startChoice==='now'){
+      rows+='<div class="r"><span>น้ำหนัก</span><b>'+esc(W.weightKg)+' กก.</b></div>'
+        +'<div class="r"><span>ไขมัน</span><b>'+esc(W.fatPct)+' %</b></div>'
+        +'<div class="r"><span>V Fat</span><b>'+esc(W.vFat)+'</b></div>'
+        +'<div class="r"><span>กล้ามเนื้อ</span><b>'+esc(W.muscleKg)+' กก.</b></div>'
+        +'<div class="r"><span>มวลน้ำ</span><b>'+esc(W.waterPct)+' %</b></div>'
+        +'<div class="r"><span>รูป Before</span><b>แนบแล้ว ✓</b></div>';
+    }
+    rows+='<div class="r"><span>ค่าสมัคร</span><b style="color:var(--lime)">'+thb(EVENT.fee)+'</b></div>';
+    app.innerHTML='<div class="card">'+stepper(4)
+    +'<h2 class="tt">ตรวจสอบข้อมูล</h2><p class="sub">โปรดตรวจสอบให้ถูกต้องก่อนยืนยัน — ยืนยัน 2 ครั้งเพื่อความชัวร์</p>'
+    +'<div class="rev">'+rows+'</div>'
+    +'<div class="msg" id="cfMsg"></div>'
+    +'<div class="rowbtns"><button class="btn ghost block" id="cfback">ย้อนกลับ</button><button class="btn lime block" id="cfsubmit">ยืนยันการสมัคร</button></div>'
+    +'</div>';
+    $('#cfback').onclick=function(){if(W.startChoice==='now')vStep3();else vStep2();};
+    $('#cfsubmit').onclick=openConfirm;
+  }
 
-  window.LL={tab:tab,submit:submit,saveProfile:saveProfile,logout:logout};
+  function openConfirm(){$('#confirmModal').classList.add('on');$('#confirmYes').onclick=doSubmitReg;}
+  function closeConfirm(){$('#confirmModal').classList.remove('on');}
+
+  function doSubmitReg(){
+    var y=$('#confirmYes');y.disabled=true;y.textContent='กำลังส่ง…';
+    var body={name:W.name,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice};
+    if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
+    fetch('/api/leanlab/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
+      .then(function(r){return r.json();})
+      .then(function(j){
+        y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();
+        if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
+        REG=j.registration;vPay();
+      })
+      .catch(function(){y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+  }
+
+  // ---------- PAYMENT ----------
+  function vPay(){
+    var bk=EVENT.bank||{};
+    app.innerHTML='<div class="card">'
+    +'<h2 class="tt">ชำระค่าสมัคร</h2><p class="sub">โอนเงินตามยอดด้านล่าง แล้วแนบสลิปเพื่อยืนยันสิทธิ์</p>'
+    +'<div style="text-align:center;margin:6px 0 18px"><div class="fee">'+thb((REG&&REG.fee)||EVENT.fee)+'</div><div class="sub" style="margin:2px 0 0">ชำระผ่านการโอนธนาคารเท่านั้น</div></div>'
+    +'<div class="bank">'
+    + '<div class="r"><span>ธนาคาร</span><b>'+esc(bk.bankName||'กสิกรไทย (KBank)')+'</b></div>'
+    + '<div class="r"><span>เลขที่บัญชี</span><b><span id="acct">'+esc(bk.accountNo||'231-1-71119-1')+'</span> <button class="copy" id="copyBtn">คัดลอก</button></b></div>'
+    + '<div class="r"><span>ชื่อบัญชี</span><b>'+esc(bk.accountName||'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด')+'</b></div>'
+    +'</div>'
+    +'<div class="field" style="margin-top:18px" id="fSlip"><label>แนบสลิปการโอน <span class="req">*</span></label>'
+    + '<label class="upl" id="slipBox"><input type="file" id="slipFile" accept="image/*" hidden><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><div id="slipTxt">แตะเพื่อแนบสลิปโอนเงิน</div></label>'
+    + '<div class="err">กรุณาแนบสลิป</div></div>'
+    +'<div class="msg" id="payMsg"></div>'
+    +'<button class="btn lime block lg" id="paySubmit">ยืนยันการชำระเงิน</button>'
+    +'<p class="hint" style="text-align:center;margin-top:12px">⚠️ กรุณาโอนตามยอด '+thb((REG&&REG.fee)||EVENT.fee)+' แล้วแนบสลิป — ทีมงานจะตรวจสอบและยืนยันสิทธิ์</p>'
+    +'</div>';
+    $('#copyBtn').onclick=function(){try{navigator.clipboard.writeText(($('#acct').textContent||'').trim());$('#copyBtn').textContent='คัดลอกแล้ว ✓';setTimeout(function(){$('#copyBtn').textContent='คัดลอก';},1500);}catch(e){}};
+    var slipData=null;
+    $('#slipBox').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var box=$('#slipBox');box.innerHTML='<div>กำลังประมวลผล…</div>';
+      compress(f,1600,0.85).then(function(d){slipData=d;box.classList.add('has');box.innerHTML='<img src="'+d+'" alt="">';$('#fSlip').classList.remove('bad');
+        var inp=document.createElement('input');inp.type='file';inp.id='slipFile';inp.accept='image/*';inp.hidden=true;box.appendChild(inp);
+      }).catch(function(){box.innerHTML='<div>อ่านรูปไม่สำเร็จ</div>';});
+    });
+    $('#paySubmit').onclick=function(){
+      if(!slipData){$('#fSlip').classList.add('bad');return;}
+      var b=$('#paySubmit');b.disabled=true;b.textContent='กำลังส่ง…';clearMsg($('#payMsg'));
+      fetch('/api/leanlab/register/slip',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({slip:slipData})})
+        .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';
+          if(!j||!j.ok){return msg($('#payMsg'),'err','ส่งสลิปไม่สำเร็จ ลองใหม่');}REG=j.registration;vStatus();})
+        .catch(function(){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';msg($('#payMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+    };
+  }
+
+  // ---------- STATUS ----------
+  function vStatus(){
+    var s=REG&&REG.status;
+    var ic,cls,title,desc;
+    if(s==='confirmed'){cls='ok';ic='<path d="M20 6 9 17l-5-5"/>';title='ยืนยันสิทธิ์เรียบร้อย! 🎉';desc='คุณเข้าร่วม Lean Lab Season 1 แล้ว ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบ';}
+    else if(s==='pending_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอตรวจสอบการชำระเงิน';desc='เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ';}
+    else {return vPay();} // awaiting_payment
+    app.innerHTML='<div class="card"><div class="stbig"><div class="ic '+cls+'"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'+ic+'</svg></div>'
+      +'<h2>'+title+'</h2><p>'+desc+'</p>'
+      +'<div class="rev" style="text-align:left;margin-top:20px">'
+      + '<div class="r"><span>ผู้สมัคร</span><b>'+esc(REG.name||'')+'</b></div>'
+      + '<div class="r"><span>รูปแบบ</span><b>'+(REG.startChoice==='now'?'เริ่มลด ณ ตอนนี้':'เริ่ม '+esc(EVENT.startLaterLabel))+'</b></div>'
+      + '<div class="r"><span>ค่าสมัคร</span><b>'+thb(REG.fee)+'</b></div>'
+      + '<div class="r"><span>สถานะ</span><b style="color:'+(s==='confirmed'?'var(--lime)':'var(--orange)')+'">'+(s==='confirmed'?'ยืนยันแล้ว':'รอตรวจสอบ')+'</b></div>'
+      +'</div></div></div>';
+  }
+
+  // ---------- router ----------
+  function route(){
+    header();
+    if(!ME.loggedIn){vLanding();return;}
+    if(!REG){W={};vStep1();return;}
+    if(REG.status==='awaiting_payment'){vPay();return;}
+    vStatus();
+  }
+
+  function boot(){
+    Promise.all([
+      fetch('/api/leanlab/config',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {};}),
+      fetch('/api/leanlab/event',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {};}),
+      fetch('/api/leanlab/me',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {loggedIn:false};})
+    ]).then(function(a){
+      CFG=Object.assign(CFG,a[0]||{});
+      EVENT=Object.assign(EVENT,a[1]||{});
+      ME=a[2]||{loggedIn:false};
+      if(ME.loggedIn){
+        fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||null;route();}).catch(function(){REG=null;route();});
+      } else { route(); }
+    });
+  }
+
+  window.LL={closeConfirm:closeConfirm};
+  boot();
 })();
 </script>
 </body>
