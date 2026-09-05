@@ -197,41 +197,143 @@
   .modal .mc h3{font-size:1.25rem}
   .modal .mc p{color:var(--muted);font-size:.9rem;margin-top:8px}
 
-  /* ================= IMAGE LANDING (เป๊ะตาม mockup) ================= */
+  /* ================= FULL-WIDTH LANDING (dark neon, CI brand) ================= */
   #landing{display:none}
   body.on-landing #siteHeader{display:none}
   body.on-landing .wrap{display:none}
   body.on-landing #landing{display:block}
-  .ll-land{max-width:900px;margin:0 auto;background:var(--bg)}
-  .ll-part{position:relative;font-size:0;line-height:0}
-  .ll-img{display:block;width:100%;height:auto}
-  .ll-desk{display:block}.ll-mob{display:none}
-  @media(max-width:720px){.ll-desk{display:none}.ll-mob{display:block}}
-  /* invisible click-zones over drawn CTAs */
-  .cz{position:absolute;background:transparent;border:0;padding:0;margin:0;cursor:pointer;z-index:3}
-  .cz:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
-  .cz-d{display:block}.cz-m{display:none}
-  @media(max-width:720px){.cz-d{display:none}.cz-m{display:block}}
-  /* real JOIN / register section (rebuilt) */
-  .ll-join{background:
-      radial-gradient(760px 380px at 12% 0%,rgba(46,134,255,.14),transparent 60%),
-      radial-gradient(680px 420px at 100% 40%,rgba(200,245,106,.10),transparent 60%),
-      var(--bg);
-    padding:46px 26px 52px;border-top:0}
-  .ll-join-in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:center}
-  @media(max-width:820px){.ll-join-in{grid-template-columns:1fr;gap:26px}}
-  .ll-join .kk{display:inline-block;font-family:var(--ff-d);font-weight:700;letter-spacing:.18em;font-size:.72rem;color:var(--sky);text-transform:uppercase;margin-bottom:14px}
-  .ll-join h2{font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.12}
-  .ll-join h2 em{font-style:normal;color:var(--lime)}
-  .ll-join .jbul{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:14px}
-  .ll-join .jbul li{display:flex;gap:12px;align-items:flex-start;color:var(--ink);font-size:.98rem}
-  .ll-join .jbul .ji{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(46,134,255,.14);color:var(--sky)}
-  .ll-join .jbul li:nth-child(2) .ji{background:rgba(200,245,106,.14);color:var(--lime)}
-  .ll-join .jbul li:nth-child(3) .ji{background:rgba(255,91,176,.14);color:#ff5bb0}
-  .ll-join .jbul li:nth-child(4) .ji{background:rgba(169,139,255,.16);color:#a98bff}
-  .ll-join .jbul .ji svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
-  .ll-join .jscript{margin-top:22px;font-family:var(--ff-d);font-style:italic;font-weight:600;color:var(--sky);opacity:.85;font-size:1.05rem;line-height:1.35}
-  .ll-join-card{background:linear-gradient(180deg,rgba(12,22,34,.96),rgba(7,15,26,.98));border:1px solid var(--line2);border-radius:20px;padding:24px 22px;box-shadow:0 40px 80px -50px #000, 0 0 0 1px rgba(200,245,106,.05)}
+  .llx-in{max-width:1180px;margin:0 auto;padding:0 26px}
+  .llx-eye{display:inline-block;font-family:var(--ff-d);font-weight:700;letter-spacing:.2em;font-size:.72rem;color:var(--sky);text-transform:uppercase}
+  .llx-x{color:var(--sky);font-style:normal}
+
+  /* header */
+  .llx-hd{position:sticky;top:0;z-index:40;background:rgba(3,8,15,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .llx-hd .in{max-width:1180px;margin:0 auto;padding:13px 26px;display:flex;align-items:center;gap:20px}
+  .llx-logo{display:flex;align-items:center;gap:9px;font-family:var(--ff-d);font-weight:800;font-size:1.28rem;letter-spacing:.02em;color:var(--ink)}
+  .llx-logo .lx{width:22px;height:22px}
+  .llx-mnav{display:flex;gap:24px;margin-left:12px;font-weight:600;font-size:.9rem;color:var(--muted)}
+  .llx-mnav a{cursor:pointer}.llx-mnav a:hover{color:var(--ink)}
+  .llx-hd .sp{flex:1}
+  .llx-acts{display:flex;align-items:center;gap:10px}
+  .llx-lang{display:inline-flex;background:var(--bg2);border:1px solid var(--line2);border-radius:999px;padding:3px}
+  .llx-lang button{border:0;background:transparent;color:var(--muted);font-family:var(--ff-d);font-weight:700;font-size:.76rem;padding:5px 10px;border-radius:999px;cursor:pointer;line-height:1}
+  .llx-lang button.on{background:var(--sky);color:#04121f}
+  .llx-login{color:var(--ink);background:transparent;border:1.5px solid var(--line2);border-radius:999px;padding:8px 18px;font-family:var(--ff);font-weight:600;font-size:.88rem;cursor:pointer;white-space:nowrap}
+  .llx-login:hover{border-color:var(--sky)}
+  .llx-cta{background:var(--lime);color:var(--lime-ink);border:0;border-radius:999px;padding:9px 20px;font-family:var(--ff);font-weight:700;font-size:.88rem;cursor:pointer;white-space:nowrap}
+  .llx-cta:hover{background:var(--lime-d)}
+  .llx-burger{display:none;width:40px;height:40px;border:1px solid var(--line2);border-radius:10px;background:var(--bg2);color:var(--ink);align-items:center;justify-content:center;cursor:pointer;flex:none}
+
+  /* hero */
+  .llx-hero{position:relative;overflow:hidden;min-height:clamp(540px,82vh,760px);display:flex;align-items:center;border-bottom:1px solid var(--line)}
+  .llx-hero .hbg{position:absolute;inset:0;z-index:0;background:#050c16 center right/cover no-repeat;background-image:var(--hero-img,none)}
+  .llx-hero .hscrim{position:absolute;inset:0;z-index:1;background:
+     linear-gradient(90deg,var(--bg) 8%,rgba(3,8,15,.72) 42%,rgba(3,8,15,.25) 66%,rgba(3,8,15,.55) 100%),
+     linear-gradient(0deg,var(--bg) 2%,transparent 26%)}
+  .llx-hero .xglow{position:absolute;z-index:1;right:8%;top:50%;width:min(520px,46vw);height:min(520px,46vw);transform:translateY(-50%);pointer-events:none;opacity:.9;
+     background:
+       linear-gradient(45deg,transparent 46%,rgba(86,200,255,.55) 49%,rgba(86,200,255,.85) 50%,rgba(86,200,255,.55) 51%,transparent 54%),
+       linear-gradient(-45deg,transparent 46%,rgba(155,227,26,.5) 49%,rgba(200,245,106,.8) 50%,rgba(155,227,26,.5) 51%,transparent 54%);
+     filter:blur(1px) drop-shadow(0 0 22px rgba(86,200,255,.5))}
+  .llx-hero .in{position:relative;z-index:2;width:100%;padding-top:44px;padding-bottom:44px}
+  .llx-hero .hpre{display:block;color:var(--sky);font-family:var(--ff-d);font-weight:700;letter-spacing:.16em;font-size:.74rem;text-transform:uppercase;margin-bottom:16px}
+  .llx-hero h1{font-size:clamp(2.5rem,6vw,4.4rem);line-height:1.02;max-width:15ch}
+  .llx-hero h1 .g{background:linear-gradient(100deg,var(--sky),var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .llx-hero .hsub{color:var(--muted);font-size:1.1rem;margin-top:18px;max-width:40ch;line-height:1.6}
+  .llx-hero .hbtns{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap}
+  .llx-hero .hstats{display:flex;gap:36px;margin-top:40px;flex-wrap:wrap}
+  .llx-hero .hstats .s b{font-family:var(--ff-d);font-size:2.2rem;color:#fff;display:block;line-height:1}
+  .llx-hero .hstats .s span{font-size:.82rem;color:var(--muted)}
+
+  /* pillars strip */
+  .llx-pil{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--line);color:var(--sky);font-family:var(--ff-d);font-weight:700;letter-spacing:.16em;font-size:.78rem;text-transform:uppercase;flex-wrap:wrap;text-align:center}
+  .llx-pil .ekg{color:var(--lime)}
+
+  /* section shell */
+  .llx-sec{padding:64px 0}
+  .llx-sec .head{text-align:center;max-width:760px;margin:0 auto 40px}
+  .llx-sec .head h2{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.1;margin-top:10px}
+  .llx-sec .head p{color:var(--muted);margin-top:12px;font-size:1.02rem}
+
+  /* journey */
+  .llx-jgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media(max-width:980px){.llx-jgrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.llx-jgrid{grid-template-columns:1fr}}
+  .jc{position:relative;border:1px solid var(--line2);border-radius:18px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column;min-height:360px;transition:.18s}
+  .jc:hover{transform:translateY(-4px);border-color:var(--jc)}
+  .jc .pic{position:relative;height:170px;background:#0a1420 center/cover;background-image:var(--pic,none)}
+  .jc .pic::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,8,15,.15),var(--panel) 96%),linear-gradient(120deg,var(--jc-t),transparent 60%)}
+  .jc .num{position:absolute;left:16px;top:14px;z-index:2;font-family:var(--ff-d);font-weight:800;font-size:2rem;color:var(--jc);text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  .jc .body{position:relative;z-index:2;margin-top:-42px;padding:0 18px 20px;flex:1;display:flex;flex-direction:column}
+  .jc h3{font-family:var(--ff-d);font-weight:800;font-size:1.5rem;line-height:1.05}
+  .jc h3 .x{color:var(--jc)}
+  .jc .th{color:var(--ink);font-weight:600;font-size:.98rem;margin-top:8px}
+  .jc .ds{color:var(--muted);font-size:.86rem;margin-top:8px;line-height:1.5;flex:1}
+  .jc .lbls{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--jc);font-family:var(--ff-d);font-weight:600;letter-spacing:.08em;font-size:.68rem;text-transform:uppercase;line-height:1.7}
+
+  /* prizes */
+  .llx-prize{background:radial-gradient(700px 360px at 50% 0%,rgba(255,196,107,.10),transparent 60%),var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .llx-prize .in{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;padding:56px 26px}
+  @media(max-width:860px){.llx-prize .in{grid-template-columns:1fr;gap:26px;text-align:center}}
+  .llx-prize .big{font-family:var(--ff-d);font-weight:800;font-size:clamp(3rem,8vw,5rem);line-height:1;background:linear-gradient(100deg,#ffd76b,#ffb43b,#ffe9a8);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 10px}
+  .llx-prize .trophy{aspect-ratio:1;max-width:320px;margin:0 auto;border-radius:22px;background:radial-gradient(circle at 50% 40%,rgba(255,196,107,.22),rgba(255,180,59,.06) 60%,transparent);display:flex;align-items:center;justify-content:center;background-image:var(--trophy,none);background-size:contain;background-repeat:no-repeat;background-position:center}
+  .llx-prize .trophy .fb{font-size:8rem;filter:drop-shadow(0 8px 30px rgba(255,180,59,.5))}
+  .llx-prize ul{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+  .llx-prize li{display:flex;gap:11px;align-items:flex-start;color:var(--ink);font-size:.96rem;text-align:left}
+  .llx-prize li .pi{flex:none;color:#ffcf6b}
+
+  /* results */
+  .llx-res .in{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:0 26px}
+  @media(max-width:860px){.llx-res .in{grid-template-columns:1fr;gap:28px}}
+  .llx-res .scan{position:relative;border:1px solid var(--line2);border-radius:20px;min-height:360px;background:#0a1420 center/cover;background-image:var(--scan,none);overflow:hidden}
+  .llx-res .scan .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:.9rem;background:linear-gradient(120deg,rgba(46,134,255,.12),rgba(86,200,255,.05))}
+  .llx-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:10px}
+  @media(max-width:520px){.llx-rings{grid-template-columns:repeat(2,1fr)}}
+  .ring{text-align:center}
+  .ring .dial{width:84px;height:84px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--rc) calc(var(--v)*1%),rgba(255,255,255,.06) 0);position:relative}
+  .ring .dial::before{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--bg)}
+  .ring .dial b{position:relative;font-family:var(--ff-d);font-weight:800;font-size:1.15rem;color:var(--rc)}
+  .ring .cap{font-size:.76rem;color:var(--muted);line-height:1.35}
+  .llx-res .feats{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}
+  .llx-res .feats .f b{display:block;font-family:var(--ff-d);color:var(--sky);font-size:.8rem;letter-spacing:.06em}
+  .llx-res .feats .f span{font-size:.82rem;color:var(--muted)}
+  .llx-res .quote{font-family:var(--ff-d);font-style:italic;font-size:1.25rem;color:var(--ink);margin-top:20px;border-left:3px solid var(--lime);padding-left:14px}
+
+  /* join */
+  .llx-join{background:radial-gradient(760px 380px at 12% 0%,rgba(46,134,255,.14),transparent 60%),radial-gradient(680px 420px at 100% 40%,rgba(200,245,106,.10),transparent 60%),var(--bg2);border-top:1px solid var(--line)}
+  .llx-join .in{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;padding:60px 26px}
+  @media(max-width:860px){.llx-join .in{grid-template-columns:1fr;gap:28px}}
+  .llx-join h2{font-size:clamp(1.9rem,4.4vw,2.9rem);line-height:1.1}
+  .llx-join h2 em{font-style:normal;color:var(--lime)}
+  .llx-join .jbul{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:14px}
+  .llx-join .jbul li{display:flex;gap:12px;align-items:flex-start;color:var(--ink);font-size:.98rem}
+  .llx-join .jbul .ji{flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(46,134,255,.14);color:var(--sky)}
+  .llx-join .jbul li:nth-child(2) .ji{background:rgba(200,245,106,.14);color:var(--lime)}
+  .llx-join .jbul li:nth-child(3) .ji{background:rgba(255,91,176,.14);color:#ff5bb0}
+  .llx-join .jbul li:nth-child(4) .ji{background:rgba(169,139,255,.16);color:#a98bff}
+  .llx-join .jbul .ji svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
+  .llx-card{background:linear-gradient(180deg,rgba(12,22,34,.96),rgba(7,15,26,.98));border:1px solid var(--line2);border-radius:20px;padding:24px 22px;box-shadow:0 40px 80px -50px #000}
+
+  /* faq */
+  .llx-faq .in{max-width:820px;padding:0 26px}
+  .fq{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:12px;overflow:hidden}
+  .fq button{width:100%;text-align:left;background:transparent;border:0;color:var(--ink);font-family:var(--ff);font-weight:600;font-size:1rem;padding:16px 18px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .fq .ans{max-height:0;overflow:hidden;transition:max-height .25s;color:var(--muted);font-size:.92rem;padding:0 18px}
+  .fq.open .ans{max-height:240px;padding-bottom:16px}
+  .fq .ic{transition:.2s;color:var(--sky)}.fq.open .ic{transform:rotate(180deg)}
+
+  /* footer */
+  .llx-foot{border-top:1px solid var(--line);background:var(--bg)}
+  .llx-foot .in{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:30px 26px}
+  .llx-foot .fn{display:flex;gap:20px;color:var(--muted);font-size:.86rem;flex-wrap:wrap}
+  .llx-foot .fn a{cursor:pointer}.llx-foot .fn a:hover{color:var(--ink)}
+  .llx-foot .cp{color:var(--dim);font-size:.78rem}
+
+  @media(max-width:820px){
+    .llx-mnav,.llx-login{display:none}
+    .llx-burger{display:flex}
+    .llx-hero .hbtns .llx-cta,.llx-hero .hbtns .btn{flex:1}
+  }
 </style>
 </head>
 <body>
@@ -304,51 +406,139 @@
     var el=document.getElementById('joinSec'); if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
   }
   function bulSvg(p){return '<span class="ji"><svg viewBox="0 0 24 24">'+p+'</svg></span>';}
+  // ---------- i18n (TH / EN) ----------
+  var LANG='th';
+  try{var _l=localStorage.getItem('ll_lang');if(_l==='en'||_l==='th')LANG=_l;}catch(e){}
+  var I18={
+    th:{nav_over:'ภาพรวม',nav_prog:'โปรแกรม',nav_prize:'รางวัล',nav_faq:'คำถามที่พบบ่อย',login:'เข้าสู่ระบบ',join:'สมัครเข้าร่วม',
+      h_pre:'Real People · Real Knowledge · A Healthier You',h1a:'เปลี่ยนร่างกาย',h1b:'ให้เป็นเวอร์ชันที่ดีที่สุด',
+      h_sub:'โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ วัดจริงทุกครั้งที่เจอกัน',cta_detail:'ดูรายละเอียด',
+      st_week:'สัปดาห์',st_meet:'จุดนัดพบ',st_seat:'ที่นั่ง',
+      po_eye:'Program Overview',po_h:'เส้นทางสู่การเปลี่ยนแปลงที่แท้จริง',po_sub:'สี่ขั้นตอน สู่การเปลี่ยนแปลงที่ยั่งยืน',
+      j1t:'รู้จักตัวเอง ตั้งเป้าหมาย',j1d:'เรียนรู้จากข้อมูลร่างกายจริง และประสบการณ์จากผู้เชี่ยวชาญ',j1l:'Data Analysis · Personal Goal',
+      j2t:'กินให้ดี ขยับให้สุด พักให้พอ',j2d:'สร้างนิสัยที่ทำได้จริงในชีวิตประจำวัน',j2l:'Nutrition · Movement · Recovery',
+      j3t:'เปลี่ยนวันนี้ ให้เป็นคุณที่ดีกว่าเดิม',j3d:'ลงมือทำอย่างต่อเนื่อง พร้อมการดูแลจากผู้เชี่ยวชาญ',j3l:'Guidance · Community · Real Progress',
+      j4t:'ปลดล็อกศักยภาพที่ดีกว่าในตัวคุณ',j4d:'สู่สุขภาพที่ยั่งยืน และชีวิตที่ใช่',j4l:'A Stronger You · A Brighter Tomorrow',
+      pz_eye:'Total Prizes',pz_h:'รางวัลรวมมูลค่ากว่า',pz_sub:'มากกว่าแค่รางวัล แต่คือการลงทุนเพื่อสุขภาพที่ดีกว่า',
+      pz1:'รางวัลสำหรับผู้เปลี่ยนแปลงได้ที่สุด',pz2:'โอกาสในการเป็นส่วนหนึ่งของชุมชน Lean Lab X',pz3:'สิทธิพิเศษและของรางวัลจากพันธมิตรชั้นนำ',
+      rs_eye:'Real Results',rs_h:'วัดผลจริง เห็นการเปลี่ยนแปลงจริง',rs_sub:'ติดตามพัฒนาการของคุณด้วยข้อมูลร่างกายที่แม่นยำ และคำแนะนำจากผู้เชี่ยวชาญ',
+      rs_r1:'น้ำหนักเฉลี่ยที่ลดลง',rs_r2:'ไขมันในร่างกายที่ลดลง',rs_r3:'มวลกล้ามเนื้อที่เพิ่มขึ้น',rs_r4:'พึงพอใจในผลลัพธ์',
+      rs_q:'“ไม่ใช่แค่ตัวเลข แต่คือชีวิตที่ดีขึ้นจริง”',rs_f1:'วัดสัดส่วนร่างกาย',rs_f2:'ติดตามทุกการเปลี่ยนแปลง',rs_f3:'วิเคราะห์โดยผู้เชี่ยวชาญ',
+      jn_eye:'Join The Change',jn_h1:'เริ่มต้นเส้นทาง',jn_h2:'สู่สุขภาพที่ดีกว่า',jn_h3:'วันนี้',
+      jb1:'ดูแลโดยผู้เชี่ยวชาญตลอดโปรแกรม',jb2:'พบเพื่อนร่วมเส้นทางที่มีเป้าหมายเดียวกัน',jb3:'วัดผลจริง เห็นการเปลี่ยนแปลงจริง',jb4:'สร้างสุขภาพที่ดีในระยะยาว',
+      fq_h:'คำถามที่พบบ่อย',fq1q:'ใครสามารถเข้าร่วมได้บ้าง?',fq1a:'เปิดรับทุกคนที่อายุ 18 ปีขึ้นไป ไม่ว่าจะเพิ่งเริ่มหรือออกกำลังกายอยู่แล้ว โปรแกรมออกแบบให้เหมาะกับทุกระดับ',
+      fq2q:'ไม่เคยออกกำลังกายเลย เข้าร่วมได้ไหม?',fq2a:'ได้แน่นอน ทีมผู้เชี่ยวชาญจะดูแลและปรับให้เหมาะกับร่างกายและเป้าหมายของคุณตั้งแต่เริ่มต้น',
+      fq3q:'มีค่าใช้จ่ายหรือไม่?',fq3a:'มีค่าสมัครเข้าร่วมโครงการ เลือกชำระเต็มจำนวนหรือผ่อนได้ รายละเอียดแสดงในขั้นตอนการสมัคร',
+      ft_priv:'นโยบายความเป็นส่วนตัว',ft_terms:'ข้อกำหนดการใช้งาน',ft_about:'เกี่ยวกับเรา',ft_contact:'ติดต่อเรา',ft_tag:'Better Health · A Brighter Tomorrow'},
+    en:{nav_over:'Overview',nav_prog:'Program',nav_prize:'Prizes',nav_faq:'FAQs',login:'Log in',join:'Join now',
+      h_pre:'Real People · Real Knowledge · A Healthier You',h1a:'Transform your body',h1b:'into its best version',
+      h_sub:'A 10-week body transformation program, measured for real every time you meet.',cta_detail:'Learn more',
+      st_week:'weeks',st_meet:'check-ins',st_seat:'seats',
+      po_eye:'Program Overview',po_h:'A Journey Built For Real Change',po_sub:'Four stages toward lasting change',
+      j1t:'Know yourself, set your goal',j1d:'Learn from your real body data and expert guidance',j1l:'Data Analysis · Personal Goal',
+      j2t:'Eat well, move fully, rest enough',j2d:'Build habits that actually fit your daily life',j2l:'Nutrition · Movement · Recovery',
+      j3t:'Change today into a better you',j3d:'Consistent action with expert support along the way',j3l:'Guidance · Community · Real Progress',
+      j4t:'Unlock the better potential in you',j4d:'Toward lasting health and a life that fits',j4l:'A Stronger You · A Brighter Tomorrow',
+      pz_eye:'Total Prizes',pz_h:'Total prize pool over',pz_sub:'More than a prize — it is an investment in a healthier you',
+      pz1:'Rewards for the most improved',pz2:'Be part of the Lean Lab X community',pz3:'Perks and gifts from leading partners',
+      rs_eye:'Real Results',rs_h:'Measure it. See the real change.',rs_sub:'Track your progress with precise body data and expert guidance',
+      rs_r1:'avg weight lost',rs_r2:'body fat reduced',rs_r3:'muscle mass gained',rs_r4:'satisfied with results',
+      rs_q:'“Not just numbers — a genuinely better life.”',rs_f1:'Body composition',rs_f2:'Track every change',rs_f3:'Expert analysis',
+      jn_eye:'Join The Change',jn_h1:'Start your journey',jn_h2:'to a healthier you',jn_h3:'today',
+      jb1:'Guided by experts throughout the program',jb2:'Meet others on the same journey',jb3:'Measure it, see real change',jb4:'Build lasting health',
+      fq_h:'Frequently asked questions',fq1q:'Who can join?',fq1a:'Open to anyone 18 and over — whether you are just starting or already active. The program is designed for every level.',
+      fq2q:'I have never worked out. Can I join?',fq2a:'Absolutely. Our expert team will guide and tailor everything to your body and goals from day one.',
+      fq3q:'Is there a fee?',fq3a:'There is a program fee — pay in full or in installments. Details are shown during sign-up.',
+      ft_priv:'Privacy Policy',ft_terms:'Terms of Use',ft_about:'About',ft_contact:'Contact',ft_tag:'Better Health · A Brighter Tomorrow'}
+  };
+  function T(k){return (I18[LANG]&&I18[LANG][k])||I18.en[k]||k;}
+  function setLang(l){LANG=(l==='en')?'en':'th';try{localStorage.setItem('ll_lang',LANG);}catch(e){}document.documentElement.setAttribute('lang',LANG);vLanding();}
+
+  function jcard(n,key,color,tint,img){
+    return '<div class="jc" style="--jc:'+color+';--jc-t:'+tint+';--pic:url(\''+img+'\')">'
+      +'<div class="pic"></div><div class="num">0'+n+'</div>'
+      +'<div class="body"><h3>'+key.replace(' X',' <span class="x">X</span>')+'</h3>'
+      +'<div class="th">'+T('j'+n+'t')+'</div><div class="ds">'+T('j'+n+'d')+'</div>'
+      +'<div class="lbls">'+T('j'+n+'l')+'</div></div></div>';
+  }
+  function ring(v,rc,val,cap){return '<div class="ring"><div class="dial" style="--v:'+v+';--rc:'+rc+'"><b>'+val+'</b></div><div class="cap">'+cap+'</div></div>';}
+
   function vLanding(){
     showLanding();
+    document.documentElement.setAttribute('lang',LANG);
     var L=document.getElementById('landing');
     L.innerHTML=''
-    +'<div class="ll-land">'
-    // ---- TOP (hero → results) : exact mockup image ----
-    +' <div class="ll-part ll-top">'
-    +'   <img class="ll-img ll-desk" src="ll_top_desktop.png" alt="Lean Lab X">'
-    +'   <img class="ll-img ll-mob" src="ll_top_mobile.png" alt="Lean Lab X">'
-    // desktop click-zones (over drawn CTAs)
-    +'   <button class="cz cz-d" style="left:3.5%;top:20.3%;width:19%;height:4.6%" aria-label="สมัครเข้าร่วม" data-go="join"></button>'
-    +'   <button class="cz cz-d" style="left:22%;top:20.3%;width:16%;height:4.6%" aria-label="ดูรายละเอียด" data-go="join"></button>'
-    +'   <button class="cz cz-d" style="left:69%;top:0.7%;width:14%;height:3.1%" aria-label="เข้าสู่ระบบ" data-go="login"></button>'
-    +'   <button class="cz cz-d" style="left:83.5%;top:0.7%;width:14%;height:3.1%" aria-label="สมัครเข้าร่วม" data-go="join"></button>'
-    +'   <button class="cz cz-d" style="left:3%;top:75.4%;width:23%;height:3.6%" aria-label="ดูรายละเอียดรางวัล" data-go="join"></button>'
-    // mobile click-zones
-    +'   <button class="cz cz-m" style="left:60%;top:0.6%;width:24%;height:2.7%" aria-label="สมัคร" data-go="join"></button>'
-    +'   <button class="cz cz-m" style="left:7%;top:18.4%;width:66%;height:3.3%" aria-label="สมัครเข้าร่วม" data-go="join"></button>'
-    +'   <button class="cz cz-m" style="left:7%;top:21.9%;width:66%;height:3.3%" aria-label="ดูรายละเอียด" data-go="join"></button>'
-    +' </div>'
-    // ---- JOIN (rebuilt, real register form) ----
-    +' <section class="ll-join" id="joinSec">'
-    +'   <div class="ll-join-in">'
-    +'     <div class="ll-join-left">'
-    +'       <span class="kk">Join The Change</span>'
-    +'       <h2>เริ่มต้นเส้นทาง<br>สู่<em>สุขภาพที่ดีกว่า</em> วันนี้</h2>'
-    +'       <ul class="jbul">'
-    +'         <li>'+bulSvg('<path d="M6.5 6.5h11M4 12h16M6.5 17.5h11"/>')+'<span>ดูแลโดยผู้เชี่ยวชาญตลอดโปรแกรม</span></li>'
-    +'         <li>'+bulSvg('<circle cx="9" cy="8" r="3"/><path d="M15 11a3 3 0 100-6M3 20a6 6 0 0112 0M15 14a6 6 0 016 6"/>')+'<span>พบเพื่อนร่วมเส้นทางที่มีเป้าหมายเดียวกัน</span></li>'
-    +'         <li>'+bulSvg('<path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/>')+'<span>วัดผลจริง เห็นการเปลี่ยนแปลงจริง</span></li>'
-    +'         <li>'+bulSvg('<path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z"/>')+'<span>สร้างสุขภาพที่ดีในระยะยาว</span></li>'
-    +'       </ul>'
-    +'       <div id="promoBadge"></div>'
-    +'       <div class="jscript">Real People<br>Real Knowledge · A Healthier You</div>'
-    +'     </div>'
-    +'     <div class="ll-join-card"><div id="sidePanel"></div></div>'
+    // ===== header =====
+    +'<div class="llx-hd"><div class="in">'
+    +' <a class="llx-logo" href="/leanlab">Lean Lab<svg class="lx" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></a>'
+    +' <nav class="llx-mnav"><a data-scroll="top">'+T('nav_over')+'</a><a data-scroll="prog">'+T('nav_prog')+'</a><a data-scroll="prize">'+T('nav_prize')+'</a><a data-scroll="faq">'+T('nav_faq')+'</a></nav>'
+    +' <div class="sp"></div>'
+    +' <div class="llx-acts">'
+    +'   <div class="llx-lang" id="llxLang"><button data-l="th"'+(LANG==='th'?' class="on"':'')+'>TH</button><button data-l="en"'+(LANG==='en'?' class="on"':'')+'>EN</button></div>'
+    +'   <button class="llx-login" data-go="login">'+T('login')+'</button>'
+    +'   <button class="llx-cta" data-go="join">'+T('join')+'</button>'
+    +' </div></div></div>'
+    // ===== hero =====
+    +'<section class="llx-hero" id="llTop"><div class="hbg" style="--hero-img:url(\'ll_hero.jpg\')"></div><div class="hscrim"></div><div class="xglow"></div>'
+    +' <div class="in llx-in">'
+    +'   <span class="hpre">'+T('h_pre')+'</span>'
+    +'   <h1>'+T('h1a')+'<br><span class="g">'+T('h1b')+'</span></h1>'
+    +'   <p class="hsub">'+T('h_sub')+'</p>'
+    +'   <div class="hbtns"><button class="llx-cta" data-go="join" style="padding:13px 26px;font-size:1rem">'+T('join')+' →</button><button class="btn ghost" data-scroll="prog">'+T('cta_detail')+'</button></div>'
+    +'   <div class="hstats"><div class="s"><b>10</b><span>'+T('st_week')+'</span></div><div class="s"><b>4</b><span>'+T('st_meet')+'</span></div><div class="s"><b>200</b><span>'+T('st_seat')+'</span></div></div>'
+    +' </div></section>'
+    // ===== pillars =====
+    +'<div class="llx-pil">DATA <span class="ekg">·</span> KNOWLEDGE <span class="ekg">·</span> COMMUNITY <span class="ekg">·</span> ACTION</div>'
+    // ===== journey =====
+    +'<section class="llx-sec llx-in" id="llProg"><div class="head"><span class="llx-eye">'+T('po_eye')+'</span><h2>'+T('po_h')+'</h2><p>'+T('po_sub')+'</p></div>'
+    +' <div class="llx-jgrid">'
+    +   jcard(1,'KNOW YOUR X','#56C8FF','rgba(86,200,255,.35)','ll_know.jpg')
+    +   jcard(2,'BUILD YOUR X','#9BE31A','rgba(155,227,26,.32)','ll_build.jpg')
+    +   jcard(3,'TRANSFORM YOUR X','#ff5bb0','rgba(255,91,176,.32)','ll_transform.jpg')
+    +   jcard(4,'UNLOCK YOUR X','#a98bff','rgba(169,139,255,.32)','ll_unlock.jpg')
+    +' </div></section>'
+    // ===== prizes =====
+    +'<section class="llx-prize" id="llPrize"><div class="in llx-in">'
+    +'  <div><span class="llx-eye" style="color:#ffcf6b">'+T('pz_eye')+'</span><div style="color:var(--muted);margin-top:8px">'+T('pz_h')+'</div>'
+    +'    <div class="big">฿280,000</div><p style="color:var(--muted);max-width:34ch">'+T('pz_sub')+'</p>'
+    +'    <ul><li><span class="pi">♛</span>'+T('pz1')+'</li><li><span class="pi">✦</span>'+T('pz2')+'</li><li><span class="pi">◆</span>'+T('pz3')+'</li></ul></div>'
+    +'  <div class="trophy" style="--trophy:url(\'ll_trophy.png\')"><span class="fb">🏆</span></div>'
+    +' </div></section>'
+    // ===== results =====
+    +'<section class="llx-sec llx-res"><div class="head"><span class="llx-eye">'+T('rs_eye')+'</span><h2>'+T('rs_h')+'</h2><p>'+T('rs_sub')+'</p></div>'
+    +' <div class="in llx-in">'
+    +'   <div class="scan" style="--scan:url(\'ll_scan.jpg\')"><div class="fb">Before / After</div></div>'
+    +'   <div>'
+    +'     <div class="llx-rings">'+ring(68,'#56C8FF','-6.8kg',T('rs_r1'))+ring(74,'#9BE31A','-7.4%',T('rs_r2'))+ring(40,'#2E86FF','+12%',T('rs_r3'))+ring(94,'#ff5bb0','94%',T('rs_r4'))+'</div>'
+    +'     <div class="quote">'+T('rs_q')+'</div>'
+    +'     <div class="feats"><div class="f"><b>'+T('rs_f1')+'</b></div><div class="f"><b>'+T('rs_f2')+'</b></div><div class="f"><b>'+T('rs_f3')+'</b></div></div>'
     +'   </div>'
-    +' </section>'
-    // ---- BOTTOM (FAQ + footer) : exact mockup image ----
-    +' <div class="ll-part ll-bot">'
-    +'   <img class="ll-img ll-desk" src="ll_bot_desktop.png" alt="">'
-    +'   <img class="ll-img ll-mob" src="ll_bot_mobile.png" alt="">'
-    +' </div>'
-    +'</div>';
-    L.querySelectorAll('.cz').forEach(function(b){b.onclick=function(){scrollToJoin(b.getAttribute('data-go')==='login');};});
+    +' </div></section>'
+    // ===== join (real register form) =====
+    +'<section class="llx-join" id="joinSec"><div class="in llx-in">'
+    +'  <div><span class="llx-eye">'+T('jn_eye')+'</span>'
+    +'    <h2 style="margin-top:10px">'+T('jn_h1')+'<br><em>'+T('jn_h2')+'</em> '+T('jn_h3')+'</h2>'
+    +'    <ul class="jbul">'
+    +'      <li>'+bulSvg('<path d="M6.5 6.5h11M4 12h16M6.5 17.5h11"/>')+'<span>'+T('jb1')+'</span></li>'
+    +'      <li>'+bulSvg('<circle cx="9" cy="8" r="3"/><path d="M15 11a3 3 0 100-6M3 20a6 6 0 0112 0M15 14a6 6 0 016 6"/>')+'<span>'+T('jb2')+'</span></li>'
+    +'      <li>'+bulSvg('<path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/>')+'<span>'+T('jb3')+'</span></li>'
+    +'      <li>'+bulSvg('<path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z"/>')+'<span>'+T('jb4')+'</span></li>'
+    +'    </ul><div id="promoBadge"></div></div>'
+    +'  <div class="llx-card"><div id="sidePanel"></div></div>'
+    +' </div></section>'
+    // ===== faq =====
+    +'<section class="llx-sec llx-faq" id="llFaq"><div class="head"><h2>'+T('fq_h')+'</h2></div><div class="in">'
+    +   ['1','2','3'].map(function(i){return '<div class="fq"><button data-fq="'+i+'">'+T('fq'+i+'q')+'<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button><div class="ans">'+T('fq'+i+'a')+'</div></div>';}).join('')
+    +' </div></section>'
+    // ===== footer =====
+    +'<div class="llx-foot"><div class="in llx-in"><a class="llx-logo" href="/leanlab" style="font-size:1.1rem">Lean Lab<svg class="lx" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></a>'
+    +'  <div class="fn"><a data-scroll="top">'+T('nav_over')+'</a><a data-scroll="prog">'+T('nav_prog')+'</a><a data-scroll="prize">'+T('nav_prize')+'</a><a data-scroll="faq">'+T('nav_faq')+'</a></div>'
+    +'  <div class="sp" style="flex:1"></div><div class="cp">'+T('ft_tag')+' · © 2026 LEAN LAB by CloverX</div></div></div>';
+    // wiring
+    L.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){scrollToJoin(b.getAttribute('data-go')==='login');};});
+    L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',prog:'llProg',prize:'llPrize',faq:'llFaq'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
+    var lang=document.getElementById('llxLang');if(lang)lang.querySelectorAll('button').forEach(function(b){b.onclick=function(){setLang(b.getAttribute('data-l'));};});
+    L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
     fillSide();
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
