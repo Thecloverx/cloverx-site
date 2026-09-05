@@ -27,6 +27,7 @@ module.exports = function (app, DATA_DIR) {
     fee: 3900,
     minAge: 18,
     startLaterLabel: '8 พ.ย. 2569',      // choice "เริ่มวันที่ 08/11/69"
+    promoQuota: 100,                     // โปรโมชั่นพิเศษ: 100 สิทธิ์ (นับเฉพาะที่ยืนยัน+ชำระแล้ว)
     bank: { bankName: 'กสิกรไทย (KBank)', accountNo: '231-1-71119-1', accountName: 'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด' }
   };
 
@@ -215,8 +216,28 @@ module.exports = function (app, DATA_DIR) {
   function genRid() { return 'LLR-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
   function publicReg(r) {
     if (!r) return null;
-    return { id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null, fee: r.fee, pay: r.pay, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt };
+    return { id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null, fee: r.fee, pay: r.pay, promo: !!r.promo, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt };
   }
+  // โปรโมชั่นพิเศษ: นับ "สิทธิ์ที่ใช้แล้ว" เฉพาะผู้ที่เลือกโปรโมชั่น + ยืนยัน/ชำระเงินแล้ว (confirmed)
+  function promoStats() {
+    var used = readR().filter(function (r) { return r.promo && r.status === 'confirmed'; }).length;
+    var quota = EVENT.promoQuota;
+    return { quota: quota, used: used, left: Math.max(0, quota - used), full: used >= quota };
+  }
+  app.get('/api/leanlab/promo', function (req, res) { res.json(Object.assign({ ok: true }, promoStats())); });
+  app.post('/api/leanlab/register/promo', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var claim = !!(req.body && req.body.claim);
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (claim) {
+      var st = promoStats();
+      if (st.full && !r.promo) return res.status(409).json(Object.assign({ ok: false, error: 'promo_full' }, st));
+      r.promo = true;
+    } else { r.promo = false; }
+    writeR(l);
+    res.json(Object.assign({ ok: true, registration: publicReg(r) }, promoStats()));
+  });
 
   app.get('/api/leanlab/event', function (req, res) {
     res.json({ season: EVENT.season, fee: EVENT.fee, minAge: EVENT.minAge, startLaterLabel: EVENT.startLaterLabel, bank: EVENT.bank });
@@ -291,7 +312,7 @@ module.exports = function (app, DATA_DIR) {
     return {
       id: r.id, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
-      fee: r.fee, pay: r.pay, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
+      fee: r.fee, pay: r.pay, promo: !!r.promo, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
     };
   }
   app.get('/api/leanlab/admin/registrations', function (req, res) {
@@ -299,7 +320,7 @@ module.exports = function (app, DATA_DIR) {
     var list = regs.map(function (r) { return adminReg(r, byId); }).sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
     var counts = { total: list.length, awaiting_payment: 0, pending_review: 0, confirmed: 0, rejected: 0, revenue: 0 };
     list.forEach(function (r) { if (counts[r.status] != null) counts[r.status]++; if (r.status === 'confirmed') counts.revenue += (Number(r.fee) || 0); });
-    res.json({ ok: true, registrations: list, counts: counts, members: readM().length });
+    res.json({ ok: true, registrations: list, counts: counts, members: readM().length, promo: promoStats() });
   });
   app.post('/api/leanlab/admin/registration/:id', function (req, res) {
     var b = req.body || {}; var st = b.status;

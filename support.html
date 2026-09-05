@@ -101,7 +101,7 @@
   .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
   .btn.ghost:hover{background:var(--soft)}
 
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:16px;margin-bottom:20px}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
   .kpi .lb{font-size:.85rem;color:var(--muted)}
   .kpi .v{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin-top:6px}
@@ -205,6 +205,7 @@
       +   '<div class="kpi"><div class="lb">รอตรวจสลิป</div><div class="v num" id="k_pending" style="color:var(--warn)">–</div><div class="s">ต้องยืนยัน</div></div>'
       +   '<div class="kpi"><div class="lb">ยืนยันแล้ว</div><div class="v num" id="k_confirmed" style="color:var(--good)">–</div><div class="s">พร้อมเข้าร่วม</div></div>'
       +   '<div class="kpi"><div class="lb">ยอดยืนยันแล้ว</div><div class="v num" id="k_revenue">–</div><div class="s">ค่าสมัคร 3,900/คน</div></div>'
+      +   '<div class="kpi"><div class="lb">โปรโมชั่นพิเศษ 🎁</div><div class="v num" id="k_promo" style="color:var(--warn)">–</div><div class="s">เหลือ <b id="k_promo_left">–</b> สิทธิ์ · นับเฉพาะที่ยืนยันแล้ว</div></div>'
       + '</div>'
       + '<div class="panel">'
       +   '<div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3><span style="font-size:.78rem;color:var(--muted)">แชร์ให้ลูกค้าสแกน → เปิดหน้าสมัคร Lean Lab</span></div>'
@@ -231,6 +232,7 @@
       var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
       set('k_total',c.total||0);set('k_members',j.members||0);set('k_pending',c.pending_review||0);set('k_confirmed',c.confirmed||0);
       set('k_revenue','฿'+Number(c.revenue||0).toLocaleString('en-US'));
+      var pr=j.promo||{};set('k_promo',(pr.used!=null?pr.used:0)+' / '+(pr.quota!=null?pr.quota:100));set('k_promo_left',pr.left!=null?pr.left:'–');
       var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' คน';
       var tb=document.getElementById('llBody');if(!tb)return;
       var regs=j.registrations||[];
@@ -246,7 +248,7 @@
         if(r.status==='confirmed'){act+='<button class="btn ghost" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'rejected\')">ยกเลิก</button>';}
         act+=' <button class="btn ghost" style="padding:6px 10px;font-size:.8rem" title="ลบ" onclick="llDel(\''+r.id+'\')">🗑</button>';
         return '<tr>'
-          +'<td><div style="font-weight:700">'+llEsc(r.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
+          +'<td><div style="font-weight:700">'+llEsc(r.name||'-')+(r.promo?' <span class="pill" style="background:var(--warn-tint);color:var(--warn);font-size:.66rem;padding:2px 7px">🎁 โปรโมชั่น</span>':'')+'</div><div style="font-size:.74rem;color:var(--muted)">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
           +'<td style="font-size:.82rem">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+'ซม.</td>'
           +'<td><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span></td>'
           +'<td>'+base+'</td>'

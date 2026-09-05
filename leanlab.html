@@ -125,6 +125,9 @@
   .cch{text-align:left;border:1.5px solid var(--line2);background:var(--bg2);border-radius:15px;padding:20px;cursor:pointer;transition:.15s;font-family:var(--ff);color:var(--ink)}
   .cch:hover{border-color:var(--lime)}
   .cch.on{border-color:var(--lime);background:rgba(200,245,106,.10);box-shadow:0 0 0 3px rgba(200,245,106,.12)}
+  .cch.dis{opacity:.5;cursor:not-allowed;pointer-events:none}
+  .promotag{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--orange);background:rgba(255,196,107,.12);border:1px solid rgba(255,196,107,.3);padding:5px 12px;border-radius:999px;margin-top:16px}
+  .promotag.full{color:var(--danger);background:rgba(255,107,107,.10);border-color:rgba(255,107,107,.3)}
   .cch .ic{width:44px;height:44px;border-radius:12px;background:rgba(200,245,106,.14);color:var(--lime);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
   .cch h3{font-size:1.12rem}
   .cch p{color:var(--muted);font-size:.85rem;margin-top:6px}
@@ -241,6 +244,7 @@
     +   '<p class="lead">โปรแกรมเปลี่ยนร่างกาย 10 สัปดาห์ วัดจริงทุกครั้งที่เจอกันด้วยเครื่องเดียวกันโดยเจ้าหน้าที่ 4 จุดนัดพบ</p>'
     +   '<div class="stats"><div class="stat"><b>10</b><span>สัปดาห์</span></div><div class="stat"><b>4</b><span>จุดนัดพบ</span></div><div class="stat"><b>200</b><span>ที่นั่ง</span></div></div>'
     +   '<div class="prize"><div class="big">฿280,000</div><div class="t">รางวัลรวมตลอดโครงการ · จัดอันดับชาย/หญิง + Big Change</div></div>'
+    +   '<div id="promoBadge"></div>'
     +   '<div class="path">'
     +     '<div class="cp"><div class="n">ครั้งที่ 1</div><div class="l">วัด &amp; ตรวจร่างกาย</div></div>'
     +     '<div class="cp"><div class="n">ครั้งที่ 2–3</div><div class="l">อัพเดทความคืบหน้า</div></div>'
@@ -250,6 +254,10 @@
     + '<div id="sidePanel"></div>'
     +'</div>';
     fillSide();
+    fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
+      var el=$('#promoBadge'); if(!el||st.quota==null)return;
+      el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin-top:14px">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 โปรโมชั่นพิเศษ '+st.quota+' สิทธิ์แรก · เหลือ '+st.left+' สิทธิ์'))+'</div>';
+    }).catch(function(){});
   }
 
   function fillSide(){
@@ -444,26 +452,52 @@
       .catch(function(){y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
   }
 
-  // ---------- CHOOSE: pay now OR special promotion ----------
+  // ---------- CHOOSE: pay now OR special promotion (จำกัด 100 สิทธิ์) ----------
   function vChoosePay(){
+    fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();})
+      .then(function(st){renderChoose(st||{});}).catch(function(){renderChoose({});});
+  }
+  function renderChoose(st){
     var fee=thb((REG&&REG.fee)||EVENT.fee);
+    var full=!!st.full;
+    var statusHtml = (st.quota!=null)
+      ? '<div class="promotag'+(full?' full':'')+'">'+(full?'สิทธิ์เต็มแล้ว':('🎁 เหลือ '+st.left+' / '+st.quota+' สิทธิ์'))+'</div>'
+      : '<div class="promotag">🎁 สิทธิ์พิเศษจำนวนจำกัด</div>';
     app.innerHTML='<div class="card">'
     +'<h2 class="tt">เลือกวิธีดำเนินการต่อ</h2><p class="sub">ลงทะเบียนของคุณถูกบันทึกแล้ว ✓ — เลือกวิธีที่ต้องการเพื่อยืนยันสิทธิ์</p>'
     +'<div class="choice">'
     + '<button type="button" class="cch" id="chPay"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><h3>ยืนยันการชำระเงิน</h3><p>ชำระค่าสมัครเต็มจำนวน เข้าร่วมโครงการได้ทันที</p><div style="margin-top:12px;font-family:var(--ff-d);color:var(--lime);font-size:1.5rem">'+fee+'</div></button>'
-    + '<button type="button" class="cch" id="chPromo"><div class="ic" style="background:rgba(255,196,107,.16);color:var(--orange)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><h3>รับโปรโมชั่นพิเศษ</h3><p>รับสิทธิ์โปรโมชั่นพิเศษของโครงการ (มีเงื่อนไข)</p><div style="margin-top:12px;color:var(--orange);font-weight:700;font-size:.9rem">มีเงื่อนไขพิเศษ →</div></button>'
+    + '<button type="button" class="cch'+(full?' dis':'')+'"'+(full?' disabled':'')+' id="chPromo"><div class="ic" style="background:rgba(255,196,107,.16);color:var(--orange)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><h3>รับโปรโมชั่นพิเศษ</h3><p>สิทธิพิเศษสำหรับผู้สมัครจำนวนจำกัด</p>'+statusHtml+'</button>'
     +'</div>'
+    +'<div class="msg" id="chMsg"></div>'
     +'</div>';
-    $('#chPay').onclick=vPay;
-    $('#chPromo').onclick=vPromo;
+    $('#chPay').onclick=function(){ // เลือกจ่ายปกติ → เคลียร์ธงโปรโมชั่นก่อน
+      var b=$('#chPay');b.style.pointerEvents='none';
+      fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:false})})
+        .then(function(){vPay();}).catch(function(){vPay();});
+    };
+    if(!full)$('#chPromo').onclick=claimPromo;
+  }
+  function claimPromo(){
+    var b=$('#chPromo');b.classList.add('dis');
+    fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:true})})
+      .then(function(r){return r.json();})
+      .then(function(j){
+        if(!j||!j.ok){ if(j&&j.error==='promo_full'){msg($('#chMsg'),'err','ขออภัย สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว');setTimeout(vChoosePay,1200);} else {b.classList.remove('dis');msg($('#chMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');} return; }
+        REG=j.registration; vPromo(j);
+      })
+      .catch(function(){b.classList.remove('dis');msg($('#chMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
   }
 
-  // ---------- SPECIAL PROMOTION (เงื่อนไขจะกำหนดภายหลัง) ----------
-  function vPromo(){
+  // ---------- SPECIAL PROMOTION (รับสิทธิ์แล้ว → ไปชำระเงิน) ----------
+  function vPromo(st){
+    st=st||{};
     var fee=thb((REG&&REG.fee)||EVENT.fee);
+    var statusLine=(st.quota!=null)?('สิทธิ์คงเหลือ '+st.left+' / '+st.quota):'';
     app.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,196,107,.16);color:var(--orange)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>'
-    +'<h2>โปรโมชั่นพิเศษ 🎁</h2><p>รายละเอียดและเงื่อนไขของโปรโมชั่นพิเศษกำลังจะเปิดเร็ว ๆ นี้</p></div>'
-    +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmPay">ชำระปกติ '+fee+'</button></div></div>';
+    +'<h2>รับสิทธิ์โปรโมชั่นพิเศษ 🎁</h2><p>คุณเลือกรับโปรโมชั่นพิเศษของโครงการ Lean Lab แล้ว'+(statusLine?(' · '+statusLine):'')+'</p>'
+    +'<p class="hint" style="margin-top:8px">* สิทธิ์จะถูกยืนยันเมื่อชำระเงินและทีมงานยืนยันแล้ว (จำกัด '+(st.quota||100)+' สิทธิ์ · นับเฉพาะผู้ที่ชำระเงินแล้ว)</p></div>'
+    +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmPay">ดำเนินการชำระเงิน '+fee+'</button></div></div>';
     $('#pmBack').onclick=vChoosePay;
     $('#pmPay').onclick=vPay;
   }
