@@ -137,6 +137,9 @@ app.use(express.json({ limit: '10mb' }));
 // ---- X-VISOR exam backend (server-side shuffle + scoring) ----
 try { require('./xvisor_api')(app, DATA); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
 
+// ---- Lean Lab membership & auth (email + LINE + Google) ----
+try { require('./leanlab_api')(app, DATA); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
+
 function read() { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) { return []; } }
 function write(d) { fs.writeFileSync(DB, JSON.stringify(d, null, 2)); }
 
