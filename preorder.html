@@ -497,20 +497,15 @@
         </div>
         <div class="card">
           <div class="step"><span class="n">5</span><h3>วิธีชำระเงิน</h3></div>
-          <div class="opt on" data-pay="bank"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6M4 10v9h16v-9M9 19v-6h6v6"/></svg></span><div class="ot"><b>โอนเงินผ่านธนาคาร</b><span>แนบสลิป + ระบุยอด/วัน/เวลา</span></div></div>
+          <div class="opt on" data-pay="bank"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6M4 10v9h16v-9M9 19v-6h6v6"/></svg></span><div class="ot"><b>โอนเงินผ่านธนาคาร</b><span>แนบสลิป — ระบบตรวจยอดอัตโนมัติ</span></div></div>
           <div id="bankFields">
             <div class="bankbox">
               <div class="r"><span>ธนาคาร</span><b>กสิกรไทย (KBank)</b></div>
               <div class="r"><span>เลขที่บัญชี</span><span style="display:inline-flex;align-items:center;gap:8px"><b class="num" id="acctNo">231-1-71119-1</b><button type="button" id="acctCopy" onclick="copyAcct()" title="คัดลอกเลขบัญชี" aria-label="คัดลอกเลขบัญชี" style="display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1.5px solid var(--accent);color:var(--accent);border-radius:8px;padding:6px 8px;cursor:pointer"><span id="acctCopyIcon" style="display:inline-flex"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span></button></span></div>
               <div class="r"><span>ชื่อบัญชี</span><b>บจก. โคลเวอร์เอ็กซ์ (ไทยแลนด์)</b></div>
-              <div class="note">* กรุณาโอนตามยอดที่สั่งซื้อ แล้วแนบสลิปยืนยันการชำระเงิน</div>
+              <div class="note">* โอนตามยอดที่สั่งซื้อ แล้วแนบสลิป — ระบบจะตรวจยอด/เวลาจากสลิปให้อัตโนมัติ</div>
             </div>
-            <div class="field"><label class="fld">ยอดที่โอน (บาท) <span class="req">*</span></label><input class="in num" id="f_amt" inputmode="decimal" placeholder="0.00"><div class="err">กรุณากรอกยอดโอน</div></div>
-            <div class="rowg">
-              <div class="field"><label class="fld">วันที่โอน <span class="req">*</span></label><input class="in" id="f_date" type="date"><div class="err">เลือกวันที่</div></div>
-              <div class="field"><label class="fld">เวลาที่โอน <span class="req">*</span></label><input class="in" id="f_time" type="time"><div class="err">เลือกเวลา</div></div>
-            </div>
-            <div class="field"><label class="fld">แนบสลิป <span class="req">*</span></label>
+            <div class="field"><label class="fld">แนบสลิปโอนเงิน <span class="req">*</span></label>
               <label class="slip" id="slipBox"><span id="slipTxt">📎 แตะเพื่อแนบสลิปโอนเงิน</span><input type="file" id="f_slip" accept="image/*" hidden></label>
               <div class="err">กรุณาแนบสลิป</div>
             </div>
@@ -879,9 +874,6 @@
       ok=markBad('p_time',!byId('p_time').value)&&ok;
     }
     if(state.pay==='bank'){
-      ok=markBad('f_amt',!byId('f_amt').value.trim())&&ok;
-      ok=markBad('f_date',!byId('f_date').value)&&ok;
-      ok=markBad('f_time',!byId('f_time').value)&&ok;
       var sf=byId('slipBox').closest('.field');var sok=!!state.slip;sf.classList.toggle('bad',!sok);ok=sok&&ok;
     }
     if(state.pay==='card'){
@@ -913,9 +905,8 @@
       rows.push(['วัน/เวลารับ',byId('p_date').value+' '+byId('p_time').value]);}
     else rows.push(['จัดส่ง','ส่งไปรษณีย์']);
     if(state.pay==='card'){rows.push(['ชำระเงิน','บัตรเครดิต / เดบิต (Stripe)']);rows.push(['อีเมลชำระเงิน',byId('f_cardEmail').value.trim()]);}
+    else if(state.pay==='promptpay'){rows.push(['ชำระเงิน','PromptPay QR (ล็อกยอด · Stripe)']);}
     else{rows.push(['ชำระเงิน','โอนธนาคาร']);
-      rows.push(['ยอดโอน',THB(parseFloat(byId('f_amt').value||0))]);
-      rows.push(['วัน/เวลาโอน',byId('f_date').value+' '+byId('f_time').value]);
       rows.push(['สลิป',state.slip||'-']);}
     if(byId('taxFields').style.display==='block'){rows.push(['ใบกำกับภาษี',byId('tax_type').value]);
       rows.push(['ชื่อผู้เสียภาษี',byId('tax_name').value.trim()]);rows.push(['เลขผู้เสียภาษี',byId('tax_id').value.trim()]);}
@@ -947,7 +938,7 @@
       items:items,total:total()};
     if(state.fam.length){o.famMembers=famObjs().map(function(p){var v=state.famInfo[p.id]||{};return {item:p.nm,name:v.name||'',phone:v.phone||''};});}
     if(state.ship==='pickup')o.pickup={place:byId('p_place').value.trim(),date:byId('p_date').value,time:byId('p_time').value};
-    if(state.pay==='bank'){o.transfer={amt:parseFloat(byId('f_amt').value||0),date:byId('f_date').value,time:byId('f_time').value};o.slip=state.slipData||null;}
+    if(state.pay==='bank'){o.slip=state.slipData||null;}
     if(state.pay==='card'){o.payEmail=byId('f_cardEmail').value.trim();o.orderDate=todayISO();}
     if(byId('taxFields').style.display==='block'){o.tax={want:true,type:byId('tax_type').value,name:byId('tax_name').value.trim(),taxId:byId('tax_id').value.trim(),addr:byId('tax_addr').value.trim()};}
     return o;
@@ -1386,12 +1377,9 @@
             <div class="br"><span>ธนาคาร</span><b>กสิกรไทย (KBank)</b></div>
             <div class="br"><span>เลขที่บัญชี</span><span class="acct"><b id="mAcctNo">231-1-71119-1</b><button type="button" class="acctcopy" onclick="MX.copyAcct()" aria-label="คัดลอกเลขบัญชี"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span></div>
             <div class="br"><span>ชื่อบัญชี</span><b>บจก. โคลเวอร์เอ็กซ์ (ไทยแลนด์)</b></div>
-            <div class="bnote">* โอนตามยอดที่สั่งซื้อ แล้วแนบสลิปยืนยันการชำระเงิน</div>
+            <div class="bnote">* โอนตามยอดที่สั่งซื้อ แล้วแนบสลิป — ระบบตรวจยอด/เวลาจากสลิปให้อัตโนมัติ</div>
           </div>
-          <div class="fld"><label>ยอดที่โอน (บาท) *</label><input id="mf_amt" inputmode="decimal" placeholder="0.00"></div>
-          <div class="g2"><div class="fld"><label>วันที่โอน *</label><input id="mf_date" type="date"></div>
-            <div class="fld"><label>เวลาที่โอน *</label><input id="mf_time" type="time"></div></div>
-          <div class="fld"><label>แนบสลิป *</label><label class="slipbox" id="mf_slipBox"><span id="mf_slipTxt">📎 แตะเพื่อแนบสลิปโอนเงิน</span><input type="file" id="mf_slip" accept="image/*" hidden></label></div>
+          <div class="fld"><label>แนบสลิปโอนเงิน *</label><label class="slipbox" id="mf_slipBox"><span id="mf_slipTxt">📎 แตะเพื่อแนบสลิปโอนเงิน</span><input type="file" id="mf_slip" accept="image/*" hidden></label></div>
         </div>
         <div class="paopt" id="payCard" onclick="MX.setPay('card')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="pt"><b>บัตรเครดิต / เดบิต</b><small>ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
         <div class="paopt" id="payPromptPay" onclick="MX.setPay('promptpay')"><div class="pic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17.5 17.5V21M21 14v3.5M21 21h-3.5"/></svg></div><div class="pt"><b>PromptPay QR (ล็อกยอด)</b><small>สแกนจ่ายยอดเป๊ะ กันโอนเกิน · ยืนยันอัตโนมัติ</small></div><div class="rad"></div></div>
@@ -1491,14 +1479,14 @@
   }
 
   // CHECKOUT / SUBMIT
-  function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());var a=byId('mf_amt');if(a&&!a.value)a.value=cartTotal();setPay(pay);}
+  function renderCheckout(){byId('coTotal').innerHTML=THB(cartTotal());setPay(pay);}
   function setPay(p){pay=p;byId('payCard').classList.toggle('on',p==='card');byId('payBank').classList.toggle('on',p==='bank');var pp=byId('payPromptPay');if(pp)pp.classList.toggle('on',p==='promptpay');var bb=byId('bankBox');if(bb)bb.style.display=(p==='bank')?'block':'none';var pb=byId('ppBox');if(pb)pb.style.display=(p==='promptpay')?'block':'none';}
   function sameRecv(on){var n=byId('mf_rname'),p=byId('mf_rphone');if(on){n.value=byId('mf_name').value;p.value=byId('mf_phone').value;}n.disabled=on;p.disabled=on;n.style.opacity=on?'.55':'1';p.style.opacity=on?'.55':'1';}
-  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;if(pay==='bank'){['mf_amt','mf_date','mf_time'].forEach(function(id){var el=byId(id),bad=!el.value.trim();el.classList.toggle('bad',bad);if(bad)ok=false;});var sb=byId('mf_slipBox'),sbad=!mSlipData;sb.classList.toggle('bad',sbad);if(sbad)ok=false;}return ok;}
+  function validate(){var ok=true;['mf_name','mf_phone','mf_email','mf_addr1','mf_team','mf_ref'].forEach(function(id){var el=byId(id),v=el.value.trim(),bad=!v||(id==='mf_email'&&!/.+@.+\..+/.test(v));el.classList.toggle('bad',bad);if(bad)ok=false;});var gb=byId('mf_geoBtn'),gbad=!geoSel;gb.classList.toggle('bad',gbad);if(gbad)ok=false;if(pay==='bank'){var sb=byId('mf_slipBox'),sbad=!mSlipData;sb.classList.toggle('bad',sbad);if(sbad)ok=false;}return ok;}
   function fullAddr(){var a=byId('mf_addr1').value.trim();if(geoSel){a+=' ต.'+geoSel[0]+' อ.'+geoSel[1]+' จ.'+geoSel[2]+' '+geoSel[3];}return a;}
   function buildOrder(){var items=[];cart.forEach(function(l){var p=P[l.pid];for(var i=0;i<l.qty;i++)items.push({nm:p.nm+((l.color||p.color)?(' · สี'+(l.color||p.color)):''),price:p.price,fam:false});});
     var note=byId('mf_note').value.trim();
-    var o={name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};if(pay==='bank'){o.transfer={amt:parseFloat(byId('mf_amt').value||0),date:byId('mf_date').value,time:byId('mf_time').value};o.slip=mSlipData||null;}return o;}
+    var o={name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim(),email:byId('mf_email').value.trim(),addr:fullAddr(),subdistrict:geoSel?geoSel[0]:'',district:geoSel?geoSel[1]:'',province:geoSel?geoSel[2]:'',zipcode:geoSel?geoSel[3]:'',note:note,recipient:{name:byId('mf_name').value.trim(),phone:byId('mf_phone').value.trim()},team:byId('mf_team').value.trim(),ref:byId('mf_ref').value.trim(),ship:'post',pay:pay,items:items,total:cartTotal(),source:'mobile',payEmail:byId('mf_email').value.trim(),orderDate:new Date().toISOString().slice(0,10)};if(pay==='bank'){o.slip=mSlipData||null;}return o;}
   function submit(){
     if(!cart.length)return toast('ตะกร้าว่าง');
     if(!validate()){toast('กรอกข้อมูลให้ครบ');var b=document.querySelector('#m-checkout .bad');b&&b.scrollIntoView({behavior:'smooth',block:'center'});return;}
