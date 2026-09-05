@@ -173,7 +173,7 @@
 <body>
 <header>
   <div class="hd">
-    <div class="logo"><span class="dot"></span>LEAN&nbsp;LAB</div>
+    <a class="logo" href="/leanlab"><span class="dot"></span>LEAN&nbsp;LAB</a>
     <div class="sp"></div>
     <div class="who" id="who"></div>
   </div>
@@ -247,13 +247,31 @@
     +     '<div class="cp"><div class="n">ครั้งที่ 4</div><div class="l">วัดผลรอบสุดท้าย</div></div>'
     +   '</div>'
     + '</div>'
-    + '<div class="card" id="authCard"></div>'
+    + '<div id="sidePanel"></div>'
     +'</div>';
-    renderAuth();
+    fillSide();
+  }
+
+  function fillSide(){
+    if(!ME.loggedIn){renderAuth();return;}
+    var p=$('#sidePanel'), st=REG&&REG.status;
+    if(!REG){
+      p.innerHTML='<div class="card"><h2 class="tt">พร้อมเปลี่ยนแปลงหรือยัง? 🔥</h2><p class="sub">คุณเข้าสู่ระบบแล้ว เริ่มลงทะเบียนเข้าร่วม Lean Lab Season 1 ได้เลย</p><button class="btn lime block lg" id="ctaReg">ลงทะเบียนเข้าร่วม</button><p class="hint" style="text-align:center;margin-top:12px">ค่าสมัคร '+thb(EVENT.fee)+' · โอนธนาคาร</p></div>';
+      $('#ctaReg').onclick=function(){W={};vStep1();};
+    } else if(st==='awaiting_payment'){
+      p.innerHTML='<div class="card"><h2 class="tt">ลงทะเบียนแล้ว 🎯</h2><p class="sub">เหลือแค่ชำระค่าสมัครเพื่อยืนยันสิทธิ์ของคุณ</p><div class="fee" style="text-align:center;margin:6px 0">'+thb((REG&&REG.fee)||EVENT.fee)+'</div><button class="btn lime block lg" id="ctaPay">ชำระเงิน / แนบสลิป</button></div>';
+      $('#ctaPay').onclick=vPay;
+    } else if(st==='pending_review'){
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ</p></div></div>';
+    } else if(st==='confirmed'){
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ยืนยันสิทธิ์แล้ว! 🎉</h2><p>คุณเข้าร่วม Lean Lab Season 1 เรียบร้อย ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบ</p></div></div>';
+    } else {
+      p.innerHTML='<div class="card"><h2 class="tt">Lean Lab</h2><p class="sub">สถานะการสมัคร: '+esc(st||'-')+'</p></div>';
+    }
   }
 
   function renderAuth(){
-    var c=$('#authCard');
+    var c=$('#sidePanel');
     c.innerHTML=''
     +'<div class="authtabs"><button id="tS" class="'+(authMode==='signup'?'on':'')+'">สมัครสมาชิก</button><button id="tL" class="'+(authMode==='login'?'on':'')+'">เข้าสู่ระบบ</button></div>'
     +'<h2 class="tt">'+(authMode==='signup'?'สมัครเข้าร่วม Lean Lab':'ยินดีต้อนรับกลับมา')+'</h2>'
@@ -481,13 +499,7 @@
   }
 
   // ---------- router ----------
-  function route(){
-    header();
-    if(!ME.loggedIn){vLanding();return;}
-    if(!REG){W={};vStep1();return;}
-    if(REG.status==='awaiting_payment'){vPay();return;}
-    vStatus();
-  }
+  function route(){ header(); vLanding(); }
 
   function boot(){
     Promise.all([

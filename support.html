@@ -244,6 +244,7 @@
         if(r.status==='pending_review'||r.status==='rejected'){act+='<button class="btn pri" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'confirmed\')">ยืนยัน</button> ';}
         if(r.status==='pending_review'){act+='<button class="btn ghost" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'rejected\')">ปฏิเสธ</button>';}
         if(r.status==='confirmed'){act+='<button class="btn ghost" style="padding:6px 12px;font-size:.8rem" onclick="llSet(\''+r.id+'\',\'rejected\')">ยกเลิก</button>';}
+        act+=' <button class="btn ghost" style="padding:6px 10px;font-size:.8rem" title="ลบ" onclick="llDel(\''+r.id+'\')">🗑</button>';
         return '<tr>'
           +'<td><div style="font-weight:700">'+llEsc(r.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
           +'<td style="font-size:.82rem">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+'ซม.</td>'
@@ -264,6 +265,12 @@
     var qb=document.getElementById('llQrBox'); if(qb&&window.QRCode){qb.innerHTML='';try{new QRCode(qb,{text:url,width:150,height:150,correctLevel:QRCode.CorrectLevel.M});}catch(e){qb.textContent='QR ไม่สำเร็จ';}}
     llLoad();
   }
+  window.llDel=function(id){
+    if(!confirm('ลบผู้สมัครนี้ถาวร? (รวมบัญชีสมาชิก)'))return;
+    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({withMember:true})})
+      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)llLoad();else alert('ลบไม่สำเร็จ');})
+      .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
+  };
   window.llSet=function(id,status){
     if(status==='rejected'&&!confirm('ยืนยันการปฏิเสธ/ยกเลิกผู้สมัครนี้?'))return;
     fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:status})})

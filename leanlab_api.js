@@ -311,6 +311,17 @@ module.exports = function (app, DATA_DIR) {
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
+  // ลบผู้สมัคร (ลบทั้งใบสมัคร + บัญชีสมาชิก ถ้า withMember=1) — ใช้เคลียร์ข้อมูลทดสอบ/ยกเลิก
+  app.post('/api/leanlab/admin/registration/:id/delete', function (req, res) {
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    var mid = r.memberId;
+    var nl = l.filter(function (x) { return x.id !== req.params.id; }); writeR(nl);
+    if ((req.body && req.body.withMember) && mid) {
+      var ml = readM().filter(function (m) { return m.id !== mid; }); writeM(ml);
+    }
+    res.json({ ok: true, deleted: req.params.id });
+  });
 
   // ============================ LINE LOGIN (OAuth2) ============================
   app.get('/auth/leanlab/line/login', function (req, res) {
