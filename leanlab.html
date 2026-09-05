@@ -126,6 +126,23 @@
   .cch:hover{border-color:var(--lime)}
   .cch.on{border-color:var(--lime);background:rgba(200,245,106,.10);box-shadow:0 0 0 3px rgba(200,245,106,.12)}
   .cch.dis{opacity:.5;cursor:not-allowed;pointer-events:none}
+  .plist{list-style:none;margin:14px 0 6px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:520px){.plist{grid-template-columns:1fr}}
+  .plist li{position:relative;padding-left:26px;font-size:.92rem;font-weight:600}
+  .plist li::before{content:"✓";position:absolute;left:0;top:0;color:var(--lime-ink);background:var(--lime);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800}
+  .cond{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:14px}
+  .cond b{font-size:.86rem;color:var(--orange)}
+  .cond ul{margin:6px 0 0;padding-left:18px;font-size:.82rem;color:var(--muted);line-height:1.7}
+  .tiers{display:flex;flex-direction:column;gap:10px}
+  .tierbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1.5px solid var(--line2);background:var(--bg2);border-radius:13px;padding:14px 16px;cursor:pointer;font-family:var(--ff);color:var(--ink);text-align:left;transition:.15s}
+  .tierbtn:hover{border-color:var(--lime)}
+  .tierbtn.on{border-color:var(--lime);background:rgba(200,245,106,.1);box-shadow:0 0 0 3px rgba(200,245,106,.12)}
+  .tierbtn .tl b{font-family:var(--ff-d);font-size:1.35rem;display:block}
+  .tierbtn .tl span{font-size:.82rem;color:var(--muted)}
+  .tierbtn .tnow{font-size:.72rem;font-weight:700;color:var(--lime);background:rgba(200,245,106,.12);padding:4px 10px;border-radius:999px;flex:none}
+  .tierbtn .tneed{font-size:.72rem;font-weight:700;color:var(--orange);background:rgba(255,196,107,.12);padding:4px 10px;border-radius:999px;flex:none}
+  .specialnote{margin-top:16px;padding:12px 14px;border:1px dashed var(--line2);border-radius:12px;color:var(--muted);font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+  .specialnote .soon{font-size:.68rem;font-weight:700;background:rgba(255,255,255,.08);padding:2px 8px;border-radius:99px;color:var(--dim)}
   .promotag{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--orange);background:rgba(255,196,107,.12);border:1px solid rgba(255,196,107,.3);padding:5px 12px;border-radius:999px;margin-top:16px}
   .promotag.full{color:var(--danger);background:rgba(255,107,107,.10);border-color:rgba(255,107,107,.3)}
   .cch .ic{width:44px;height:44px;border-radius:12px;background:rgba(200,245,106,.14);color:var(--lime);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
@@ -267,8 +284,18 @@
       p.innerHTML='<div class="card"><h2 class="tt">พร้อมเปลี่ยนแปลงหรือยัง? 🔥</h2><p class="sub">คุณเข้าสู่ระบบแล้ว เริ่มลงทะเบียนเข้าร่วม Lean Lab Season 1 ได้เลย</p><button class="btn lime block lg" id="ctaReg">ลงทะเบียนเข้าร่วม</button><p class="hint" style="text-align:center;margin-top:12px">ค่าสมัคร '+thb(EVENT.fee)+' · โอนธนาคาร</p></div>';
       $('#ctaReg').onclick=function(){W={};vStep1();};
     } else if(st==='awaiting_payment'){
-      p.innerHTML='<div class="card"><h2 class="tt">ลงทะเบียนแล้ว 🎯</h2><p class="sub">เหลือแค่ชำระค่าสมัครเพื่อยืนยันสิทธิ์ของคุณ</p><div class="fee" style="text-align:center;margin:6px 0">'+thb((REG&&REG.fee)||EVENT.fee)+'</div><button class="btn lime block lg" id="ctaPay">ชำระเงิน / แนบสลิป</button></div>';
-      $('#ctaPay').onclick=vChoosePay;
+      var amt=thb((REG.promoPlan?REG.promoAmount:REG.fee)||EVENT.fee);
+      var promoPay=!!(REG.promo&&REG.promoPlan);
+      p.innerHTML='<div class="card"><h2 class="tt">'+(promoPay?'พร้อมชำระเงิน 💳':'ลงทะเบียนแล้ว 🎯')+'</h2><p class="sub">'+(promoPay?'ยืนยันสิทธิ์โปรโมชั่นด้วยการชำระเงิน':'เหลือแค่ชำระค่าสมัครเพื่อยืนยันสิทธิ์ของคุณ')+'</p><div class="fee" style="text-align:center;margin:6px 0">'+amt+'</div><button class="btn lime block lg" id="ctaPay">ชำระเงิน / แนบสลิป</button></div>';
+      $('#ctaPay').onclick=promoPay?vPay:vChoosePay;
+    } else if(st==='promo_select'){
+      p.innerHTML='<div class="card"><h2 class="tt">แนบหลักฐานการซื้อ 🎁</h2><p class="sub">คุณเลือกยอด '+thb(REG.promoAmount)+' — แนบหลักฐานการซื้อเพื่อให้ทีมงานตรวจสอบสิทธิ์ส่วนลด</p><button class="btn lime block lg" id="ctaProof">แนบหลักฐาน</button></div>';
+      $('#ctaProof').onclick=vPromoProof;
+    } else if(st==='promo_review'){
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอทีมงานตรวจสอบหลักฐาน</h2><p>เราได้รับหลักฐานการซื้อของคุณแล้ว ทีมงานกำลังตรวจสอบสิทธิ์ส่วนลด เมื่อผ่านการตรวจสอบจะแจ้งให้ชำระเงินต่อ</p></div></div>';
+    } else if(st==='promo_rejected'){
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,107,107,.12);color:var(--danger)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></div><h2>หลักฐานไม่ผ่านการตรวจสอบ</h2><p>กรุณาแนบหลักฐานการซื้อใหม่อีกครั้ง หากมีข้อสงสัยติดต่อทีมงาน</p></div><button class="btn lime block" id="ctaProof2" style="margin-top:16px">แนบหลักฐานใหม่</button></div>';
+      $('#ctaProof2').onclick=vPromoProof;
     } else if(st==='pending_review'){
       p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ</p></div></div>';
     } else if(st==='confirmed'){
@@ -489,17 +516,64 @@
       .catch(function(){b.classList.remove('dis');msg($('#chMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
   }
 
-  // ---------- SPECIAL PROMOTION (รับสิทธิ์แล้ว → ไปชำระเงิน) ----------
-  function vPromo(st){
-    st=st||{};
-    var fee=thb((REG&&REG.fee)||EVENT.fee);
-    var statusLine=(st.quota!=null)?('สิทธิ์คงเหลือ '+st.left+' / '+st.quota):'';
-    app.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,196,107,.16);color:var(--orange)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>'
-    +'<h2>รับสิทธิ์โปรโมชั่นพิเศษ 🎁</h2><p>คุณเลือกรับโปรโมชั่นพิเศษของโครงการ Lean Lab แล้ว'+(statusLine?(' · '+statusLine):'')+'</p>'
-    +'<p class="hint" style="margin-top:8px">* สิทธิ์จะถูกยืนยันเมื่อชำระเงินและทีมงานยืนยันแล้ว (จำกัด '+(st.quota||100)+' สิทธิ์ · นับเฉพาะผู้ที่ชำระเงินแล้ว)</p></div>'
-    +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmPay">ดำเนินการชำระเงิน '+fee+'</button></div></div>';
+  // ---------- SPECIAL PROMOTION — Grand Slam Offer (Full Option) ----------
+  var promoTierSel=null;
+  function vPromo(){
+    fetch('/api/leanlab/promo/plans',{credentials:'same-origin'}).then(function(r){return r.json();})
+      .then(function(j){renderPromo((j&&j.plans)||{});}).catch(function(){renderPromo({});});
+  }
+  function renderPromo(plans){
+    var full=plans.full||{items:[],tiers:[],conditions:[],valueTotal:12180};
+    var itemsHtml=(full.items||[]).map(function(i){return '<li>'+esc(i)+'</li>';}).join('');
+    var condHtml=(full.conditions||[]).map(function(c){return '<li>'+esc(c)+'</li>';}).join('');
+    var tiersHtml=(full.tiers||[]).map(function(t){
+      return '<button type="button" class="tierbtn" data-tier="'+t.key+'"><div class="tl"><b>'+thb(t.amount)+'</b><span>'+esc(t.label)+'</span></div>'+(t.needProof?'<span class="tneed">แนบหลักฐาน</span>':'<span class="tnow">จ่ายได้เลย</span>')+'</button>';
+    }).join('');
+    app.innerHTML='<div class="card">'
+     +'<span class="eyebrow" style="color:var(--orange);background:rgba(255,196,107,.1);border-color:rgba(255,196,107,.3)">Grand Slam Offer · Full Option</span>'
+     +'<h2 class="tt" style="margin-top:12px">รับของรวมมูลค่า '+thb(full.valueTotal)+' ฟรี 🎁</h2>'
+     +'<ul class="plist">'+itemsHtml+'</ul>'
+     +'<div class="cond"><b>เงื่อนไข</b><ul>'+condHtml+'</ul></div>'
+     +'<h3 style="font-family:var(--ff-d);margin:18px 0 10px;font-size:1.05rem">เลือกยอดชำระ (ติ๊ก 1 รายการ)</h3>'
+     +'<div class="tiers">'+tiersHtml+'</div>'
+     +'<div class="specialnote">Special Option · ผ่อน 6 เดือน (7,490/เดือน) <span class="soon">เร็ว ๆ นี้</span></div>'
+     +'<div class="msg" id="pmMsg"></div>'
+     +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmNext" disabled>ดำเนินการต่อ</button></div>'
+     +'</div>';
+    promoTierSel=null;
+    app.querySelectorAll('.tierbtn').forEach(function(b){b.onclick=function(){promoTierSel=b.getAttribute('data-tier');app.querySelectorAll('.tierbtn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');$('#pmNext').disabled=false;};});
     $('#pmBack').onclick=vChoosePay;
-    $('#pmPay').onclick=vPay;
+    $('#pmNext').onclick=submitPromoPlan;
+  }
+  function submitPromoPlan(){
+    if(!promoTierSel)return;
+    var b=$('#pmNext');b.disabled=true;var old=b.textContent;b.textContent='กำลังดำเนินการ…';clearMsg($('#pmMsg'));
+    fetch('/api/leanlab/register/promo/plan',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({plan:'full',tier:promoTierSel})})
+      .then(function(r){return r.json();}).then(function(j){
+        if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
+        REG=j.registration;
+        if(j.needProof) vPromoProof(); else vPay();
+      }).catch(function(){b.disabled=false;b.textContent=old;msg($('#pmMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+  }
+  function vPromoProof(){
+    var amt=thb((REG&&REG.promoAmount)||(REG&&REG.fee));
+    app.innerHTML='<div class="card">'
+     +'<h2 class="tt">แนบหลักฐานการซื้อ</h2><p class="sub">ยอดที่เลือก '+amt+' · แนบหลักฐานการซื้อเดิมเพื่อให้ทีมงานตรวจสอบสิทธิ์ส่วนลด</p>'
+     +'<div class="field" id="fProof"><label>หลักฐานการซื้อ (รูปภาพ) <span class="req">*</span></label>'
+     +'<label class="upl" id="proofBox"><input type="file" id="proofFile" accept="image/*" hidden><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 4 4 4-6 4 6M3 20h18M3 4h18v16H3z"/></svg><div id="proofTxt">แตะเพื่อแนบรูปหลักฐาน</div></label>'
+     +'<div class="err">กรุณาแนบหลักฐาน</div></div>'
+     +'<div class="msg" id="prMsg"></div>'
+     +'<div class="rowbtns"><button class="btn ghost block" id="prBack">ย้อนกลับ</button><button class="btn lime block" id="prSubmit">ส่งให้ทีมงานตรวจสอบ</button></div></div>';
+    var data=null;
+    $('#proofBox').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var box=$('#proofBox');box.innerHTML='<div>กำลังประมวลผล…</div>';compress(f,1800,0.85).then(function(d){data=d;box.classList.add('has');box.innerHTML='<img src="'+d+'" alt="">';$('#fProof').classList.remove('bad');var inp=document.createElement('input');inp.type='file';inp.id='proofFile';inp.accept='image/*';inp.hidden=true;box.appendChild(inp);}).catch(function(){box.innerHTML='<div>อ่านรูปไม่สำเร็จ</div>';});});
+    $('#prBack').onclick=vPromo;
+    $('#prSubmit').onclick=function(){
+      if(!data){$('#fProof').classList.add('bad');return;}
+      var b=$('#prSubmit');b.disabled=true;b.textContent='กำลังส่ง…';
+      fetch('/api/leanlab/register/promo/proof',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({proof:data})})
+        .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';if(!j||!j.ok){return msg($('#prMsg'),'err','ส่งไม่สำเร็จ ลองใหม่');}REG=j.registration;route();})
+        .catch(function(){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';msg($('#prMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+    };
   }
 
   // ---------- PAYMENT ----------

@@ -31,6 +31,28 @@ module.exports = function (app, DATA_DIR) {
     bank: { bankName: 'กสิกรไทย (KBank)', accountNo: '231-1-71119-1', accountName: 'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด' }
   };
 
+  // ---- Promotion packages (Grand Slam Offer) ----
+  const PROMO = {
+    full: {
+      key: 'full', name: 'Grand Slam Offer', valueTotal: 12180,
+      items: ['Lean Lab Event', 'Shaker', 'Tumbler', 'Protein', 'Xircle Band', 'Xircle Scale'],
+      conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินเพียงครั้งเดียว (ไม่เข้าร่วมบริการผ่อนชำระ)', 'หักยอดจากที่สั่งซื้อ Pre-Order และ Order ปกติได้', 'รายการ Protein ไม่เข้าร่วมโปรโมชั่นทุกกรณี'],
+      tiers: [
+        { key: 't0', amount: 44940, label: 'ไม่เคยมีประวัติการซื้อ', needProof: false },
+        { key: 't1', amount: 39950, label: 'เคยซื้อ 39,950 บาท', needProof: true },
+        { key: 't2', amount: 37450, label: 'เคยซื้อ RoutineX', needProof: true },
+        { key: 't3', amount: 32460, label: 'เคยซื้อ Brand + Scale + RoutineX', needProof: true }
+      ]
+    },
+    special: {
+      key: 'special', name: 'Special Option', valueTotal: 4950, available: false,
+      items: ['Lean Lab Event', 'Shaker', 'Tumbler'],
+      conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินแบบผ่อนกับบริษัท (แบ่งจ่าย 6 เดือน)'],
+      installment: { months: 6, perMonth: 7490 }
+    }
+  };
+  function fullTier(k) { return PROMO.full.tiers.filter(function (t) { return t.key === k; })[0] || null; }
+
   // SESSION_SECRET: ควรตั้งใน env เพื่อไม่ให้ session หลุดตอน deploy/restart
   const SECRET = process.env.SESSION_SECRET || process.env.LEANLAB_SESSION_SECRET
     || crypto.randomBytes(32).toString('hex');
@@ -216,7 +238,12 @@ module.exports = function (app, DATA_DIR) {
   function genRid() { return 'LLR-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
   function publicReg(r) {
     if (!r) return null;
-    return { id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null, fee: r.fee, pay: r.pay, promo: !!r.promo, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt };
+    return {
+      id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
+      promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
+      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt
+    };
   }
   // โปรโมชั่นพิเศษ: นับ "สิทธิ์ที่ใช้แล้ว" เฉพาะผู้ที่เลือกโปรโมชั่น + ยืนยัน/ชำระเงินแล้ว (confirmed)
   function promoStats() {
@@ -237,6 +264,42 @@ module.exports = function (app, DATA_DIR) {
     } else { r.promo = false; }
     writeR(l);
     res.json(Object.assign({ ok: true, registration: publicReg(r) }, promoStats()));
+  });
+
+  // รายละเอียดแพ็กเกจโปรโมชั่น (Full / Special)
+  app.get('/api/leanlab/promo/plans', function (req, res) { res.json({ ok: true, plans: PROMO }); });
+
+  // เลือกแพ็กเกจ + ระดับราคา (Full Option)
+  app.post('/api/leanlab/register/promo/plan', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var b = req.body || {};
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (b.plan === 'special') return res.status(400).json({ ok: false, error: 'special_not_available' });
+    if (b.plan !== 'full') return res.status(400).json({ ok: false, error: 'bad_plan' });
+    var t = fullTier(b.tier); if (!t) return res.status(400).json({ ok: false, error: 'bad_tier' });
+    r.promo = true; r.promoPlan = 'full'; r.promoTier = t.key; r.promoAmount = t.amount; r.fee = t.amount; r.pay = 'bank';
+    if (t.needProof) {
+      r.promoVerify = 'awaiting_proof'; r.status = 'promo_select';   // รอลูกค้าแนบหลักฐาน
+    } else {
+      r.promoVerify = 'not_required'; r.status = 'awaiting_payment'; // 44,940 → จ่ายได้เลย
+    }
+    r.updatedAt = new Date().toISOString();
+    writeR(l);
+    res.json({ ok: true, registration: publicReg(r), needProof: !!t.needProof });
+  });
+
+  // แนบหลักฐานการซื้อ (สำหรับระดับราคาที่มีส่วนลด) → รอทีมงานตรวจสอบ
+  app.post('/api/leanlab/register/promo/proof', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var b = req.body || {};
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    if (!r || r.promoPlan !== 'full') return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (!(typeof b.proof === 'string' && /^data:image\//.test(b.proof))) return res.status(400).json({ ok: false, error: 'bad_proof' });
+    var url = saveImg(b.proof, 'proof-' + m.id); if (!url) return res.status(400).json({ ok: false, error: 'save_failed' });
+    r.promoProofUrl = url; r.promoVerify = 'pending'; r.status = 'promo_review'; r.proofAt = new Date().toISOString();
+    writeR(l);
+    res.json({ ok: true, registration: publicReg(r) });
   });
 
   app.get('/api/leanlab/event', function (req, res) {
@@ -312,7 +375,9 @@ module.exports = function (app, DATA_DIR) {
     return {
       id: r.id, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
-      fee: r.fee, pay: r.pay, promo: !!r.promo, slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
+      fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
+      promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
+      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null
     };
   }
   app.get('/api/leanlab/admin/registrations', function (req, res) {
@@ -328,6 +393,19 @@ module.exports = function (app, DATA_DIR) {
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     r.status = st; r.reviewedAt = new Date().toISOString();
+    writeR(l);
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    res.json({ ok: true, registration: adminReg(r, byId) });
+  });
+  // ตรวจหลักฐานการซื้อของโปรโมชั่น (ระดับราคาที่มีส่วนลด)
+  app.post('/api/leanlab/admin/registration/:id/promo-verify', function (req, res) {
+    var result = (req.body || {}).result;
+    if (['verified', 'rejected'].indexOf(result) < 0) return res.status(400).json({ ok: false, error: 'bad_result' });
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    r.promoVerify = result;
+    r.status = (result === 'verified') ? 'awaiting_payment' : 'promo_rejected';
+    r.reviewedAt = new Date().toISOString();
     writeR(l);
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
