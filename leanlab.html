@@ -260,7 +260,7 @@
       $('#ctaReg').onclick=function(){W={};vStep1();};
     } else if(st==='awaiting_payment'){
       p.innerHTML='<div class="card"><h2 class="tt">ลงทะเบียนแล้ว 🎯</h2><p class="sub">เหลือแค่ชำระค่าสมัครเพื่อยืนยันสิทธิ์ของคุณ</p><div class="fee" style="text-align:center;margin:6px 0">'+thb((REG&&REG.fee)||EVENT.fee)+'</div><button class="btn lime block lg" id="ctaPay">ชำระเงิน / แนบสลิป</button></div>';
-      $('#ctaPay').onclick=vPay;
+      $('#ctaPay').onclick=vChoosePay;
     } else if(st==='pending_review'){
       p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ</p></div></div>';
     } else if(st==='confirmed'){
@@ -439,9 +439,33 @@
       .then(function(j){
         y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();
         if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
-        REG=j.registration;vPay();
+        REG=j.registration;vChoosePay();
       })
       .catch(function(){y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+  }
+
+  // ---------- CHOOSE: pay now OR special promotion ----------
+  function vChoosePay(){
+    var fee=thb((REG&&REG.fee)||EVENT.fee);
+    app.innerHTML='<div class="card">'
+    +'<h2 class="tt">เลือกวิธีดำเนินการต่อ</h2><p class="sub">ลงทะเบียนของคุณถูกบันทึกแล้ว ✓ — เลือกวิธีที่ต้องการเพื่อยืนยันสิทธิ์</p>'
+    +'<div class="choice">'
+    + '<button type="button" class="cch" id="chPay"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><h3>ยืนยันการชำระเงิน</h3><p>ชำระค่าสมัครเต็มจำนวน เข้าร่วมโครงการได้ทันที</p><div style="margin-top:12px;font-family:var(--ff-d);color:var(--lime);font-size:1.5rem">'+fee+'</div></button>'
+    + '<button type="button" class="cch" id="chPromo"><div class="ic" style="background:rgba(255,196,107,.16);color:var(--orange)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><h3>รับโปรโมชั่นพิเศษ</h3><p>รับสิทธิ์โปรโมชั่นพิเศษของโครงการ (มีเงื่อนไข)</p><div style="margin-top:12px;color:var(--orange);font-weight:700;font-size:.9rem">มีเงื่อนไขพิเศษ →</div></button>'
+    +'</div>'
+    +'</div>';
+    $('#chPay').onclick=vPay;
+    $('#chPromo').onclick=vPromo;
+  }
+
+  // ---------- SPECIAL PROMOTION (เงื่อนไขจะกำหนดภายหลัง) ----------
+  function vPromo(){
+    var fee=thb((REG&&REG.fee)||EVENT.fee);
+    app.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,196,107,.16);color:var(--orange)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>'
+    +'<h2>โปรโมชั่นพิเศษ 🎁</h2><p>รายละเอียดและเงื่อนไขของโปรโมชั่นพิเศษกำลังจะเปิดเร็ว ๆ นี้</p></div>'
+    +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmPay">ชำระปกติ '+fee+'</button></div></div>';
+    $('#pmBack').onclick=vChoosePay;
+    $('#pmPay').onclick=vPay;
   }
 
   // ---------- PAYMENT ----------
@@ -485,7 +509,7 @@
     var ic,cls,title,desc;
     if(s==='confirmed'){cls='ok';ic='<path d="M20 6 9 17l-5-5"/>';title='ยืนยันสิทธิ์เรียบร้อย! 🎉';desc='คุณเข้าร่วม Lean Lab Season 1 แล้ว ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบ';}
     else if(s==='pending_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอตรวจสอบการชำระเงิน';desc='เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ';}
-    else {return vPay();} // awaiting_payment
+    else {return vChoosePay();} // awaiting_payment
     app.innerHTML='<div class="card"><div class="stbig"><div class="ic '+cls+'"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'+ic+'</svg></div>'
       +'<h2>'+title+'</h2><p>'+desc+'</p>'
       +'<div class="rev" style="text-align:left;margin-top:20px">'
