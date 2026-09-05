@@ -596,7 +596,7 @@
     fillSide();
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
-      el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin:0 0 14px;text-align:center">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 โปรโมชั่นพิเศษ '+st.quota+' สิทธิ์แรก · เหลือ '+st.left+' สิทธิ์'))+'</div>';
+      el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin:0 0 14px;text-align:center">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>';
     }).catch(function(){});
   }
 
@@ -821,7 +821,7 @@
     var fee=thb((REG&&REG.fee)||EVENT.fee);
     var full=!!st.full;
     var statusHtml = (st.quota!=null)
-      ? '<div class="promotag'+(full?' full':'')+'">'+(full?'สิทธิ์เต็มแล้ว':('🎁 เหลือ '+st.left+' / '+st.quota+' สิทธิ์'))+'</div>'
+      ? '<div class="promotag'+(full?' full':'')+'">'+(full?'สิทธิ์เต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>'
       : '<div class="promotag">🎁 สิทธิ์พิเศษจำนวนจำกัด</div>';
     app.innerHTML='<div class="card">'
     +'<h2 class="tt">เลือกวิธีดำเนินการต่อ</h2><p class="sub">ลงทะเบียนของคุณถูกบันทึกแล้ว ✓ — เลือกวิธีที่ต้องการเพื่อยืนยันสิทธิ์</p>'
