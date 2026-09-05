@@ -487,8 +487,8 @@
         </div>
         <div class="card">
           <div class="step"><span class="n">4</span><h3>การจัดส่ง</h3></div>
-          <div class="opt on" data-ship="post"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7M5.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></span><div class="ot"><b>ส่งไปรษณีย์</b><span>จัดส่งตามที่อยู่ที่กรอก</span></div></div>
-          
+          <div class="opt on" data-ship="post"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7M5.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></span><div class="ot"><b>ส่งไปรษณีย์ (จัดส่งที่บ้าน)</b><span>จัดส่งตามที่อยู่ที่กรอก</span></div></div>
+          <div class="opt" data-ship="pickup" style="margin-top:10px"><span class="rd"></span><span class="oic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><div class="ot"><b>รับหน้างาน</b><span>ระบุสถานที่นัดรับ (ไม่ต้องกรอกที่อยู่จัดส่ง)</span></div></div>
           <div class="subfields" id="pickupFields" style="display:none">
             <div class="field"><label class="fld">สถานที่นัดรับ <span class="req">*</span></label><input class="in" id="p_place" placeholder="เช่น งาน CloverX Expo · ฮอลล์ 3 อิมแพ็ค เมืองทองธานี"><div class="err">กรุณาระบุสถานที่นัดรับ</div></div>
             <div class="rowg">
@@ -807,6 +807,8 @@
   document.querySelectorAll('.opt[data-ship]').forEach(function(o){o.addEventListener('click',function(){
     document.querySelectorAll('.opt[data-ship]').forEach(function(x){x.classList.remove('on')});o.classList.add('on');state.ship=o.getAttribute('data-ship');
     byId('pickupFields').style.display=state.ship==='pickup'?'block':'none';
+    // รับหน้างาน → ซ่อนช่องที่อยู่จัดส่ง (ไม่ต้องกรอก)
+    var af=byId('f_addr'); if(af){var afw=af.closest('.field'); if(afw)afw.style.display=state.ship==='pickup'?'none':'block';}
   });});
   document.querySelectorAll('.opt[data-pay]').forEach(function(o){o.addEventListener('click',function(){
     if(o.classList.contains('disabled'))return;
@@ -865,7 +867,7 @@
     ok=markBad('f_name',!byId('f_name').value.trim())&&ok;
     ok=markBad('f_phone',!/^[0-9\-\s]{9,}$/.test(byId('f_phone').value.trim()))&&ok;
     ok=markBad('f_email',!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(byId('f_email').value.trim()))&&ok;
-    ok=markBad('f_addr',!byId('f_addr').value.trim())&&ok;
+    if(state.ship!=='pickup'){ ok=markBad('f_addr',!byId('f_addr').value.trim())&&ok; }
     ok=markBad('f_ref',!byId('f_ref').value)&&ok;
     ok=markBad('f_ref_other',!byId('f_ref_other').value.trim())&&ok;
     // family member info
