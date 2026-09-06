@@ -725,8 +725,9 @@
     } else if(st==='awaiting_payment'){
       var amt=thb((REG.promoPlan?REG.promoAmount:REG.fee)||EVENT.fee);
       var promoPay=!!(REG.promo&&REG.promoPlan);
-      p.innerHTML='<div class="card"><h2 class="tt">'+(promoPay?'พร้อมชำระเงิน 💳':'ลงทะเบียนแล้ว 🎯')+'</h2><p class="sub">'+(promoPay?'ยืนยันสิทธิ์โปรโมชั่นด้วยการชำระเงิน':'เหลือแค่ชำระค่าสมัครเพื่อยืนยันสิทธิ์ของคุณ')+'</p><div class="fee" style="text-align:center;margin:6px 0">'+amt+'</div><button class="btn lime block lg" id="ctaPay">ชำระเงิน / แนบสลิป</button></div>';
+      p.innerHTML='<div class="card"><h2 class="tt">'+(promoPay?'พร้อมชำระเงิน 💳':'ลงทะเบียนแล้ว 🎯')+'</h2><p class="sub">'+(promoPay?'ยืนยันสิทธิ์โปรโมชั่นด้วยการชำระเงิน':'เหลือแค่ชำระค่าสมัครเพื่อยืนยันสิทธิ์ของคุณ')+'</p><div class="fee" style="text-align:center;margin:6px 0">'+amt+'</div><button class="btn lime block lg" id="ctaPay">ชำระเงิน / แนบสลิป</button><button class="btn ghost block" id="ctaChange" style="margin-top:10px">ยกเลิก / เปลี่ยนแปลงการเข้าร่วม</button><p class="hint" style="text-align:center;margin-top:10px">เปลี่ยนวันเริ่ม รับโปรโมชั่น หรือเปลี่ยนวิธีชำระเงินได้</p></div>';
       $('#ctaPay').onclick=promoPay?vPay:vChoosePay;
+      $('#ctaChange').onclick=function(){hydrateW();vStep2();};
     } else if(st==='promo_select'){
       p.innerHTML='<div class="card"><h2 class="tt">แนบหลักฐานการซื้อ 🎁</h2><p class="sub">คุณเลือกยอด '+thb(REG.promoAmount)+' — แนบหลักฐานการซื้อเพื่อให้ทีมงานตรวจสอบสิทธิ์ส่วนลด</p><button class="btn lime block lg" id="ctaProof">แนบหลักฐาน</button></div>';
       $('#ctaProof').onclick=vPromoProof;
@@ -843,6 +844,27 @@
   function showOAuthError(){var m=(location.search.match(/[?&]err=([^&]+)/)||[])[1];if(!m||!$('#authMsg'))return;var map={line_state:'เซสชัน LINE หมดอายุ ลองใหม่',google_state:'เซสชัน Google หมดอายุ ลองใหม่',line_token:'เชื่อมต่อ LINE ไม่สำเร็จ',google_token:'เชื่อมต่อ Google ไม่สำเร็จ'};msg($('#authMsg'),'err',map[m]||'เข้าสู่ระบบด้วยโซเชียลไม่สำเร็จ');}
 
   function logout(){fetch('/api/leanlab/auth/logout',{method:'POST',credentials:'same-origin'}).then(function(){location.href='/leanlab';}).catch(function(){location.href='/leanlab';});}
+  // ดึงข้อมูลเดิมจากใบสมัคร (REG) ใส่ลง W เพื่อย้อนกลับไปแก้โดยไม่ต้องกรอกใหม่
+  function hydrateW(){
+    if(!REG)return;
+    var mm=ME.member||{};
+    if(!W.name)W.name=REG.name||mm.name||'';
+    if(!W.dob)W.dob=REG.dob||'';
+    if(!W.age)W.age=REG.age;
+    if(!W.gender)W.gender=REG.gender;
+    if(!W.heightCm)W.heightCm=REG.heightCm;
+    if(!W.phone)W.phone=mm.phone||'';
+    if(!W.email)W.email=mm.email||'';
+    if(!W.startChoice)W.startChoice=REG.startChoice;
+    if(REG.baseline){var b=REG.baseline;
+      if(W.weightKg==null||W.weightKg==='')W.weightKg=b.weightKg;
+      if(W.fatPct==null||W.fatPct==='')W.fatPct=b.fatPct;
+      if(W.vFat==null||W.vFat==='')W.vFat=b.vFat;
+      if(W.muscleKg==null||W.muscleKg==='')W.muscleKg=b.muscleKg;
+      if(W.waterPct==null||W.waterPct==='')W.waterPct=b.waterPct;
+      if(!W.beforePhoto&&b.beforePhotoUrl)W.beforePhoto=b.beforePhotoUrl;
+    }
+  }
 
   // ---------- WIZARD ----------
   function stepper(cur){

@@ -272,7 +272,7 @@ module.exports = function (app, DATA_DIR) {
   function publicReg(r) {
     if (!r) return null;
     return {
-      id: r.id, name: r.name, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      id: r.id, name: r.name, dob: r.dob || null, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null } : null,
@@ -386,6 +386,7 @@ module.exports = function (app, DATA_DIR) {
       if (!(weightKg > 0) || !(fatPct >= 0) || !(vFat >= 0) || !(muscleKg >= 0) || !(waterPct >= 0)) return res.status(400).json({ ok: false, error: 'bad_measurements' });
       var photoUrl = null;
       if (typeof b.beforePhoto === 'string' && /^data:image\//.test(b.beforePhoto)) photoUrl = saveImg(b.beforePhoto, 'before-' + m.id);
+      if (!photoUrl) { var _ex = readR().find(function (x) { return x.memberId === m.id; }); if (_ex && _ex.baseline && _ex.baseline.beforePhotoUrl) photoUrl = _ex.baseline.beforePhotoUrl; }  // แก้ไขภายหลัง: เก็บรูปเดิมไว้ถ้าไม่ได้แนบใหม่
       if (!photoUrl) return res.status(400).json({ ok: false, error: 'bad_photo' });
       baseline = { weightKg: weightKg, fatPct: fatPct, vFat: vFat, muscleKg: muscleKg, waterPct: waterPct, beforePhotoUrl: photoUrl };
     }
