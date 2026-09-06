@@ -484,7 +484,7 @@
   function welcomePopup(){
     if(WELCOME_SHOWN)return;
     try{if(sessionStorage.getItem('ll_welcome'))return;}catch(e){}
-    if(REG)return;                 // ไม่รบกวนคนที่อยู่ในขั้นตอนสมัคร/ยืนยันแล้ว
+    if(REG&&REG.status==='confirmed')return;   // ข้ามเฉพาะคนที่ยืนยันจ่ายเงินแล้ว
     WELCOME_SHOWN=true;
     var slides=[
       {img:'ll_hero.jpg',eye:'Welcome · Lean Lab',h:'จองสิทธิ์เข้าร่วม<br><em>ก่อนใคร</em> วันนี้',q:'โปรแกรมเปลี่ยนพฤติกรรมสุขภาพ 4 Onsite ที่วัดผลได้จริง เห็นการเปลี่ยนแปลงชัดเจน',foot:'🎁 จำกัดสิทธิ์เพียง 100 คนแรกเท่านั้น',goals:null},
