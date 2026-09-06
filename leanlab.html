@@ -17,6 +17,16 @@
     --radius:18px;color-scheme:dark;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  html,body{max-width:100%;overflow-x:hidden}
+  img{max-width:100%}
+  /* lightbox: แตะรูปเพื่อดูเต็มจอ (อ่านอินโฟกราฟิกบนมือถือได้) */
+  .lbox{position:fixed;inset:0;z-index:200;background:rgba(2,6,12,.92);display:none;align-items:center;justify-content:center;padding:12px;overflow:auto}
+  .lbox.on{display:flex}
+  .lbox img{max-width:100%;max-height:none;width:auto;border-radius:10px}
+  .lbox .lbx{position:fixed;top:14px;right:16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:rgba(3,8,15,.7);color:#fff;font-size:1.2rem;cursor:pointer;z-index:201}
+  .lbox .lbhint{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:rgba(255,255,255,.75);font-size:.82rem}
+  .zoom{cursor:zoom-in}
   body{background:var(--bg);color:var(--ink);font-family:var(--ff);line-height:1.6;-webkit-font-smoothing:antialiased;
     background-image:radial-gradient(900px 500px at 85% -10%,rgba(200,245,106,.10),transparent 60%),radial-gradient(700px 500px at -5% 10%,rgba(46,134,255,.10),transparent 55%)}
   a{color:inherit;text-decoration:none}
@@ -438,6 +448,17 @@
   .cf-dots button{width:9px;height:9px;border-radius:50%;border:0;background:var(--line2);cursor:pointer;padding:0;transition:.2s}
   .cf-dots button.on{background:var(--sky);width:26px;border-radius:6px}
   @media(max-width:720px){.cf-stage{height:340px}.cf-card{width:90vw;aspect-ratio:16/9}}
+  /* ---- mobile spacing/proportion fixes: coverflow -> เรียงแนวตั้ง ไม่ล้นจอ ---- */
+  @media(max-width:620px){
+    .llx-sec{padding:34px 0}
+    .llx-sec .head{margin:0 auto 20px;padding:0 18px}
+    .cf-stage{height:auto!important;min-height:0;margin-top:14px;perspective:none;overflow:visible}
+    .cf-track{position:static!important;transform:none!important;display:flex;flex-direction:column;gap:14px;align-items:center}
+    .cf-card{position:static!important;left:auto;top:auto;width:92vw;transform:none!important;opacity:1!important;filter:none!important;display:block!important}
+    .cf-arrow,.cf-dots{display:none!important}
+    .llx-res .llin{padding:0 14px}
+    .res-img{cursor:zoom-in}
+  }
 
   @media(max-width:820px){
     .llx-mnav,.llx-login,.llx-hquota{display:none}
@@ -447,6 +468,28 @@
 </style>
 </head>
 <body>
+<script>
+(function(){try{
+  var ua=navigator.userAgent||'', qs=location.search||'';
+  if(/Line/i.test(ua) && qs.indexOf('openExternalBrowser=1')<0){
+    location.replace(location.pathname+qs+(qs?'&':'?')+'openExternalBrowser=1'+(location.hash||''));
+    return;
+  }
+  if(/(FBAN|FBAV|FB_IAB|Instagram)/i.test(ua)){ window.__inApp=true; }
+}catch(e){}})();
+// แตะรูปอินโฟกราฟิกเพื่อดูเต็มจอ (lightbox)
+document.addEventListener('click',function(e){
+  try{
+    var lb=document.getElementById('lbox'); if(!lb)return;
+    var t=e.target;
+    if(t&&t.tagName==='IMG'&&(t.classList.contains('res-img')||(t.closest&&(t.closest('.exguide')||t.closest('.pcstage'))))){
+      var li=document.getElementById('lboxImg'); if(li){li.src=t.currentSrc||t.src;} lb.classList.add('on'); e.stopPropagation(); return;
+    }
+    if(lb.classList.contains('on')){ lb.classList.remove('on'); }
+  }catch(err){}
+},true);
+</script>
+<div class="lbox" id="lbox"><button class="lbx" id="lbxClose" aria-label="ปิด">✕</button><img id="lboxImg" alt=""><div class="lbhint">แตะที่ใดก็ได้เพื่อปิด</div></div>
 <header id="siteHeader">
   <div class="hd">
     <a class="logo" href="/leanlab"><img src="ll_wm.png" alt="Lean Lab X" style="height:28px;width:auto;display:block"></a>
