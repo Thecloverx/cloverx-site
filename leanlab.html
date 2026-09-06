@@ -56,7 +56,7 @@
   .wpop-ov.show{opacity:1}
   .wpop{position:relative;overflow:hidden;background:#050b14;border:1px solid var(--line2);border-radius:20px;box-shadow:0 40px 120px -30px #000,0 0 70px -22px rgba(46,134,255,.5);transform:translateY(18px) scale(.98);transition:transform .38s cubic-bezier(.2,.9,.3,1)}
   .wpop-ov.show .wpop{transform:none}
-  .wposter{display:block;max-height:90vh;max-width:94vw;width:auto;height:auto;cursor:pointer;transition:opacity .28s}
+  .wposter{display:block;max-height:88vh;max-width:min(940px,94vw);width:auto;height:auto;cursor:pointer;transition:opacity .28s}
   .wpop.switching .wposter{opacity:.2}
   .wpop .wpic{position:relative;background:#03080f center/cover;background-image:url('ll_hero.jpg')}
   .wpop .wpic::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,#070f1a)}
@@ -490,8 +490,9 @@
     try{if(sessionStorage.getItem('ll_welcome'))return;}catch(e){}
     if(REG&&REG.status==='confirmed')return;   // ข้ามเฉพาะคนที่ยืนยันจ่ายเงินแล้ว
     WELCOME_SHOWN=true;
-    var slides=[ {img:'ll_pop1.jpg',alt:'Lean Lab Early Bird'}, {img:'ll_pop2.jpg',alt:'Promotion'} ];
-    var idx=0, closable=false, cdStarted=false, CD_SECS=3;
+    var slides=[ {img:'ll_pop1.jpg',imgD:'ll_pop1_d.jpg',alt:'Lean Lab Early Bird'}, {img:'ll_pop2.jpg',imgD:'ll_pop2_d.jpg',alt:'Promotion'} ];
+    var isDesk=window.innerWidth>620;
+    var idx=0, closable=false, cdStarted=false, CD_SECS=5;
     var ov=document.createElement('div');ov.className='wpop-ov';ov.id='wpopOv';
     ov.innerHTML='<div class="wpop"><div class="wcd" id="wpopCd" hidden></div><button class="wclose" id="wpopX" aria-label="ปิด" hidden>✕</button><img class="wposter" id="wposter" alt=""><div class="wdots"></div></div>';
     document.body.appendChild(ov);
@@ -509,7 +510,9 @@
     }
     function render(){
       var s=slides[idx];
-      poster.src=s.img; poster.alt=s.alt||'';
+      var src=(isDesk&&s.imgD)?s.imgD:s.img;
+      poster.onerror=function(){ poster.onerror=null; poster.src=s.img; };   // ถ้ายังไม่มีรูป desktop → ใช้รูปเดิม
+      poster.src=src; poster.alt=s.alt||'';
       dots.innerHTML=slides.map(function(_,i){return '<span class="'+(i===idx?'on':'')+'"></span>';}).join('');
       xbtn.hidden=!closable;
       if(idx>=slides.length-1) startCountdown();     // สไลด์สุดท้าย → นับถอยหลัง 3 วิ แล้วค่อยขึ้น ✕
@@ -517,7 +520,7 @@
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
     render();
     requestAnimationFrame(function(){ov.classList.add('show');});
-    setTimeout(function(){ go(1); },2000);          // เลื่อนไปสไลด์ 2 อัตโนมัติหลัง 2 วินาที
+    setTimeout(function(){ go(1); },5000);          // เลื่อนไปสไลด์ 2 อัตโนมัติหลัง 5 วินาที
     xbtn.onclick=function(){ if(closable)remove(); };
     ov.addEventListener('click',function(e){ if(e.target===ov&&closable)remove(); });
     dots.addEventListener('click',function(e){ if(closable){var sp=[].indexOf.call(dots.children,e.target); if(sp>=0)go(sp);} });
@@ -681,7 +684,7 @@
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
     buildCf();
     fillSide();
-    setTimeout(welcomePopup,900);
+    setTimeout(welcomePopup,5000);
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
       el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin:0 0 14px;text-align:center">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>';
