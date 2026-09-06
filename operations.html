@@ -1235,6 +1235,19 @@
     if(decision==='disqualified')xvConfirm('ตัดสิทธิ์การสอบ','ยืนยันตัดสิทธิ์ "'+name+'" ออกจากการสอบ? ผู้สอบจะทำข้อสอบต่อไม่ได้ (ถ้ากำลังสอบอยู่จะถูกหยุดทันที)','ตัดสิทธิ์การสอบ',run,true);
     else run();
   }
+  // ลบรายการสอบ (สำหรับลบรายการทดสอบ/ผิดพลาด — ต้องมีสิทธิ์แอดมิน)
+  function xvDelSession(id,name,which){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
+    xvConfirm('ลบรายการสอบ','ยืนยันลบรายการสอบของ "'+name+'"? การลบนี้ถาวร — ใช้สำหรับลบรายการทดสอบหรือรายการที่ผิดพลาดเท่านั้น','ลบรายการ',function(){
+      fetch('/api/xv/admin/session/'+id+'/delete'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
+        .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
+          if(o.j&&o.j.ok){xvToast('ลบรายการ "'+name+'" แล้ว','ok');xvFetch(function(){which==='result'?renderExamResult():renderExamTracker();});}
+          else if(o.s===403)xvToast('รหัสแอดมินไม่ถูกต้อง หรือยังไม่ได้ใส่','bad');
+          else xvToast('ลบไม่สำเร็จ','bad');
+        }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    },true);
+  }
+  window.xvDelSession=xvDelSession;
   function renderExamTracker(){
     var all=EXAM_CACHE||[];
     var onsite=EXAM_TAB==='onsite';
@@ -1274,12 +1287,14 @@
       } else {
         statusCell='<span class="pill '+st.cl+'">'+st.t+'</span>';
       }
+      var delName=xvName(s).replace(/["'\\]/g,'');
       return '<tr'+(isRed?' style="background:#FEF3F4"':'')+'><td class="num">'+(s.code||'—')+'</td><td>'+nameHtml+'</td>'
         +'<td>'+prog+'</td>'
         +'<td class="num">'+remain+'</td>'
         +'<td class="num">'+scoreCell+'</td>'
-        +'<td>'+statusCell+'</td></tr>';
-    }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ไม่มีผู้ที่กำลังสอบอยู่ตอนนี้ · ผู้ที่สอบเสร็จแล้วดูได้ที่ <a class="link" href="#" onclick="go(\'exam-result\');return false">หน้าผลการสอบ →</a></td></tr>';
+        +'<td>'+statusCell+'</td>'
+        +'<td><button onclick="xvDelSession(\''+s.id+'\',\''+delName+'\',\'tracker\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;cursor:pointer;color:var(--bad);font-size:.9rem;line-height:1">🗑</button></td></tr>';
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">ไม่มีผู้ที่กำลังสอบอยู่ตอนนี้ · ผู้ที่สอบเสร็จแล้วดูได้ที่ <a class="link" href="#" onclick="go(\'exam-result\');return false">หน้าผลการสอบ →</a></td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
       +xvKstrip((function(){var tot=Math.max(1,list.length);return onsite?[
@@ -1295,7 +1310,7 @@
       ];})())
       +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
       +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>กำลังสอบอยู่ — '+modeLabel+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><input id="trkSearch" type="text" value="'+String(EXAM_TRK_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px"><a class="link" href="#" onclick="go(\'exam-result\');return false">ดูผลการสอบ →</a></div></div>'
-      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>ความคืบหน้า</th><th>เวลาคงเหลือ</th><th>คะแนนรวม</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.etab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_TAB=b.getAttribute('data-tab');renderExamTracker();});});
     var tq=document.getElementById('trkSearch');if(tq)tq.addEventListener('input',function(){var pos=this.selectionStart;EXAM_TRK_Q=this.value;renderExamTracker();var el=document.getElementById('trkSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
     gen.querySelectorAll('.pd-ok').forEach(function(b){b.addEventListener('click',function(){proctorDecide(b.getAttribute('data-id'),'normal',b.getAttribute('data-name'));});});
@@ -1372,11 +1387,12 @@
         } else if(s.status==='ended_failed'){
           action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
         }
+        var delNm2=xvName(s).replace(/["'\\]/g,'');
         return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b><div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
-          +'<td>'+action+'</td></tr>';
+          +'<td>'+action+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
       }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ตรวจเสร็จ</td></tr>';
       head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th></tr>';
       var tot2=Math.max(1,list.length);var vf=list.filter(function(s){return s.status==='verified';}).length;var ef=list.filter(function(s){return s.status==='ended_failed';}).length;
