@@ -393,6 +393,21 @@ module.exports = function (app, DATA) {
     writeS(all); res.json({ ok: true });
   });
 
+  // เก็บภาพเว็บแคมระหว่างสอบ (proctoring) — เก็บล่าสุดสูงสุด 30 ภาพ/คน แล้วลบไฟล์เก่าทิ้ง
+  app.post('/api/xv/proctor-photo', (req, res) => {
+    const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
+    if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
+    const url = saveRegImage(b.image, 'cam');
+    if (!url || url === 'TOO_BIG') return res.status(400).json({ ok: false, error: 'bad_image' });
+    s.proctorPhotos = s.proctorPhotos || [];
+    s.proctorPhotos.push({ at: Date.now(), url: url });
+    while (s.proctorPhotos.length > 30) {
+      const old = s.proctorPhotos.shift();
+      try { fs.unlinkSync(path.join(REGUP, path.basename(old.url))); } catch (e) {}
+    }
+    writeS(all); res.json({ ok: true, count: s.proctorPhotos.length });
+  });
+
   app.post('/api/xv/submit', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s) return res.status(404).json({ ok: false });
@@ -468,6 +483,7 @@ module.exports = function (app, DATA) {
         pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), startedAt: s.startedAt, autoExpired: !!s.autoExpired,
         proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0, paste: s.proctor.paste || 0, cut: s.proctor.cut || 0, fullscreen_exit: s.proctor.fullscreen_exit || 0 } : null,
         flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0) + (s.proctor.paste || 0) + (s.proctor.cut || 0) + (s.proctor.fullscreen_exit || 0)) : 0,
+        proctorPhotos: s.proctorPhotos || [], camPhotos: (s.proctorPhotos || []).length,
         proctorDecision: s.proctorDecision || null
       }))
     });

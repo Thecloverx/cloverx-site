@@ -468,6 +468,8 @@ function render(){
    remedial_prep:renderRemedialPrep,remedial_result:renderResult,attempts_completed:renderAttempts,
    waiting_verification:renderWaiting,all_passed:renderAllPassed,wrong_review:renderWrongReview,final_report:renderFinal}[S.phase];
  if(r)r();
+ // ซิงก์ลายน้ำ + เว็บแคม proctoring ตามสถานะการสอบ
+ try{ xvWatermark(); if(S.phase==='active_exam'){ if(window.XVCam)XVCam.start(); } else { if(window.XVCam)XVCam.stop(); } }catch(e){}
 }
 function appbar(extra){const c=S.candidate;
  return `<header class="appbar card"><span class="brand">X-VISOR</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span>
@@ -811,6 +813,43 @@ window.xvEnterFS=xvEnterFS;
   if(document.body)place();else document.addEventListener('DOMContentLoaded',place);
   setInterval(function(){var show=(S&&S.phase==='active_exam'&&S.api&&S.api.on&&!xvInFS());b.style.display=show?'block':'none';},700);
 })();
+/* ---------- เว็บแคม proctoring: ถ่ายภาพหน้าผู้สอบเป็นระยะ (เฉพาะ Online) ---------- */
+var XVCam=(function(){
+  var stream=null,video=null,iv=null,started=false;
+  function onlineExam(){return S&&S.phase==='active_exam'&&S.candidate&&S.candidate.mode!=='onsite'&&S.api&&S.api.on;}
+  function snap(){
+    if(!video||!stream||!onlineExam())return;
+    try{
+      var c=document.createElement('canvas');c.width=320;c.height=240;
+      c.getContext('2d').drawImage(video,0,0,320,240);
+      var data=c.toDataURL('image/jpeg',0.5);
+      fetch('/api/xv/proctor-photo',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:S.api.id,token:S.api.token,image:data})}).catch(function(){});
+    }catch(e){}
+  }
+  function start(){
+    if(started||!onlineExam())return;started=true;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(window.xvProctorReport)xvProctorReport('camera_denied');return;}
+    navigator.mediaDevices.getUserMedia({video:{width:{ideal:320},height:{ideal:240},facingMode:'user'},audio:false})
+      .then(function(st){stream=st;video=document.createElement('video');video.setAttribute('playsinline','');video.muted=true;video.srcObject=st;var p=video.play();if(p&&p.catch)p.catch(function(){});
+        setTimeout(snap,3500);iv=setInterval(snap,240000);})    // ภาพแรก ~3.5วิ แล้วทุก 4 นาที
+      .catch(function(){if(window.xvProctorReport)xvProctorReport('camera_denied');});
+  }
+  function stop(){if(iv){clearInterval(iv);iv=null;}if(stream){try{stream.getTracks().forEach(function(t){t.stop();});}catch(e){}stream=null;}video=null;started=false;}
+  return {start:start,stop:stop,snap:snap};
+})();
+/* ---------- ลายน้ำชื่อผู้สอบจาง ๆ (กันแคปหน้าจอไปแชร์ — รู้ว่ามาจากใคร) ---------- */
+function xvWatermark(){
+  var wm=document.getElementById('xvWM');
+  var show=S&&S.phase==='active_exam'&&S.candidate;
+  if(!show){if(wm)wm.remove();return;}
+  var name=((S.candidate.firstName||'')+' '+(S.candidate.lastName||'')).trim();
+  var code=S.candidate.id||(S.api&&S.api.code)||'';
+  var txt=(name+'  '+code).trim().replace(/[<>&]/g,'');
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="10" y="110" transform="rotate(-24 180 100)" font-family="sans-serif" font-size="16" fill="#ffffff">'+txt+'</text></svg>';
+  var uri='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
+  if(!wm){wm=document.createElement('div');wm.id='xvWM';document.body.appendChild(wm);}
+  wm.style.cssText='position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.05;background-image:url('+uri+');background-repeat:repeat';
+}
 initState();render();resolveRound();
 </script>
 </body>
