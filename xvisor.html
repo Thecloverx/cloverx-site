@@ -523,8 +523,11 @@ function renderRegistration(){const c=S.candidate;
  $('#start').onclick=async()=>{if(!roundOpen()){toast('รอบนี้ยังไม่เปิดสอบ');return;}const btn=$('#start');btn.disabled=true;btn.style.opacity=.7;
    try{const res=await apiPost('/api/xv/start',{firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode,roundId:S.round&&S.round.id,roundCode:S.round&&S.round.code});
      if(res&&res.error==='round_closed'){btn.disabled=false;btn.style.opacity=1;S.round&&(S.round.open=false);toast('รอบนี้เพิ่งถูกปิด — เข้าสอบไม่ได้');render();return;}
-     if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};res.parts.forEach(pp=>S.paper[pp]=res.paper[pp]);
-       S.session=freshSessionAPI('first',res.durationSec);S.phase='active_exam';render();startTimer();return;}
+     if(res&&res.error==='already_taken'){btn.disabled=false;btn.style.opacity=1;toast('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
+     if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
+       if(res.resumed){S.answers=res.answers||{};if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
+       else{S.session=freshSessionAPI('first',res.durationSec);}
+       S.phase='active_exam';try{xvEnterFS();}catch(e){}render();startTimer();return;}
    }catch(e){/* offline → demo mode */}
    S.api={on:false};S.session=freshSession('first');S.phase='active_exam';render();startTimer();};
  upd();
@@ -761,6 +764,10 @@ document.getElementById('demoNext').onclick=()=>{const order=['registration','ac
  let i=order.indexOf(S.phase);i=(i+1)%order.length;S.phase=order[i];if(S.phase==='active_exam'&&!S.session){S.session=freshSession('first');}render();};
 
 if(DEMO){document.getElementById('demobar').style.display='';}
+/* ---------- fullscreen (บังคับเต็มจอระหว่างสอบ — best-effort กันมือถือบางรุ่นที่ไม่รองรับ) ---------- */
+function xvInFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);}
+function xvEnterFS(){var el=document.documentElement;var fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;if(fn){try{var p=fn.call(el);if(p&&p.catch)p.catch(function(){});}catch(e){}}}
+window.xvEnterFS=xvEnterFS;
 /* ---------- proctor: บันทึกพฤติกรรมระหว่างสอบ (best-effort) ---------- */
 (function proctorInit(){
   var last={};
@@ -771,7 +778,10 @@ if(DEMO){document.getElementById('demobar').style.display='';}
     if(S.api&&S.api.on){try{fetch('/api/xv/proctor',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:S.api.id,token:S.api.token,type:type})});}catch(e){}}
     if(type==='leave'||type==='blur')toast('⚠ ระบบบันทึกการออกจากหน้าสอบ');
     else if(type==='printscreen')toast('⚠ ระบบบันทึกการพยายามแคปหน้าจอ');
+    else if(type==='fullscreen_exit')toast('⚠ ออกจากโหมดเต็มจอ — ระบบบันทึกไว้ แตะปุ่ม "เข้าเต็มจอ" เพื่อกลับ');
+    else if(type==='paste'||type==='copy'||type==='cut')toast('⚠ ปิดการคัดลอก/วางระหว่างสอบ — ระบบบันทึกไว้');
   }
+  window.xvProctorReport=report;
   document.addEventListener('visibilitychange',function(){if(document.hidden)report('leave');});
   window.addEventListener('blur',function(){if(!document.hidden)report('blur');});
   window.addEventListener('keyup',function(e){if(e.key==='PrintScreen')report('printscreen');});
@@ -780,8 +790,26 @@ if(DEMO){document.getElementById('demobar').style.display='';}
     var k=(e.key||'').toLowerCase();
     if((e.metaKey||e.ctrlKey)&&e.shiftKey&&(k==='s'||k==='3'||k==='4'||k==='5'))report('printscreen');
   });
-  document.addEventListener('copy',function(){report('copy');});
+  document.addEventListener('copy',function(e){if(examing()){e.preventDefault();report('copy');}});
+  document.addEventListener('cut',function(e){if(examing()){e.preventDefault();report('cut');}});
+  document.addEventListener('paste',function(e){if(examing()){e.preventDefault();report('paste');}});
+  document.addEventListener('selectstart',function(e){if(examing())e.preventDefault();});
   document.addEventListener('contextmenu',function(e){if(examing()){e.preventDefault();report('contextmenu');}});
+  function onFS(){if(examing()&&!xvInFS())report('fullscreen_exit');}
+  document.addEventListener('fullscreenchange',onFS);
+  document.addEventListener('webkitfullscreenchange',onFS);
+})();
+/* ปุ่มลอย "เข้าเต็มจอ" — โผล่เฉพาะเครื่องที่รองรับ fullscreen และกำลังสอบแต่ไม่ได้อยู่เต็มจอ */
+(function fsButton(){
+  var fsSupported=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+  if(!fsSupported)return;
+  var b=document.createElement('button');
+  b.id='xvFsBtn';b.textContent='⛶ เข้าโหมดเต็มจอ';
+  b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:200;display:none;padding:9px 18px;border:none;border-radius:999px;background:#E5484D;color:#fff;font-weight:700;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;font-family:inherit';
+  b.onclick=function(){xvEnterFS();};
+  var place=function(){if(document.body)document.body.appendChild(b);};
+  if(document.body)place();else document.addEventListener('DOMContentLoaded',place);
+  setInterval(function(){var show=(S&&S.phase==='active_exam'&&S.api&&S.api.on&&!xvInFS());b.style.display=show?'block':'none';},700);
 })();
 initState();render();resolveRound();
 </script>

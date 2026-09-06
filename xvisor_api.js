@@ -299,6 +299,22 @@ module.exports = function (app, DATA) {
   }
   const pubResults = (s) => s.results.map(r => ({ part: r.part, score: r.score, status: r.status, attempts: r.attempts }));
 
+  /* ---- server-side time enforcement (กันโกงเวลา: ไม่เชื่อค่าเวลาจากฝั่งลูกค้า) ---- */
+  const XV_GRACE_MS = 10000; // เผื่อความหน่วงเครือข่าย 10 วินาที ก่อนตัดเวลาจริง
+  function xvDeadline(s) { return s.deadlineAt || ((s.startedAt || Date.now()) + TOTAL * 1000); }
+  // เวลาที่เหลือจริง คำนวณจากนาฬิกาเซิร์ฟเวอร์ (ถ้ากำลัง pause ใช้เวลา ณ ตอนหยุด)
+  function xvRemaining(s) { const dl = xvDeadline(s); const ref = (s.paused && s.pausedAt) ? s.pausedAt : Date.now(); return Math.max(0, Math.ceil((dl - ref) / 1000)); }
+  function xvExpired(s) { if (s.paused) return false; return Date.now() > xvDeadline(s) + XV_GRACE_MS; }
+  // ซิงก์สถานะ pause ของ On-Site: ตอน resume ให้ขยาย deadline ตามเวลาที่หยุดไป (ออนไลน์ไม่มี pause = นาฬิกาเดินตรง)
+  function xvSyncPause(s, paused) {
+    const now = Date.now();
+    if (paused && !s.paused) { s.paused = true; s.pausedAt = now; }
+    else if (!paused && s.paused) { if (s.pausedAt) s.deadlineAt = xvDeadline(s) + (now - s.pausedAt); s.paused = false; s.pausedAt = null; }
+  }
+  // ตัดข้อสอบอัตโนมัติเมื่อหมดเวลา (แม้ลูกค้าจะเปิดค้างไว้/ไม่กดส่ง)
+  function xvAutoExpire(s) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s); s.autoExpired = true; return true; } return false; }
+  const xvDigits = (v) => String(v || '').replace(/\D/g, '');
+
   /* ---------------- candidate endpoints ---------------- */
   app.post('/api/xv/start', (req, res) => {
     const b = req.body || {};
@@ -308,10 +324,33 @@ module.exports = function (app, DATA) {
     if (b.roundId) round = findR(b.roundId);
     if (!round && b.roundCode) round = findRByCode(b.roundCode);
     if (round && round.status !== 'open') return res.status(403).json({ ok: false, error: 'round_closed' });
+    const all = readS();
+    // กันเปิดสอบซ้ำ/หลาย session ต่อคนต่อรอบ (เฉพาะรอบที่ระบุ)
+    if (round) {
+      const ph = xvDigits(b.phone);
+      const prev = all.find(x => x.roundId === round.id && xvDigits((x.candidate || {}).phone) === ph);
+      if (prev) {
+        xvAutoExpire(prev); // เผื่อ session เดิมหมดเวลาไปแล้ว
+        if (prev.status === 'in_progress') {
+          // มี session ค้างอยู่ → กลับเข้าสอบเดิม (กัน refresh แล้วรีเซ็ตเวลา/สร้างชุดใหม่)
+          const rp = activeParts(prev);
+          writeS(all);
+          return res.json({
+            ok: true, resumed: true, sessionId: prev.id, token: prev.token, code: prev.code,
+            mode: prev.candidate.mode, phase: prev.phase, parts: rp, durationSec: TOTAL,
+            remaining: xvRemaining(prev), answers: prev.answers || {}, paper: clientPaper(prev.paper, rp)
+          });
+        }
+        // สอบจบไปแล้ว (รอตรวจ/ผ่าน/ตก/ตัดสิทธิ์) → ห้ามสอบซ้ำในรอบเดิม
+        writeS(all);
+        return res.status(409).json({ ok: false, error: 'already_taken', status: prev.status });
+      }
+    }
     // pick the question set assigned to this round (falls back to the default/first set)
     const B = getSet(round ? round.setId : null);
     if (!B.bank || Object.keys(B.bank).length < 5) return res.status(400).json({ ok: false, error: 'no_questions' });
     const paper = buildPaper(B, PARTS);
+    const now = Date.now();
     const s = {
       id: genId(), token: crypto.randomBytes(12).toString('hex'),
       candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: b.mode === 'onsite' ? 'onsite' : 'online' },
@@ -319,30 +358,34 @@ module.exports = function (app, DATA) {
       setId: B.id || null,
       roundId: round ? round.id : null, roundNo: round ? round.no : null,
       phase: 'first', paper, answers: {}, results: [], status: 'in_progress',
-      startedAt: Date.now(), remaining: TOTAL, pauseUsed: 0, staffVerified: false, createdAt: Date.now()
+      startedAt: now, deadlineAt: now + TOTAL * 1000, paused: false, pausedAt: null,
+      remaining: TOTAL, pauseUsed: 0, staffVerified: false, createdAt: now
     };
-    const all = readS(); all.push(s); writeS(all);
+    all.push(s); writeS(all);
     res.json({ ok: true, sessionId: s.id, token: s.token, code: s.code, mode: s.candidate.mode, phase: 'first', parts: PARTS, durationSec: TOTAL, paper: clientPaper(paper, PARTS) });
   });
 
   app.post('/api/xv/answer', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
-    if (b.part && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) s.answers[b.part + '-' + b.q] = b.choice;
-    if (typeof b.remaining === 'number') s.remaining = Math.max(0, b.remaining | 0);
+    // ซิงก์ pause ของ On-Site ก่อน (มีผลต่อการคำนวณเวลา)
+    if (typeof b.paused === 'boolean') xvSyncPause(s, b.paused);
     if (typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
-    if (typeof b.paused === 'boolean') s.paused = b.paused; // On-Site pause state, for staff tracking
-    writeS(all); res.json({ ok: true });
+    // บังคับเวลาจากเซิร์ฟเวอร์: หมดเวลาแล้ว → ตัดข้อสอบทันที ไม่รับคำตอบเพิ่ม (ไม่เชื่อค่าเวลาจากลูกค้า)
+    if (xvExpired(s)) { score(s); writeS(all); return res.json({ ok: true, expired: true, status: s.status, remaining: 0 }); }
+    if (b.part && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) s.answers[b.part + '-' + b.q] = b.choice;
+    s.remaining = xvRemaining(s); // เวลาที่เหลือคิดจากเซิร์ฟเวอร์เท่านั้น
+    writeS(all); res.json({ ok: true, remaining: s.remaining });
   });
 
   // proctor: record anti-cheat behaviour events during the exam
-  const PROC_TYPES = ['leave', 'blur', 'printscreen', 'copy', 'contextmenu'];
+  const PROC_TYPES = ['leave', 'blur', 'printscreen', 'copy', 'contextmenu', 'paste', 'cut', 'fullscreen_exit'];
   app.post('/api/xv/proctor', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
     const type = PROC_TYPES.indexOf(b.type) >= 0 ? b.type : null;
     if (!type) return res.status(400).json({ ok: false, error: 'bad_type' });
-    s.proctor = s.proctor || { leave: 0, blur: 0, printscreen: 0, copy: 0, contextmenu: 0, events: [] };
+    s.proctor = s.proctor || { leave: 0, blur: 0, printscreen: 0, copy: 0, contextmenu: 0, paste: 0, cut: 0, fullscreen_exit: 0, events: [] };
     s.proctor[type] = (s.proctor[type] || 0) + 1;
     s.proctor.events = s.proctor.events || [];
     s.proctor.events.push({ type, at: Date.now() });
@@ -352,8 +395,9 @@ module.exports = function (app, DATA) {
 
   app.post('/api/xv/submit', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
-    if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
-    score(s); writeS(all);
+    if (!s) return res.status(404).json({ ok: false });
+    // idempotent: ถ้าถูกตัด/ส่งไปแล้ว (เช่นเซิร์ฟเวอร์หมดเวลาก่อน) คืนผลเดิม ไม่ error
+    if (s.status === 'in_progress') { score(s); writeS(all); }
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
   });
 
@@ -362,7 +406,9 @@ module.exports = function (app, DATA) {
     if (!s || s.status !== 'remedial_required') return res.status(400).json({ ok: false });
     const np = buildPaper(getSet(s.setId), s.remedialQueue);
     s.remedialQueue.forEach(p => { s.paper[p] = np[p]; for (let q = 0; q < QPP; q++) delete s.answers[p + '-' + q]; });
-    s.phase = 'remedial'; s.status = 'in_progress'; s.remaining = TOTAL; s.startedAt = Date.now();
+    const now = Date.now();
+    s.phase = 'remedial'; s.status = 'in_progress'; s.remaining = TOTAL;
+    s.startedAt = now; s.deadlineAt = now + TOTAL * 1000; s.paused = false; s.pausedAt = null;
     writeS(all);
     res.json({ ok: true, parts: s.remedialQueue, durationSec: TOTAL, paper: clientPaper(s.paper, s.remedialQueue) });
   });
@@ -370,8 +416,10 @@ module.exports = function (app, DATA) {
   app.get('/api/xv/session/:id', (req, res) => {
     const all = readS(); const s = findS(all, req.params.id, req.query.token);
     if (!s) return res.status(404).json({ ok: false });
+    // ถ้าหมดเวลาแต่ยังไม่ได้ส่ง (เช่นปิดแท็บทิ้งไว้) → ตัดข้อสอบอัตโนมัติเมื่อมีการเรียกดู
+    if (xvAutoExpire(s)) writeS(all);
     const parts = activeParts(s);
-    res.json({ ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, answers: s.answers, remaining: s.remaining, pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: s.staffVerified, paper: clientPaper(s.paper, parts) });
+    res.json({ ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, answers: s.answers, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: s.staffVerified, paper: clientPaper(s.paper, parts) });
   });
 
   // wrong-question review — only after staff verification
@@ -392,7 +440,8 @@ module.exports = function (app, DATA) {
   /* ---------------- admin endpoints (ADMIN_KEY) ---------------- */
   app.get('/api/xv/admin/overview', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
-    const all = readS(); const by = f => all.filter(f).length;
+    const all = readS(); let ch = false; all.forEach(s => { if (xvAutoExpire(s)) ch = true; }); if (ch) writeS(all);
+    const by = f => all.filter(f).length;
     res.json({
       ok: true, total: all.length,
       inProgress: by(s => s.status === 'in_progress'),
@@ -408,14 +457,17 @@ module.exports = function (app, DATA) {
 
   app.get('/api/xv/admin/sessions', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readS(); let changed = false;
+    all.forEach(s => { if (xvAutoExpire(s)) changed = true; }); // ตัดข้อสอบที่หมดเวลาแต่ถูกทิ้งไว้
+    if (changed) writeS(all);
     res.json({
-      ok: true, sessions: readS().map(s => ({
+      ok: true, sessions: all.map(s => ({
         id: s.id, code: s.code, candidate: s.candidate, phase: s.phase, status: s.status,
         roundId: s.roundId || null, roundNo: s.roundNo || null,
         results: pubResults(s), total: s.results.reduce((a, r) => a + (r.score || 0), 0),
-        pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: s.remaining, startedAt: s.startedAt,
-        proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0 } : null,
-        flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0)) : 0,
+        pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), startedAt: s.startedAt, autoExpired: !!s.autoExpired,
+        proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0, paste: s.proctor.paste || 0, cut: s.proctor.cut || 0, fullscreen_exit: s.proctor.fullscreen_exit || 0 } : null,
+        flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0) + (s.proctor.paste || 0) + (s.proctor.cut || 0) + (s.proctor.fullscreen_exit || 0)) : 0,
         proctorDecision: s.proctorDecision || null
       }))
     });
