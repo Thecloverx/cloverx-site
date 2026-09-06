@@ -211,7 +211,25 @@ module.exports = function (app, DATA) {
   const PARTS = [1, 2, 3, 4, 5], QPP = 20, PASS = 16, MAXATT = 3, TOTAL = 120 * 60; // MAXATT = total attempts/part (1 first + 2 remedial)
   // Exam admin endpoints are open (no Admin Key) — per CloverX request. Keep the operations URL private.
   // NOTE: the orders/Stripe/PII admin in server.js still uses ADMIN_KEY separately.
-  const adminOk = (req) => true;
+  const adminOk = (req) => true;   // การอ่าน (GET) ยังเปิด/มาสก์ตาม PDPA เหมือนเดิม
+  // ---- ล็อกเฉพาะ "การแก้ไข" (POST) ของ admin ระบบสอบ: ต้องมี ADMIN_KEY ที่ถูกต้อง ----
+  const xvClientIp = (req) => String((req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || (req.connection && req.connection.remoteAddress) || 'x');
+  const _xvFail = {};
+  const adminWrite = (req) => {
+    const need = process.env.ADMIN_KEY || '';
+    if (!need) return true;   // ยังไม่ตั้งคีย์ → คงพฤติกรรมเดิม (เปิด) กันระบบล็อกตัวเองในenv ที่ไม่ได้ตั้งคีย์
+    const ip = xvClientIp(req), now = Date.now(); let f = _xvFail[ip];
+    if (f && f.until > now) return false;   // โดนล็อกชั่วคราวจากการเดาคีย์ผิดถี่
+    const k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key'] || '';
+    if (k && k === need) { if (_xvFail[ip]) _xvFail[ip].n = 0; return true; }
+    f = _xvFail[ip] || { n: 0, until: 0 }; f.n++; if (f.n >= 8) { f.until = now + 600000; f.n = 0; } _xvFail[ip] = f;
+    return false;
+  };
+  // ป้องกันทุก POST ใต้ /api/xv/admin (การแก้ไข/ยืนยัน/รอบสอบ/นำเข้าข้อสอบ ฯลฯ) — GET (อ่าน) ปล่อยผ่าน
+  app.use('/api/xv/admin', (req, res, next) => {
+    if (req.method === 'POST' && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
+    next();
+  });
   const genId = () => crypto.randomBytes(9).toString('hex');
 
   /* ---------------- question SETS (each round picks one; keys stay server-side) ---------------- */
