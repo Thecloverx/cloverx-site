@@ -1126,7 +1126,7 @@ document.addEventListener('click',function(e){
      +'<div class="msg" id="pmMsg"></div>'
      +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmNext" disabled>ดำเนินการต่อ</button></div>'
      +'</div>';
-    (function(){var st=document.getElementById('pcStage');if(!st)return;var imgs=st.querySelectorAll('img'),dots=st.querySelectorAll('.pcdots span'),i=0,tmr;function go(n){i=(n+imgs.length)%imgs.length;imgs.forEach(function(x,k){x.classList.toggle('on',k===i);});dots.forEach(function(d,k){d.classList.toggle('on',k===i);});}function auto(){clearInterval(tmr);tmr=setInterval(function(){go(i+1);},3500);}dots.forEach(function(d,k){d.onclick=function(){go(k);auto();};});st.querySelectorAll('.pcnav').forEach(function(b){b.onclick=function(){go(i+Number(b.getAttribute('data-pc')));auto();};});auto();})();
+    (function(){var st=document.getElementById('pcStage');if(!st)return;var imgs=st.querySelectorAll('img'),dots=st.querySelectorAll('.pcdots span'),i=0,tmr;function go(n){i=(n+imgs.length)%imgs.length;imgs.forEach(function(x,k){x.classList.toggle('on',k===i);});dots.forEach(function(d,k){d.classList.toggle('on',k===i);});}function auto(){clearInterval(tmr);tmr=setInterval(function(){go(i+1);},3000);}dots.forEach(function(d,k){d.onclick=function(){go(k);auto();};});st.querySelectorAll('.pcnav').forEach(function(b){b.onclick=function(){go(i+Number(b.getAttribute('data-pc')));auto();};});auto();})();
     promoTierSel=null;promoPlanSel=null;
     app.querySelectorAll('.tierbtn').forEach(function(b){b.onclick=function(){
       app.querySelectorAll('.tierbtn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
