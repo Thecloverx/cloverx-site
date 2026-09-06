@@ -303,7 +303,7 @@ module.exports = function (app, DATA_DIR) {
       id: r.id, name: r.name, dob: r.dob || null, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       address: r.address || '', postcode: r.postcode || '', addrDetail: r.addrDetail || '', geo: r.geo || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
-      promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
+      promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null, autoVerified: !!r.autoVerified,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null } : null,
       slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, po: r.po || null
     };
@@ -370,7 +370,38 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, registration: publicReg(r) });
   });
 
-  // แนบหลักฐานการซื้อ (สำหรับระดับราคาที่มีส่วนลด) → รอทีมงานตรวจสอบ
+  // ---- ตรวจสิทธิ์ส่วนลดอัตโนมัติจากข้อมูลพรีออเดอร์จริง (ลดงานแอดมิน) ----
+  function readOrders() { try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'orders.json'), 'utf8')) || []; } catch (e) { return []; } }
+  var ORDER_PAID = ['paid', 'PAID', 'confirmed', 'CONFIRMED'];
+  // รวมสินค้าที่ลูกค้า (เบอร์/อีเมลนี้) เคยซื้อจากออเดอร์พรีออเดอร์ที่ "ชำระเงินแล้ว"
+  function ownedFromPreorder(phone, email) {
+    var pd = String(phone || '').replace(/\D/g, ''), em = String(email || '').trim().toLowerCase();
+    var owned = { band: false, scale: false, routinex: false, matchedOrders: [] };
+    if (!pd && !em) return owned;
+    readOrders().forEach(function (o) {
+      if (ORDER_PAID.indexOf(o.status) < 0) return;   // เฉพาะออเดอร์ที่จ่ายจริง
+      var op = String(o.phone || '').replace(/\D/g, ''), oe = String(o.email || '').trim().toLowerCase();
+      if (!((pd && op && op === pd) || (em && oe && oe === em))) return;   // แมตช์เบอร์หรืออีเมล
+      owned.matchedOrders.push(o.id);
+      (o.items || []).forEach(function (it) {
+        var nm = String(it.nm || '').toLowerCase();
+        if (nm.indexOf('triple') >= 0) { owned.band = owned.scale = owned.routinex = true; }
+        if (nm.indexOf('duo') >= 0) { owned.band = owned.scale = true; }
+        if (nm.indexOf('routinex') >= 0) owned.routinex = true;
+        if (nm.indexOf('band') >= 0) owned.band = true;
+        if (nm.indexOf('scale') >= 0) owned.scale = true;
+      });
+    });
+    return owned;
+  }
+  function tierQualifies(tierKey, o) {
+    if (tierKey === 't1') return !!(o.band && o.scale);                 // Band + Scale
+    if (tierKey === 't2') return !!o.routinex;                          // RoutineX
+    if (tierKey === 't3') return !!(o.band && o.scale && o.routinex);   // ครบทั้งสาม
+    return false;
+  }
+
+  // แนบหลักฐานการซื้อ → ตรวจกับพรีออเดอร์จริงอัตโนมัติ; ถ้าตรง → อนุมัติทันที มิฉะนั้นส่งแอดมินตรวจ
   app.post('/api/leanlab/register/promo/proof', limit('proof', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
@@ -378,9 +409,18 @@ module.exports = function (app, DATA_DIR) {
     if (!r || r.promoPlan !== 'full') return res.status(404).json({ ok: false, error: 'no_registration' });
     if (!(typeof b.proof === 'string' && /^data:image\//.test(b.proof))) return res.status(400).json({ ok: false, error: 'bad_proof' });
     var url = saveImg(b.proof, 'proof-' + m.id); if (!url) return res.status(400).json({ ok: false, error: 'save_failed' });
-    r.promoProofUrl = url; r.promoVerify = 'pending'; r.status = 'promo_review'; r.proofAt = new Date().toISOString();
+    r.promoProofUrl = url; r.proofAt = new Date().toISOString();
+    // ตรวจสิทธิ์อัตโนมัติจากพรีออเดอร์จริง (เบอร์/อีเมลตรง + ซื้อสินค้าครบตาม tier)
+    var owned = ownedFromPreorder(r.phone || m.phone, r.email || m.email);
+    if (tierQualifies(r.promoTier, owned)) {
+      r.promoVerify = 'verified'; r.status = 'awaiting_payment'; r.autoVerified = true;
+      r.autoVerifyInfo = { at: new Date().toISOString(), orders: owned.matchedOrders.slice(0, 10), owned: { band: owned.band, scale: owned.scale, routinex: owned.routinex } };
+      r.reviewedAt = new Date().toISOString();
+    } else {
+      r.promoVerify = 'pending'; r.status = 'promo_review'; r.autoVerified = false;   // ส่งแอดมินตรวจสลิปเหมือนเดิม
+    }
     writeR(l);
-    res.json({ ok: true, registration: publicReg(r) });
+    res.json({ ok: true, registration: publicReg(r), autoVerified: !!r.autoVerified });
   });
 
   app.get('/api/leanlab/event', function (req, res) {
@@ -674,6 +714,7 @@ module.exports = function (app, DATA_DIR) {
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
+      autoVerified: !!r.autoVerified, autoVerifyInfo: r.autoVerifyInfo || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, total: r.installment.total, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null, subId: r.installment.subId || null, nextChargeTs: r.installment.nextChargeTs || null, lastFail: r.installment.lastFail || null } : null,
       slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null,
       cancelReason: r.cancelReason || null, rejectReason: r.rejectReason || null, refund: r.refund || null, autoCancelled: !!r.autoCancelled

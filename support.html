@@ -642,7 +642,7 @@
         if(r.promoPlan==='special'&&ins){
           promoInfo='<div class="cell-sub" style="color:#2563EB">Special · ผ่อน '+Number(ins.perMonth||7490).toLocaleString('en-US')+'×'+(ins.months||6)+' · ตัดทุกวันที่ '+(ins.day||'-')+'</div>';
         } else {
-          promoInfo=r.promo?('<div class="cell-sub" style="color:var(--warn)">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'):'';
+          promoInfo=r.promo?('<div class="cell-sub" style="color:var(--warn)">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'+(r.autoVerified?'<div class="cell-sub" style="color:var(--good,#16A34A);font-weight:700">✓ ตรวจสิทธิ์อัตโนมัติ (พรีออเดอร์)</div>':'')):'';
         }
         var payLabel = r.pay==='card' ? '💳 ชำระผ่านบัตร' : r.pay==='installment' ? 'ผ่อนบัตร' : 'โอนธนาคาร';
         var attachHtml = (slip||proof) ? ('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>') : (r.pay==='card' ? '' : '<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>');

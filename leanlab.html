@@ -1233,7 +1233,10 @@ document.addEventListener('click',function(e){
       if(!data){$('#fProof').classList.add('bad');return;}
       var b=$('#prSubmit');b.disabled=true;b.textContent='กำลังส่ง…';
       fetch('/api/leanlab/register/promo/proof',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({proof:data})})
-        .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';if(!j||!j.ok){return msg($('#prMsg'),'err','ส่งไม่สำเร็จ ลองใหม่');}REG=j.registration;route();})
+        .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';if(!j||!j.ok){return msg($('#prMsg'),'err','ส่งไม่สำเร็จ ลองใหม่');}REG=j.registration;
+          if(REG.status==='awaiting_payment'){ vPay(); }   // ระบบตรวจสิทธิ์กับพรีออเดอร์อัตโนมัติผ่าน → ไปชำระเงินเลย
+          else { route(); }                                  // ไม่เจอข้อมูลตรง → ส่งแอดมินตรวจ (หน้ารอ)
+        })
         .catch(function(){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';msg($('#prMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     };
   }
