@@ -398,7 +398,7 @@
       +     '<div class="ofchips" id="ofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
       +     '<div class="ofchips" id="osChips"><button class="ofc on" data-s="all">ทุกสถานะ</button><button class="ofc" data-s="confirmed">ยืนยัน</button><button class="ofc" data-s="pending">รอชำระเงิน</button><button class="ofc" data-s="cancelled">ยกเลิก</button><button class="ofc" data-s="refunded">คืนเงิน</button></div>'
       +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
-      +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx)">'
+      +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx) / รหัสไปรษณีย์">'
       +   '</div>'
       +   '<div style="overflow-x:auto"><table><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       + '</div>';
@@ -496,9 +496,9 @@
       if(lo!=null||hi!=null){ var t=new Date(r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; }
       if(stB && stB.indexOf(r.status)<0) return false;
       if(q){
-        var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')).toLowerCase();
+        var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')+' '+(r.address||'')).toLowerCase();
         var okText=hay.indexOf(q)>=0;
-        var okPhone=qd&&String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0;
+        var okPhone=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0||String(r.postcode||'').indexOf(qd)>=0);
         if(!okText&&!okPhone)return false;
       }
       return true;
@@ -531,7 +531,7 @@
           ? ('<div class="cell-amt">฿'+Number(ins.total||44940).toLocaleString('en-US')+'</div><div class="cell-sub" style="color:#2563EB">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div class="cell-sub">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div class="cell-sub" style="color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':''))
           : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">โอนธนาคาร</div>'+(slip||proof?('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>'):'<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>'));
         return '<tr>'
-          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
+          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(r.address?'<div class="cell-sub" style="color:var(--muted)">📦 '+llEsc(r.address)+(r.postcode?' '+llEsc(r.postcode):'')+'</div>':'')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
           +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
           +'<td style="min-width:150px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span>'+promoInfo+'</td>'
           +'<td style="min-width:120px">'+base+'</td>'
@@ -589,8 +589,8 @@
       llPost(id,'/cancel',{reason:reason}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ยกเลิกไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llEdit=function(id){var r=LL_REGS[id]||{};
-    llModal('<h3>แก้ไขข้อมูลลูกค้า</h3><label>ชื่อ–นามสกุล</label><input id="edN" value="'+llEsc(r.name||'')+'"><label>เบอร์โทร</label><input id="edP" value="'+llEsc(r.phone||'')+'" placeholder="08x-xxx-xxxx"><div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');
-    document.getElementById('edG').onclick=function(){llPost(id,'/edit',{name:document.getElementById('edN').value,phone:document.getElementById('edP').value}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert(j&&j.error==='not_found'?'ไม่พบข้อมูล':'บันทึกไม่สำเร็จ (ชื่อสั้นเกินไป?)');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
+    llModal('<h3>แก้ไขข้อมูลลูกค้า</h3><label>ชื่อ–นามสกุล</label><input id="edN" value="'+llEsc(r.name||'')+'"><label>เบอร์โทร</label><input id="edP" value="'+llEsc(r.phone||'')+'" placeholder="08x-xxx-xxxx"><label>อีเมล</label><input id="edE" value="'+llEsc(r.email||'')+'" placeholder="you@email.com"><label>ที่อยู่จัดส่ง</label><textarea id="edA" rows="2" style="width:100%;font-family:inherit;resize:vertical" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด">'+llEsc(r.address||'')+'</textarea><label>รหัสไปรษณีย์</label><input id="edZ" value="'+llEsc(r.postcode||'')+'" maxlength="5" placeholder="10250"><div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');
+    document.getElementById('edG').onclick=function(){llPost(id,'/edit',{name:document.getElementById('edN').value,phone:document.getElementById('edP').value,email:document.getElementById('edE').value,address:document.getElementById('edA').value,postcode:document.getElementById('edZ').value}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert(j&&j.error==='email_taken'?'อีเมลนี้ถูกใช้แล้ว':j&&j.error==='bad_email'?'รูปแบบอีเมลไม่ถูกต้อง':j&&j.error==='not_found'?'ไม่พบข้อมูล':'บันทึกไม่สำเร็จ (ชื่อสั้นเกินไป?)');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llRefund=function(id){var r=LL_REGS[id]||{};var max=r.installment?((r.installment.perMonth||0)*(r.installment.paidCount||0)):(r.promoAmount||r.fee||0);
     llModal('<h3>คืนเงิน (บัตรเครดิต)</h3><p class="sub">คืนผ่าน Stripe'+(r.installment?' · แผนผ่อน: หากมีหลายงวดอาจต้องทำใน Stripe Dashboard':'')+'</p>'

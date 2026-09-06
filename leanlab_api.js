@@ -298,6 +298,7 @@ module.exports = function (app, DATA_DIR) {
     if (!r) return null;
     return {
       id: r.id, name: r.name, dob: r.dob || null, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      address: r.address || '', postcode: r.postcode || '',
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null } : null,
@@ -422,6 +423,8 @@ module.exports = function (app, DATA_DIR) {
     r.name = name.slice(0, 80); r.dob = dob; r.age = age; r.gender = gender; r.heightCm = heightCm;
     r.startChoice = choice; r.baseline = baseline; r.fee = EVENT.fee; r.pay = 'bank';
     r.email = m.email || ''; r.phone = phone || m.phone || '';
+    r.address = String(b.address || r.address || '').slice(0, 300);
+    r.postcode = String(b.postcode || r.postcode || '').replace(/\D/g, '').slice(0, 5);
     if (!r.slipUrl) r.status = 'awaiting_payment';
     r.updatedAt = new Date().toISOString();
     writeR(l);
@@ -650,6 +653,7 @@ module.exports = function (app, DATA_DIR) {
     var mem = byId[r.memberId] || {};
     return {
       id: r.id, po: r.po || null, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
+      address: r.address || '', postcode: r.postcode || '',
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
@@ -718,17 +722,26 @@ module.exports = function (app, DATA_DIR) {
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
-  // แก้ไขข้อมูลลูกค้า (ชื่อ / เบอร์โทร)
+  // แก้ไขข้อมูลลูกค้า (ชื่อ / เบอร์โทร / อีเมล / ที่อยู่จัดส่ง)
   app.post('/api/leanlab/admin/registration/:id/edit', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (typeof b.email === 'string' && b.email.trim()) {
+      var newEmail = b.email.trim().toLowerCase();
+      if (!EMAIL_RE.test(newEmail)) return res.status(400).json({ ok: false, error: 'bad_email' });
+      var clash = readM().some(function (m) { return m.id !== r.memberId && String(m.email || '').toLowerCase() === newEmail; });
+      if (clash) return res.status(409).json({ ok: false, error: 'email_taken' });
+      r.email = newEmail;
+    }
     if (typeof b.name === 'string' && b.name.trim().length >= 2) r.name = b.name.trim().slice(0, 80);
     if (typeof b.phone === 'string') r.phone = b.phone.trim().slice(0, 30);
+    if (typeof b.address === 'string') r.address = b.address.trim().slice(0, 300);
+    if (typeof b.postcode === 'string') r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
     r.updatedAt = new Date().toISOString();
     writeR(l);
-    if (r.memberId) { var ml = readM(); var mm = ml.find(function (m) { return m.id === r.memberId; }); if (mm) { mm.name = r.name; if (r.phone) mm.phone = r.phone; writeM(ml); } }
+    if (r.memberId) { var ml = readM(); var mm = ml.find(function (m) { return m.id === r.memberId; }); if (mm) { mm.name = r.name; if (r.phone) mm.phone = r.phone; if (r.email) mm.email = r.email; writeM(ml); } }
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
