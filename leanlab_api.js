@@ -38,10 +38,10 @@ module.exports = function (app, DATA_DIR) {
       items: ['Lean Lab Event', 'Shaker', 'Tumbler', 'Protein', 'Xircle Band', 'Xircle Scale'],
       conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินเพียงครั้งเดียว (ไม่เข้าร่วมบริการผ่อนชำระ)', 'หักยอดจากที่สั่งซื้อ Pre-Order และ Order ปกติได้', 'รายการ Protein ไม่เข้าร่วมโปรโมชั่นทุกกรณี'],
       tiers: [
-        { key: 't0', amount: 44940, label: 'ไม่เคยมีประวัติการซื้อ', needProof: false },
-        { key: 't1', amount: 39950, label: 'เคยซื้อ 39,950 บาท', needProof: true },
-        { key: 't2', amount: 37450, label: 'เคยซื้อ RoutineX', needProof: true },
-        { key: 't3', amount: 32460, label: 'เคยซื้อ Brand + Scale + RoutineX', needProof: true }
+        { key: 't0', amount: 44940, label: 'ยังไม่ PreOrder สินค้าใด ๆ', needProof: false },
+        { key: 't1', amount: 39950, label: 'เคยซื้อ Xircle Band + Xircle Scale', needProof: true },
+        { key: 't2', amount: 37450, label: 'เคยซื้อ RoutineX 1 Set', needProof: true },
+        { key: 't3', amount: 32460, label: 'เคยซื้อ Xircle Band + Xircle Scale + RoutineX', needProof: true }
       ]
     },
     special: {
