@@ -184,6 +184,8 @@
   /* order filters */
   .ofilt{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
   .ofchips{display:flex;flex-wrap:wrap;gap:7px}
+  .ofsel{border:1.5px solid var(--line);background:var(--soft,#fff);color:var(--ink);font-family:inherit;font-weight:600;font-size:.88rem;padding:9px 30px 9px 13px;border-radius:10px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='2.4'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+  .ofsel:focus{outline:none;border-color:var(--brand,#2563EB)}
   .ofc{border:1px solid var(--line);background:var(--soft,#f4f6f9);color:var(--ink);font-family:inherit;font-weight:600;font-size:.82rem;padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s}
   .ofc:hover{border-color:var(--brand,#2563EB)}
   .ofc.on{background:var(--brand,#2563EB);color:#fff;border-color:var(--brand,#2563EB)}
@@ -396,7 +398,7 @@
       +   '<div class="ph"><h3>รายการทั้งหมด</h3><span class="pill lean" id="llCount">–</span></div>'
       +   '<div class="ofilt">'
       +     '<div class="ofchips" id="ofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
-      +     '<div class="ofchips" id="osChips"><button class="ofc on" data-s="all">ทุกสถานะ</button><button class="ofc" data-s="confirmed">ยืนยัน</button><button class="ofc" data-s="pending">รอชำระเงิน</button><button class="ofc" data-s="cancelled">ยกเลิก</button><button class="ofc" data-s="refunded">คืนเงิน</button></div>'
+      +     '<select id="osSelect" class="ofsel"><option value="all">ทุกสถานะ</option><option value="confirmed">ยืนยัน</option><option value="pending">รอชำระเงิน</option><option value="cancelled">ยกเลิก</option><option value="refunded">คืนเงิน</option></select>'
       +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
       +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx) / รหัสไปรษณีย์">'
       +   '</div>'
@@ -413,11 +415,8 @@
       var rg=document.getElementById('ofRange'); if(rg)rg.style.display=(LL_FILT.date==='custom')?'flex':'none';
       orderLoad();
     };});}
-    var sChips=document.getElementById('osChips');
-    if(sChips){[].forEach.call(sChips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
-      [].forEach.call(sChips.querySelectorAll('.ofc'),function(x){x.classList.remove('on');}); b.classList.add('on');
-      LL_FILT.status=b.getAttribute('data-s'); orderLoad();
-    };});}
+    var sSel=document.getElementById('osSelect');
+    if(sSel)sSel.onchange=function(){LL_FILT.status=sSel.value;orderLoad();};
     var ff=document.getElementById('ofFrom'), ft=document.getElementById('ofTo');
     if(ff)ff.onchange=function(){LL_FILT.from=ff.value;orderLoad();};
     if(ft)ft.onchange=function(){LL_FILT.to=ft.value;orderLoad();};
@@ -527,9 +526,11 @@
         } else {
           promoInfo=r.promo?('<div class="cell-sub" style="color:var(--warn)">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'):'';
         }
+        var payLabel = r.pay==='card' ? '💳 ชำระผ่านบัตร' : r.pay==='installment' ? 'ผ่อนบัตร' : 'โอนธนาคาร';
+        var attachHtml = (slip||proof) ? ('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>') : (r.pay==='card' ? '' : '<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>');
         var payCell = (r.promoPlan==='special'&&ins)
           ? ('<div class="cell-amt">฿'+Number(ins.total||44940).toLocaleString('en-US')+'</div><div class="cell-sub" style="color:#2563EB">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div class="cell-sub">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div class="cell-sub" style="color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':''))
-          : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">โอนธนาคาร</div>'+(slip||proof?('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>'):'<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>'));
+          : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">'+payLabel+'</div>'+attachHtml);
         return '<tr>'
           +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(r.address?'<div class="cell-sub" style="color:var(--muted)">📦 '+llEsc(r.address)+(r.postcode?' '+llEsc(r.postcode):'')+'</div>':'')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
           +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
@@ -548,12 +549,12 @@
     var id=r.id, items='', sep='<div class="sep"></div>';
     var card=(r.pay==='card'), instm=!!r.installment;
     if(r.status==='promo_review'){ items+=mi('ok','✓','อนุมัติหลักฐาน','llVerify(\''+id+'\',\'verified\')')+mi('danger','✕','ปฏิเสธหลักฐาน','llReject(\''+id+'\')')+sep; }
-    if(r.status==='pending_review'){ items+=mi('ok','✓','ยืนยันการชำระ','llSet(\''+id+'\',\'confirmed\')')+mi('danger','✕','ปฏิเสธ (ใส่เหตุผล)','llReject(\''+id+'\')')+sep; }
+    if(r.status==='pending_review'){ items+=mi('ok','✓','ยืนยันการชำระ','llSet(\''+id+'\',\'confirmed\')')+mi('warn','↩','ปฏิเสธสลิป · ให้ชำระใหม่','llReject(\''+id+'\')')+sep; }
     if(r.slipUrl) items+=mi('','📄','ดูสลิปการโอน','window.open(\''+r.slipUrl+'\',\'_blank\')');
     if(r.promoProofUrl) items+=mi('','📄','ดูหลักฐานการซื้อ','window.open(\''+r.promoProofUrl+'\',\'_blank\')');
     if(r.slipUrl||r.promoProofUrl) items+=sep;
     if(r.status==='confirmed'){ if(card||instm) items+=mi('warn','↩','คืนเงิน','llRefund(\''+id+'\')'); items+=mi('','🧾','ใบรับเงินมัดจำ','llReceipt(\''+id+'\')'); }
-    if(['cancelled','refunded'].indexOf(r.status)<0) items+=mi('danger','✕','ยกเลิกคำสั่งซื้อ','llCancel(\''+id+'\')');
+    if(['awaiting_payment','confirmed','refunded'].indexOf(r.status)<0) items+=mi('warn','↩','ยกเลิก · ส่งกลับหน้าชำระเงิน','llCancel(\''+id+'\')');
     items+=sep+mi('','✏️','แก้ไขข้อมูลลูกค้า','llEdit(\''+id+'\')')+mi('danger','🗑','ลบข้อมูล','llDel(\''+id+'\')');
     return '<div class="menuwrap"><button class="kebab" onclick="llMenu(this)" aria-label="จัดการ">⋮</button><div class="menu">'+items+'</div></div>';
   }
@@ -580,13 +581,13 @@
       p.then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llCancel=function(id){
-    llModal('<h3>ยกเลิกคำสั่งซื้อ / สิทธิ์จอง</h3><p class="sub">ระบุเหตุผลการยกเลิก</p>'
-      +'<label>เหตุผล</label><select id="cnR"><option>ลูกค้าเปลี่ยนใจ</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
+    llModal('<h3>ยกเลิก · ส่งกลับหน้าชำระเงิน</h3><p class="sub">ลูกค้าจะกลับไปที่หน้าชำระเงินและชำระใหม่ได้ (ไม่ลบสมาชิกออกจากระบบ)</p>'
+      +'<label>เหตุผล (ลูกค้าจะเห็น)</label><select id="cnR"><option>ขอให้ชำระเงินใหม่</option><option>สลิป/หลักฐานไม่ถูกต้อง</option><option>ลูกค้าเปลี่ยนใจ</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
       +'<div id="cnOW" style="display:none"><label>ระบุเหตุผล</label><input id="cnO"></div>'
-      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="cnG">ยืนยันยกเลิก</button></div>');
+      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="cnG">ยืนยัน · ส่งกลับหน้าชำระเงิน</button></div>');
     var sel=document.getElementById('cnR');sel.onchange=function(){document.getElementById('cnOW').style.display=sel.value==='__o'?'block':'none';};
     document.getElementById('cnG').onclick=function(){var reason=sel.value==='__o'?(document.getElementById('cnO').value.trim()||'อื่น ๆ'):sel.value;
-      llPost(id,'/cancel',{reason:reason}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ยกเลิกไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
+      llPost(id,'/cancel',{reason:reason}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llEdit=function(id){var r=LL_REGS[id]||{};
     llModal('<h3>แก้ไขข้อมูลลูกค้า</h3><label>ชื่อ–นามสกุล</label><input id="edN" value="'+llEsc(r.name||'')+'"><label>เบอร์โทร</label><input id="edP" value="'+llEsc(r.phone||'')+'" placeholder="08x-xxx-xxxx"><label>อีเมล</label><input id="edE" value="'+llEsc(r.email||'')+'" placeholder="you@email.com"><label>ที่อยู่จัดส่ง</label><textarea id="edA" rows="2" style="width:100%;font-family:inherit;resize:vertical" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด">'+llEsc(r.address||'')+'</textarea><label>รหัสไปรษณีย์</label><input id="edZ" value="'+llEsc(r.postcode||'')+'" maxlength="5" placeholder="10250"><div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');

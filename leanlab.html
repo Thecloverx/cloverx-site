@@ -828,7 +828,7 @@ document.addEventListener('click',function(e){
     if(!ME.loggedIn){renderAuth();return;}
     var p=$('#sidePanel'), st=REG&&REG.status;
     if(!REG){
-      p.innerHTML='<div class="card"><h2 class="tt">พร้อมเปลี่ยนแปลงหรือยัง? 🔥</h2><p class="sub">คุณเข้าสู่ระบบแล้ว เริ่มลงทะเบียนเข้าร่วม Lean Lab Season 1 ได้เลย</p><button class="btn lime block lg" id="ctaReg">ลงทะเบียนเข้าร่วม</button><p class="hint" style="text-align:center;margin-top:12px">ค่าสมัคร '+thb(EVENT.fee)+' · โอนธนาคาร</p></div>';
+      p.innerHTML='<div class="card"><h2 class="tt">พร้อมเปลี่ยนแปลงหรือยัง? 🔥</h2><p class="sub">คุณเข้าสู่ระบบแล้ว เริ่มลงทะเบียนเข้าร่วม Lean Lab Season 1 ได้เลย</p><button class="btn lime block lg" id="ctaReg">ลงทะเบียนเข้าร่วม</button></div>';
       $('#ctaReg').onclick=function(){W={};vStep1();};
     } else if(st==='awaiting_payment'){
       var amt=thb((REG.promoPlan?REG.promoAmount:REG.fee)||EVENT.fee);
@@ -1100,7 +1100,7 @@ document.addEventListener('click',function(e){
       .then(function(r){return r.json();})
       .then(function(j){
         if(y){y.disabled=false;y.textContent='ยืนยันการชำระเงิน';}
-        if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
+        if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว',too_many_requests:'ทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่',not_logged_in:'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
         REG=j.registration; vChoosePay();
       })
       .catch(function(){if(y){y.disabled=false;y.textContent='ยืนยันการชำระเงิน';}msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});

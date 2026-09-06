@@ -66,10 +66,13 @@ module.exports = function (app, DATA_DIR) {
 
   // ---------- rate limiting / anti-abuse (in-memory) ----------
   function clientIp(req) { return String((req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || req.connection && req.connection.remoteAddress || 'x'); }
+  // ตัวระบุผู้ใช้สำหรับ rate-limit: ถ้าล็อกอินแล้วใช้ member id (กันปัญหา CGNAT/5G ที่หลายคนใช้ IP เดียวกัน
+  // แล้วโดนบล็อกข้ามกัน) — ถ้ายังไม่ล็อกอินค่อย fallback เป็น IP
+  function rlWho(req) { try { var m = currentMember(req); if (m && m.id) return 'm:' + m.id; } catch (e) { } return 'ip:' + clientIp(req); }
   var _rl = {};
-  // จำกัดจำนวนครั้งต่อ IP ต่อหน้าต่างเวลา — คืน true ถ้ายังไม่เกิน
+  // จำกัดจำนวนครั้งต่อผู้ใช้ (member id ถ้าล็อกอิน มิฉะนั้น IP) ต่อหน้าต่างเวลา — คืน true ถ้ายังไม่เกิน
   function rlOk(bucket, req, max, windowMs) {
-    var key = bucket + ':' + clientIp(req), now = Date.now(), b = _rl[key];
+    var key = bucket + ':' + rlWho(req), now = Date.now(), b = _rl[key];
     if (!b || now > b.reset) { _rl[key] = { n: 1, reset: now + windowMs }; return true; }
     b.n++; return b.n <= max;
   }
@@ -186,7 +189,7 @@ module.exports = function (app, DATA_DIR) {
   const googleConfigured = function () { return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET); };
 
   // ============================ EMAIL AUTH ============================
-  app.post('/api/leanlab/auth/register', limit('auth', 15, 300000), function (req, res) {
+  app.post('/api/leanlab/auth/register', limit('auth', 60, 300000), function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     const pw = String(b.password || '');
@@ -201,7 +204,7 @@ module.exports = function (app, DATA_DIR) {
   });
 
   // สมัครแบบฟอร์มเดียว ไม่ต้องรหัสผ่าน — มีอีเมลอยู่แล้วก็ใช้บัญชีเดิม (resume)
-  app.post('/api/leanlab/auth/join', limit('auth', 15, 300000), function (req, res) {
+  app.post('/api/leanlab/auth/join', limit('auth', 60, 300000), function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     const name = String(b.name || '').trim();
@@ -221,7 +224,7 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, member: publicMember(m) });
   });
 
-  app.post('/api/leanlab/auth/login', limit('login', 12, 300000), function (req, res) {
+  app.post('/api/leanlab/auth/login', limit('login', 40, 300000), function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     const phone = String(b.phone || b.password || '').trim();
@@ -725,13 +728,20 @@ module.exports = function (app, DATA_DIR) {
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
-  // ยกเลิกคำสั่งซื้อ/สิทธิ์จอง (ใส่เหตุผล)
+  // "ยกเลิก" = ส่งลูกค้ากลับไปหน้าชำระเงิน (ไม่ลบสมาชิกออกจากระบบ)
+  // เคลียร์สลิป/หลักฐาน แล้วตั้งสถานะเป็น awaiting_payment เพื่อให้ลูกค้าชำระใหม่ได้
   app.post('/api/leanlab/admin/registration/:id/cancel', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-    r.status = 'cancelled'; r.cancelReason = String(b.reason || '').slice(0, 200) || 'ยกเลิกโดยแอดมิน'; r.cancelledAt = new Date().toISOString(); r.autoCancelled = false;
+    r.status = 'awaiting_payment';
+    r.slipUrl = null; r.slip = null;
+    r.cancelReason = null; r.cancelledAt = null; r.autoCancelled = false;
+    // เก็บเหตุผลไว้แสดงให้ลูกค้าเห็นบนหน้าชำระเงิน (ถ้าระบุมา)
+    var reason = String(b.reason || '').slice(0, 200);
+    r.rejectReason = reason || null;
+    r.reviewedAt = new Date().toISOString();
     writeR(l);
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
