@@ -1057,16 +1057,24 @@ document.addEventListener('click',function(e){
     +'<h2 class="tt">ตรวจสอบข้อมูล</h2><p class="sub">โปรดตรวจสอบให้ถูกต้องก่อนยืนยัน — ยืนยัน 2 ครั้งเพื่อความชัวร์</p>'
     +'<div class="rev">'+rows+'</div>'
     +'<div class="msg" id="cfMsg"></div>'
-    +'<div class="rowbtns"><button class="btn ghost block" id="cfback">ย้อนกลับ</button><button class="btn lime block" id="cfsubmit">ยืนยันการสมัคร</button></div>'
+    +'<div style="display:flex;flex-direction:column;gap:10px">'
+    + '<button class="btn block lg" id="cfPromo" style="background:rgba(255,196,107,.14);color:var(--orange);border:1.5px solid rgba(255,196,107,.5);font-weight:800">🎁 รับโปรโมชั่นพิเศษ</button>'
+    + '<button class="btn lime block lg" id="cfPay">ยืนยันชำระเงิน</button>'
+    + '<button class="btn ghost block" id="cfback">ย้อนกลับ</button>'
+    +'</div>'
     +'</div>';
     $('#cfback').onclick=function(){if(W.startChoice==='now')vStep3();else vStep2();};
-    $('#cfsubmit').onclick=openConfirm;
+    $('#cfPay').onclick=function(){openConfirm('pay');};
+    $('#cfPromo').onclick=function(){openConfirm('promo');};
   }
 
-  function openConfirm(){$('#confirmModal').classList.add('on');$('#confirmYes').onclick=doSubmitReg;}
+  function openConfirm(next){$('#confirmModal').classList.add('on');$('#confirmYes').onclick=function(){doSubmitReg(next);};}
   function closeConfirm(){$('#confirmModal').classList.remove('on');}
+  // หลังบันทึกใบสมัครแล้ว → ไปตามทางที่ลูกค้าเลือก
+  function goPayNormal(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:false})}).then(function(){vPay();}).catch(function(){vPay();}); }
+  function goPromo(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:true})}).then(function(r){return r.json();}).then(function(j){ if(!j||!j.ok){ if(j&&j.error==='promo_full'){alert('ขออภัย สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว');} else {alert('ทำรายการไม่สำเร็จ ลองใหม่');} return vChoosePay(); } REG=j.registration; vPromo(j); }).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');vChoosePay();}); }
 
-  function doSubmitReg(){
+  function doSubmitReg(next){
     var y=$('#confirmYes');y.disabled=true;y.textContent='กำลังส่ง…';
     var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice,address:W.address,postcode:W.postcode};
     if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
@@ -1075,7 +1083,8 @@ document.addEventListener('click',function(e){
       .then(function(j){
         y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();
         if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
-        REG=j.registration;vChoosePay();
+        REG=j.registration;
+        if(next==='pay'){goPayNormal();} else if(next==='promo'){goPromo();} else {vChoosePay();}
       })
       .catch(function(){y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
   }
