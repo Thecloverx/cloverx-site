@@ -568,7 +568,7 @@ document.addEventListener('click',function(e){
     WELCOME_SHOWN=true;
     var slides=[ {img:'ll_pop_1.jpg',imgD:'ll_pop_1.jpg',alt:'Lean Lab X'}, {img:'ll_pop_2.jpg',imgD:'ll_pop_2.jpg',alt:'Lean Lab Early Bird'}, {img:'ll_pop_3.jpg',imgD:'ll_pop_3.jpg',alt:'Promotion Grand Slam'}, {img:'ll_pop_4.jpg',imgD:'ll_pop_4.jpg',alt:'Promotion Grand Slam'} ];
     var isDesk=window.innerWidth>620;
-    var idx=0, closable=false, cdStarted=false, CD_SECS=5;
+    var idx=0, closable=true, cdStarted=false, CD_SECS=5;
     var ov=document.createElement('div');ov.className='wpop-ov';ov.id='wpopOv';
     ov.innerHTML='<div class="wpop"><div class="wcd" id="wpopCd" hidden></div><button class="wclose" id="wpopX" aria-label="ปิด" hidden>✕</button><img class="wposter" id="wposter" alt=""><div class="wdots"></div></div>';
     document.body.appendChild(ov);
@@ -590,8 +590,7 @@ document.addEventListener('click',function(e){
       poster.onerror=function(){ poster.onerror=null; poster.src=s.img; };   // ถ้ายังไม่มีรูป desktop → ใช้รูปเดิม
       poster.src=src; poster.alt=s.alt||'';
       dots.innerHTML=slides.map(function(_,i){return '<span class="'+(i===idx?'on':'')+'"></span>';}).join('');
-      xbtn.hidden=!closable;
-      if(idx>=slides.length-1) startCountdown();     // สไลด์สุดท้าย → นับถอยหลัง 3 วิ แล้วค่อยขึ้น ✕
+      xbtn.hidden=false;     // กากบาทกดปิดได้ทันที ไม่ต้องรอนับวิ
     }
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
     render();
