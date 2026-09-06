@@ -90,7 +90,7 @@
     .wpop .wcd{top:10px;right:10px;width:38px;height:38px;font-size:1.02rem}
     .wpop .wdots{bottom:12px}
   }
-  @media(prefers-reduced-motion:reduce){.neonbtn{animation:none}.neonbtn::after{display:none}.llx-cta.neon{animation:none}.llx-cta.neon::after{display:none}.llx-hquota{animation:none}.llx-hquota::after{display:none}}
+  @media(prefers-reduced-motion:reduce){.neonbtn{animation:none}.neonbtn::after{display:none}.llx-cta.neon{animation:none}.llx-cta.neon::after{display:none}.llx-hquota{animation:none}.llx-hquota::after{display:none}.pobox{animation:none}.pobox .poval{animation:none}}
   .btn.ghost{background:transparent;border-color:var(--line2);color:var(--ink)}
   .btn.ghost:hover{border-color:var(--lime);color:var(--lime)}
   .btn.block{width:100%}
@@ -236,10 +236,12 @@
   .stbig .ic.wait{background:rgba(255,196,107,.14);color:var(--orange)}
   .stbig h2{font-size:1.7rem}
   .stbig p{color:var(--muted);margin-top:8px}
-  .pobox{margin-top:18px;text-align:center;border:1px solid var(--lime);background:rgba(200,245,106,.08);border-radius:14px;padding:16px}
+  .pobox{position:relative;margin-top:18px;text-align:center;border:1.5px solid var(--lime);background:rgba(200,245,106,.08);border-radius:14px;padding:16px;animation:poGlow 2.2s ease-in-out infinite}
   .pobox .polbl{display:block;font-size:.78rem;color:var(--muted);letter-spacing:.04em}
-  .pobox .poval{display:block;font-family:var(--ff-d);font-weight:800;font-size:1.9rem;color:var(--lime);letter-spacing:.06em;margin:4px 0}
+  .pobox .poval{display:block;font-family:var(--ff-d);font-weight:800;font-size:2rem;color:var(--lime);letter-spacing:.09em;margin:5px 0;animation:poShine 1.8s ease-in-out infinite}
   .pobox .pohint{display:block;font-size:.74rem;color:var(--muted)}
+  @keyframes poGlow{0%,100%{box-shadow:0 0 0 1px rgba(200,245,106,.4),0 0 10px rgba(200,245,106,.35),0 0 22px rgba(86,200,255,.2)}50%{box-shadow:0 0 0 1px rgba(200,245,106,.85),0 0 18px rgba(200,245,106,.7),0 0 34px rgba(86,200,255,.45)}}
+  @keyframes poShine{0%,100%{text-shadow:0 0 6px rgba(200,245,106,.5),0 0 14px rgba(200,245,106,.3)}50%{text-shadow:0 0 12px rgba(200,245,106,.95),0 0 26px rgba(200,245,106,.7),0 0 40px rgba(86,200,255,.4)}}
   .oid{font-family:var(--ff-d);color:var(--lime)}
 
   .rowbtns{display:flex;gap:12px;margin-top:22px}
@@ -744,7 +746,7 @@
          +'<div class="r"><span>วันตัดบัตร</span><b>ทุกวันที่ '+(ins.day||'-')+' ของเดือน</b></div>'
          +(paid>=mo?'<div class="r"><span>สถานะ</span><b style="color:var(--lime)">ผ่อนครบแล้ว ✓</b></div>':'')+'</div>';
       }
-      p.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการชำระเงิน 🎉</h2><p>คุณเข้าร่วม Lean Lab Season 1 เรียบร้อยแล้ว ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบเร็ว ๆ นี้</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">เลขคำสั่งซื้อ (PO)</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+'</div>';
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการสั่งซื้อ</h2><p>เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว ทีมงานจะดำเนินการตรวจสอบและแจ้งรายละเอียดให้ทราบอีกครั้ง</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">หมายเลขคำสั่งซื้อ</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บหมายเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+'</div>';
     } else {
       p.innerHTML='<div class="card"><h2 class="tt">Lean Lab</h2><p class="sub">สถานะการสมัคร: '+esc(st||'-')+'</p></div>';
     }
