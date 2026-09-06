@@ -54,8 +54,10 @@
   /* welcome popup */
   .wpop-ov{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,12,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .3s}
   .wpop-ov.show{opacity:1}
-  .wpop{position:relative;width:min(860px,100%);max-height:92vh;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;background:linear-gradient(160deg,#0b1a29,#050b14);border:1px solid var(--line2);border-radius:22px;box-shadow:0 40px 120px -30px #000,0 0 70px -22px rgba(46,134,255,.5);transform:translateY(18px) scale(.98);transition:transform .38s cubic-bezier(.2,.9,.3,1)}
+  .wpop{position:relative;overflow:hidden;background:#050b14;border:1px solid var(--line2);border-radius:20px;box-shadow:0 40px 120px -30px #000,0 0 70px -22px rgba(46,134,255,.5);transform:translateY(18px) scale(.98);transition:transform .38s cubic-bezier(.2,.9,.3,1)}
   .wpop-ov.show .wpop{transform:none}
+  .wposter{display:block;max-height:90vh;max-width:94vw;width:auto;height:auto;cursor:pointer;transition:opacity .28s}
+  .wpop.switching .wposter{opacity:.2}
   .wpop .wpic{position:relative;background:#03080f center/cover;background-image:url('ll_hero.jpg')}
   .wpop .wpic::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,#070f1a)}
   .wpop .wbody{padding:34px 30px 28px;display:flex;flex-direction:column;min-width:0}
@@ -82,14 +84,11 @@
   .wpop .wdots span.on{background:var(--lime);width:20px;border-radius:4px}
   .wpop .wclose[hidden]{display:none}
   @media(max-width:620px){
-    .wpop-ov{padding:12px;align-items:flex-end}
-    .wpop{grid-template-columns:1fr;max-width:440px;max-height:90vh;overflow-y:auto;border-radius:20px}
-    .wpop .wpic{height:120px;min-height:120px}
-    .wpop .wpic::after{background:linear-gradient(180deg,transparent 30%,#070f1a)}
-    .wpop .wbody{padding:20px 18px 34px}
-    .wpop .wgoals button{padding:14px 15px;font-size:.98rem}
-    .wpop .wclose{top:10px;right:10px;width:38px;height:38px;font-size:1.05rem;background:rgba(3,8,15,.75)}
-    .wpop .wdots{bottom:14px}
+    .wpop-ov{padding:12px}
+    .wposter{max-height:88vh;max-width:92vw}
+    .wpop .wclose{top:10px;right:10px;width:38px;height:38px;font-size:1.05rem;background:rgba(3,8,15,.8)}
+    .wpop .wcd{top:10px;right:10px;width:38px;height:38px;font-size:1.02rem}
+    .wpop .wdots{bottom:12px}
   }
   @media(prefers-reduced-motion:reduce){.neonbtn{animation:none}.neonbtn::after{display:none}}
   .btn.ghost{background:transparent;border-color:var(--line2);color:var(--ink)}
@@ -491,15 +490,13 @@
     try{if(sessionStorage.getItem('ll_welcome'))return;}catch(e){}
     if(REG&&REG.status==='confirmed')return;   // ข้ามเฉพาะคนที่ยืนยันจ่ายเงินแล้ว
     WELCOME_SHOWN=true;
-    var slides=[
-      {img:'ll_hero.jpg',eye:'Welcome · Lean Lab',h:'จองสิทธิ์เข้าร่วม<br><em>ก่อนใคร</em> วันนี้',q:'โปรแกรมเปลี่ยนพฤติกรรมสุขภาพ 4 Onsite ที่วัดผลได้จริง เห็นการเปลี่ยนแปลงชัดเจน',foot:'🎁 จำกัดสิทธิ์เพียง 100 คนแรกเท่านั้น',goals:null},
-      {img:'ll_join.jpg',eye:'เริ่มต้นการเปลี่ยนแปลง',h:'เป้าหมายสุขภาพ<br>ของคุณ<em>คืออะไร?</em>',q:'เลือกเป้าหมาย แล้วเริ่มลงทะเบียนได้เลย',foot:'',goals:['ลดไขมัน กระชับสัดส่วน','เพิ่มกล้ามเนื้อ แข็งแรงขึ้น','สุขภาพดี นอนหลับดีขึ้น','เปลี่ยนไลฟ์สไตล์ระยะยาว']}
-    ];
+    var slides=[ {img:'ll_pop1.jpg',alt:'Lean Lab Early Bird'}, {img:'ll_pop2.jpg',alt:'Promotion'} ];
     var idx=0, closable=false, cdStarted=false, CD_SECS=3;
     var ov=document.createElement('div');ov.className='wpop-ov';ov.id='wpopOv';
-    ov.innerHTML='<div class="wpop"><div class="wcd" id="wpopCd" hidden></div><button class="wclose" id="wpopX" aria-label="ปิด" hidden>✕</button><div class="wpic"></div><div class="wbody"></div><div class="wdots"></div></div>';
+    ov.innerHTML='<div class="wpop"><div class="wcd" id="wpopCd" hidden></div><button class="wclose" id="wpopX" aria-label="ปิด" hidden>✕</button><img class="wposter" id="wposter" alt=""><div class="wdots"></div></div>';
     document.body.appendChild(ov);
-    var pop=ov.querySelector('.wpop'),pic=ov.querySelector('.wpic'),body=ov.querySelector('.wbody'),dots=ov.querySelector('.wdots'),xbtn=ov.querySelector('#wpopX'),cd=ov.querySelector('#wpopCd');
+    var pop=ov.querySelector('.wpop'),poster=ov.querySelector('#wposter'),dots=ov.querySelector('.wdots'),xbtn=ov.querySelector('#wpopX'),cd=ov.querySelector('#wpopCd');
+    poster.onclick=function(){ remove(); scrollToJoin(false); };
     function remove(){ try{sessionStorage.setItem('ll_welcome','1');}catch(e){} ov.classList.remove('show'); setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},320); }
     function startCountdown(){
       if(cdStarted)return; cdStarted=true;
@@ -512,14 +509,9 @@
     }
     function render(){
       var s=slides[idx];
-      pic.style.backgroundImage="url('"+s.img+"')";
-      var html='<span class="weye">'+s.eye+'</span><h3>'+s.h+'</h3><p class="wq">'+s.q+'</p>';
-      if(s.goals){html+='<div class="wgoals">'+s.goals.map(function(g){return '<button type="button">'+g+'</button>';}).join('')+'</div>';}
-      if(s.foot){html+='<div class="wfoot">'+s.foot+'</div>';}
-      body.innerHTML=html;
+      poster.src=s.img; poster.alt=s.alt||'';
       dots.innerHTML=slides.map(function(_,i){return '<span class="'+(i===idx?'on':'')+'"></span>';}).join('');
       xbtn.hidden=!closable;
-      body.querySelectorAll('.wgoals button').forEach(function(b){b.onclick=function(){remove();scrollToJoin(false);};});
       if(idx>=slides.length-1) startCountdown();     // สไลด์สุดท้าย → นับถอยหลัง 3 วิ แล้วค่อยขึ้น ✕
     }
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
