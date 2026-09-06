@@ -490,7 +490,7 @@
     try{if(sessionStorage.getItem('ll_welcome'))return;}catch(e){}
     if(REG&&REG.status==='confirmed')return;   // ข้ามเฉพาะคนที่ยืนยันจ่ายเงินแล้ว
     WELCOME_SHOWN=true;
-    var slides=[ {img:'ll_pop1.jpg',imgD:'ll_pop1_d.jpg',alt:'Lean Lab Early Bird'}, {img:'ll_pop2.jpg',imgD:'ll_pop2_d.jpg',alt:'Promotion'} ];
+    var slides=[ {img:'ll_pop_1.jpg',imgD:'ll_pop_1.jpg',alt:'Lean Lab X'}, {img:'ll_pop_2.jpg',imgD:'ll_pop_2.jpg',alt:'Lean Lab Early Bird'}, {img:'ll_pop_3.jpg',imgD:'ll_pop_3.jpg',alt:'Promotion Grand Slam'}, {img:'ll_pop_4.jpg',imgD:'ll_pop_4.jpg',alt:'Promotion Grand Slam'} ];
     var isDesk=window.innerWidth>620;
     var idx=0, closable=false, cdStarted=false, CD_SECS=5;
     var ov=document.createElement('div');ov.className='wpop-ov';ov.id='wpopOv';
@@ -520,7 +520,7 @@
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
     render();
     requestAnimationFrame(function(){ov.classList.add('show');});
-    setTimeout(function(){ go(1); },5000);          // เลื่อนไปสไลด์ 2 อัตโนมัติหลัง 5 วินาที
+    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },3000);  // เลื่อนสไลด์อัตโนมัติทุก 3 วินาที
     xbtn.onclick=function(){ if(closable)remove(); };
     ov.addEventListener('click',function(e){ if(e.target===ov&&closable)remove(); });
     dots.addEventListener('click',function(e){ if(closable){var sp=[].indexOf.call(dots.children,e.target); if(sp>=0)go(sp);} });
