@@ -181,6 +181,16 @@
   .ph-empty .ic{width:60px;height:60px;border-radius:16px;background:var(--soft);color:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
   .ph-empty h3{color:var(--ink);font-size:1.2rem;margin-bottom:6px}
   .view{display:none}.view.active{display:block}
+  /* order filters */
+  .ofilt{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .ofchips{display:flex;flex-wrap:wrap;gap:7px}
+  .ofc{border:1px solid var(--line);background:var(--soft,#f4f6f9);color:var(--ink);font-family:inherit;font-weight:600;font-size:.82rem;padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+  .ofc:hover{border-color:var(--brand,#2563EB)}
+  .ofc.on{background:var(--brand,#2563EB);color:#fff;border-color:var(--brand,#2563EB)}
+  .ofrange{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.85rem}
+  .ofrange input{padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.85rem;background:var(--soft,#fff);color:var(--ink)}
+  #ofSearch{flex:1;min-width:220px;padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;background:var(--soft,#fff);color:var(--ink)}
+  #ofSearch:focus,.ofrange input:focus{outline:none;border-color:var(--brand,#2563EB)}
 </style>
 
 <div class="app">
@@ -374,10 +384,31 @@
       + '<div class="panel" style="background:var(--warn-tint,#FFF6E6);border:1px solid var(--warn,#C77700)"><div style="font-size:.86rem;color:var(--ink);line-height:1.7"><b>ขั้นตอน Admin สำหรับลูกค้าที่รับสิทธิ์พิเศษ (Option ที่ต้องแนบหลักฐาน):</b><br>1) ลูกค้าแนบภาพ + รายละเอียดการซื้อ → สถานะ <span class="pill pend">รอตรวจหลักฐาน</span><br>2) Admin กด <b>✓ อนุมัติหลักฐาน</b> เมื่อตรวจว่าถูกต้อง → ลูกค้าจึงชำระเงินได้<br>3) เมื่อลูกค้าชำระผ่าน → ย้ายเข้า <b>Member</b> ตามวันเริ่มที่เลือก</div></div>'
       + '<div class="panel">'
       +   '<div class="ph"><h3>รายการทั้งหมด</h3><span class="pill lean" id="llCount">–</span></div>'
+      +   '<div class="ofilt">'
+      +     '<div class="ofchips" id="ofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
+      +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
+      +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx)">'
+      +   '</div>'
       +   '<div style="overflow-x:auto"><table><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       + '</div>';
   }
-  function orderInit(){ var rb=document.getElementById('llRefresh'); if(rb)rb.onclick=orderLoad; orderLoad(); }
+  function orderInit(){
+    LL_FILT={date:'all',from:'',to:'',q:''};
+    var rb=document.getElementById('llRefresh'); if(rb)rb.onclick=orderLoad;
+    var chips=document.getElementById('ofChips');
+    if(chips){[].forEach.call(chips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
+      [].forEach.call(chips.querySelectorAll('.ofc'),function(x){x.classList.remove('on');}); b.classList.add('on');
+      LL_FILT.date=b.getAttribute('data-d');
+      var rg=document.getElementById('ofRange'); if(rg)rg.style.display=(LL_FILT.date==='custom')?'flex':'none';
+      orderLoad();
+    };});}
+    var ff=document.getElementById('ofFrom'), ft=document.getElementById('ofTo');
+    if(ff)ff.onchange=function(){LL_FILT.from=ff.value;orderLoad();};
+    if(ft)ft.onchange=function(){LL_FILT.to=ft.value;orderLoad();};
+    var s=document.getElementById('ofSearch'), tmr;
+    if(s)s.oninput=function(){LL_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(orderLoad,280);};
+    orderLoad();
+  }
 
   // ----- Member (เฉพาะลูกค้าที่ชำระ/ยืนยันแล้ว แยกตาม Choice การเริ่ม) -----
   function memberView(mode){
@@ -419,15 +450,37 @@
   }
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var LL_FILT={date:'all',from:'',to:'',q:''};
+  function llFilterList(regs){
+    var f=LL_FILT;
+    function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
+    var t0=dayStart(new Date()), DAY=86400000, lo=null, hi=null;
+    if(f.date==='today'){lo=t0;hi=t0+DAY;}
+    else if(f.date==='yst'){lo=t0-DAY;hi=t0;}
+    else if(f.date==='7d'){lo=t0-6*DAY;hi=t0+DAY;}
+    else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
+    else if(f.date==='custom'){ if(f.from)lo=dayStart(f.from); if(f.to)hi=dayStart(f.to)+DAY; }
+    var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
+    return (regs||[]).filter(function(r){
+      if(lo!=null||hi!=null){ var t=new Date(r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; }
+      if(q){
+        var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')).toLowerCase();
+        var okText=hay.indexOf(q)>=0;
+        var okPhone=qd&&String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0;
+        if(!okText&&!okPhone)return false;
+      }
+      return true;
+    });
+  }
   function orderLoad(){
     fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       if(!j||!j.ok)return;
-      var c=j.counts||{};
-      var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' รายการ';
       var tb=document.getElementById('llBody');if(!tb)return;
-      var regs=j.registrations||[];
-      window.LL_REGS={};regs.forEach(function(r){LL_REGS[r.id]=r;});
-      if(!regs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">ยังไม่มีผู้สมัคร</td></tr>';return;}
+      var all=j.registrations||[];
+      window.LL_ALL=all; window.LL_REGS={};all.forEach(function(r){LL_REGS[r.id]=r;});
+      var regs=llFilterList(all);
+      var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=regs.length+' / '+all.length+' รายการ';
+      if(!regs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">'+(all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีผู้สมัคร')+'</td></tr>';return;}
       tb.innerHTML=regs.map(function(r){
         var s=LL_ST[r.status]||[r.status,'pend'];
         var start=r.startChoice==='now'?'เริ่มตอนนี้':'8 พ.ย. 2569';
@@ -446,7 +499,7 @@
           ? ('<div class="cell-amt">฿'+Number(ins.total||44940).toLocaleString('en-US')+'</div><div class="cell-sub" style="color:#2563EB">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div class="cell-sub">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div class="cell-sub" style="color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':''))
           : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">โอนธนาคาร</div>'+(slip||proof?('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>'):'<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>'));
         return '<tr>'
-          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
+          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
           +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
           +'<td style="min-width:150px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span>'+promoInfo+'</td>'
           +'<td style="min-width:120px">'+base+'</td>'
