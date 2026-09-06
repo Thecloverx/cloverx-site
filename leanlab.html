@@ -90,7 +90,7 @@
     .wpop .wcd{top:10px;right:10px;width:38px;height:38px;font-size:1.02rem}
     .wpop .wdots{bottom:12px}
   }
-  @media(prefers-reduced-motion:reduce){.neonbtn{animation:none}.neonbtn::after{display:none}.llx-cta.neon{animation:none}.llx-cta.neon::after{display:none}}
+  @media(prefers-reduced-motion:reduce){.neonbtn{animation:none}.neonbtn::after{display:none}.llx-cta.neon{animation:none}.llx-cta.neon::after{display:none}.llx-hquota{animation:none}.llx-hquota::after{display:none}}
   .btn.ghost{background:transparent;border-color:var(--line2);color:var(--ink)}
   .btn.ghost:hover{border-color:var(--lime);color:var(--lime)}
   .btn.block{width:100%}
@@ -274,7 +274,10 @@
   .llx-cta{background:var(--lime);color:var(--lime-ink);border:0;border-radius:999px;padding:9px 20px;font-family:var(--ff);font-weight:700;font-size:.88rem;cursor:pointer;white-space:nowrap}
   .llx-cta:hover{background:var(--lime-d)}
   /* header quota pill + neon join button */
-  .llx-hquota{display:inline-flex;align-items:center;gap:7px;background:rgba(8,13,20,.9);border:1px solid rgba(255,196,107,.35);color:var(--orange);font-weight:700;font-size:.82rem;line-height:1;padding:8px 15px;border-radius:999px;white-space:nowrap;box-shadow:0 0 12px -4px rgba(255,196,107,.4)}
+  .llx-hquota{position:relative;overflow:hidden;isolation:isolate;display:inline-flex;align-items:center;background:rgba(8,13,20,.92);border:1px solid rgba(255,196,107,.6);color:var(--orange);font-weight:700;font-size:.82rem;line-height:1;padding:8px 15px;border-radius:999px;white-space:nowrap;animation:quotaNeon 2.4s ease-in-out infinite}
+  .llx-hquota .qt{position:relative;z-index:2}
+  .llx-hquota::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,214,150,.55),transparent);transform:skewX(-20deg);z-index:1;animation:neonsweep 3.2s ease-in-out infinite}
+  @keyframes quotaNeon{0%,100%{box-shadow:0 0 0 1px rgba(255,196,107,.5),0 0 8px rgba(255,170,80,.45),0 0 20px rgba(255,150,60,.3)}50%{box-shadow:0 0 0 1px rgba(255,196,107,.9),0 0 16px rgba(255,170,80,.8),0 0 30px rgba(255,150,60,.55)}}
   .llx-cta.neon{position:relative;overflow:hidden;isolation:isolate;animation:ctaNeon 2.2s ease-in-out infinite}
   .llx-cta.neon>span{position:relative;z-index:2}
   .llx-cta.neon::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);z-index:1;animation:neonsweep 3s ease-in-out infinite}
@@ -526,7 +529,7 @@
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
     render();
     requestAnimationFrame(function(){ov.classList.add('show');});
-    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },4000);  // เลื่อนสไลด์อัตโนมัติทุก 4 วินาที
+    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },3500);  // เลื่อนสไลด์อัตโนมัติทุก 3.5 วินาที
     xbtn.onclick=function(){ if(closable)remove(); };
     ov.addEventListener('click',function(e){ if(e.target===ov&&closable)remove(); });
     dots.addEventListener('click',function(e){ if(closable){var sp=[].indexOf.call(dots.children,e.target); if(sp>=0)go(sp);} });
@@ -663,7 +666,7 @@
     +' <nav class="llx-mnav"><a data-scroll="top">About Us</a><a data-scroll="goal">Project Goal</a><a data-scroll="prog">The Journey</a><a data-scroll="prize">The Reward</a></nav>'
     +' <div class="sp"></div>'
     +' <div class="llx-acts">'
-    +'   <span class="llx-hquota">🎁 จำกัดสิทธิ์เพียง 100 สิทธิ์เท่านั้น</span>'
+    +'   <span class="llx-hquota"><span class="qt">🎁 จำกัดสิทธิ์เพียง 100 สิทธิ์เท่านั้น</span></span>'
     +'   <button class="llx-cta neon" data-go="join"><span>'+T('join')+'</span></button>'
     +' </div></div></div>'
     // ===== hero — image only, nothing else =====
