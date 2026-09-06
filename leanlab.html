@@ -1352,11 +1352,11 @@ document.addEventListener('click',function(e){
 
   // ---------- STATUS ----------
   function vStatus(){
-    showApp();
+    showApp(); stopPoll();
     var s=REG&&REG.status;
     var ic,cls,title,desc;
-    if(s==='confirmed'){cls='ok';ic='<path d="M20 6 9 17l-5-5"/>';title='ยืนยันสิทธิ์เรียบร้อย! 🎉';desc='คุณเข้าร่วม Lean Lab Season 1 แล้ว ทีมงานจะติดต่อแจ้งรายละเอียดจุดนัดพบ';}
-    else if(s==='pending_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอตรวจสอบการชำระเงิน';desc='เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ';}
+    if(s==='confirmed'){ return vThankYou(); }  // ยืนยันแล้ว → หน้าขอบคุณเต็มจอ
+    else if(s==='pending_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอตรวจสอบการชำระเงิน';desc='เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จหน้านี้จะอัปเดตให้อัตโนมัติ';}
     else {return vChoosePay();} // awaiting_payment
     app.innerHTML='<div class="card"><div class="stbig"><div class="ic '+cls+'"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'+ic+'</svg></div>'
       +'<h2>'+title+'</h2><p>'+desc+'</p>'
@@ -1366,10 +1366,20 @@ document.addEventListener('click',function(e){
       + '<div class="r"><span>ค่าสมัคร</span><b>'+thb(REG.fee)+'</b></div>'
       + '<div class="r"><span>สถานะ</span><b style="color:'+(s==='confirmed'?'var(--lime)':'var(--orange)')+'">'+(s==='confirmed'?'ยืนยันแล้ว':'รอตรวจสอบ')+'</b></div>'
       +'</div></div></div>';
+    if(s==='pending_review') startPoll('pending_review');  // auto-refresh: ทีมงานยืนยัน → เด้งหน้าขอบคุณเอง
   }
 
   // ---------- router ----------
   function route(){ header(); vLanding(); }
+  // กลับไป "หน้าที่ถูกต้องตามสถานะ" ตอนโหลด/รีเฟรช — กันเด้งกลับหน้าแรกทั้งที่อยู่กลางขั้นตอนชำระเงิน
+  function resumeFlow(){
+    if(!ME.loggedIn || !REG){ route(); return; }
+    var s=REG.status;
+    if(s==='confirmed'){ vThankYou(); return; }        // ยืนยันแล้ว → หน้าขอบคุณเต็มจอ
+    if(s==='pending_review'){ vStatus(); return; }      // รอตรวจสลิป → หน้ารอ (auto-refresh)
+    if(s==='promo_select'){ vPromoProof(); return; }    // ต้องแนบหลักฐาน → หน้าแนบหลักฐาน
+    route();  // awaiting_payment / promo_review / อื่น ๆ → หน้าแรก+แผงข้าง (ปุ่มครบ + auto-refresh)
+  }
 
   function boot(){
     Promise.all([
@@ -1382,18 +1392,31 @@ document.addEventListener('click',function(e){
       ME=a[2]||{loggedIn:false};
       var paid=(location.search.match(/[?&]paid=([^&]+)/)||[])[1];
       if(ME.loggedIn){
-        fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||null;if(paid){vPaidReturn(0);}else{route();}}).catch(function(){REG=null;route();});
+        fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||null;if(paid){vPaidReturn(0);}else{resumeFlow();}}).catch(function(){REG=null;route();});
       } else { route(); }
     });
   }
-  // กลับจากหน้าชำระเงินบัตร (Stripe) — webhook ยืนยันแบบ async จึง poll สถานะสักครู่
+  // กลับจากหน้าชำระเงินบัตร (Stripe) — webhook ยืนยันแบบ async
+  // สำคัญ: ลูกค้าที่จ่ายแล้ว "ห้ามเด้งไปหน้ากรุณาชำระเงินเด็ดขาด" — รอยืนยันแล้วอัปเดตให้อัตโนมัติ
   function vPaidReturn(tries){
     showApp();header();
     if(REG&&REG.status==='confirmed'){ history.replaceState(null,'','/leanlab'); vThankYou(); return; }
-    if(tries>=6){ history.replaceState(null,'','/leanlab'); route(); return; }
-    app.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ได้รับการชำระเงินแล้ว 🎉</h2><p>กำลังยืนยันสิทธิ์ของคุณ… โปรดรอสักครู่</p><div style="margin:20px auto 0;width:32px;height:32px;border:3px solid var(--line2);border-top-color:var(--lime);border-radius:50%;animation:llspin .8s linear infinite"></div></div></div>';
     if(!document.getElementById('llspinkf')){var st=document.createElement('style');st.id='llspinkf';st.textContent='@keyframes llspin{to{transform:rotate(360deg)}}';document.head.appendChild(st);}
-    setTimeout(function(){fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||REG;vPaidReturn((tries||0)+1);}).catch(function(){vPaidReturn((tries||0)+1);});},2000);
+    var spin='<div style="margin:20px auto 0;width:32px;height:32px;border:3px solid var(--line2);border-top-color:var(--lime);border-radius:50%;animation:llspin .8s linear infinite"></div>';
+    var chk='<path d="M20 6 9 17l-5-5"/>';
+    if(tries<30){   // ~60 วินาทีแรก เช็กทุก 2 วิ
+      app.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'+chk+'</svg></div><h2>ได้รับการชำระเงินแล้ว 🎉</h2><p>กำลังยืนยันสิทธิ์ของคุณ… โปรดรอสักครู่</p>'+spin+'</div></div>';
+      setTimeout(function(){fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||REG;vPaidReturn((tries||0)+1);}).catch(function(){vPaidReturn((tries||0)+1);});},2000);
+      return;
+    }
+    // เกิน 60 วิ webhook ยังไม่มา — แสดงยืนยันแล้วรอต่อแบบช้า ๆ (ทุก 10 วิ) ไม่เด้งไปหน้าอื่น
+    history.replaceState(null,'','/leanlab');
+    app.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'+chk+'</svg></div><h2>ได้รับการชำระเงินแล้ว ✓</h2><p>ระบบกำลังยืนยันสิทธิ์ของคุณ อาจใช้เวลาสักครู่ — หน้านี้จะอัปเดตให้อัตโนมัติ <b>ไม่ต้องชำระซ้ำ</b> หากเกิน 15 นาทียังไม่อัปเดต กรุณาติดต่อทีมงาน</p>'+spin+'</div>'
+      +'<button class="btn ghost block" id="paidChk" style="margin-top:16px">ตรวจสอบสถานะอีกครั้ง</button></div>';
+    var pc=$('#paidChk'); if(pc)pc.onclick=function(){var b=this;b.disabled=true;b.textContent='กำลังตรวจสอบ…';fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||REG;if(REG&&REG.status==='confirmed'){history.replaceState(null,'','/leanlab');vThankYou();}else{b.disabled=false;b.textContent='ตรวจสอบสถานะอีกครั้ง';}}).catch(function(){b.disabled=false;b.textContent='ตรวจสอบสถานะอีกครั้ง';});};
+    if(tries<120){  // เช็กช้า ๆ ต่ออีก ~15 นาที
+      setTimeout(function(){fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){REG=(j&&j.registration)||REG;vPaidReturn((tries||0)+1);}).catch(function(){vPaidReturn((tries||0)+1);});},10000);
+    }
   }
 
   window.LL={closeConfirm:closeConfirm};
