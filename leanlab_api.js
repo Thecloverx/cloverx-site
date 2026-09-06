@@ -181,6 +181,27 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, needsProfile: true, member: publicMember(m) });
   });
 
+  // สมัครแบบฟอร์มเดียว ไม่ต้องรหัสผ่าน — มีอีเมลอยู่แล้วก็ใช้บัญชีเดิม (resume)
+  app.post('/api/leanlab/auth/join', function (req, res) {
+    const b = req.body || {};
+    const email = String(b.email || '').trim().toLowerCase();
+    const name = String(b.name || '').trim();
+    const phone = String(b.phone || '').trim();
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'bad_email' });
+    const l = readM();
+    let m = l.find(function (x) { return (x.email || '').toLowerCase() === email; });
+    if (!m) {
+      m = { id: genId(), email: email, pwHash: null, name: name.slice(0, 80), phone: phone.slice(0, 30), provider: 'email', createdAt: new Date().toISOString() };
+      l.push(m);
+    } else {
+      if (name) m.name = name.slice(0, 80);
+      if (phone) m.phone = phone.slice(0, 30);
+    }
+    writeM(l);
+    setSession(res, { pid: m.id });
+    res.json({ ok: true, member: publicMember(m) });
+  });
+
   app.post('/api/leanlab/auth/login', function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
@@ -336,6 +357,7 @@ module.exports = function (app, DATA_DIR) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
     var name = String(b.name || '').trim();
+    var phone = String(b.phone || '').trim();
     var dob = String(b.dob || '').trim();
     var gender = String(b.gender || '').trim();
     var heightCm = Number(b.heightCm);
@@ -362,12 +384,12 @@ module.exports = function (app, DATA_DIR) {
     if (!r) { r = { id: genRid(), memberId: m.id, season: EVENT.season, createdAt: new Date().toISOString() }; l.push(r); }
     r.name = name.slice(0, 80); r.dob = dob; r.age = age; r.gender = gender; r.heightCm = heightCm;
     r.startChoice = choice; r.baseline = baseline; r.fee = EVENT.fee; r.pay = 'bank';
-    r.email = m.email || ''; r.phone = m.phone || '';
+    r.email = m.email || ''; r.phone = phone || m.phone || '';
     if (!r.slipUrl) r.status = 'awaiting_payment';
     r.updatedAt = new Date().toISOString();
     writeR(l);
-    // sync member name if empty
-    var ml = readM(); var mm = ml.find(function (x) { return x.id === m.id; }); if (mm && !mm.name) { mm.name = name.slice(0, 80); writeM(ml); }
+    // sync member name/phone
+    var ml = readM(); var mm = ml.find(function (x) { return x.id === m.id; }); if (mm) { if (!mm.name) mm.name = name.slice(0, 80); if (phone) mm.phone = phone.slice(0, 30); writeM(ml); }
     res.json({ ok: true, registration: publicReg(r), bank: EVENT.bank });
   });
 
@@ -421,6 +443,7 @@ module.exports = function (app, DATA_DIR) {
     if (!stripeCfg()) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
     var r = readR().find(function (x) { return x.memberId === m.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (r.status === 'cancelled' && r.autoCancelled) { var lc = readR(); var rc = lc.find(function (x) { return x.id === r.id; }); if (rc) { rc.status = 'awaiting_payment'; rc.autoCancelled = false; rc.cancelReason = null; rc.updatedAt = new Date().toISOString(); writeR(lc); } r.status = 'awaiting_payment'; }
     if (r.status !== 'awaiting_payment') return res.status(400).json({ ok: false, error: 'not_ready' });
     createCard(r, baseUrl(req)).then(function (s) {
       if (!s || !s.url) return res.status(502).json({ ok: false, error: 'stripe_error' });
@@ -491,6 +514,7 @@ module.exports = function (app, DATA_DIR) {
     var r = readR().find(function (x) { return x.memberId === m.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (r.promoPlan !== 'special' || !r.installment) return res.status(400).json({ ok: false, error: 'not_special' });
+    if (r.status === 'cancelled' && r.autoCancelled) { var lc = readR(); var rc = lc.find(function (x) { return x.id === r.id; }); if (rc) { rc.status = 'awaiting_payment'; rc.autoCancelled = false; rc.cancelReason = null; rc.updatedAt = new Date().toISOString(); writeR(lc); } r.status = 'awaiting_payment'; }
     if (r.status !== 'awaiting_payment') return res.status(400).json({ ok: false, error: 'not_ready' });
     createInstallment(r, baseUrl(req)).then(function (s) {
       if (!s || !s.url) return res.status(502).json({ ok: false, error: 'stripe_error' });
@@ -568,6 +592,13 @@ module.exports = function (app, DATA_DIR) {
   };
 
   // ---- Back-office (Support dept manages Lean Lab) ----
+  // ล็อกทุก endpoint หลังบ้านด้วย ADMIN_KEY (env) — ยังไม่ตั้ง env ใช้ค่าเริ่มต้น '@dev1234' (เปลี่ยนได้ภายหลังผ่าน Railway Variables)
+  var LL_ADMIN_KEY = process.env.ADMIN_KEY || '@dev1234';
+  function adminGuard(req, res) {
+    var k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key'] || '';
+    if (String(k) !== LL_ADMIN_KEY) { res.status(403).json({ ok: false, error: 'forbidden' }); return false; }
+    return true;
+  }
   function adminReg(r, byId) {
     var mem = byId[r.memberId] || {};
     return {
@@ -592,6 +623,7 @@ module.exports = function (app, DATA_DIR) {
     return changed;
   }
   app.get('/api/leanlab/admin/registrations', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var regs = readR(); if (autoCancelSweep(regs)) writeR(regs);
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     var list = regs.map(function (r) { return adminReg(r, byId); }).sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
@@ -600,6 +632,7 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, registrations: list, counts: counts, members: readM().length, promo: promoStats() });
   });
   app.post('/api/leanlab/admin/registration/:id', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var b = req.body || {}; var st = b.status;
     if (['confirmed', 'rejected', 'pending_review', 'awaiting_payment'].indexOf(st) < 0) return res.status(400).json({ ok: false, error: 'bad_status' });
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
@@ -612,6 +645,7 @@ module.exports = function (app, DATA_DIR) {
   });
   // ตรวจหลักฐานการซื้อของโปรโมชั่น (ระดับราคาที่มีส่วนลด)
   app.post('/api/leanlab/admin/registration/:id/promo-verify', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var result = (req.body || {}).result;
     if (['verified', 'rejected'].indexOf(result) < 0) return res.status(400).json({ ok: false, error: 'bad_result' });
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
@@ -627,6 +661,7 @@ module.exports = function (app, DATA_DIR) {
   });
   // ยกเลิกคำสั่งซื้อ/สิทธิ์จอง (ใส่เหตุผล)
   app.post('/api/leanlab/admin/registration/:id/cancel', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
@@ -637,6 +672,7 @@ module.exports = function (app, DATA_DIR) {
   });
   // แก้ไขข้อมูลลูกค้า (ชื่อ / เบอร์โทร)
   app.post('/api/leanlab/admin/registration/:id/edit', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
@@ -650,6 +686,7 @@ module.exports = function (app, DATA_DIR) {
   });
   // คืนเงิน (บัตรเครดิต) — เต็มจำนวน หรือบางส่วน
   app.post('/api/leanlab/admin/registration/:id/refund', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
@@ -671,6 +708,7 @@ module.exports = function (app, DATA_DIR) {
   });
   // ลบผู้สมัคร (ลบทั้งใบสมัคร + บัญชีสมาชิก ถ้า withMember=1)
   app.post('/api/leanlab/admin/registration/:id/delete', function (req, res) {
+    if (!adminGuard(req, res)) return;
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     var mid = r.memberId;

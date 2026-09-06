@@ -245,6 +245,11 @@
 
 <script>
   var gen=document.getElementById('gen');
+  // ---- Admin key (ล็อกหลังบ้าน) ----
+  var ADM_KEY=(function(){try{return sessionStorage.getItem('llAdminKey')||'';}catch(e){return '';}})();
+  function admQ(){return '?key='+encodeURIComponent(ADM_KEY);}
+  function admUnlock(force){ if(ADM_KEY&&!force)return; var k=prompt('ใส่รหัสแอดมิน (Admin Key) เพื่อจัดการข้อมูล Lean Lab'); if(k!=null){ADM_KEY=k.trim();try{sessionStorage.setItem('llAdminKey',ADM_KEY);}catch(e){}} }
+  function admForbidden(j){ if(j&&j.error==='forbidden'){ ADM_KEY='';try{sessionStorage.removeItem('llAdminKey');}catch(e){} alert('รหัสแอดมินไม่ถูกต้อง หรือยังไม่ได้ใส่'); admUnlock(true); return true; } return false; }
   function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
 
   // desktop icon-rail: expand on hover
@@ -276,7 +281,7 @@
   }
   function dashLoad(){
     var rb=document.getElementById('dashRefresh'); if(rb)rb.onclick=dashLoad;
-    fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       var body=document.getElementById('dashBody'); if(!body)return;
       if(!j||!j.ok){body.innerHTML='<div style="color:var(--bad);text-align:center;padding:40px">โหลดข้อมูลไม่สำเร็จ</div>';return;}
       var R=j.registrations||[], TARGET=300, promo=j.promo||{quota:100,used:0,left:100};
@@ -388,7 +393,7 @@
   }
   function memberLoad(mode){
     var rb=document.getElementById('memRefresh'); if(rb)rb.onclick=function(){memberLoad(mode);};
-    fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       var tb=document.getElementById('memBody'); if(!tb)return;
       if(!j||!j.ok){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';return;}
       var mem=(j.registrations||[]).filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
@@ -415,7 +420,7 @@
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function orderLoad(){
-    fetch('/api/leanlab/admin/registrations',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       if(!j||!j.ok)return;
       var c=j.counts||{};
       var cnt=document.getElementById('llCount');if(cnt)cnt.textContent=(c.total||0)+' รายการ';
@@ -475,7 +480,7 @@
   document.addEventListener('click',function(e){if(!e.target.closest('.menuwrap'))llCloseMenus();});
   window.addEventListener('scroll',function(){llCloseMenus();},true);
   // ----- modal + post helpers -----
-  function llPost(id,path,body){return fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})}).then(function(r){return r.json();});}
+  function llPost(id,path,body){return fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+path+admQ(),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})}).then(function(r){return r.json();}).then(function(j){admForbidden(j);return j;});}
   function llModal(html){var m=document.getElementById('llModal');if(!m){m=document.createElement('div');m.id='llModal';m.className='lmodal';document.body.appendChild(m);}m.innerHTML='<div class="bk" onclick="llCloseModal()"></div><div class="mc">'+html+'</div>';m.classList.add('on');}
   window.llCloseModal=function(){var m=document.getElementById('llModal');if(m)m.classList.remove('on');};
   window.llReject=function(id){
@@ -517,19 +522,19 @@
 
   window.llDel=function(id){
     if(!confirm('ยืนยันการลบข้อมูลนี้ถาวร? เมื่อกดยืนยัน ข้อมูลจะหายไป (รวมบัญชีสมาชิก)'))return;
-    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({withMember:true})})
+    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/delete'+admQ(),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({withMember:true})})
       .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('ลบไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
   window.llVerify=function(id,result){
     if(result==='rejected'&&!confirm('ปฏิเสธหลักฐานการซื้อของผู้สมัครนี้?'))return;
-    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/promo-verify',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({result:result})})
+    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/promo-verify'+admQ(),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({result:result})})
       .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('อัปเดตไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
   window.llSet=function(id,status){
     if(status==='rejected'&&!confirm('ยืนยันการปฏิเสธ/ยกเลิกผู้สมัครนี้?'))return;
-    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:status})})
+    fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+admQ(),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status:status})})
       .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('อัปเดตไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
@@ -559,5 +564,6 @@
   }
   document.querySelectorAll('.nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
 
+  admUnlock();
   go('lldash');
 </script>
