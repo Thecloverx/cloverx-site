@@ -20,6 +20,11 @@ module.exports = function (app, DATA_DIR) {
   try { fs.mkdirSync(UP, { recursive: true }); } catch (e) {}
   if (!fs.existsSync(MEMBERS)) { try { fs.writeFileSync(MEMBERS, '[]'); } catch (e) {} }
   if (!fs.existsSync(REGS)) { try { fs.writeFileSync(REGS, '[]'); } catch (e) {} }
+  const SETTINGS = path.join(DIR, 'settings.json');
+  function readSettings() { try { return JSON.parse(fs.readFileSync(SETTINGS, 'utf8')) || {}; } catch (e) { return {}; } }
+  function writeSettings(s) { try { fs.writeFileSync(SETTINGS, JSON.stringify(s, null, 2)); } catch (e) {} }
+  // โหมด "ปิดการตรวจสอบชั่วคราว" — ลูกค้าชำระเงินแล้วยืนยันอัตโนมัติ ไม่ต้องรอแอดมิน (เปิด/ปิดผ่าน admin settings)
+  function noReviewOn() { return !!readSettings().noReview; }
 
   // ---- Lean Lab event config (Season 1) ----
   const EVENT = {
@@ -427,6 +432,12 @@ module.exports = function (app, DATA_DIR) {
       r.promoVerify = 'verified'; r.status = 'awaiting_payment'; r.autoVerified = true;
       r.autoVerifyInfo = { at: new Date().toISOString(), orders: owned.matchedOrders.slice(0, 10), owned: { band: owned.band, scale: owned.scale, routinex: owned.routinex } };
       r.reviewedAt = new Date().toISOString();
+    } else if (noReviewOn()) {
+      // ปิดการตรวจสอบชั่วคราว → ผ่านหลักฐานโปรฯ อัตโนมัติ ให้ลูกค้าไปชำระเงินต่อได้ (ทั้งโอนสลิป/บัตรเครดิต)
+      r.promoVerify = 'verified'; r.status = 'awaiting_payment'; r.autoVerified = true;
+      r.autoVerifyInfo = { at: new Date().toISOString(), noReview: true };
+      r.reviewedAt = new Date().toISOString();
+      console.log('[lean-lab] registration ' + r.id + ' promo proof auto-passed (no-review mode)');
     } else {
       r.promoVerify = 'pending'; r.status = 'promo_review'; r.autoVerified = false;   // ส่งแอดมินตรวจสลิปเหมือนเดิม
     }
@@ -512,7 +523,14 @@ module.exports = function (app, DATA_DIR) {
     if (typeof b.addrDetail === 'string') r.addrDetail = b.addrDetail.trim().slice(0, 200);
     if (Array.isArray(b.geo) && b.geo.length === 4) r.geo = b.geo.map(function (x) { return String(x).slice(0, 60); });
     var url = saveImg(b.slip, 'slip-' + m.id); if (!url) return res.status(400).json({ ok: false, error: 'save_failed' });
-    r.slipUrl = url; r.status = 'pending_review'; r.slipAt = new Date().toISOString();
+    r.slipUrl = url; r.slipAt = new Date().toISOString();
+    if (noReviewOn()) {
+      // ปิดการตรวจสอบชั่วคราว → ยืนยันการชำระเงินอัตโนมัติ (แอดมินมากระทบยอดสลิปย้อนหลังได้)
+      r.status = 'confirmed'; assignPO(r); r.autoApproved = true; r.reviewedAt = new Date().toISOString();
+      console.log('[lean-lab] registration ' + r.id + ' auto-confirmed (no-review mode, slip)');
+    } else {
+      r.status = 'pending_review';
+    }
     writeR(l);
     res.json({ ok: true, registration: publicReg(r) });
   });
@@ -765,6 +783,20 @@ module.exports = function (app, DATA_DIR) {
     var counts = { total: list.length, awaiting_payment: 0, pending_review: 0, confirmed: 0, rejected: 0, revenue: 0 };
     list.forEach(function (r) { if (counts[r.status] != null) counts[r.status]++; if (r.status === 'confirmed') counts.revenue += (Number(r.fee) || 0); });
     res.json({ ok: true, registrations: list, counts: counts, members: readM().length, promo: promoStats() });
+  });
+  // ตั้งค่าระบบ (เช่น ปิดการตรวจสอบชั่วคราว) — อ่าน/แก้ ด้วยคีย์แอดมิน
+  app.get('/api/leanlab/admin/settings', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    res.json({ ok: true, settings: readSettings() });
+  });
+  app.post('/api/leanlab/admin/settings', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    var b = req.body || {}; var s = readSettings();
+    if (typeof b.noReview === 'boolean') s.noReview = b.noReview;
+    s.updatedAt = new Date().toISOString();
+    writeSettings(s);
+    console.log('[lean-lab] settings updated: noReview=' + (!!s.noReview));
+    res.json({ ok: true, settings: s });
   });
   app.post('/api/leanlab/admin/registration/:id', function (req, res) {
     if (!adminGuard(req, res)) return;
