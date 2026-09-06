@@ -767,7 +767,38 @@ document.addEventListener('click',function(e){
     }).catch(function(){});
   }
 
+  // ---- auto-refresh สถานะระหว่าง "รอทีมงานตรวจสอบ" → เด้งต่ออัตโนมัติ ไม่ต้องกดรีเฟรช ----
+  var _pollIv=null, _pollFrom=null;
+  function stopPoll(){ if(_pollIv){clearInterval(_pollIv);_pollIv=null;} _pollFrom=null; }
+  function pollOnce(){
+    fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      var nr=(j&&j.registration)||null; if(!nr){return;}
+      if(nr.status!==_pollFrom){
+        REG=nr; stopPoll();
+        if(nr.status==='awaiting_payment'){ (nr.promo&&nr.promoPlan)?vPay():vChoosePay(); }  // ทีมงานตรวจผ่าน → เด้งหน้าชำระเงินทันที
+        else if(nr.status==='confirmed'){ vThankYou(); }  // ยืนยันแล้ว → พาไปหน้าขอบคุณเต็มจอ
+        else { route(); }
+      } else { REG=nr; }
+    }).catch(function(){});
+  }
+  function startPoll(from){ _pollFrom=from; if(_pollIv)return; _pollIv=setInterval(pollOnce,6000); }
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && _pollIv) pollOnce(); });
+  // การ์ดขอบคุณ + เลข PO (ใช้ทั้งใน side panel และหน้าเต็มจอ)
+  function thankHTML(){
+    var insBox='';
+    if(REG.installment&&REG.promoPlan==='special'){var ins=REG.installment;var paid=ins.paidCount||0;var mo=ins.months||6;
+      insBox='<div class="bank" style="margin-top:16px;gap:8px;text-align:left">'
+       +'<div class="r"><span>แผนผ่อน</span><b>'+thb(ins.perMonth||7490)+' × '+mo+' งวด</b></div>'
+       +'<div class="r"><span>ชำระแล้ว</span><b style="color:var(--lime)">'+paid+' / '+mo+' งวด</b></div>'
+       +'<div class="r"><span>วันตัดบัตร</span><b>ทุกวันที่ '+(ins.day||'-')+' ของเดือน</b></div>'
+       +(paid>=mo?'<div class="r"><span>สถานะ</span><b style="color:var(--lime)">ผ่อนครบแล้ว ✓</b></div>':'')+'</div>';
+    }
+    return '<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการสั่งซื้อ</h2><p>เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว ทีมงานจะดำเนินการตรวจสอบและแจ้งรายละเอียดให้ทราบอีกครั้ง</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">หมายเลขคำสั่งซื้อ</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บหมายเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+'</div>';
+  }
+  // พาไปหน้าขอบคุณเต็มจอทันที (ไม่ต้องเลื่อนหา)
+  function vThankYou(){ showApp(); app.innerHTML=thankHTML(); }
   function fillSide(){
+    stopPoll();
     if(!ME.loggedIn){renderAuth();return;}
     var p=$('#sidePanel'), st=REG&&REG.status;
     if(!REG){
@@ -783,22 +814,16 @@ document.addEventListener('click',function(e){
       p.innerHTML='<div class="card"><h2 class="tt">แนบหลักฐานการซื้อ 🎁</h2><p class="sub">คุณเลือกยอด '+thb(REG.promoAmount)+' — แนบหลักฐานการซื้อเพื่อให้ทีมงานตรวจสอบสิทธิ์ส่วนลด</p><button class="btn lime block lg" id="ctaProof">แนบหลักฐาน</button></div>';
       $('#ctaProof').onclick=vPromoProof;
     } else if(st==='promo_review'){
-      p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอทีมงานตรวจสอบหลักฐาน</h2><p>เราได้รับหลักฐานการซื้อของคุณแล้ว ทีมงานกำลังตรวจสอบสิทธิ์ส่วนลด เมื่อผ่านการตรวจสอบจะแจ้งให้ชำระเงินต่อ</p></div></div>';
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอทีมงานตรวจสอบหลักฐาน</h2><p>เราได้รับหลักฐานการซื้อของคุณแล้ว ทีมงานกำลังตรวจสอบสิทธิ์ส่วนลด เมื่อผ่านการตรวจสอบระบบจะพาไปหน้าชำระเงินให้อัตโนมัติ</p></div></div>';
+      startPoll('promo_review');
     } else if(st==='promo_rejected'){
       p.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,107,107,.12);color:var(--danger)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></div><h2>หลักฐานไม่ผ่านการตรวจสอบ</h2><p>กรุณาแนบหลักฐานการซื้อใหม่อีกครั้ง หากมีข้อสงสัยติดต่อทีมงาน</p></div><button class="btn lime block" id="ctaProof2" style="margin-top:16px">แนบหลักฐานใหม่</button></div>';
       $('#ctaProof2').onclick=vPromoProof;
     } else if(st==='pending_review'){
-      p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จจะแจ้งให้ทราบ</p></div></div>';
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จระบบจะอัปเดตให้อัตโนมัติ</p></div></div>';
+      startPoll('pending_review');
     } else if(st==='confirmed'){
-      var insBox='';
-      if(REG.installment&&REG.promoPlan==='special'){var ins=REG.installment;var paid=ins.paidCount||0;var mo=ins.months||6;
-        insBox='<div class="bank" style="margin-top:16px;gap:8px;text-align:left">'
-         +'<div class="r"><span>แผนผ่อน</span><b>'+thb(ins.perMonth||7490)+' × '+mo+' งวด</b></div>'
-         +'<div class="r"><span>ชำระแล้ว</span><b style="color:var(--lime)">'+paid+' / '+mo+' งวด</b></div>'
-         +'<div class="r"><span>วันตัดบัตร</span><b>ทุกวันที่ '+(ins.day||'-')+' ของเดือน</b></div>'
-         +(paid>=mo?'<div class="r"><span>สถานะ</span><b style="color:var(--lime)">ผ่อนครบแล้ว ✓</b></div>':'')+'</div>';
-      }
-      p.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการสั่งซื้อ</h2><p>เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว ทีมงานจะดำเนินการตรวจสอบและแจ้งรายละเอียดให้ทราบอีกครั้ง</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">หมายเลขคำสั่งซื้อ</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บหมายเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+'</div>';
+      p.innerHTML=thankHTML();
     } else {
       p.innerHTML='<div class="card"><h2 class="tt">Lean Lab</h2><p class="sub">สถานะการสมัคร: '+esc(st||'-')+'</p></div>';
     }
@@ -1301,7 +1326,7 @@ document.addEventListener('click',function(e){
   // กลับจากหน้าชำระเงินบัตร (Stripe) — webhook ยืนยันแบบ async จึง poll สถานะสักครู่
   function vPaidReturn(tries){
     showApp();header();
-    if(REG&&REG.status==='confirmed'){ history.replaceState(null,'','/leanlab'); route(); return; }
+    if(REG&&REG.status==='confirmed'){ history.replaceState(null,'','/leanlab'); vThankYou(); return; }
     if(tries>=6){ history.replaceState(null,'','/leanlab'); route(); return; }
     app.innerHTML='<div class="card"><div class="stbig"><div class="ic ok"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ได้รับการชำระเงินแล้ว 🎉</h2><p>กำลังยืนยันสิทธิ์ของคุณ… โปรดรอสักครู่</p><div style="margin:20px auto 0;width:32px;height:32px;border:3px solid var(--line2);border-top-color:var(--lime);border-radius:50%;animation:llspin .8s linear infinite"></div></div></div>';
     if(!document.getElementById('llspinkf')){var st=document.createElement('style');st.id='llspinkf';st.textContent='@keyframes llspin{to{transform:rotate(360deg)}}';document.head.appendChild(st);}

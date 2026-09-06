@@ -281,11 +281,17 @@ module.exports = function (app, DATA_DIR) {
   function readR() { try { return JSON.parse(fs.readFileSync(REGS, 'utf8')) || []; } catch (e) { return []; } }
   function writeR(l) { try { fs.writeFileSync(REGS, JSON.stringify(l, null, 2)); } catch (e) {} }
   function genRid() { return 'LLR-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
-  // เลขคำสั่งซื้อ (PO) แบบเรียงลำดับ: LL-00001, LL-00002, ...
+  // เลขคำสั่งซื้อ (PO) แบบสุ่ม: LL-XXXXXX (ตัวอักษร/ตัวเลข ไม่ซ้ำกับที่มีอยู่)
   function nextPO() {
-    var max = 0;
-    readR().forEach(function (r) { var m = /^LL-(\d+)$/.exec(r.po || ''); if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; } });
-    return 'LL-' + String(max + 1).padStart(5, '0');
+    var used = {}; readR().forEach(function (r) { if (r.po) used[r.po] = 1; });
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // ตัด 0/O/1/I ที่สับสน
+    for (var attempt = 0; attempt < 60; attempt++) {
+      var s = 'LL-';
+      var buf = crypto.randomBytes(6);
+      for (var i = 0; i < 6; i++) s += chars[buf[i] % chars.length];
+      if (!used[s]) return s;
+    }
+    return 'LL-' + crypto.randomBytes(5).toString('hex').toUpperCase();
   }
   function assignPO(r) { if (r && !r.po) r.po = nextPO(); return r ? r.po : null; }
   function publicReg(r) {
