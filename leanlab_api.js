@@ -324,7 +324,17 @@ module.exports = function (app, DATA_DIR) {
       var st = promoStats();
       if (st.full && !r.promo) return res.status(409).json(Object.assign({ ok: false, error: 'promo_full' }, st));
       r.promo = true;
-    } else { r.promo = false; }
+    } else {
+      // เลือกจ่ายปกติ → ล้างสถานะโปรโมชั่นทั้งหมดกลับเป็นค่าเริ่มต้น (กันหน้าจอเด้งไปหน้าผ่อน/แนบหลักฐาน)
+      // ล้างเฉพาะตอนที่ยังไม่ได้แนบสลิป/ยังไม่ยืนยัน — ถ้าจ่ายแล้วห้ามแตะ
+      r.promo = false;
+      if (['awaiting_payment', 'promo_select', 'promo_review', 'promo_rejected'].indexOf(r.status) >= 0) {
+        r.promoPlan = null; r.promoTier = null; r.promoAmount = null; r.promoVerify = null;
+        r.installment = null; r.autoVerified = false; r.autoVerifyInfo = null;
+        r.fee = EVENT.fee; r.pay = 'bank'; r.status = 'awaiting_payment';
+      }
+    }
+    r.updatedAt = new Date().toISOString();
     writeR(l);
     res.json(Object.assign({ ok: true, registration: publicReg(r) }, promoStats()));
   });
@@ -468,7 +478,12 @@ module.exports = function (app, DATA_DIR) {
     r.email = m.email || ''; r.phone = phone || m.phone || '';
     r.address = String(b.address || r.address || '').slice(0, 300);
     r.postcode = String(b.postcode || r.postcode || '').replace(/\D/g, '').slice(0, 5);
-    if (!r.slipUrl) r.status = 'awaiting_payment';
+    if (!r.slipUrl) {
+      r.status = 'awaiting_payment';
+      // ยังไม่ได้แนบสลิป → ล้างสถานะโปรโมชั่นค้างเก่าให้ตรงกับ fee/pay ฐาน (กันข้อมูลค้าง/จอเด้ง)
+      r.promo = false; r.promoPlan = null; r.promoTier = null; r.promoAmount = null;
+      r.promoVerify = null; r.installment = null; r.autoVerified = false; r.autoVerifyInfo = null;
+    }
     r.updatedAt = new Date().toISOString();
     writeR(l);
     // sync member name/phone

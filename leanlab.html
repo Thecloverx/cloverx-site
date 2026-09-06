@@ -1090,7 +1090,7 @@ document.addEventListener('click',function(e){
   function openConfirm(next){$('#confirmModal').classList.add('on');$('#confirmYes').onclick=function(){doSubmitReg(next);};}
   function closeConfirm(){$('#confirmModal').classList.remove('on');}
   // หลังบันทึกใบสมัครแล้ว → ไปตามทางที่ลูกค้าเลือก
-  function goPayNormal(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:false})}).then(function(){vPay();}).catch(function(){vPay();}); }
+  function goPayNormal(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:false})}).then(function(r){return r.json();}).then(function(j){if(j&&j.registration)REG=j.registration;vPay();}).catch(function(){vPay();}); }
   function goPromo(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:true})}).then(function(r){return r.json();}).then(function(j){ if(!j||!j.ok){ if(j&&j.error==='promo_full'){alert('ขออภัย สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว');} else {alert('ทำรายการไม่สำเร็จ ลองใหม่');} return vChoosePay(); } REG=j.registration; vPromo(j); }).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');vChoosePay();}); }
 
   function doSubmitReg(){
@@ -1127,10 +1127,10 @@ document.addEventListener('click',function(e){
     +'</div>'
     +'<div class="msg" id="chMsg"></div>'
     +'</div>';
-    $('#chPay').onclick=function(){ // เลือกจ่ายปกติ → เคลียร์ธงโปรโมชั่นก่อน
+    $('#chPay').onclick=function(){ // เลือกจ่ายปกติ → เคลียร์โปรโมชั่นก่อน แล้วรีเฟรช REG กันจอเด้งไปหน้าผ่อน/แนบหลักฐาน
       var b=$('#chPay');b.style.pointerEvents='none';
       fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:false})})
-        .then(function(){vPay();}).catch(function(){vPay();});
+        .then(function(r){return r.json();}).then(function(j){if(j&&j.registration)REG=j.registration;vPay();}).catch(function(){vPay();});
     };
     if(!full)$('#chPromo').onclick=claimPromo;
   }
