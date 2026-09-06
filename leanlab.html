@@ -1246,7 +1246,7 @@ document.addEventListener('click',function(e){
       fetch('/api/leanlab/register/promo/proof',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({proof:data})})
         .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';if(!j||!j.ok){return msg($('#prMsg'),'err','ส่งไม่สำเร็จ ลองใหม่');}REG=j.registration;
           if(REG.status==='awaiting_payment'){ vPay(); }   // ระบบตรวจสิทธิ์กับพรีออเดอร์อัตโนมัติผ่าน → ไปชำระเงินเลย
-          else { route(); }                                  // ไม่เจอข้อมูลตรง → ส่งแอดมินตรวจ (หน้ารอ)
+          else { vStatus(); }                                // ไม่เจอข้อมูลตรง → ส่งแอดมินตรวจ → พาไปหน้ารอเต็มจอทันที (เลื่อนขึ้นบนสุดให้)
         })
         .catch(function(){b.disabled=false;b.textContent='ส่งให้ทีมงานตรวจสอบ';msg($('#prMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     };
@@ -1366,21 +1366,27 @@ document.addEventListener('click',function(e){
 
   // ---------- STATUS ----------
   function vStatus(){
-    showApp(); stopPoll();
+    showApp(); stopPoll();   // showApp() เลื่อนหน้าขึ้นบนสุดให้อัตโนมัติ — ลูกค้าเห็นสถานะทันทีไม่ต้องเลื่อนหา
     var s=REG&&REG.status;
-    var ic,cls,title,desc;
     if(s==='confirmed'){ return vThankYou(); }  // ยืนยันแล้ว → หน้าขอบคุณเต็มจอ
-    else if(s==='pending_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอตรวจสอบการชำระเงิน';desc='เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จหน้านี้จะอัปเดตให้อัตโนมัติ';}
+    if(s==='promo_rejected'){  // หลักฐานไม่ผ่าน → การ์ดเต็มจอ + ปุ่มแนบใหม่
+      app.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,107,107,.12);color:var(--danger)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></div><h2>หลักฐานไม่ผ่านการตรวจสอบ</h2><p>กรุณาแนบหลักฐานการซื้อใหม่อีกครั้ง หากมีข้อสงสัยติดต่อทีมงาน</p></div><button class="btn lime block lg" id="ctaProof2" style="margin-top:18px">แนบหลักฐานใหม่</button></div>';
+      $('#ctaProof2').onclick=vPromoProof; return;
+    }
+    var ic,cls,title,desc;
+    if(s==='pending_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอตรวจสอบการชำระเงิน';desc='เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จหน้านี้จะอัปเดตให้อัตโนมัติ';}
+    else if(s==='promo_review'){cls='wait';ic='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';title='รอทีมงานตรวจสอบหลักฐาน';desc='เราได้รับหลักฐานการซื้อของคุณแล้ว ทีมงานกำลังตรวจสอบสิทธิ์ส่วนลด เมื่อผ่านการตรวจสอบระบบจะพาไปหน้าชำระเงินให้อัตโนมัติ';}
     else {return vChoosePay();} // awaiting_payment
     app.innerHTML='<div class="card"><div class="stbig"><div class="ic '+cls+'"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'+ic+'</svg></div>'
       +'<h2>'+title+'</h2><p>'+desc+'</p>'
       +'<div class="rev" style="text-align:left;margin-top:20px">'
       + '<div class="r"><span>ผู้สมัคร</span><b>'+esc(REG.name||'')+'</b></div>'
       + '<div class="r"><span>รูปแบบ</span><b>'+(REG.startChoice==='now'?'เริ่มลด ณ ตอนนี้':'เริ่ม '+esc(EVENT.startLaterLabel))+'</b></div>'
-      + '<div class="r"><span>ค่าสมัคร</span><b>'+thb(REG.fee)+'</b></div>'
-      + '<div class="r"><span>สถานะ</span><b style="color:'+(s==='confirmed'?'var(--lime)':'var(--orange)')+'">'+(s==='confirmed'?'ยืนยันแล้ว':'รอตรวจสอบ')+'</b></div>'
+      + '<div class="r"><span>ค่าสมัคร</span><b>'+thb((REG.promoPlan?REG.promoAmount:REG.fee)||REG.fee)+'</b></div>'
+      + '<div class="r"><span>สถานะ</span><b style="color:var(--orange)">รอตรวจสอบ</b></div>'
       +'</div></div></div>';
     if(s==='pending_review') startPoll('pending_review');  // auto-refresh: ทีมงานยืนยัน → เด้งหน้าขอบคุณเอง
+    if(s==='promo_review') startPoll('promo_review');      // ตรวจผ่าน → เด้งไปหน้าชำระเงินเอง
   }
 
   // ---------- router ----------
@@ -1391,8 +1397,10 @@ document.addEventListener('click',function(e){
     var s=REG.status;
     if(s==='confirmed'){ vThankYou(); return; }        // ยืนยันแล้ว → หน้าขอบคุณเต็มจอ
     if(s==='pending_review'){ vStatus(); return; }      // รอตรวจสลิป → หน้ารอ (auto-refresh)
+    if(s==='promo_review'){ vStatus(); return; }        // รอตรวจหลักฐาน → หน้ารอเต็มจอ (auto-refresh) — ไม่ต้องเลื่อนหา
+    if(s==='promo_rejected'){ vStatus(); return; }      // หลักฐานไม่ผ่าน → หน้าเต็มจอ + ปุ่มแนบใหม่
     if(s==='promo_select'){ vPromoProof(); return; }    // ต้องแนบหลักฐาน → หน้าแนบหลักฐาน
-    route();  // awaiting_payment / promo_review / อื่น ๆ → หน้าแรก+แผงข้าง (ปุ่มครบ + auto-refresh)
+    route();  // awaiting_payment / อื่น ๆ → หน้าแรก+แผงข้าง (ปุ่มครบ + auto-refresh)
   }
 
   function boot(){
