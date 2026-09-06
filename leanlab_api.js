@@ -262,6 +262,13 @@ module.exports = function (app, DATA_DIR) {
   function readR() { try { return JSON.parse(fs.readFileSync(REGS, 'utf8')) || []; } catch (e) { return []; } }
   function writeR(l) { try { fs.writeFileSync(REGS, JSON.stringify(l, null, 2)); } catch (e) {} }
   function genRid() { return 'LLR-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
+  // เลขคำสั่งซื้อ (PO) แบบเรียงลำดับ: LL-00001, LL-00002, ...
+  function nextPO() {
+    var max = 0;
+    readR().forEach(function (r) { var m = /^LL-(\d+)$/.exec(r.po || ''); if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; } });
+    return 'LL-' + String(max + 1).padStart(5, '0');
+  }
+  function assignPO(r) { if (r && !r.po) r.po = nextPO(); return r ? r.po : null; }
   function publicReg(r) {
     if (!r) return null;
     return {
@@ -269,7 +276,7 @@ module.exports = function (app, DATA_DIR) {
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null } : null,
-      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt
+      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, po: r.po || null
     };
   }
   // โปรโมชั่นพิเศษ: นับ "สิทธิ์ที่ใช้แล้ว" เฉพาะผู้ที่เลือกโปรโมชั่น + ยืนยัน/ชำระเงินแล้ว (confirmed)
@@ -459,7 +466,7 @@ module.exports = function (app, DATA_DIR) {
   app.locals.leanlabStripePaid = function (regId, s) {
     var l = readR(); var r = l.find(function (x) { return x.id === regId; });
     if (!r) return false;
-    r.status = 'confirmed'; r.pay = 'card';
+    r.status = 'confirmed'; r.pay = 'card'; assignPO(r);
     r.stripe = { sessionId: (s && s.id) || null, paymentIntent: (s && s.payment_intent) || null, amount: (s && s.amount_total != null ? s.amount_total / 100 : null), at: new Date().toISOString() };
     r.reviewedAt = new Date().toISOString();
     writeR(l);
@@ -536,7 +543,7 @@ module.exports = function (app, DATA_DIR) {
     r.installment.paidCount = 1;                  // งวดแรกชำระตอน checkout
     r.installment.status = 'active';
     r.installment.firstPaidAt = new Date().toISOString();
-    r.status = 'confirmed'; r.pay = 'installment';
+    r.status = 'confirmed'; r.pay = 'installment'; assignPO(r);
     r.stripe = { checkoutId: (s && s.id) || null, subscriptionId: subId, at: new Date().toISOString() };
     r.reviewedAt = new Date().toISOString();
     writeR(l);
@@ -606,7 +613,7 @@ module.exports = function (app, DATA_DIR) {
   function adminReg(r, byId) {
     var mem = byId[r.memberId] || {};
     return {
-      id: r.id, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
+      id: r.id, po: r.po || null, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
@@ -642,6 +649,7 @@ module.exports = function (app, DATA_DIR) {
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     r.status = st; r.reviewedAt = new Date().toISOString();
+    if (st === 'confirmed') assignPO(r);
     if (st === 'rejected') r.rejectReason = String(b.reason || '').slice(0, 200) || 'หลักฐานไม่ถูกต้อง';
     writeR(l);
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
