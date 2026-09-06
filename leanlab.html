@@ -18,7 +18,8 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  html,body{max-width:100%;overflow-x:hidden}
+  /* กันเลื่อนแนวนอน แต่ไม่ทำให้ body กลายเป็น scroll container (แก้บั๊ก iOS Safari เลื่อนแนวตั้งไม่ได้) */
+  html,body{max-width:100%;overflow-x:hidden;overflow-x:clip}
   img{max-width:100%}
   /* lightbox: แตะรูปเพื่อดูเต็มจอ (อ่านอินโฟกราฟิกบนมือถือได้) */
   .lbox{position:fixed;inset:0;z-index:200;background:rgba(2,6,12,.92);display:none;align-items:center;justify-content:center;padding:12px;overflow:auto}
