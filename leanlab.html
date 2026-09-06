@@ -213,6 +213,12 @@
   .exguide img{display:block;width:100%;height:auto}
   .exguide p{margin:0;padding:9px 12px;font-size:.82rem;color:var(--muted);line-height:1.5}
   .exguide p b{color:var(--ink)}
+  .pcstage{position:relative;width:100%;aspect-ratio:3/2;overflow:hidden}
+  .pcstage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+  .pcstage img.on{opacity:1}
+  .pcstage .pcdots{position:absolute;bottom:8px;left:0;right:0;display:flex;gap:6px;justify-content:center;z-index:2}
+  .pcstage .pcdots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.55);cursor:pointer}
+  .pcstage .pcdots span.on{background:#fff}
   .upl.has{border-style:solid;border-color:var(--lime)}
   .upl img{max-height:180px;border-radius:10px}
 
@@ -440,7 +446,7 @@
 <body>
 <header id="siteHeader">
   <div class="hd">
-    <a class="logo" href="/leanlab"><span class="dot"></span>LEAN&nbsp;LAB</a>
+    <a class="logo" href="/leanlab"><img src="ll_wm.png" alt="Lean Lab X" style="height:28px;width:auto;display:block"></a>
     <div class="sp"></div>
     <div class="who" id="who"></div>
   </div>
@@ -1066,7 +1072,7 @@
      +'<h2 class="tt" style="margin-top:12px">รับของรวมมูลค่า '+thb(full.valueTotal)+' ฟรี 🎁</h2>'
      +'<ul class="plist">'+itemsHtml+'</ul>'
      +'<div class="cond"><b>เงื่อนไข</b><ul>'+condHtml+'</ul></div>'
-     +'<div class="exguide" style="margin:16px 0 4px"><img src="ll_paycases.jpg" alt="กรณีส่วนลดจาก PreOrder"><p>ยอดชำระปรับตามสิ่งที่คุณ <b>PreOrder</b> ไปแล้ว — ดูกรณีของคุณด้านบน แล้วเลือกแพ็กเกจด้านล่าง</p></div>'
+     +'<div class="exguide" style="margin:16px 0 4px"><div class="pcstage" id="pcStage"><img src="ll_paycases.jpg" class="on" alt="กรณีส่วนลดจาก PreOrder"><img src="ll_paycases2.jpg" alt="Promotion Grand Slam — RoutineX 6 Set"><div class="pcdots"><span class="on"></span><span></span></div></div><p>ยอดชำระปรับตามสิ่งที่คุณ <b>PreOrder</b> ไปแล้ว — ดูกรณีของคุณด้านบน แล้วเลือกแพ็กเกจด้านล่าง</p></div>'
      +'<h3 style="font-family:var(--ff-d);margin:18px 0 10px;font-size:1.05rem">เลือกรูปแบบการชำระ (ติ๊ก 1 รายการ)</h3>'
      +'<div class="eyebrow" style="margin:0 0 8px;color:var(--muted);background:transparent;border:0;padding:0;font-size:.72rem">◦ Full Option — จ่ายครั้งเดียว รับของครบทุกชิ้น</div>'
      +'<div class="tiers">'+tiersHtml+'</div>'
@@ -1074,6 +1080,7 @@
      +'<div class="msg" id="pmMsg"></div>'
      +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmNext" disabled>ดำเนินการต่อ</button></div>'
      +'</div>';
+    (function(){var st=document.getElementById('pcStage');if(!st)return;var imgs=st.querySelectorAll('img'),dots=st.querySelectorAll('.pcdots span'),i=0;function go(n){i=(n+imgs.length)%imgs.length;imgs.forEach(function(x,k){x.classList.toggle('on',k===i);});dots.forEach(function(d,k){d.classList.toggle('on',k===i);});}dots.forEach(function(d,k){d.onclick=function(){go(k);};});setInterval(function(){go(i+1);},3500);})();
     promoTierSel=null;promoPlanSel=null;
     app.querySelectorAll('.tierbtn').forEach(function(b){b.onclick=function(){
       app.querySelectorAll('.tierbtn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
