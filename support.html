@@ -434,17 +434,62 @@
       +   '<button class="btn ghost" id="memRefresh" data-mode="'+mode+'">รีเฟรช ⟳</button></div>'
       + '<div class="panel">'
       +   '<div class="ph"><h3>รายชื่อสมาชิก</h3><span class="pill '+(isNow?'lean':'ok')+'" id="memCount">–</span></div>'
+      +   '<div class="ofilt">'
+      +     '<div class="ofchips" id="mofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
+      +     '<div class="ofrange" id="mofRange" style="display:none"><input type="date" id="mofFrom"><span>–</span><input type="date" id="mofTo"></div>'
+      +     '<input type="search" id="mofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / รหัสไปรษณีย์">'
+      +   '</div>'
       +   '<div style="overflow-x:auto"><table><thead><tr><th>สมาชิก</th><th>ข้อมูล</th><th>แพ็กเกจ/ยอด</th><th>'+(isNow?'ค่าตั้งต้น (Before)':'สถานะเริ่ม')+'</th><th>ยืนยันเมื่อ</th></tr></thead><tbody id="memBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       + '</div>';
+  }
+  // ตัวกรองสมาชิก (วันที่ยืนยัน + ค้นหา) — ใช้แบบเดียวกับหน้า Order
+  var MEM_FILT={date:'all',from:'',to:'',q:''};
+  function memFilterList(regs){
+    var f=MEM_FILT;
+    function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
+    var t0=dayStart(new Date()),DAY=86400000,lo=null,hi=null;
+    if(f.date==='today'){lo=t0;hi=t0+DAY;}
+    else if(f.date==='yst'){lo=t0-DAY;hi=t0;}
+    else if(f.date==='7d'){lo=t0-6*DAY;hi=t0+DAY;}
+    else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
+    else if(f.date==='custom'){ if(f.from)lo=dayStart(f.from); if(f.to)hi=dayStart(f.to)+DAY; }
+    var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
+    return (regs||[]).filter(function(r){
+      if(lo!=null||hi!=null){ var t=new Date(r.reviewedAt||r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; }
+      if(q){
+        var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')).toLowerCase();
+        var okText=hay.indexOf(q)>=0;
+        var okPhone=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0||String(r.postcode||'').indexOf(qd)>=0);
+        if(!okText&&!okPhone)return false;
+      }
+      return true;
+    });
+  }
+  function memberInit(mode){
+    MEM_FILT={date:'all',from:'',to:'',q:''};
+    var chips=document.getElementById('mofChips');
+    if(chips){[].forEach.call(chips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
+      [].forEach.call(chips.querySelectorAll('.ofc'),function(x){x.classList.remove('on');}); b.classList.add('on');
+      MEM_FILT.date=b.getAttribute('data-d');
+      var rg=document.getElementById('mofRange'); if(rg)rg.style.display=(MEM_FILT.date==='custom')?'flex':'none';
+      memberLoad(mode);
+    };});}
+    var ff=document.getElementById('mofFrom'), ft=document.getElementById('mofTo');
+    if(ff)ff.onchange=function(){MEM_FILT.from=ff.value;memberLoad(mode);};
+    if(ft)ft.onchange=function(){MEM_FILT.to=ft.value;memberLoad(mode);};
+    var s=document.getElementById('mofSearch'), tmr;
+    if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){memberLoad(mode);},280);};
+    memberLoad(mode);
   }
   function memberLoad(mode){
     var rb=document.getElementById('memRefresh'); if(rb)rb.onclick=function(){memberLoad(mode);};
     fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin',headers:admHdr()}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       var tb=document.getElementById('memBody'); if(!tb)return;
       if(!j||!j.ok){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';return;}
-      var mem=(j.registrations||[]).filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
-      var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent=mem.length+' คน';
-      if(!mem.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">ยังไม่มีสมาชิกในกลุ่มนี้</td></tr>';return;}
+      var all=(j.registrations||[]).filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
+      var mem=memFilterList(all);
+      var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent=(mem.length===all.length?all.length+' คน':mem.length+' / '+all.length+' คน');
+      if(!mem.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">'+(all.length?'ไม่พบสมาชิกที่ตรงกับตัวกรอง':'ยังไม่มีสมาชิกในกลุ่มนี้')+'</td></tr>';return;}
       tb.innerHTML=mem.map(function(r){
         var ins=r.installment||null;
         var pkg = ins?('Special · ผ่อน '+Number(ins.perMonth||7490).toLocaleString('en-US')+'×'+(ins.months||6)+' <span style="color:#2E86FF">('+(ins.paidCount||0)+'/'+(ins.months||6)+')</span>')
@@ -638,8 +683,8 @@
     document.getElementById('crumbTitle').textContent=TITLES[v]||v;
     if(v==='lldash'){ DASH_FILT={date:'all',from:'',to:''}; gen.innerHTML=dashView(); dashLoad(); }
     else if(v==='llreg'){ gen.innerHTML=registerView(); registerInit(); }
-    else if(v==='llmstart'){ gen.innerHTML=memberView('now'); memberLoad('now'); }
-    else if(v==='llmafter'){ gen.innerHTML=memberView('later'); memberLoad('later'); }
+    else if(v==='llmstart'){ gen.innerHTML=memberView('now'); memberInit('now'); }
+    else if(v==='llmafter'){ gen.innerHTML=memberView('later'); memberInit('later'); }
     else if(v==='llorder'){ gen.innerHTML=orderView(); orderInit(); }
     else if(v==='tickets') gen.innerHTML=emptyView('Tickets','ระบบรับเรื่อง/ตั๋วช่วยเหลือลูกค้า กำลังพัฒนา — เร็ว ๆ นี้');
     else if(v==='kb') gen.innerHTML=emptyView('ฐานความรู้','คลังบทความ/คู่มือช่วยเหลือ กำลังพัฒนา — เร็ว ๆ นี้');
