@@ -439,6 +439,8 @@ module.exports = function (app, DATA_DIR) {
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (!(typeof b.slip === 'string' && /^data:image\//.test(b.slip))) return res.status(400).json({ ok: false, error: 'bad_slip' });
+    if (typeof b.address === 'string' && b.address.trim()) r.address = b.address.trim().slice(0, 300);
+    if (typeof b.postcode === 'string' && b.postcode) r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
     var url = saveImg(b.slip, 'slip-' + m.id); if (!url) return res.status(400).json({ ok: false, error: 'save_failed' });
     r.slipUrl = url; r.status = 'pending_review'; r.slipAt = new Date().toISOString();
     writeR(l);
@@ -481,13 +483,16 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/register/pay/card', limit('pay', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!stripeCfg()) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
+    var b = req.body || {};
     var r = readR().find(function (x) { return x.memberId === m.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (typeof b.address === 'string' && b.address.trim()) r.address = b.address.trim().slice(0, 300);
+    if (typeof b.postcode === 'string' && b.postcode) r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
     if (r.status === 'cancelled' && r.autoCancelled) { var lc = readR(); var rc = lc.find(function (x) { return x.id === r.id; }); if (rc) { rc.status = 'awaiting_payment'; rc.autoCancelled = false; rc.cancelReason = null; rc.updatedAt = new Date().toISOString(); writeR(lc); } r.status = 'awaiting_payment'; }
     if (r.status !== 'awaiting_payment') return res.status(400).json({ ok: false, error: 'not_ready' });
     createCard(r, baseUrl(req)).then(function (s) {
       if (!s || !s.url) return res.status(502).json({ ok: false, error: 'stripe_error' });
-      var l = readR(); var x = l.find(function (y) { return y.id === r.id; }); if (x) { x.cardSessionId = s.id; writeR(l); }
+      var l = readR(); var x = l.find(function (y) { return y.id === r.id; }); if (x) { x.cardSessionId = s.id; x.address = r.address || x.address || ''; x.postcode = r.postcode || x.postcode || ''; writeR(l); }
       res.json({ ok: true, url: s.url });
     });
   });
@@ -551,14 +556,17 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/register/pay/installment', limit('pay', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!process.env.STRIPE_SECRET_KEY) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
+    var b = req.body || {};
     var r = readR().find(function (x) { return x.memberId === m.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (typeof b.address === 'string' && b.address.trim()) r.address = b.address.trim().slice(0, 300);
+    if (typeof b.postcode === 'string' && b.postcode) r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
     if (r.promoPlan !== 'special' || !r.installment) return res.status(400).json({ ok: false, error: 'not_special' });
     if (r.status === 'cancelled' && r.autoCancelled) { var lc = readR(); var rc = lc.find(function (x) { return x.id === r.id; }); if (rc) { rc.status = 'awaiting_payment'; rc.autoCancelled = false; rc.cancelReason = null; rc.updatedAt = new Date().toISOString(); writeR(lc); } r.status = 'awaiting_payment'; }
     if (r.status !== 'awaiting_payment') return res.status(400).json({ ok: false, error: 'not_ready' });
     createInstallment(r, baseUrl(req)).then(function (s) {
       if (!s || !s.url) return res.status(502).json({ ok: false, error: 'stripe_error' });
-      var l = readR(); var x = l.find(function (y) { return y.id === r.id; }); if (x && x.installment) { x.installment.checkoutId = s.id; writeR(l); }
+      var l = readR(); var x = l.find(function (y) { return y.id === r.id; }); if (x) { if (x.installment) x.installment.checkoutId = s.id; x.address = r.address || x.address || ''; x.postcode = r.postcode || x.postcode || ''; writeR(l); }
       res.json({ ok: true, url: s.url });
     });
   });

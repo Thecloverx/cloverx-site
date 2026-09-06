@@ -964,8 +964,6 @@ document.addEventListener('click',function(e){
     + '<div class="field" id="fHeight"><label>ส่วนสูง (ซม.) <span class="req">*</span></label><input class="in" id="w_height" type="number" inputmode="decimal" placeholder="เช่น 170" value="'+esc(W.heightCm||'')+'"><div class="err">กรอกส่วนสูง</div></div>'
     +'</div>'
     +'<div class="field" id="fGender"><label>เพศโดยกำเนิด <span class="req">*</span></label><div class="chips" id="genderChips"><button type="button" class="chip'+(W.gender==='ชาย'?' on':'')+'" data-g="ชาย">ชาย</button><button type="button" class="chip'+(W.gender==='หญิง'?' on':'')+'" data-g="หญิง">หญิง</button></div><div class="err">เลือกเพศ</div></div>'
-    +'<div class="field" id="fAddr"><label>ที่อยู่รับสินค้า (จัดส่ง) <span class="req">*</span></label><textarea class="in" id="w_addr" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด" style="resize:vertical;font-family:inherit">'+esc(W.address||'')+'</textarea><div class="err">กรุณากรอกที่อยู่จัดส่ง</div></div>'
-    +'<div class="field" id="fPost"><label>รหัสไปรษณีย์ <span class="req">*</span></label><input class="in" id="w_post" type="tel" inputmode="numeric" maxlength="5" placeholder="เช่น 10250" value="'+esc(W.postcode||'')+'"><div class="err">กรอกรหัสไปรษณีย์ 5 หลัก</div></div>'
     +'<div class="rowbtns"><a class="btn ghost block" href="/leanlab">ยกเลิก</a><button class="btn lime block" id="s1next">ถัดไป</button></div>'
     +'</div>';
     function updAge(){var a=calcAge($('#w_dob').value);$('#ageHint').textContent=(a!=null&&a>=0)?('อายุ '+a+' ปี'):'';}
@@ -973,14 +971,11 @@ document.addEventListener('click',function(e){
     $('#genderChips').querySelectorAll('.chip').forEach(function(b){b.onclick=function(){W.gender=b.getAttribute('data-g');$('#genderChips').querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');$('#fGender').classList.remove('bad');};});
     $('#s1next').onclick=function(){
       W.name=$('#w_name').value.trim();W.dob=$('#w_dob').value;W.heightCm=$('#w_height').value;
-      W.address=$('#w_addr').value.trim();W.postcode=$('#w_post').value.trim();
       var age=calcAge(W.dob),ok=true;
       ok=bad($('#fName'),W.name.length<2)&&ok;
       ok=bad($('#fDob'),!(age!=null&&age>=18))&&ok;
       ok=bad($('#fHeight'),!(Number(W.heightCm)>=100&&Number(W.heightCm)<=250))&&ok;
       ok=bad($('#fGender'),!W.gender)&&ok;
-      ok=bad($('#fAddr'),W.address.length<5)&&ok;
-      ok=bad($('#fPost'),!/^\d{5}$/.test(W.postcode))&&ok;
       if(!ok)return;W.age=age;vStep2();
     };
   }
@@ -1042,8 +1037,7 @@ document.addEventListener('click',function(e){
       +'<div class="r"><span>อายุ</span><b>'+esc(W.age)+' ปี</b></div>'
       +'<div class="r"><span>เพศ</span><b>'+esc(W.gender)+'</b></div>'
       +'<div class="r"><span>ส่วนสูง</span><b>'+esc(W.heightCm)+' ซม.</b></div>'
-      +'<div class="r"><span>รูปแบบการเริ่ม</span><b>'+(W.startChoice==='now'?'เริ่มลด ณ ตอนนี้':'เริ่มวันที่ '+esc(EVENT.startLaterLabel))+'</b></div>'
-      +'<div class="r"><span>ที่อยู่จัดส่ง</span><b>'+esc(W.address||'')+' ('+esc(W.postcode||'')+')</b></div>';
+      +'<div class="r"><span>รูปแบบการเริ่ม</span><b>'+(W.startChoice==='now'?'เริ่มลด ณ ตอนนี้':'เริ่มวันที่ '+esc(EVENT.startLaterLabel))+'</b></div>';
     if(W.startChoice==='now'){
       rows+='<div class="r"><span>น้ำหนัก</span><b>'+esc(W.weightKg)+' กก.</b></div>'
         +'<div class="r"><span>ไขมัน</span><b>'+esc(W.fatPct)+' %</b></div>'
@@ -1076,7 +1070,7 @@ document.addEventListener('click',function(e){
 
   function doSubmitReg(next){
     var y=$('#confirmYes');y.disabled=true;y.textContent='กำลังส่ง…';
-    var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice,address:W.address,postcode:W.postcode};
+    var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice};
     if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
     fetch('/api/leanlab/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
       .then(function(r){return r.json();})
@@ -1220,6 +1214,18 @@ document.addEventListener('click',function(e){
     };
   }
 
+  // ---------- ที่อยู่รับสินค้า (เก็บก่อนชำระเงิน) ----------
+  function addrFieldsHTML(){
+    return '<div class="field" id="fAddrP"><label>ที่อยู่รับสินค้า (จัดส่ง) <span class="req">*</span></label><textarea class="in" id="p_addr" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด" style="resize:vertical;font-family:inherit">'+esc((REG&&REG.address)||'')+'</textarea><div class="err">กรุณากรอกที่อยู่จัดส่ง</div></div>'
+      +'<div class="field" id="fPostP"><label>รหัสไปรษณีย์ <span class="req">*</span></label><input class="in" id="p_post" type="tel" inputmode="numeric" maxlength="5" placeholder="เช่น 10250" value="'+esc((REG&&REG.postcode)||'')+'"><div class="err">กรอกรหัสไปรษณีย์ 5 หลัก</div></div>';
+  }
+  function readAddr(){
+    var a=((($('#p_addr')||{}).value)||'').trim(), p=((($('#p_post')||{}).value)||'').trim();
+    var ok=true;
+    ok=bad($('#fAddrP'),a.length<5)&&ok;
+    ok=bad($('#fPostP'),!/^\d{5}$/.test(p))&&ok;
+    return {ok:ok,address:a,postcode:p};
+  }
   // ---------- PAYMENT ----------
   function vPay(){
     showApp();
@@ -1235,6 +1241,7 @@ document.addEventListener('click',function(e){
     app.innerHTML='<div class="card">'
     +'<h2 class="tt">ชำระค่าสมัคร</h2><p class="sub">'+(canCard?'เลือกวิธีชำระเงินที่ต้องการ':'โอนเงินตามยอดด้านล่าง แล้วแนบสลิปเพื่อยืนยันสิทธิ์')+'</p>'
     +'<div style="text-align:center;margin:6px 0 18px"><div class="fee">'+amt+'</div><div class="sub" style="margin:2px 0 0">'+(canCard?'เลือกโอนธนาคาร หรือ บัตรเครดิต/เดบิต':'ชำระผ่านการโอนธนาคารเท่านั้น')+'</div></div>'
+    +'<div style="background:rgba(200,245,106,.06);border:1px solid var(--line2,#233);border-radius:12px;padding:14px 14px 2px;margin-bottom:18px"><div class="sub" style="margin:0 0 10px;font-weight:700;color:var(--ink)">📦 ที่อยู่จัดส่งสินค้า</div>'+addrFieldsHTML()+'</div>'
     +toggle
     +'<div id="bankPane">'
     + '<div class="bank">'
@@ -1254,8 +1261,8 @@ document.addEventListener('click',function(e){
     if(canCard){
       $('#mBank').onclick=function(){$('#mBank').classList.add('on');$('#mCard').classList.remove('on');$('#bankPane').hidden=false;$('#cardPane').hidden=true;};
       $('#mCard').onclick=function(){$('#mCard').classList.add('on');$('#mBank').classList.remove('on');$('#bankPane').hidden=true;$('#cardPane').hidden=false;};
-      $('#cardBtn').onclick=function(){var b=$('#cardBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';
-        fetch('/api/leanlab/register/pay/card',{method:'POST',credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+      $('#cardBtn').onclick=function(){var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}var b=$('#cardBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';
+        fetch('/api/leanlab/register/pay/card',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode})}).then(function(r){return r.json();}).then(function(j){
           if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เริ่มการชำระเงินไม่สำเร็จ ลองใหม่');}
         }).catch(function(){b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
       };
@@ -1268,9 +1275,10 @@ document.addEventListener('click',function(e){
       }).catch(function(){box.innerHTML='<div>อ่านรูปไม่สำเร็จ</div>';});
     });
     $('#paySubmit').onclick=function(){
+      var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}
       if(!slipData){$('#fSlip').classList.add('bad');return;}
       var b=$('#paySubmit');b.disabled=true;b.textContent='กำลังส่ง…';clearMsg($('#payMsg'));
-      fetch('/api/leanlab/register/slip',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({slip:slipData})})
+      fetch('/api/leanlab/register/slip',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({slip:slipData,address:ad.address,postcode:ad.postcode})})
         .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';
           if(!j||!j.ok){return msg($('#payMsg'),'err','ส่งสลิปไม่สำเร็จ ลองใหม่');}REG=j.registration;vStatus();})
         .catch(function(){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';msg($('#payMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
@@ -1289,14 +1297,15 @@ document.addEventListener('click',function(e){
     +  '<div class="r"><span>งวดที่ 2-'+months+'</span><b>'+thb(per)+' · ทุกวันที่ '+day+' ของเดือน</b></div>'
     +  '<div class="r"><span>วิธีชำระ</span><b>บัตรเครดิต/เดบิต (อัตโนมัติ)</b></div>'
     +'</div>'
+    +'<div style="background:rgba(200,245,106,.06);border:1px solid var(--line2,#233);border-radius:12px;padding:14px 14px 2px;margin-top:18px"><div class="sub" style="margin:0 0 10px;font-weight:700;color:var(--ink)">📦 ที่อยู่จัดส่งสินค้า</div>'+addrFieldsHTML()+'</div>'
     +'<button class="btn lime block lg" id="insBtn" style="margin-top:18px">เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗</button>'
     +'<p class="hint" style="text-align:center;margin-top:12px">จะพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe · งวดแรกตัดทันที ยืนยันสิทธิ์อัตโนมัติ แล้วงวดถัดไปตัดเองทุกวันที่ '+day+'</p>'
     +'<div class="msg" id="insMsg"></div>'
     +'<button class="btn ghost block" id="insBack" style="margin-top:10px">ย้อนกลับ</button>'
     +'</div>';
     $('#insBack').onclick=vPromo;
-    $('#insBtn').onclick=function(){var b=$('#insBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';clearMsg($('#insMsg'));
-      fetch('/api/leanlab/register/pay/installment',{method:'POST',credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    $('#insBtn').onclick=function(){var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}var b=$('#insBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';clearMsg($('#insMsg'));
+      fetch('/api/leanlab/register/pay/installment',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode})}).then(function(r){return r.json();}).then(function(j){
         if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';var em={not_ready:'สถานะไม่พร้อมชำระ ลองรีเฟรชหน้าใหม่',not_special:'ใบสมัครนี้ไม่ใช่แบบผ่อน',stripe_error:'ระบบชำระเงินขัดข้องชั่วคราว ลองใหม่อีกครั้ง',stripe_not_configured:'ระบบชำระเงินยังไม่พร้อม กรุณาติดต่อทีมงาน',no_registration:'ไม่พบใบสมัคร'}[j&&j.error]||'เริ่มการชำระเงินไม่สำเร็จ ลองใหม่';msg($('#insMsg'),'err',em);}
       }).catch(function(){b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';msg($('#insMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     };
