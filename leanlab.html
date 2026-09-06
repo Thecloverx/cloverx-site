@@ -1266,6 +1266,8 @@ document.addEventListener('click',function(e){
     showApp();
     // Special Option — ผ่อนชำระผ่านบัตร (Stripe subscription) เท่านั้น
     if(REG&&REG.promoPlan==='special'&&REG.installment){ return vPayInstallment(); }
+    // กันหน้าจ่ายเงินโผล่ทั้งที่ยังจ่ายไม่ได้ (เช่น โปรฯ ยังรอตรวจหลักฐาน) → พาไปหน้าสถานะที่ถูกต้อง
+    if(REG&&REG.status&&REG.status!=='awaiting_payment'){ return route(); }
     var bk=EVENT.bank||{};
     var amt=thb((REG&&REG.fee)||EVENT.fee);
     var canCard=!!(CFG.card && REG && REG.promo && REG.promoPlan); // บัตร: เฉพาะโปรโมชั่น Full Option
@@ -1298,7 +1300,7 @@ document.addEventListener('click',function(e){
       $('#mCard').onclick=function(){$('#mCard').classList.add('on');$('#mBank').classList.remove('on');$('#bankPane').hidden=true;$('#cardPane').hidden=false;};
       $('#cardBtn').onclick=function(){var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}var b=$('#cardBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';
         fetch('/api/leanlab/register/pay/card',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode,addrDetail:ad.addrDetail,geo:ad.geo})}).then(function(r){return r.json();}).then(function(j){
-          if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เริ่มการชำระเงินไม่สำเร็จ ลองใหม่');}
+          if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';if(j&&j.error==='not_ready'){fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(jj){REG=(jj&&jj.registration)||REG;route();});}else{msg($('#cardMsg'),'err','เริ่มการชำระเงินไม่สำเร็จ ลองใหม่');}}
         }).catch(function(){b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
       };
     }
@@ -1322,6 +1324,7 @@ document.addEventListener('click',function(e){
 
   // ---------- PAYMENT · Special Option (ผ่อน 6 งวด) ----------
   function vPayInstallment(){
+    if(REG&&REG.status&&REG.status!=='awaiting_payment'){ return route(); }
     var ins=REG.installment||{};var per=ins.perMonth||7490;var months=ins.months||6;var total=ins.total||44940;var day=ins.day;
     app.innerHTML='<div class="card">'
     +'<span class="eyebrow" style="color:var(--blue);background:rgba(46,134,255,.1);border-color:rgba(46,134,255,.3)">Special Option · ผ่อน '+months+' งวด</span>'
@@ -1341,7 +1344,7 @@ document.addEventListener('click',function(e){
     $('#insBack').onclick=vPromo;
     $('#insBtn').onclick=function(){var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}var b=$('#insBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';clearMsg($('#insMsg'));
       fetch('/api/leanlab/register/pay/installment',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode,addrDetail:ad.addrDetail,geo:ad.geo})}).then(function(r){return r.json();}).then(function(j){
-        if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';var em={not_ready:'สถานะไม่พร้อมชำระ ลองรีเฟรชหน้าใหม่',not_special:'ใบสมัครนี้ไม่ใช่แบบผ่อน',stripe_error:'ระบบชำระเงินขัดข้องชั่วคราว ลองใหม่อีกครั้ง',stripe_not_configured:'ระบบชำระเงินยังไม่พร้อม กรุณาติดต่อทีมงาน',no_registration:'ไม่พบใบสมัคร'}[j&&j.error]||'เริ่มการชำระเงินไม่สำเร็จ ลองใหม่';msg($('#insMsg'),'err',em);}
+        if(j&&j.ok&&j.url){location.href=j.url;}else if(j&&j.error==='not_ready'){b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(jj){REG=(jj&&jj.registration)||REG;route();});}else{b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';var em={not_special:'ใบสมัครนี้ไม่ใช่แบบผ่อน',stripe_error:'ระบบชำระเงินขัดข้องชั่วคราว ลองใหม่อีกครั้ง',stripe_not_configured:'ระบบชำระเงินยังไม่พร้อม กรุณาติดต่อทีมงาน',no_registration:'ไม่พบใบสมัคร'}[j&&j.error]||'เริ่มการชำระเงินไม่สำเร็จ ลองใหม่';msg($('#insMsg'),'err',em);}
       }).catch(function(){b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';msg($('#insMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     };
   }
