@@ -280,6 +280,10 @@
     return '<div class="head"><div><h1><span class="pill lean">EVENT</span> Dashboard — Lean Lab</h1>'
       + '<p>ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
       + '<div style="display:flex;gap:10px"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><a class="btn pri" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
+      + '<div class="ofilt">'
+      +   '<div class="ofchips" id="dfChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
+      +   '<div class="ofrange" id="dfRange" style="display:none"><input type="date" id="dfFrom"><span>–</span><input type="date" id="dfTo"></div>'
+      + '</div>'
       + '<div id="dashBody"><div style="text-align:center;color:var(--muted);padding:52px 0">กำลังโหลดข้อมูล…</div></div>';
   }
   function dbar(label,value,max,color,suffix){
@@ -291,10 +295,15 @@
   }
   function dashLoad(){
     var rb=document.getElementById('dashRefresh'); if(rb)rb.onclick=dashLoad;
+    var dc=document.getElementById('dfChips');
+    if(dc){[].forEach.call(dc.querySelectorAll('.ofc'),function(b){b.onclick=function(){[].forEach.call(dc.querySelectorAll('.ofc'),function(x){x.classList.remove('on');});b.classList.add('on');DASH_FILT.date=b.getAttribute('data-d');var rg=document.getElementById('dfRange');if(rg)rg.style.display=(DASH_FILT.date==='custom')?'flex':'none';dashLoad();};});}
+    var df=document.getElementById('dfFrom'), dt=document.getElementById('dfTo');
+    if(df)df.onchange=function(){DASH_FILT.from=df.value;dashLoad();};
+    if(dt)dt.onchange=function(){DASH_FILT.to=dt.value;dashLoad();};
     fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       var body=document.getElementById('dashBody'); if(!body)return;
       if(!j||!j.ok){body.innerHTML='<div style="color:var(--bad);text-align:center;padding:40px">โหลดข้อมูลไม่สำเร็จ</div>';return;}
-      var R=j.registrations||[], TARGET=300, promo=j.promo||{quota:100,used:0,left:100};
+      var R=llDashFilter(j.registrations||[]), TARGET=300, promo=j.promo||{quota:100,used:0,left:100};
       var total=R.length;
       var confirmed=R.filter(function(x){return x.status==='confirmed';});
       var pending=R.filter(function(x){return x.status==='pending_review'||x.status==='promo_review';}).length;
@@ -451,6 +460,19 @@
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   var LL_FILT={date:'all',from:'',to:'',q:''};
+  var DASH_FILT={date:'all',from:'',to:''};
+  function llDashFilter(regs){
+    var f=DASH_FILT;
+    function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
+    var t0=dayStart(new Date()),DAY=86400000,lo=null,hi=null;
+    if(f.date==='today'){lo=t0;hi=t0+DAY;}
+    else if(f.date==='yst'){lo=t0-DAY;hi=t0;}
+    else if(f.date==='7d'){lo=t0-6*DAY;hi=t0+DAY;}
+    else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
+    else if(f.date==='custom'){ if(f.from)lo=dayStart(f.from); if(f.to)hi=dayStart(f.to)+DAY; }
+    if(lo==null&&hi==null)return regs||[];
+    return (regs||[]).filter(function(r){var t=new Date(r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; return true;});
+  }
   function llFilterList(regs){
     var f=LL_FILT;
     function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
@@ -603,7 +625,7 @@
     // mark group has-active for collapsed rail
     document.querySelectorAll('.nav .group').forEach(function(g){g.classList.toggle('has-active', !!g.querySelector('.item.active'));});
     document.getElementById('crumbTitle').textContent=TITLES[v]||v;
-    if(v==='lldash'){ gen.innerHTML=dashView(); dashLoad(); }
+    if(v==='lldash'){ DASH_FILT={date:'all',from:'',to:''}; gen.innerHTML=dashView(); dashLoad(); }
     else if(v==='llreg'){ gen.innerHTML=registerView(); registerInit(); }
     else if(v==='llmstart'){ gen.innerHTML=memberView('now'); memberLoad('now'); }
     else if(v==='llmafter'){ gen.innerHTML=memberView('later'); memberLoad('later'); }

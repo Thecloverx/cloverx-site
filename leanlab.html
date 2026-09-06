@@ -596,7 +596,7 @@ document.addEventListener('click',function(e){
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
     render();
     requestAnimationFrame(function(){ov.classList.add('show');});
-    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },3500);  // เลื่อนสไลด์อัตโนมัติทุก 3.5 วินาที
+    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },3000);  // เลื่อนสไลด์อัตโนมัติทุก 3 วินาที
     xbtn.onclick=function(){ if(closable)remove(); };
     ov.addEventListener('click',function(e){ if(e.target===ov&&closable)remove(); });
     dots.addEventListener('click',function(e){ if(closable){var sp=[].indexOf.call(dots.children,e.target); if(sp>=0)go(sp);} });
