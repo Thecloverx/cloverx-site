@@ -209,6 +209,10 @@
   /* upload */
   .upl{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:130px;border:1.6px dashed var(--line2);border-radius:14px;background:var(--bg2);color:var(--muted);cursor:pointer;flex-direction:column;text-align:center;padding:16px;transition:.15s}
   .upl:hover{border-color:var(--lime);color:var(--ink)}
+  .exguide{margin:2px 0 10px;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--bg2)}
+  .exguide img{display:block;width:100%;height:auto}
+  .exguide p{margin:0;padding:9px 12px;font-size:.82rem;color:var(--muted);line-height:1.5}
+  .exguide p b{color:var(--ink)}
   .upl.has{border-style:solid;border-color:var(--lime)}
   .upl img{max-height:180px;border-radius:10px}
 
@@ -307,6 +311,10 @@
   .llx-sec .head{text-align:center;max-width:760px;margin:0 auto 40px}
   .llx-sec .head h2{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.1;margin-top:10px}
   .llx-sec .head h2 .g{color:var(--sky)}
+  .eco-head{max-width:min(1000px,94vw)!important}
+  .eco-wm{display:block;height:40px;width:auto;margin:0 auto 16px}
+  .eco-h2{margin-top:0!important}
+  .eco-h2 .tl{display:block;white-space:nowrap;font-size:clamp(1rem,4.4vw,2.35rem);line-height:1.24}
   .llx-sec .head p{color:var(--muted);margin-top:12px;font-size:1.02rem}
 
   /* journey */
@@ -658,19 +666,19 @@
     L.innerHTML=''
     // ===== header =====
     +'<div class="llx-hd"><div class="llin">'
-    +' <a class="llx-logo" href="/leanlab"><img src="ll_logo.png" alt="Lean Lab X" class="llx-logoimg"></a>'
+    +' <a class="llx-logo" href="/leanlab"><img src="ll_wm.png" alt="Lean Lab X" class="llx-logoimg"></a>'
     +' <nav class="llx-mnav"><a data-scroll="top">About Us</a><a data-scroll="goal">Project Goal</a><a data-scroll="prog">The Journey</a><a data-scroll="prize">The Reward</a></nav>'
     +' <div class="sp"></div>'
     +' <div class="llx-acts">'
     +'   <span class="llx-hquota"><span class="qt">🎁 จำกัดสิทธิ์เพียง 100 สิทธิ์เท่านั้น</span></span>'
-    +'   <button class="llx-cta neon" data-go="join"><span>'+T('join')+'</span></button>'
+    +'   <button class="llx-cta neon" id="hdrAuth"><span>'+(ME.loggedIn?'ออกจากระบบ':'เข้าสู่ระบบ')+'</span></button>'
     +' </div></div></div>'
     // ===== hero — image only, nothing else =====
     +'<section class="llx-hero" id="llTop"><img class="hero-img" src="ll_hero.jpg" alt="Lean Lab X"></section>'
     // ===== program overview (full poster: pillars + journey) =====
     +'<section class="llx-res" id="llProg"><img class="res-img" src="ll_journey.jpg" alt="Onsite Journey 4 — เส้นทางการเปลี่ยนพฤติกรรมสุขภาพของผู้เข้าร่วม"></section>'
     // ===== ecosystem carousel (coverflow) =====
-    +'<section class="llx-sec" id="llEco"><div class="head"><span class="llx-eye">LEAN LAB X</span><h2>'+(LANG==='en'?'When you are healthy, <span class="g">dreams are endless</span><br>but in sickness, only one remains — <span class="g">to get well</span>':'เพื่อสุขภาพดี <span class="g">ความฝันมีมากมาย</span><br>แต่เมื่อเจ็บป่วย ความฝันก็เหลือเพียง <span class="g">แค่หายดี</span>')+'</h2></div>'
+    +'<section class="llx-sec" id="llEco"><div class="head eco-head"><img src="ll_wm.png" class="eco-wm" alt="Lean Lab X"><h2 class="eco-h2">'+(LANG==='en'?'<span class="tl">When you are healthy, <span class="g">dreams are endless</span></span><span class="tl">in sickness, only one remains — <span class="g">to get well</span></span>':'<span class="tl">เพื่อสุขภาพดี <span class="g">ความฝันมีมากมาย</span></span><span class="tl">แต่เมื่อเจ็บป่วย ความฝันก็เหลือเพียง <span class="g">แค่หายดี</span></span>')+'</h2></div>'
     +' <div class="cf-stage"><div class="cf-track" id="cfTrack"></div></div>'
     +'</section>'
     // ===== prizes (full poster) =====
@@ -685,6 +693,7 @@
     +' </div></section>';
     // wiring
     L.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){scrollToJoin(b.getAttribute('data-go')==='login');};});
+    var ha=L.querySelector('#hdrAuth'); if(ha)ha.onclick=function(){ if(ME.loggedIn){logout();} else {authMode='login';scrollToJoin(true);} };
     L.querySelectorAll('[data-scroll]').forEach(function(a){a.onclick=function(){var m={top:'llTop',goal:'llProg',prog:'llProg',prize:'llPrize'};var el=document.getElementById(m[a.getAttribute('data-scroll')]);if(el)el.scrollIntoView({behavior:'smooth'});};});
     var lang=document.getElementById('llxLang');if(lang)lang.querySelectorAll('button').forEach(function(b){b.onclick=function(){setLang(b.getAttribute('data-l'));};});
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
@@ -739,6 +748,7 @@
 
   function renderAuth(){
     var c=$('#sidePanel');
+    if(authMode==='login'){ renderLogin(); return; }
     authMode='signup';
     c.innerHTML=''
     +'<h2 class="tt">สมัครเข้าร่วมโครงการ</h2>'
@@ -754,12 +764,47 @@
     + '<div class="field" id="fGender"><label>เพศโดยกำเนิด <span class="req">*</span></label><div class="chips" id="genderChips"><button type="button" class="chip'+(W.gender==='ชาย'?' on':'')+'" data-g="ชาย">ชาย</button><button type="button" class="chip'+(W.gender==='หญิง'?' on':'')+'" data-g="หญิง">หญิง</button></div><div class="err">เลือกเพศ</div></div>'
     + '<button class="btn lime block lg neonbtn" id="authSubmit" type="submit"><span>สมัครเข้าร่วมโครงการ</span></button>'
     + '<div class="msg" id="authMsg"></div>'
+    + '<p class="hint" style="text-align:center;margin-top:14px">มีบัญชีแล้ว? <span class="lnk" id="toLogin">เข้าสู่ระบบ</span></p>'
     +'</form>';
     function updAge(){var a=calcAge($('#j_dob').value);$('#ageHint').textContent=(a!=null&&a>=0)?('อายุ '+a+' ปี'):'';}
     $('#j_dob').addEventListener('change',updAge);updAge();
     $('#genderChips').querySelectorAll('.chip').forEach(function(b){b.onclick=function(){W.gender=b.getAttribute('data-g');$('#genderChips').querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');$('#fGender').classList.remove('bad');};});
     $('#authForm').onsubmit=submitJoin;
+    var tl=$('#toLogin'); if(tl)tl.onclick=function(){authMode='login';renderAuth();};
     showOAuthError();
+  }
+  function renderLogin(){
+    var c=$('#sidePanel');
+    c.innerHTML=''
+    +'<h2 class="tt">เข้าสู่ระบบ</h2>'
+    +'<p class="sub">เข้าสู่ระบบด้วยอีเมลและเบอร์โทรที่ใช้ตอนสมัคร (เบอร์โทร = รหัสผ่าน)</p>'
+    +'<form id="loginForm" novalidate>'
+    + '<div class="field" id="lEmail"><label>อีเมล <span class="req">*</span></label><input class="in" id="l_email" type="email" inputmode="email" placeholder="you@email.com" value="'+esc((ME.member&&ME.member.email)||'')+'"><div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div></div>'
+    + '<div class="field" id="lPhone"><label>เบอร์โทรศัพท์ <span class="req">*</span></label><input class="in" id="l_phone" type="tel" inputmode="tel" placeholder="08x-xxx-xxxx"><div class="err">กรอกเบอร์โทรให้ถูกต้อง</div></div>'
+    + '<button class="btn lime block lg neonbtn" id="loginSubmit" type="submit"><span>เข้าสู่ระบบ</span></button>'
+    + '<div class="msg" id="loginMsg"></div>'
+    + '<p class="hint" style="text-align:center;margin-top:14px">ยังไม่มีบัญชี? <span class="lnk" id="toSignup">สมัครเข้าร่วมโครงการ</span></p>'
+    +'</form>';
+    $('#toSignup').onclick=function(){authMode='signup';renderAuth();};
+    $('#loginForm').onsubmit=submitLogin;
+    showOAuthError();
+  }
+  function submitLogin(e){
+    e.preventDefault();
+    var email=$('#l_email').value.trim(), phone=$('#l_phone').value.trim(), ok=true;
+    ok=bad($('#lEmail'),!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))&&ok;
+    ok=bad($('#lPhone'),!/^[0-9+\-\s()]{9,15}$/.test(phone))&&ok;
+    if(!ok)return false;
+    var btn=$('#loginSubmit');btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='<span>กำลังเข้าสู่ระบบ…</span>';clearMsg($('#loginMsg'));
+    fetch('/api/leanlab/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email:email,phone:phone})})
+      .then(function(r){return r.json();})
+      .then(function(j){
+        if(!j||!j.ok){btn.disabled=false;btn.innerHTML=old;return msg($('#loginMsg'),'err','อีเมลหรือเบอร์โทรไม่ถูกต้อง หรือยังไม่ได้สมัคร');}
+        ME={loggedIn:true,member:j.member};
+        fetch('/api/leanlab/register/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(jj){REG=(jj&&jj.registration)||null;route();}).catch(function(){route();});
+      })
+      .catch(function(){btn.disabled=false;btn.innerHTML=old;msg($('#loginMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+    return false;
   }
 
   function submitJoin(e){
@@ -857,6 +902,7 @@
     + '<div class="field" id="fWa"><label>มวลน้ำในร่างกาย (%) <span class="req">*</span></label><input class="in" id="w_water" type="number" inputmode="decimal" placeholder="เช่น 55" value="'+esc(W.waterPct||'')+'"><div class="err">กรอกมวลน้ำ</div></div>'
     +'</div>'
     +'<div class="field" id="fPhoto"><label>รูปภาพ Before (ความละเอียดสูง) <span class="req">*</span></label>'
+    + '<div class="exguide"><img src="ll_before_ex.jpg" alt="ตัวอย่างรูป Before"><p>ตัวอย่าง: ถ่าย <b>หน้าตรง · ด้านข้าง · ด้านหลัง</b> ยืนตรงเห็นเต็มตัว แสงสว่าง ฉากหลังโล่ง แต่งกายรัดรูป</p></div>'
     + '<label class="upl'+(W.beforePhoto?' has':'')+'" id="uplBox"><input type="file" id="w_photo" accept="image/*" hidden>'
     +   (W.beforePhoto?'<img src="'+W.beforePhoto+'" alt="">':'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 4 4 4-6 4 6M3 20h18M3 4h18v16H3z"/></svg><div id="uplTxt">แตะเพื่อแนบรูป Before</div>')
     + '</label><div class="err">กรุณาแนบรูป Before</div></div>'

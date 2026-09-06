@@ -205,9 +205,13 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/auth/login', function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
-    const pw = String(b.password || '');
+    const phone = String(b.phone || b.password || '').trim();
+    const digits = function (s) { return String(s || '').replace(/\D/g, ''); };
     const m = readM().find(function (x) { return (x.email || '').toLowerCase() === email; });
-    if (!m || !m.pwHash || !verifyPw(pw, m.pwHash)) return res.status(401).json({ ok: false, error: 'bad_credentials' });
+    if (!m) return res.status(401).json({ ok: false, error: 'bad_credentials' });
+    // เบอร์โทรใช้เป็นรหัสผ่าน (เทียบเฉพาะตัวเลข) — รองรับบัญชีเก่าที่มี pwHash ด้วย
+    const ok = (m.pwHash && verifyPw(phone, m.pwHash)) || (digits(m.phone) && digits(m.phone) === digits(phone));
+    if (!ok) return res.status(401).json({ ok: false, error: 'bad_credentials' });
     setSession(res, { pid: m.id });
     res.json({ ok: true, member: publicMember(m), needsProfile: !m.name });
   });
