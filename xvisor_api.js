@@ -499,6 +499,15 @@ module.exports = function (app, DATA) {
     res.json({ ok: true });
   });
 
+  // ลบ session (สำหรับลบรายการทดสอบ/รายการผิดพลาด — ต้องใช้รหัสแอดมิน ผ่าน middleware ด้านบน)
+  app.post('/api/xv/admin/session/:id/delete', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readS(); const i = all.findIndex(x => x.id === req.params.id);
+    if (i < 0) return res.status(404).json({ ok: false, error: 'not_found' });
+    const removed = all[i].id; all.splice(i, 1); writeS(all);
+    res.json({ ok: true, deleted: removed });
+  });
+
   /* -------- admin: exam ROUNDS (date-based windows over the master bank) -------- */
   // list rounds + how many candidates in each
   app.get('/api/xv/admin/rounds', (req, res) => {
