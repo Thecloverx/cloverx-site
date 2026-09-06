@@ -872,6 +872,10 @@ document.addEventListener('click',function(e){
     +   '<div class="field" id="fHeight"><label>ส่วนสูง (ซม.) <span class="req">*</span></label><input class="in" id="j_height" type="number" inputmode="decimal" placeholder="เช่น 170" value="'+esc(W.heightCm||'')+'"><div class="err">กรอกส่วนสูง</div></div>'
     + '</div>'
     + '<div class="field" id="fGender"><label>เพศโดยกำเนิด <span class="req">*</span></label><div class="chips" id="genderChips"><button type="button" class="chip'+(W.gender==='ชาย'?' on':'')+'" data-g="ชาย">ชาย</button><button type="button" class="chip'+(W.gender==='หญิง'?' on':'')+'" data-g="หญิง">หญิง</button></div><div class="err">เลือกเพศ</div></div>'
+    + '<div class="field" id="fCoach"><label>ทีมโค้ช <span class="req">*</span></label><select class="in" id="j_coach"><option value="">เลือกทีมโค้ช</option>'
+    +   ['โค้ชซิง','โค้ชนุ่น','โค้ชจา','โค้ชต๊ะ','อื่น ๆ'].map(function(cn){return '<option value="'+cn+'"'+(W.coach===cn?' selected':'')+'>'+(cn==='อื่น ๆ'?'อื่น ๆ (ระบุได้)':cn)+'</option>';}).join('')
+    +   '</select><input class="in" id="j_coachOther" placeholder="ระบุชื่อโค้ช" value="'+esc(W.coachOther||'')+'" style="margin-top:10px;'+(W.coach==='อื่น ๆ'?'':'display:none')+'"><div class="err">กรุณาเลือกทีมโค้ช</div></div>'
+    + '<div class="field" id="fRef"><label>ผู้แนะนำ <span class="req">*</span></label><input class="in" id="j_ref" placeholder="ชื่อผู้แนะนำ" value="'+esc(W.referrer||'')+'"><div class="hint">หากไม่ทราบ สามารถใส่เครื่องหมาย “-” ได้</div><div class="err">กรุณากรอกผู้แนะนำ</div></div>'
     + '<button class="btn lime block lg neonbtn" id="authSubmit" type="submit"><span>สมัครเข้าร่วมโครงการ</span></button>'
     + '<div class="msg" id="authMsg"></div>'
     + '<p class="hint" style="text-align:center;margin-top:14px">มีบัญชีแล้ว? <span class="lnk" id="toLogin">เข้าสู่ระบบ</span></p>'
@@ -879,6 +883,7 @@ document.addEventListener('click',function(e){
     function updAge(){var a=calcAge($('#j_dob').value);$('#ageHint').textContent=(a!=null&&a>=0)?('อายุ '+a+' ปี'):'';}
     $('#j_dob').addEventListener('change',updAge);updAge();
     $('#genderChips').querySelectorAll('.chip').forEach(function(b){b.onclick=function(){W.gender=b.getAttribute('data-g');$('#genderChips').querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');$('#fGender').classList.remove('bad');};});
+    var csel=$('#j_coach');if(csel){csel.onchange=function(){W.coach=csel.value;$('#fCoach').classList.remove('bad');var oth=$('#j_coachOther');if(oth){if(W.coach==='อื่น ๆ'){oth.style.display='';oth.focus();}else{oth.style.display='none';oth.value='';}}};}
     $('#authForm').onsubmit=submitJoin;
     var tl=$('#toLogin'); if(tl)tl.onclick=function(){authMode='login';renderAuth();};
     showOAuthError();
@@ -927,7 +932,13 @@ document.addEventListener('click',function(e){
     ok=bad($('#fDob'),!(age!=null&&age>=18))&&ok;
     ok=bad($('#fHeight'),!(Number(height)>=100&&Number(height)<=250))&&ok;
     ok=bad($('#fGender'),!W.gender)&&ok;
+    var coach=$('#j_coach')?$('#j_coach').value:(W.coach||'');
+    var coachOther=$('#j_coachOther')?$('#j_coachOther').value.trim():'';
+    var referrer=$('#j_ref')?$('#j_ref').value.trim():'';
+    ok=bad($('#fCoach'),!coach||(coach==='อื่น ๆ'&&coachOther.length<1))&&ok;
+    ok=bad($('#fRef'),referrer.length<1)&&ok;
     if(!ok)return false;
+    W.coach=coach;W.coachOther=coachOther;W.referrer=referrer;
     var btn=$('#authSubmit');btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='<span>กำลังดำเนินการ…</span>';clearMsg($('#authMsg'));
     fetch('/api/leanlab/auth/join',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email:email,name:name,phone:phone})})
       .then(function(r){return r.json();})
@@ -1095,7 +1106,7 @@ document.addEventListener('click',function(e){
 
   function doSubmitReg(){
     var y=$('#cfPay'); if(y){y.disabled=true;y.textContent='กำลังส่ง…';}
-    var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice};
+    var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice,coach:W.coach,coachOther:W.coachOther,referrer:W.referrer};
     if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
     fetch('/api/leanlab/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
       .then(function(r){return r.json();})

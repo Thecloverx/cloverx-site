@@ -301,6 +301,7 @@ module.exports = function (app, DATA_DIR) {
     if (!r) return null;
     return {
       id: r.id, name: r.name, dob: r.dob || null, age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      coach: r.coach || '', coachOther: r.coachOther || '', referrer: r.referrer || '',
       address: r.address || '', postcode: r.postcode || '', addrDetail: r.addrDetail || '', geo: r.geo || null,
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null, autoVerified: !!r.autoVerified,
@@ -475,6 +476,15 @@ module.exports = function (app, DATA_DIR) {
     if (!r) { r = { id: genRid(), memberId: m.id, season: EVENT.season, createdAt: new Date().toISOString() }; l.push(r); }
     r.name = name.slice(0, 80); r.dob = dob; r.age = age; r.gender = gender; r.heightCm = heightCm;
     r.startChoice = choice; r.baseline = baseline; r.fee = EVENT.fee; r.pay = 'bank';
+    // ทีมโค้ช + ผู้แนะนำ (บังคับกรอกจากหน้าสมัคร)
+    var COACHES = ['โค้ชซิง', 'โค้ชนุ่น', 'โค้ชจา', 'โค้ชต๊ะ', 'อื่น ๆ'];
+    var coachSel = String(b.coach || '').trim();
+    var coachOther = String(b.coachOther || '').trim().slice(0, 60);
+    if (COACHES.indexOf(coachSel) >= 0) {
+      r.coach = (coachSel === 'อื่น ๆ') ? (coachOther || 'อื่น ๆ') : coachSel;
+      r.coachOther = (coachSel === 'อื่น ๆ') ? coachOther : '';
+    } else if (coachSel) { r.coach = coachSel.slice(0, 60); r.coachOther = ''; }
+    if (typeof b.referrer === 'string' && b.referrer.trim()) r.referrer = b.referrer.trim().slice(0, 80);
     r.email = m.email || ''; r.phone = phone || m.phone || '';
     r.address = String(b.address || r.address || '').slice(0, 300);
     r.postcode = String(b.postcode || r.postcode || '').replace(/\D/g, '').slice(0, 5);
@@ -727,6 +737,7 @@ module.exports = function (app, DATA_DIR) {
       id: r.id, po: r.po || null, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
       address: r.address || '', postcode: r.postcode || '',
       age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      coach: r.coach || '', coachOther: r.coachOther || '', referrer: r.referrer || '',
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
       autoVerified: !!r.autoVerified, autoVerifyInfo: r.autoVerifyInfo || null,
