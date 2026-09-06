@@ -718,6 +718,16 @@ module.exports = function (app, DATA_DIR) {
     }
     res.json({ ok: true, deleted: req.params.id });
   });
+  // รีเซ็ตทั้งหมด: ลบสมาชิก + ใบสมัครทั้งหมด (สำรองไฟล์อัตโนมัติก่อนล้าง) — สำหรับทดสอบ
+  app.post('/api/leanlab/admin/reset', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    var members = readM(), regs = readR();
+    var stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    try { fs.writeFileSync(path.join(DIR, 'members.backup-' + stamp + '.json'), JSON.stringify(members, null, 2)); } catch (e) {}
+    try { fs.writeFileSync(path.join(DIR, 'registrations.backup-' + stamp + '.json'), JSON.stringify(regs, null, 2)); } catch (e) {}
+    writeM([]); writeR([]);
+    res.json({ ok: true, cleared: { members: members.length, registrations: regs.length }, backup: stamp });
+  });
 
   // ============================ LINE LOGIN (OAuth2) ============================
   app.get('/auth/leanlab/line/login', function (req, res) {
