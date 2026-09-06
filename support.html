@@ -396,6 +396,7 @@
       +   '<div class="ph"><h3>รายการทั้งหมด</h3><span class="pill lean" id="llCount">–</span></div>'
       +   '<div class="ofilt">'
       +     '<div class="ofchips" id="ofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
+      +     '<div class="ofchips" id="osChips"><button class="ofc on" data-s="all">ทุกสถานะ</button><button class="ofc" data-s="confirmed">ยืนยัน</button><button class="ofc" data-s="pending">รอชำระเงิน</button><button class="ofc" data-s="cancelled">ยกเลิก</button><button class="ofc" data-s="refunded">คืนเงิน</button></div>'
       +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
       +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx)">'
       +   '</div>'
@@ -403,7 +404,7 @@
       + '</div>';
   }
   function orderInit(){
-    LL_FILT={date:'all',from:'',to:'',q:''};
+    LL_FILT={date:'all',from:'',to:'',q:'',status:'all'};
     var rb=document.getElementById('llRefresh'); if(rb)rb.onclick=orderLoad;
     var chips=document.getElementById('ofChips');
     if(chips){[].forEach.call(chips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
@@ -411,6 +412,11 @@
       LL_FILT.date=b.getAttribute('data-d');
       var rg=document.getElementById('ofRange'); if(rg)rg.style.display=(LL_FILT.date==='custom')?'flex':'none';
       orderLoad();
+    };});}
+    var sChips=document.getElementById('osChips');
+    if(sChips){[].forEach.call(sChips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
+      [].forEach.call(sChips.querySelectorAll('.ofc'),function(x){x.classList.remove('on');}); b.classList.add('on');
+      LL_FILT.status=b.getAttribute('data-s'); orderLoad();
     };});}
     var ff=document.getElementById('ofFrom'), ft=document.getElementById('ofTo');
     if(ff)ff.onchange=function(){LL_FILT.from=ff.value;orderLoad();};
@@ -460,7 +466,8 @@
   }
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  var LL_FILT={date:'all',from:'',to:'',q:''};
+  var LL_FILT={date:'all',from:'',to:'',q:'',status:'all'};
+  var LL_ST_BUCKET={confirmed:['confirmed'],pending:['awaiting_payment','pending_review','promo_select','promo_review','promo_rejected'],cancelled:['cancelled','rejected'],refunded:['refunded']};
   var DASH_FILT={date:'all',from:'',to:''};
   function llDashFilter(regs){
     var f=DASH_FILT;
@@ -484,8 +491,10 @@
     else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
     else if(f.date==='custom'){ if(f.from)lo=dayStart(f.from); if(f.to)hi=dayStart(f.to)+DAY; }
     var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
+    var stB=(f.status&&f.status!=='all')?LL_ST_BUCKET[f.status]:null;
     return (regs||[]).filter(function(r){
       if(lo!=null||hi!=null){ var t=new Date(r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; }
+      if(stB && stB.indexOf(r.status)<0) return false;
       if(q){
         var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')).toLowerCase();
         var okText=hay.indexOf(q)>=0;
