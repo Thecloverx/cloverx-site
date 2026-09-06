@@ -684,7 +684,7 @@
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
     buildCf();
     fillSide();
-    setTimeout(welcomePopup,7000);
+    setTimeout(welcomePopup,4000);
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
       el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin:0 0 14px;text-align:center">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>';
