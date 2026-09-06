@@ -520,7 +520,7 @@
     function go(i){ if(i<0||i>=slides.length||i===idx)return; pop.classList.add('switching'); setTimeout(function(){idx=i;render();pop.classList.remove('switching');},260); }
     render();
     requestAnimationFrame(function(){ov.classList.add('show');});
-    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },3000);  // เลื่อนสไลด์อัตโนมัติทุก 3 วินาที
+    var autoIv=setInterval(function(){ if(idx<slides.length-1){go(idx+1);}else{clearInterval(autoIv);} },4000);  // เลื่อนสไลด์อัตโนมัติทุก 4 วินาที
     xbtn.onclick=function(){ if(closable)remove(); };
     ov.addEventListener('click',function(e){ if(e.target===ov&&closable)remove(); });
     dots.addEventListener('click',function(e){ if(closable){var sp=[].indexOf.call(dots.children,e.target); if(sp>=0)go(sp);} });
@@ -684,7 +684,11 @@
     L.querySelectorAll('[data-fq]').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open');};});
     buildCf();
     fillSide();
-    setTimeout(welcomePopup,4000);
+    setTimeout(welcomePopup,3000);   // เด้งหลัง 3 วินาที
+    if(!window.__llPopScroll){ window.__llPopScroll=true;   // หรือเด้งทันทีเมื่อไถพ้น Hero
+      var onPopScroll=function(){ var h=document.getElementById('llTop'); if(h && h.getBoundingClientRect().bottom<=120){ welcomePopup(); window.removeEventListener('scroll',onPopScroll); } };
+      window.addEventListener('scroll',onPopScroll,{passive:true});
+    }
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
       el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin:0 0 14px;text-align:center">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>';
