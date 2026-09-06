@@ -465,6 +465,23 @@
     .llx-burger{display:flex}
     .llx-hero .hbtns .llx-cta,.llx-hero .hbtns .btn{flex:1}
   }
+  /* Shopee-style geo picker */
+  .geosheet{position:fixed;inset:0;z-index:300;display:none}
+  .geosheet.on{display:block}
+  .geosheet .gbk{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+  .geosheet .gpanel{position:absolute;left:0;right:0;bottom:0;max-height:82vh;background:var(--panel);border-top-left-radius:20px;border-top-right-radius:20px;border-top:1px solid var(--line2);padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+  .geosheet .gh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .geosheet .gh b{font-size:1.05rem;color:var(--ink)}
+  .geosheet .gx{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:1.15rem;cursor:pointer}
+  .geosheet .gsb{display:flex;align-items:center;gap:9px;border:1.5px solid var(--line2);border-radius:12px;padding:11px 13px;margin-bottom:10px}
+  .geosheet .gsb svg{width:18px;height:18px;color:var(--muted);flex:none}
+  .geosheet .gsb input{flex:1;border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:.98rem;outline:none}
+  .geosheet .glist{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+  .geosheet .geo-row{padding:12px 6px;border-bottom:1px solid var(--line);cursor:pointer}
+  .geosheet .geo-row:active{background:rgba(200,245,106,.06)}
+  .geosheet .geo-row b{display:block;color:var(--ink);font-weight:600;font-size:.95rem}
+  .geosheet .geo-row small{color:var(--muted);font-size:.82rem}
+  .geosheet .geo-hint{color:var(--muted);text-align:center;padding:26px 10px;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -512,6 +529,15 @@ document.addEventListener('click',function(e){
       <button class="btn ghost block" onclick="LL.closeConfirm()">กลับไปแก้</button>
       <button class="btn lime block" id="confirmYes">ยืนยันส่งข้อมูล</button>
     </div>
+  </div>
+</div>
+
+<div class="geosheet" id="llGeoSheet">
+  <div class="gbk" onclick="LLcloseGeo()"></div>
+  <div class="gpanel">
+    <div class="gh"><b>เลือกที่อยู่จัดส่ง</b><button type="button" class="gx" onclick="LLcloseGeo()">✕</button></div>
+    <div class="gsb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="llGeoSearch" placeholder="ค้นหา ตำบล / อำเภอ / จังหวัด / รหัสไปรษณีย์" oninput="LLrenderGeo(this.value)"></div>
+    <div class="glist" id="llGeoList"><div class="geo-hint">พิมพ์เพื่อค้นหา ตำบล อำเภอ จังหวัด หรือรหัสไปรษณีย์</div></div>
   </div>
 </div>
 
@@ -1046,20 +1072,18 @@ document.addEventListener('click',function(e){
         +'<div class="r"><span>มวลน้ำ</span><b>'+esc(W.waterPct)+' %</b></div>'
         +'<div class="r"><span>รูป Before</span><b>แนบแล้ว ✓</b></div>';
     }
-    rows+='<div class="r"><span>ค่าสมัคร</span><b style="color:var(--lime)">'+thb(EVENT.fee)+'</b></div>';
+    rows+='<div class="r"><span>ค่าสมัคร</span><b style="color:var(--muted)">-</b></div>';
     app.innerHTML='<div class="card">'+stepper(4)
-    +'<h2 class="tt">ตรวจสอบข้อมูล</h2><p class="sub">โปรดตรวจสอบให้ถูกต้องก่อนยืนยัน — ยืนยัน 2 ครั้งเพื่อความชัวร์</p>'
+    +'<h2 class="tt">ตรวจสอบข้อมูล</h2><p class="sub">โปรดตรวจสอบให้ถูกต้องก่อนยืนยัน — จากนั้นเลือกวิธีชำระเงิน</p>'
     +'<div class="rev">'+rows+'</div>'
     +'<div class="msg" id="cfMsg"></div>'
-    +'<div style="display:flex;flex-direction:column;gap:10px">'
-    + '<button class="btn block lg" id="cfPromo" style="background:rgba(255,196,107,.14);color:var(--orange);border:1.5px solid rgba(255,196,107,.5);font-weight:800">🎁 รับโปรโมชั่นพิเศษ</button>'
-    + '<button class="btn lime block lg" id="cfPay">ยืนยันชำระเงิน</button>'
+    +'<div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">'
+    + '<button class="btn lime block lg" id="cfPay">ยืนยันการชำระเงิน</button>'
     + '<button class="btn ghost block" id="cfback">ย้อนกลับ</button>'
     +'</div>'
     +'</div>';
     $('#cfback').onclick=function(){if(W.startChoice==='now')vStep3();else vStep2();};
-    $('#cfPay').onclick=function(){openConfirm('pay');};
-    $('#cfPromo').onclick=function(){openConfirm('promo');};
+    $('#cfPay').onclick=doSubmitReg;
   }
 
   function openConfirm(next){$('#confirmModal').classList.add('on');$('#confirmYes').onclick=function(){doSubmitReg(next);};}
@@ -1068,19 +1092,18 @@ document.addEventListener('click',function(e){
   function goPayNormal(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:false})}).then(function(){vPay();}).catch(function(){vPay();}); }
   function goPromo(){ fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:true})}).then(function(r){return r.json();}).then(function(j){ if(!j||!j.ok){ if(j&&j.error==='promo_full'){alert('ขออภัย สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว');} else {alert('ทำรายการไม่สำเร็จ ลองใหม่');} return vChoosePay(); } REG=j.registration; vPromo(j); }).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');vChoosePay();}); }
 
-  function doSubmitReg(next){
-    var y=$('#confirmYes');y.disabled=true;y.textContent='กำลังส่ง…';
+  function doSubmitReg(){
+    var y=$('#cfPay'); if(y){y.disabled=true;y.textContent='กำลังส่ง…';}
     var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice};
     if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
     fetch('/api/leanlab/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
       .then(function(r){return r.json();})
       .then(function(j){
-        y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();
+        if(y){y.disabled=false;y.textContent='ยืนยันการชำระเงิน';}
         if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
-        REG=j.registration;
-        if(next==='pay'){goPayNormal();} else if(next==='promo'){goPromo();} else {vChoosePay();}
+        REG=j.registration; vChoosePay();
       })
-      .catch(function(){y.disabled=false;y.textContent='ยืนยันส่งข้อมูล';closeConfirm();msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
+      .catch(function(){if(y){y.disabled=false;y.textContent='ยืนยันการชำระเงิน';}msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
   }
 
   // ---------- CHOOSE: pay now OR special promotion (จำกัด 100 สิทธิ์) ----------
@@ -1214,18 +1237,30 @@ document.addEventListener('click',function(e){
     };
   }
 
-  // ---------- ที่อยู่รับสินค้า (เก็บก่อนชำระเงิน) ----------
+  // ---------- ที่อยู่รับสินค้า (เก็บก่อนชำระเงิน) — Shopee-style geo picker ----------
+  var LLgeoData=null, LLgeoSel=null;
   function addrFieldsHTML(){
-    return '<div class="field" id="fAddrP"><label>ที่อยู่รับสินค้า (จัดส่ง) <span class="req">*</span></label><textarea class="in" id="p_addr" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด" style="resize:vertical;font-family:inherit">'+esc((REG&&REG.address)||'')+'</textarea><div class="err">กรุณากรอกที่อยู่จัดส่ง</div></div>'
-      +'<div class="field" id="fPostP"><label>รหัสไปรษณีย์ <span class="req">*</span></label><input class="in" id="p_post" type="tel" inputmode="numeric" maxlength="5" placeholder="เช่น 10250" value="'+esc((REG&&REG.postcode)||'')+'"><div class="err">กรอกรหัสไปรษณีย์ 5 หลัก</div></div>';
+    if(!LLgeoSel && REG && REG.geo && REG.geo.length===4) LLgeoSel=REG.geo.slice();
+    var geoTxt = LLgeoSel ? (LLgeoSel[2]+' · '+LLgeoSel[1]+' · '+LLgeoSel[0]+' · '+LLgeoSel[3]) : '';
+    return '<div class="field" id="fAddr1"><label>ที่อยู่ (บ้านเลขที่ / หมู่ / ถนน) <span class="req">*</span></label><input class="in" id="p_addr1" placeholder="เช่น 99/9 หมู่ 3 ถนนพัฒนาการ" value="'+esc((REG&&REG.addrDetail)||'')+'"><div class="err">กรุณากรอกที่อยู่</div></div>'
+      +'<div class="field" id="fGeo"><label>จังหวัด / เขต-อำเภอ / แขวง-ตำบล / รหัสไปรษณีย์ <span class="req">*</span></label>'
+      +'<button type="button" class="in" id="p_geoBtn" onclick="LLopenGeo()" style="text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px"><span id="p_geoTxt"'+(geoTxt?'':' style="color:var(--muted)"')+'>'+(geoTxt||'แตะเพื่อเลือก (ค้นหาได้)')+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>'
+      +'<div class="err">กรุณาเลือกที่อยู่</div></div>';
   }
   function readAddr(){
-    var a=((($('#p_addr')||{}).value)||'').trim(), p=((($('#p_post')||{}).value)||'').trim();
-    var ok=true;
-    ok=bad($('#fAddrP'),a.length<5)&&ok;
-    ok=bad($('#fPostP'),!/^\d{5}$/.test(p))&&ok;
-    return {ok:ok,address:a,postcode:p};
+    var d=((($('#p_addr1')||{}).value)||'').trim();
+    var ok=bad($('#fAddr1'),d.length<3);
+    ok=bad($('#fGeo'),!LLgeoSel)&&ok;
+    var full=d, post='';
+    if(LLgeoSel){ full=d+' ต.'+LLgeoSel[0]+' อ.'+LLgeoSel[1]+' จ.'+LLgeoSel[2]+' '+LLgeoSel[3]; post=LLgeoSel[3]; }
+    return {ok:ok,address:full,postcode:post,addrDetail:d,geo:LLgeoSel};
   }
+  function LLloadGeo(cb){ if(LLgeoData){cb();return;} var list=$('#llGeoList'); if(list)list.innerHTML='<div class="geo-hint">กำลังโหลดข้อมูลที่อยู่…</div>'; fetch('/thai-geo.json').then(function(r){return r.json();}).then(function(d){LLgeoData=d;cb();}).catch(function(){if(list)list.innerHTML='<div class="geo-hint">โหลดข้อมูลไม่สำเร็จ ลองใหม่</div>';}); }
+  function LLrenderGeo(q){ var list=$('#llGeoList'); if(!list)return; if(!LLgeoData){LLloadGeo(function(){LLrenderGeo(q);});return;} q=(q||'').toString().toLowerCase().trim(); if(!q){list.innerHTML='<div class="geo-hint">พิมพ์เพื่อค้นหา ตำบล อำเภอ จังหวัด หรือรหัสไปรษณีย์</div>';return;} var res=[]; for(var i=0;i<LLgeoData.length&&res.length<40;i++){var e=LLgeoData[i]; if((''+e[0]).toLowerCase().indexOf(q)>=0||(''+e[1]).toLowerCase().indexOf(q)>=0||(''+e[2]).toLowerCase().indexOf(q)>=0||(''+e[3]).indexOf(q)>=0)res.push(i);} if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+esc(q)+'”</div>';return;} list.innerHTML=res.map(function(i){var e=LLgeoData[i];return '<div class="geo-row" onclick="LLpickGeo('+i+')"><b>'+esc(e[0])+' » '+esc(e[1])+'</b><small>'+esc(e[2])+' '+esc(e[3])+'</small></div>';}).join(''); }
+  function LLopenGeo(){ var sh=$('#llGeoSheet'); if(sh)sh.classList.add('on'); var s=$('#llGeoSearch'); LLloadGeo(function(){LLrenderGeo(s?s.value:'');}); setTimeout(function(){if(s)s.focus();},60); }
+  function LLcloseGeo(){ var sh=$('#llGeoSheet'); if(sh)sh.classList.remove('on'); }
+  function LLpickGeo(i){ var e=LLgeoData[i]; LLgeoSel=[e[0],e[1],e[2],String(e[3])]; var t=$('#p_geoTxt'); if(t){t.textContent=e[2]+' · '+e[1]+' · '+e[0]+' · '+e[3];t.style.color='';} var fg=$('#fGeo'); if(fg)fg.classList.remove('bad'); LLcloseGeo(); }
+  window.LLopenGeo=LLopenGeo; window.LLcloseGeo=LLcloseGeo; window.LLpickGeo=LLpickGeo; window.LLrenderGeo=LLrenderGeo;
   // ---------- PAYMENT ----------
   function vPay(){
     showApp();
@@ -1262,7 +1297,7 @@ document.addEventListener('click',function(e){
       $('#mBank').onclick=function(){$('#mBank').classList.add('on');$('#mCard').classList.remove('on');$('#bankPane').hidden=false;$('#cardPane').hidden=true;};
       $('#mCard').onclick=function(){$('#mCard').classList.add('on');$('#mBank').classList.remove('on');$('#bankPane').hidden=true;$('#cardPane').hidden=false;};
       $('#cardBtn').onclick=function(){var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}var b=$('#cardBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';
-        fetch('/api/leanlab/register/pay/card',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode})}).then(function(r){return r.json();}).then(function(j){
+        fetch('/api/leanlab/register/pay/card',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode,addrDetail:ad.addrDetail,geo:ad.geo})}).then(function(r){return r.json();}).then(function(j){
           if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เริ่มการชำระเงินไม่สำเร็จ ลองใหม่');}
         }).catch(function(){b.disabled=false;b.textContent='ชำระผ่านบัตร '+amt+' ↗';msg($('#cardMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
       };
@@ -1278,7 +1313,7 @@ document.addEventListener('click',function(e){
       var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}
       if(!slipData){$('#fSlip').classList.add('bad');return;}
       var b=$('#paySubmit');b.disabled=true;b.textContent='กำลังส่ง…';clearMsg($('#payMsg'));
-      fetch('/api/leanlab/register/slip',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({slip:slipData,address:ad.address,postcode:ad.postcode})})
+      fetch('/api/leanlab/register/slip',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({slip:slipData,address:ad.address,postcode:ad.postcode,addrDetail:ad.addrDetail,geo:ad.geo})})
         .then(function(r){return r.json();}).then(function(j){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';
           if(!j||!j.ok){return msg($('#payMsg'),'err','ส่งสลิปไม่สำเร็จ ลองใหม่');}REG=j.registration;vStatus();})
         .catch(function(){b.disabled=false;b.textContent='ยืนยันการชำระเงิน';msg($('#payMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
@@ -1305,7 +1340,7 @@ document.addEventListener('click',function(e){
     +'</div>';
     $('#insBack').onclick=vPromo;
     $('#insBtn').onclick=function(){var ad=readAddr();if(!ad.ok){$('#fAddrP').scrollIntoView({behavior:'smooth',block:'center'});return;}var b=$('#insBtn');b.disabled=true;b.textContent='กำลังไปหน้าชำระเงิน…';clearMsg($('#insMsg'));
-      fetch('/api/leanlab/register/pay/installment',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode})}).then(function(r){return r.json();}).then(function(j){
+      fetch('/api/leanlab/register/pay/installment',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({address:ad.address,postcode:ad.postcode,addrDetail:ad.addrDetail,geo:ad.geo})}).then(function(r){return r.json();}).then(function(j){
         if(j&&j.ok&&j.url){location.href=j.url;}else{b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';var em={not_ready:'สถานะไม่พร้อมชำระ ลองรีเฟรชหน้าใหม่',not_special:'ใบสมัครนี้ไม่ใช่แบบผ่อน',stripe_error:'ระบบชำระเงินขัดข้องชั่วคราว ลองใหม่อีกครั้ง',stripe_not_configured:'ระบบชำระเงินยังไม่พร้อม กรุณาติดต่อทีมงาน',no_registration:'ไม่พบใบสมัคร'}[j&&j.error]||'เริ่มการชำระเงินไม่สำเร็จ ลองใหม่';msg($('#insMsg'),'err',em);}
       }).catch(function(){b.disabled=false;b.textContent='เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗';msg($('#insMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
     };
