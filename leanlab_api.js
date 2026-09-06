@@ -593,7 +593,7 @@ module.exports = function (app, DATA_DIR) {
 
   // ---- Back-office (Support dept manages Lean Lab) ----
   // ล็อกทุก endpoint หลังบ้านด้วย ADMIN_KEY (env) — ยังไม่ตั้ง env ใช้ค่าเริ่มต้น '@dev1234' (เปลี่ยนได้ภายหลังผ่าน Railway Variables)
-  var LL_ADMIN_KEY = process.env.ADMIN_KEY || '@dev1234';
+  var LL_ADMIN_KEY = process.env.LEANLAB_ADMIN_KEY || '@dev1234';
   function adminGuard(req, res) {
     var k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key'] || '';
     if (String(k) !== LL_ADMIN_KEY) { res.status(403).json({ ok: false, error: 'forbidden' }); return false; }
