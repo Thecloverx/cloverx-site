@@ -64,6 +64,25 @@ module.exports = function (app, DATA_DIR) {
   const NINETY_DAYS = 90 * 24 * 3600 * 1000;
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  // ---------- rate limiting / anti-abuse (in-memory) ----------
+  function clientIp(req) { return String((req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || req.connection && req.connection.remoteAddress || 'x'); }
+  var _rl = {};
+  // จำกัดจำนวนครั้งต่อ IP ต่อหน้าต่างเวลา — คืน true ถ้ายังไม่เกิน
+  function rlOk(bucket, req, max, windowMs) {
+    var key = bucket + ':' + clientIp(req), now = Date.now(), b = _rl[key];
+    if (!b || now > b.reset) { _rl[key] = { n: 1, reset: now + windowMs }; return true; }
+    b.n++; return b.n <= max;
+  }
+  // middleware ช่วย: ถ้าเกินโควตา → 429
+  function limit(bucket, max, windowMs) {
+    return function (req, res, next) {
+      if (rlOk(bucket, req, max, windowMs)) return next();
+      res.status(429).json({ ok: false, error: 'too_many_requests', message: 'ทำรายการถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' });
+    };
+  }
+  // กัน brute-force รหัสแอดมิน: ล็อก IP ชั่วคราวเมื่อใส่รหัสผิดหลายครั้ง
+  var _adminFail = {};
+
   // ---------- store ----------
   function readM() { try { return JSON.parse(fs.readFileSync(MEMBERS, 'utf8')) || []; } catch (e) { return []; } }
   function writeM(l) { try { fs.writeFileSync(MEMBERS, JSON.stringify(l, null, 2)); } catch (e) {} }
@@ -167,7 +186,7 @@ module.exports = function (app, DATA_DIR) {
   const googleConfigured = function () { return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET); };
 
   // ============================ EMAIL AUTH ============================
-  app.post('/api/leanlab/auth/register', function (req, res) {
+  app.post('/api/leanlab/auth/register', limit('auth', 15, 300000), function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     const pw = String(b.password || '');
@@ -182,7 +201,7 @@ module.exports = function (app, DATA_DIR) {
   });
 
   // สมัครแบบฟอร์มเดียว ไม่ต้องรหัสผ่าน — มีอีเมลอยู่แล้วก็ใช้บัญชีเดิม (resume)
-  app.post('/api/leanlab/auth/join', function (req, res) {
+  app.post('/api/leanlab/auth/join', limit('auth', 15, 300000), function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     const name = String(b.name || '').trim();
@@ -202,7 +221,7 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, member: publicMember(m) });
   });
 
-  app.post('/api/leanlab/auth/login', function (req, res) {
+  app.post('/api/leanlab/auth/login', limit('login', 12, 300000), function (req, res) {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     const phone = String(b.phone || b.password || '').trim();
@@ -342,7 +361,7 @@ module.exports = function (app, DATA_DIR) {
   });
 
   // แนบหลักฐานการซื้อ (สำหรับระดับราคาที่มีส่วนลด) → รอทีมงานตรวจสอบ
-  app.post('/api/leanlab/register/promo/proof', function (req, res) {
+  app.post('/api/leanlab/register/promo/proof', limit('proof', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
@@ -364,7 +383,7 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, registration: publicReg(r) });
   });
 
-  app.post('/api/leanlab/register', function (req, res) {
+  app.post('/api/leanlab/register', limit('register', 25, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
     var name = String(b.name || '').trim();
@@ -405,7 +424,7 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, registration: publicReg(r), bank: EVENT.bank });
   });
 
-  app.post('/api/leanlab/register/slip', function (req, res) {
+  app.post('/api/leanlab/register/slip', limit('slip', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
@@ -450,7 +469,7 @@ module.exports = function (app, DATA_DIR) {
       r.on('error', function () { resolve(null); }); r.write(body); r.end();
     });
   }
-  app.post('/api/leanlab/register/pay/card', function (req, res) {
+  app.post('/api/leanlab/register/pay/card', limit('pay', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!stripeCfg()) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
     var r = readR().find(function (x) { return x.memberId === m.id; });
@@ -520,7 +539,7 @@ module.exports = function (app, DATA_DIR) {
     params.push(['subscription_data[metadata][leanlab_months]', String((reg.installment && reg.installment.months) || 6)]);
     return stripeApi('POST', '/v1/checkout/sessions', params).then(function (j) { return (j && j.url) ? { url: j.url, id: j.id } : null; });
   }
-  app.post('/api/leanlab/register/pay/installment', function (req, res) {
+  app.post('/api/leanlab/register/pay/installment', limit('pay', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!process.env.STRIPE_SECRET_KEY) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
     var r = readR().find(function (x) { return x.memberId === m.id; });
@@ -606,9 +625,19 @@ module.exports = function (app, DATA_DIR) {
   // ---- Back-office (Support dept manages Lean Lab) ----
   // ล็อกทุก endpoint หลังบ้านด้วย ADMIN_KEY (env) — ยังไม่ตั้ง env ใช้ค่าเริ่มต้น '@dev1234' (เปลี่ยนได้ภายหลังผ่าน Railway Variables)
   var LL_ADMIN_KEY = process.env.LEANLAB_ADMIN_KEY || '@dev1234';
+  if (!process.env.LEANLAB_ADMIN_KEY) console.warn('[lean-lab] ⚠ LEANLAB_ADMIN_KEY not set — using weak default. Set a strong key in Railway env.');
   function adminGuard(req, res) {
+    var ip = clientIp(req), f = _adminFail[ip];
+    // ถูกล็อกอยู่ (ใส่รหัสผิดหลายครั้ง)
+    if (f && f.until > Date.now()) { res.status(429).json({ ok: false, error: 'locked', message: 'ใส่รหัสผิดหลายครั้ง ถูกล็อกชั่วคราว กรุณารอสักครู่' }); return false; }
     var k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key'] || '';
-    if (String(k) !== LL_ADMIN_KEY) { res.status(403).json({ ok: false, error: 'forbidden' }); return false; }
+    if (String(k) !== LL_ADMIN_KEY) {
+      f = _adminFail[ip] || { n: 0, until: 0 }; f.n++;
+      if (f.n >= 8) { f.until = Date.now() + 10 * 60 * 1000; f.n = 0; }   // ผิดครบ 8 ครั้ง → ล็อก 10 นาที
+      _adminFail[ip] = f;
+      res.status(403).json({ ok: false, error: 'forbidden' }); return false;
+    }
+    if (_adminFail[ip]) _adminFail[ip].n = 0;   // สำเร็จ → รีเซ็ต
     return true;
   }
   function adminReg(r, byId) {

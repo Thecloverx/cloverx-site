@@ -151,6 +151,18 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
   res.json({ received: true });
 });
 
+// ---- security hardening: HTTPS redirect + security headers (applies to all routes incl. Lean Lab & X-VISOR) ----
+app.use(function (req, res, next) {
+  var proto = req.headers['x-forwarded-proto'];
+  if (proto && proto !== 'https' && (req.method === 'GET' || req.method === 'HEAD')) return res.redirect(301, 'https://' + req.headers.host + req.originalUrl);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 // ---- X-VISOR exam backend (server-side shuffle + scoring) ----
@@ -791,6 +803,16 @@ app.get('/preorder', (req, res, next) => {
   if (!s.preorderOpen && req.query.preview !== '1') {
     res.set('Cache-Control', 'no-store');
     return res.status(200).send(closedPage(s));
+  }
+  next();
+});
+
+// ---- block source & data files from being served publicly (PDPA / source protection) ----
+app.use(function (req, res, next) {
+  var p = decodeURIComponent(req.path || '').toLowerCase().replace(/^\/+/, '');
+  var blocked = ['server.js', 'leanlab_api.js', 'xvisor_api.js', 'package.json', 'package-lock.json'];
+  if (blocked.indexOf(p) > -1 || p === 'data' || p.indexOf('data/') === 0 || p.indexOf('.') === 0 || p.indexOf('/.') > -1 || p.endsWith('.env') || p.endsWith('.map')) {
+    return res.status(404).send('Not found');
   }
   next();
 });
