@@ -774,6 +774,10 @@ window.xvEnterFS=xvEnterFS;
 (function proctorInit(){
   var last={};
   var examing=function(){return S&&S.phase==='active_exam';};
+  /* หน้าที่ต้องปกป้องเนื้อหา (คำถาม/ทบทวนข้อผิด) — ห้ามแคป/คัดลอก/ลากรูป.
+     หน้าคะแนนรวมเมื่อผ่านเกณฑ์ (all_passed/final_report ฯลฯ) ไม่อยู่ในนี้ = แคปได้ */
+  var protectedPhase=function(){return S&&(S.phase==='active_exam'||S.phase==='wrong_review');};
+  window.xvProtectedPhase=protectedPhase;
   function report(type){
     if(!examing())return;
     var now=Date.now(); if(last[type]&&now-last[type]<800)return; last[type]=now;
@@ -792,11 +796,13 @@ window.xvEnterFS=xvEnterFS;
     var k=(e.key||'').toLowerCase();
     if((e.metaKey||e.ctrlKey)&&e.shiftKey&&(k==='s'||k==='3'||k==='4'||k==='5'))report('printscreen');
   });
-  document.addEventListener('copy',function(e){if(examing()){e.preventDefault();report('copy');}});
-  document.addEventListener('cut',function(e){if(examing()){e.preventDefault();report('cut');}});
-  document.addEventListener('paste',function(e){if(examing()){e.preventDefault();report('paste');}});
-  document.addEventListener('selectstart',function(e){if(examing())e.preventDefault();});
-  document.addEventListener('contextmenu',function(e){if(examing()){e.preventDefault();report('contextmenu');}});
+  document.addEventListener('copy',function(e){if(protectedPhase()){e.preventDefault();report('copy');}});
+  document.addEventListener('cut',function(e){if(protectedPhase()){e.preventDefault();report('cut');}});
+  document.addEventListener('paste',function(e){if(protectedPhase()){e.preventDefault();report('paste');}});
+  document.addEventListener('selectstart',function(e){if(protectedPhase())e.preventDefault();});
+  document.addEventListener('contextmenu',function(e){if(protectedPhase()){e.preventDefault();report('contextmenu');}});
+  /* กันลาก/บันทึกรูปภาพในหน้าที่ปกป้อง */
+  document.addEventListener('dragstart',function(e){if(protectedPhase())e.preventDefault();});
   function onFS(){if(examing()&&!xvInFS())report('fullscreen_exit');}
   document.addEventListener('fullscreenchange',onFS);
   document.addEventListener('webkitfullscreenchange',onFS);
@@ -812,6 +818,27 @@ window.xvEnterFS=xvEnterFS;
   var place=function(){if(document.body)document.body.appendChild(b);};
   if(document.body)place();else document.addEventListener('DOMContentLoaded',place);
   setInterval(function(){var show=(S&&S.phase==='active_exam'&&S.api&&S.api.on&&!xvInFS());b.style.display=show?'block':'none';},700);
+})();
+/* ---------- กันแคปจอ: เบลอ/บังเนื้อหาเมื่อหน้าต่างไม่ได้โฟกัส (เฉพาะหน้าคำถาม/ทบทวนข้อผิด) ----------
+   ช่วยกันสกรีนช็อต/แชร์จอ: พอสลับหน้าต่างหรือเรียกเครื่องมือแคป หน้าจะถูกบังทันที
+   ไม่มีผลกับหน้าคะแนนรวมเมื่อผ่านเกณฑ์ (แคปได้ปกติ) */
+(function blurGuard(){
+  var ov=null;
+  function prot(){return typeof xvProtectedPhase==='function'&&xvProtectedPhase();}
+  function ensure(){
+    if(ov)return ov;
+    ov=document.createElement('div');ov.id='xvBlur';
+    ov.style.cssText='position:fixed;inset:0;z-index:9998;display:none;background:#0B1220;color:#E6EDF7;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:24px;font-family:inherit;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)';
+    ov.innerHTML='<div style="font-size:34px">🔒</div><div style="font-weight:800;font-size:17px">เนื้อหาถูกซ่อนชั่วคราว</div><div style="opacity:.8;font-size:13px;max-width:360px;line-height:1.6">กรุณากลับมาที่หน้าสอบเพื่อดูเนื้อหาต่อ · ระบบซ่อนคำถามอัตโนมัติเมื่อออกจากหน้าจอเพื่อป้องกันการบันทึกภาพ</div>';
+    var mount=function(){if(document.body&&!ov.parentNode)document.body.appendChild(ov);};
+    if(document.body)mount();else document.addEventListener('DOMContentLoaded',mount);
+    return ov;
+  }
+  function cover(){ensure().style.display=prot()?'flex':'none';}
+  function uncover(){if(ov)ov.style.display='none';}
+  window.addEventListener('blur',function(){if(prot())cover();});
+  window.addEventListener('focus',uncover);
+  document.addEventListener('visibilitychange',function(){if(document.hidden){if(prot())cover();}else uncover();});
 })();
 /* ---------- เว็บแคม proctoring: ถ่ายภาพหน้าผู้สอบเป็นระยะ (เฉพาะ Online) ---------- */
 var XVCam=(function(){
@@ -840,7 +867,7 @@ var XVCam=(function(){
 /* ---------- ลายน้ำชื่อผู้สอบจาง ๆ (กันแคปหน้าจอไปแชร์ — รู้ว่ามาจากใคร) ---------- */
 function xvWatermark(){
   var wm=document.getElementById('xvWM');
-  var show=S&&S.phase==='active_exam'&&S.candidate;
+  var show=S&&(S.phase==='active_exam'||S.phase==='wrong_review')&&S.candidate;
   if(!show){if(wm)wm.remove();return;}
   var name=((S.candidate.firstName||'')+' '+(S.candidate.lastName||'')).trim();
   var code=S.candidate.id||(S.api&&S.api.code)||'';
