@@ -26,6 +26,51 @@ module.exports = function (app, DATA_DIR) {
   // โหมด "ปิดการตรวจสอบชั่วคราว" — ลูกค้าชำระเงินแล้วยืนยันอัตโนมัติ ไม่ต้องรอแอดมิน (เปิด/ปิดผ่าน admin settings)
   function noReviewOn() { return !!readSettings().noReview; }
 
+  // ---- แจ้งเตือนเข้า Lark (Custom Bot Webhook) เมื่อลูกค้าชำระเงินสำเร็จ ----
+  function larkWebhook() { return process.env.LARK_WEBHOOK_URL || readSettings().larkWebhook || ''; }
+  function larkEnabled() { return !!larkWebhook() && readSettings().larkNotify !== false; }
+  function larkPost(payload) {
+    var url = larkWebhook(); if (!url) return;
+    try {
+      var u = new URL(url);
+      var body = JSON.stringify(payload);
+      var req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, function (resp) {
+        var d = ''; resp.on('data', function (c) { d += c; });
+        resp.on('end', function () { if (resp.statusCode >= 300) console.log('[lean-lab] lark post http ' + resp.statusCode + ' ' + d.slice(0, 120)); });
+      });
+      req.on('error', function (e) { console.log('[lean-lab] lark post error: ' + e.message); });
+      req.setTimeout(8000, function () { try { req.destroy(); } catch (e) {} });
+      req.write(body); req.end();
+    } catch (e) { console.log('[lean-lab] lark post exception: ' + e.message); }
+  }
+  // การ์ดแจ้งเตือน "ชำระเงินสำเร็จ" — ยิงเข้า Lark แบบเรียลไทม์ (ไม่บล็อกการตอบลูกค้า)
+  function notifyLarkPaid(r, force) {
+    if (!r || (!force && !larkEnabled())) return;
+    var payMap = { card: '💳 บัตรเครดิต', installment: '💳 ผ่อนบัตร', bank: '🏦 โอนธนาคาร' };
+    var pay = payMap[r.pay] || r.pay || '-';
+    var amt = '฿' + Number(r.fee || 0).toLocaleString('en-US');
+    var when = '';
+    try { when = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { when = new Date().toISOString(); }
+    var f = function (label, val) { return { is_short: true, text: { tag: 'lark_md', content: '**' + label + '**\n' + (val || '-') } }; };
+    var card = {
+      msg_type: 'interactive',
+      card: {
+        config: { wide_screen_mode: true },
+        header: { template: 'green', title: { tag: 'plain_text', content: '🎉 ชำระเงินสำเร็จ · Lean Lab' } },
+        elements: [
+          { tag: 'div', fields: [
+            f('👤 ลูกค้า', r.name), f('🧾 เลขออเดอร์', r.po),
+            f('💰 ยอดชำระ', amt), f('วิธีชำระ', pay),
+            f('📞 เบอร์โทร', r.phone), f('✉️ อีเมล', r.email),
+            f('🏋️ ทีมโค้ช', r.coach), f('🙋 ผู้แนะนำ', r.referrer)
+          ] },
+          { tag: 'note', elements: [{ tag: 'plain_text', content: '⏰ ' + when }] }
+        ]
+      }
+    };
+    larkPost(card);
+  }
+
   // ---- Lean Lab event config (Season 1) ----
   const EVENT = {
     season: 1,
@@ -528,6 +573,7 @@ module.exports = function (app, DATA_DIR) {
       // ปิดการตรวจสอบชั่วคราว → ยืนยันการชำระเงินอัตโนมัติ (แอดมินมากระทบยอดสลิปย้อนหลังได้)
       r.status = 'confirmed'; assignPO(r); r.autoApproved = true; r.reviewedAt = new Date().toISOString();
       console.log('[lean-lab] registration ' + r.id + ' auto-confirmed (no-review mode, slip)');
+      notifyLarkPaid(r);
     } else {
       r.status = 'pending_review';
     }
@@ -595,6 +641,7 @@ module.exports = function (app, DATA_DIR) {
     r.reviewedAt = new Date().toISOString();
     writeR(l);
     console.log('[lean-lab] registration ' + regId + ' paid by card (webhook) → confirmed');
+    notifyLarkPaid(r);
     return true;
   };
 
@@ -677,6 +724,7 @@ module.exports = function (app, DATA_DIR) {
     r.reviewedAt = new Date().toISOString();
     writeR(l);
     console.log('[lean-lab] installment ' + regId + ' first payment ok (webhook) → confirmed, sub=' + subId);
+    notifyLarkPaid(r);
     // เลื่อนงวดถัดไปไปวันที่ลูกค้าเลือก โดยไม่คิดเงินระหว่างทาง (trial_end + proration none) — ไม่กระทบงวดแรกที่จ่ายแล้ว
     // และตั้ง cancel_at เป็นเพดานความปลอดภัย: หยุดตัดบัตรหลังงวดที่ 6 เสมอ แม้ webhook งวดถัดไปจะพลาด
     if (subId && r.installment.day) {
@@ -784,19 +832,38 @@ module.exports = function (app, DATA_DIR) {
     list.forEach(function (r) { if (counts[r.status] != null) counts[r.status]++; if (r.status === 'confirmed') counts.revenue += (Number(r.fee) || 0); });
     res.json({ ok: true, registrations: list, counts: counts, members: readM().length, promo: promoStats() });
   });
-  // ตั้งค่าระบบ (เช่น ปิดการตรวจสอบชั่วคราว) — อ่าน/แก้ ด้วยคีย์แอดมิน
+  // ตั้งค่าระบบ (เช่น ปิดการตรวจสอบชั่วคราว, แจ้งเตือน Lark) — อ่าน/แก้ ด้วยคีย์แอดมิน
+  function maskedSettings() {
+    var s = readSettings(); var out = {};
+    Object.keys(s).forEach(function (k) { out[k] = s[k]; });
+    // ปิดบัง webhook (ความลับ) — แสดงแค่ว่าตั้งไว้แล้วหรือยัง
+    var wh = larkWebhook();
+    out.larkWebhook = wh ? (wh.slice(0, 42) + '…') : '';
+    out.larkConfigured = !!wh;
+    out.larkEnabled = larkEnabled();
+    return out;
+  }
   app.get('/api/leanlab/admin/settings', function (req, res) {
     if (!adminGuard(req, res)) return;
-    res.json({ ok: true, settings: readSettings() });
+    res.json({ ok: true, settings: maskedSettings() });
   });
   app.post('/api/leanlab/admin/settings', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {}; var s = readSettings();
     if (typeof b.noReview === 'boolean') s.noReview = b.noReview;
+    if (typeof b.larkWebhook === 'string') s.larkWebhook = b.larkWebhook.trim();
+    if (typeof b.larkNotify === 'boolean') s.larkNotify = b.larkNotify;
     s.updatedAt = new Date().toISOString();
     writeSettings(s);
-    console.log('[lean-lab] settings updated: noReview=' + (!!s.noReview));
-    res.json({ ok: true, settings: s });
+    console.log('[lean-lab] settings updated: noReview=' + (!!s.noReview) + ' larkConfigured=' + (!!larkWebhook()) + ' larkNotify=' + (s.larkNotify !== false));
+    res.json({ ok: true, settings: maskedSettings() });
+  });
+  // ทดสอบส่งการ์ดตัวอย่างเข้า Lark (ตรวจว่า webhook ใช้งานได้)
+  app.post('/api/leanlab/admin/lark-test', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    if (!larkWebhook()) return res.status(400).json({ ok: false, error: 'no_webhook' });
+    notifyLarkPaid({ name: 'ทดสอบระบบ (Test)', po: 'LL-TEST01', fee: 39950, pay: 'bank', phone: '08x-xxx-xxxx', email: 'test@cloverxth.com', coach: 'โค้ชนุ่น', referrer: '-' }, true);
+    res.json({ ok: true, sent: true });
   });
   app.post('/api/leanlab/admin/registration/:id', function (req, res) {
     if (!adminGuard(req, res)) return;
@@ -804,10 +871,12 @@ module.exports = function (app, DATA_DIR) {
     if (['confirmed', 'rejected', 'pending_review', 'awaiting_payment'].indexOf(st) < 0) return res.status(400).json({ ok: false, error: 'bad_status' });
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    var wasConfirmed = (r.status === 'confirmed');
     r.status = st; r.reviewedAt = new Date().toISOString();
     if (st === 'confirmed') assignPO(r);
     if (st === 'rejected') r.rejectReason = String(b.reason || '').slice(0, 200) || 'หลักฐานไม่ถูกต้อง';
     writeR(l);
+    if (st === 'confirmed' && !wasConfirmed) notifyLarkPaid(r);   // แจ้ง Lark เฉพาะตอนยืนยันครั้งแรก
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
