@@ -381,6 +381,23 @@
 
   var TITLES={lldash:'Dashboard',llreg:'Registration',llmstart:'Start Member',llmafter:'After Member',llorder:'Order · Management',settings:'ตั้งค่า'};
 
+  // ผู้แนะนำที่จริง ๆ แล้วเป็น "โค้ช" → ให้นับเป็นโค้ช ไม่นับเป็นผู้แนะนำ
+  var LL_COACH_ALIAS={'นที เหลืองอรุณโรจน์':'โค้ชซิง','มนัสวี ผิวคำ':'โค้ชต๊ะ','ชีวาวัชญ์ จรัสนิรัติศัย':'โค้ชจา'};
+  function llAliasCoach(name){
+    var s=String(name||'').replace(/\s+/g,' ').trim(); if(!s||s==='-')return '';
+    if(LL_COACH_ALIAS[s])return LL_COACH_ALIAS[s];
+    var first=s.split(' ')[0];
+    for(var k in LL_COACH_ALIAS){ if(first && first===k.split(' ')[0]) return LL_COACH_ALIAS[k]; }
+    return '';
+  }
+  // คืนค่า coach/referrer ที่ผ่านกฎแล้ว: ถ้า referrer เป็นชื่อโค้ช → ย้ายไปเป็น coach, ล้าง referrer
+  function llEffCR(r){
+    var coach=String(r.coach||'').trim(), ref=String(r.referrer||'').trim();
+    var refCoach=llAliasCoach(ref);
+    if(refCoach){ return {coach:(coach||refCoach), referrer:''}; }
+    return {coach:coach, referrer:(ref==='-'?'':ref)};
+  }
+
   // ---------- DASHBOARD (Lean Lab event overview) ----------
   function dashView(){
     return '<div class="head"><div><h1><span class="pill lean">EVENT</span> Dashboard — Lean Lab</h1>'
@@ -457,8 +474,9 @@
       var coachMap={}, refMap={};
       R.forEach(function(x){
         var val = (x.status==='confirmed') ? (x.installment ? ((x.installment.perMonth||0)*(x.installment.paidCount||0)) : (x.promoAmount||x.fee||0)) : 0;
-        var cn=String(x.coach||'').trim(); if(cn){ coachMap[cn]=coachMap[cn]||{c:0,v:0,m:[]}; coachMap[cn].c++; coachMap[cn].v+=val; coachMap[cn].m.push(_pp(x)); }
-        var rf=String(x.referrer||'').trim(); if(rf&&rf!=='-'){ refMap[rf]=refMap[rf]||{c:0,v:0,m:[]}; refMap[rf].c++; refMap[rf].v+=val; refMap[rf].m.push(_pp(x)); }
+        var eff=llEffCR(x); // ใช้กฎ: ผู้แนะนำที่เป็นชื่อโค้ช → นับเป็นโค้ช
+        var cn=eff.coach; if(cn){ coachMap[cn]=coachMap[cn]||{c:0,v:0,m:[]}; coachMap[cn].c++; coachMap[cn].v+=val; coachMap[cn].m.push(_pp(x)); }
+        var rf=eff.referrer; if(rf){ refMap[rf]=refMap[rf]||{c:0,v:0,m:[]}; refMap[rf].c++; refMap[rf].v+=val; refMap[rf].m.push(_pp(x)); }
       });
       var coachRank=Object.keys(coachMap).map(function(k){return {name:k,c:coachMap[k].c,v:coachMap[k].v,m:coachMap[k].m};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
       var refRank=Object.keys(refMap).map(function(k){return {name:k,c:refMap[k].c,v:refMap[k].v,m:refMap[k].m};}).sort(function(a,b){return b.c-a.c;}).slice(0,5);
@@ -804,6 +822,7 @@
       if(!regs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">'+(all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีผู้สมัคร')+'</td></tr>';return;}
       tb.innerHTML=regs.map(function(r){
         var s=LL_ST[r.status]||[r.status,'pend'];
+        var _cr=llEffCR(r); // ผู้แนะนำที่เป็นชื่อโค้ช → แสดงเป็นโค้ช
         var start=r.startChoice==='now'?'เริ่มตอนนี้':'8 พ.ย. 2569';
         var base=r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>';
         var slip=r.slipUrl?('<a class="linkpill slip" href="'+llEsc(r.slipUrl)+'" target="_blank" rel="noopener">ดูสลิป ↗</a>'):'';
@@ -822,7 +841,7 @@
           ? ('<div class="cell-amt">฿'+Number(ins.total||44940).toLocaleString('en-US')+'</div><div class="cell-sub" style="color:#2563EB">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div class="cell-sub">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div class="cell-sub" style="color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':''))
           : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">'+payLabel+'</div>'+attachHtml);
         return '<tr>'
-          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(r.address?'<div class="cell-sub" style="color:var(--muted)">📦 '+llEsc(r.address)+(r.postcode?' '+llEsc(r.postcode):'')+'</div>':'')+(r.coach?'<div class="cell-sub" style="color:#0077B6;font-weight:700">🏋️ '+llEsc(r.coach)+(r.referrer&&r.referrer!=='-'?' · แนะนำ: '+llEsc(r.referrer):'')+'</div>':'<div class="cell-sub" style="color:var(--warn);font-weight:700">🏋️ ยังไม่ระบุโค้ช</div>')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
+          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(r.address?'<div class="cell-sub" style="color:var(--muted)">📦 '+llEsc(r.address)+(r.postcode?' '+llEsc(r.postcode):'')+'</div>':'')+(_cr.coach?'<div class="cell-sub" style="color:#0077B6;font-weight:700">🏋️ '+llEsc(_cr.coach)+(_cr.referrer?' · แนะนำ: '+llEsc(_cr.referrer):'')+'</div>':'<div class="cell-sub" style="color:var(--warn);font-weight:700">🏋️ ยังไม่ระบุโค้ช</div>')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
           +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
           +'<td style="min-width:150px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span>'+promoInfo+'</td>'
           +'<td style="min-width:120px">'+base+'</td>'
