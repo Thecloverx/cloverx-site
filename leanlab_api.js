@@ -1078,6 +1078,12 @@ module.exports = function (app, DATA_DIR) {
     if (typeof b.phone === 'string') r.phone = b.phone.trim().slice(0, 30);
     if (typeof b.address === 'string') r.address = b.address.trim().slice(0, 300);
     if (typeof b.postcode === 'string') r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
+    if (typeof b.coach === 'string') {
+      var cs = b.coach.trim();
+      if (cs === 'อื่น ๆ') { r.coach = (typeof b.coachOther === 'string' && b.coachOther.trim()) ? b.coachOther.trim().slice(0, 60) : 'อื่น ๆ'; r.coachOther = (typeof b.coachOther === 'string' ? b.coachOther.trim().slice(0, 60) : ''); }
+      else { r.coach = cs.slice(0, 60); r.coachOther = ''; }
+    }
+    if (typeof b.referrer === 'string') r.referrer = b.referrer.trim().slice(0, 80);
     r.updatedAt = new Date().toISOString();
     writeR(l);
     if (r.memberId) { var ml = readM(); var mm = ml.find(function (m) { return m.id === r.memberId; }); if (mm) { mm.name = r.name; if (r.phone) mm.phone = r.phone; if (r.email) mm.email = r.email; writeM(ml); } }
