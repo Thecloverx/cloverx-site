@@ -26,49 +26,65 @@ module.exports = function (app, DATA_DIR) {
   // โหมด "ปิดการตรวจสอบชั่วคราว" — ลูกค้าชำระเงินแล้วยืนยันอัตโนมัติ ไม่ต้องรอแอดมิน (เปิด/ปิดผ่าน admin settings)
   function noReviewOn() { return !!readSettings().noReview; }
 
-  // ---- แจ้งเตือนเข้า Lark (Custom Bot Webhook) เมื่อลูกค้าชำระเงินสำเร็จ ----
-  function larkWebhook() { return process.env.LARK_WEBHOOK_URL || readSettings().larkWebhook || ''; }
-  function larkEnabled() { return !!larkWebhook() && readSettings().larkNotify !== false; }
-  function larkPost(payload) {
-    var url = larkWebhook(); if (!url) return;
-    try {
-      var u = new URL(url);
-      var body = JSON.stringify(payload);
-      var req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, function (resp) {
-        var d = ''; resp.on('data', function (c) { d += c; });
-        resp.on('end', function () { if (resp.statusCode >= 300) console.log('[lean-lab] lark post http ' + resp.statusCode + ' ' + d.slice(0, 120)); });
-      });
-      req.on('error', function (e) { console.log('[lean-lab] lark post error: ' + e.message); });
-      req.setTimeout(8000, function () { try { req.destroy(); } catch (e) {} });
-      req.write(body); req.end();
-    } catch (e) { console.log('[lean-lab] lark post exception: ' + e.message); }
+  // ---- แจ้งเตือนเข้า Lark (มาตรฐาน CloverX Bridge) ----
+  // ค่าลับทั้งหมดอ่านจาก Railway Variables เท่านั้น (ห้ามเก็บในซอร์ส/ไฟล์ตั้งค่า)
+  //   ห้องเงิน "REPORT - GIVE ME MONEY": LARK_PAY_WEBHOOK_URL (+ LARK_PAY_BOT_SECRET)
+  //   ห้องหลัก:                          LARK_WEBHOOK_URL      (+ LARK_BOT_SECRET)
+  // เรื่องเงิน → ห้องเงิน; ถ้ายังไม่ได้ตั้งห้องเงิน → ตกมาห้องหลักอัตโนมัติ (แจ้งเตือนไม่มีทางหาย)
+  function larkTarget(to) {
+    if (to === 'pay') {
+      var payUrl = process.env.LARK_PAY_WEBHOOK_URL || '';
+      if (payUrl) return { url: payUrl, secret: process.env.LARK_PAY_BOT_SECRET || '' };
+    }
+    return { url: process.env.LARK_WEBHOOK_URL || '', secret: process.env.LARK_BOT_SECRET || '' };
   }
-  // การ์ดแจ้งเตือน "ชำระเงินสำเร็จ" — ยิงเข้า Lark แบบเรียลไทม์ (ไม่บล็อกการตอบลูกค้า)
+  function larkSign(ts, secret) {
+    var key = ts + '\n' + secret;   // HMAC-SHA256: key = timestamp\nsecret, data = ว่างเปล่า
+    return crypto.createHmac('sha256', Buffer.from(key, 'utf8')).update(Buffer.alloc(0)).digest('base64');
+  }
+  // fire-and-forget: Lark ล่ม/ไม่ได้ตั้ง webhook ต้องไม่ทำให้งานหลักล้ม (ไม่ throw)
+  function larkSend(payload, opts) {
+    try {
+      var t = larkTarget(opts && opts.to);
+      if (!t.url) return;   // ยังไม่ได้ตั้ง webhook → เงียบ ไม่ throw
+      var body = Object.assign({}, payload);
+      if (t.secret) { var ts = Math.floor(Date.now() / 1000).toString(); body.timestamp = ts; body.sign = larkSign(ts, t.secret); }
+      var u = new URL(t.url);
+      var data = JSON.stringify(body);
+      var req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, function (resp) {
+        var d = ''; resp.on('data', function (c) { d += c; });
+        resp.on('end', function () { try { var j = JSON.parse(d); if (!(j.code === 0 || j.StatusCode === 0 || j.code == null)) console.log('[lean-lab] lark resp: ' + d.slice(0, 160)); } catch (e) {} });
+      });
+      req.on('error', function (e) { console.log('[lean-lab] lark error: ' + e.message); });
+      req.setTimeout(15000, function () { try { req.destroy(); } catch (e) {} });
+      req.write(data); req.end();
+    } catch (e) { console.log('[lean-lab] lark exception: ' + e.message); }
+  }
+  // การ์ดมาตรฐาน { title, lines[], color, note } — header สีธีม + lines รวมด้วย \n เป็น lark_md
+  function larkCard(o) {
+    o = o || {};
+    var color = ['blue', 'green', 'orange', 'red', 'grey'].indexOf(o.color) >= 0 ? o.color : 'blue';
+    var elements = [{ tag: 'div', text: { tag: 'lark_md', content: (o.lines || []).join('\n') } }];
+    if (o.note) { elements.push({ tag: 'hr' }); elements.push({ tag: 'note', elements: [{ tag: 'plain_text', content: o.note }] }); }
+    return { msg_type: 'interactive', card: { config: { wide_screen_mode: true }, header: { template: color, title: { tag: 'plain_text', content: o.title || '' } }, elements: elements } };
+  }
+  function larkConfigured() { return !!(process.env.LARK_PAY_WEBHOOK_URL || process.env.LARK_WEBHOOK_URL); }
+  // แจ้ง "ชำระเงินสำเร็จ" เข้าห้องเงิน (green) — รูปแบบบรรทัด **ป้าย** ค่า, เลขอ้างอิงใน backtick
   function notifyLarkPaid(r, force) {
-    if (!r || (!force && !larkEnabled())) return;
-    var payMap = { card: '💳 บัตรเครดิต', installment: '💳 ผ่อนบัตร', bank: '🏦 โอนธนาคาร' };
+    if (!r || (!force && !larkConfigured())) return;
+    var payMap = { card: '💳 บัตรเครดิต', installment: '💳 ผ่อนบัตร (6 งวด)', bank: '🏦 โอนธนาคาร' };
     var pay = payMap[r.pay] || r.pay || '-';
     var amt = '฿' + Number(r.fee || 0).toLocaleString('en-US');
     var when = '';
     try { when = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { when = new Date().toISOString(); }
-    var f = function (label, val) { return { is_short: true, text: { tag: 'lark_md', content: '**' + label + '**\n' + (val || '-') } }; };
-    var card = {
-      msg_type: 'interactive',
-      card: {
-        config: { wide_screen_mode: true },
-        header: { template: 'green', title: { tag: 'plain_text', content: '🎉 ชำระเงินสำเร็จ · Lean Lab' } },
-        elements: [
-          { tag: 'div', fields: [
-            f('👤 ลูกค้า', r.name), f('🧾 เลขออเดอร์', r.po),
-            f('💰 ยอดชำระ', amt), f('วิธีชำระ', pay),
-            f('📞 เบอร์โทร', r.phone), f('✉️ อีเมล', r.email),
-            f('🏋️ ทีมโค้ช', r.coach), f('🙋 ผู้แนะนำ', r.referrer)
-          ] },
-          { tag: 'note', elements: [{ tag: 'plain_text', content: '⏰ ' + when }] }
-        ]
-      }
-    };
-    larkPost(card);
+    var lines = [
+      '**ลูกค้า** ' + (r.name || '-') + (r.phone ? (' · `' + r.phone + '`') : ''),
+      '**ยอด** ' + amt + ' · ' + pay,
+      '**อ้างอิง** `' + (r.po || '-') + '`',
+      '**ทีมโค้ช** ' + (r.coach || '-') + ' · **ผู้แนะนำ** ' + (r.referrer || '-')
+    ];
+    if (r.email) lines.push('**อีเมล** ' + r.email);
+    larkSend(larkCard({ title: '🎉 ชำระเงินสำเร็จ · Lean Lab', color: 'green', lines: lines, note: '⏰ ' + when }), { to: 'pay' });
   }
 
   // ---- Lean Lab event config (Season 1) ----
@@ -832,38 +848,36 @@ module.exports = function (app, DATA_DIR) {
     list.forEach(function (r) { if (counts[r.status] != null) counts[r.status]++; if (r.status === 'confirmed') counts.revenue += (Number(r.fee) || 0); });
     res.json({ ok: true, registrations: list, counts: counts, members: readM().length, promo: promoStats() });
   });
-  // ตั้งค่าระบบ (เช่น ปิดการตรวจสอบชั่วคราว, แจ้งเตือน Lark) — อ่าน/แก้ ด้วยคีย์แอดมิน
-  function maskedSettings() {
-    var s = readSettings(); var out = {};
-    Object.keys(s).forEach(function (k) { out[k] = s[k]; });
-    // ปิดบัง webhook (ความลับ) — แสดงแค่ว่าตั้งไว้แล้วหรือยัง
-    var wh = larkWebhook();
-    out.larkWebhook = wh ? (wh.slice(0, 42) + '…') : '';
-    out.larkConfigured = !!wh;
-    out.larkEnabled = larkEnabled();
-    return out;
+  // ตั้งค่าระบบ (เช่น ปิดการตรวจสอบชั่วคราว) — อ่าน/แก้ ด้วยคีย์แอดมิน
+  // หมายเหตุ: webhook/ความลับของ Lark อ่านจาก Railway Variables เท่านั้น ไม่เก็บในไฟล์ตั้งค่านี้
+  function larkStatus() {
+    return {
+      configured: larkConfigured(),
+      payRoom: !!process.env.LARK_PAY_WEBHOOK_URL,     // มีห้องเงินแยกไหม
+      mainRoom: !!process.env.LARK_WEBHOOK_URL,        // มีห้องหลักไหม
+      signed: !!(process.env.LARK_PAY_BOT_SECRET || process.env.LARK_BOT_SECRET)
+    };
   }
   app.get('/api/leanlab/admin/settings', function (req, res) {
     if (!adminGuard(req, res)) return;
-    res.json({ ok: true, settings: maskedSettings() });
+    res.json({ ok: true, settings: readSettings(), lark: larkStatus() });
   });
   app.post('/api/leanlab/admin/settings', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {}; var s = readSettings();
     if (typeof b.noReview === 'boolean') s.noReview = b.noReview;
-    if (typeof b.larkWebhook === 'string') s.larkWebhook = b.larkWebhook.trim();
-    if (typeof b.larkNotify === 'boolean') s.larkNotify = b.larkNotify;
     s.updatedAt = new Date().toISOString();
     writeSettings(s);
-    console.log('[lean-lab] settings updated: noReview=' + (!!s.noReview) + ' larkConfigured=' + (!!larkWebhook()) + ' larkNotify=' + (s.larkNotify !== false));
-    res.json({ ok: true, settings: maskedSettings() });
+    console.log('[lean-lab] settings updated: noReview=' + (!!s.noReview));
+    res.json({ ok: true, settings: s });
   });
-  // ทดสอบส่งการ์ดตัวอย่างเข้า Lark (ตรวจว่า webhook ใช้งานได้)
+  // ทดสอบส่งการ์ดตัวอย่างเข้าห้องเงิน Lark (ตรวจว่า webhook ใช้งานได้) — ไม่ได้ตั้งเลยตอบ 503
   app.post('/api/leanlab/admin/lark-test', function (req, res) {
     if (!adminGuard(req, res)) return;
-    if (!larkWebhook()) return res.status(400).json({ ok: false, error: 'no_webhook' });
+    var st = larkStatus();
+    if (!st.configured) return res.status(503).json({ ok: false, error: 'no_webhook', message: 'ยังไม่ได้ตั้ง LARK_PAY_WEBHOOK_URL หรือ LARK_WEBHOOK_URL ใน Railway' });
     notifyLarkPaid({ name: 'ทดสอบระบบ (Test)', po: 'LL-TEST01', fee: 39950, pay: 'bank', phone: '08x-xxx-xxxx', email: 'test@cloverxth.com', coach: 'โค้ชนุ่น', referrer: '-' }, true);
-    res.json({ ok: true, sent: true });
+    res.json({ ok: true, sent: true, room: st.payRoom ? 'pay' : 'main' });
   });
   app.post('/api/leanlab/admin/registration/:id', function (req, res) {
     if (!adminGuard(req, res)) return;
