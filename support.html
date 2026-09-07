@@ -214,6 +214,63 @@
   .ofrange input{padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.85rem;background:var(--soft,#fff);color:var(--ink)}
   .ofilt input[type=search]{flex:1;min-width:220px;padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;background:var(--soft,#fff);color:var(--ink);-webkit-appearance:none;appearance:none}
   .ofilt input[type=search]:focus,.ofrange input:focus{outline:none;border-color:var(--brand,#2563EB)}
+
+  /* ===== Lean Lab dashboard — ref/CloverX house style (scoped) ===== */
+  .lldash{--dgrad:linear-gradient(135deg,#00B4D8,#0077B6);--dink:#12233B;--dmut:#61708A;--dline:#E7ECF3;--dsh:0 1px 2px rgba(3,4,94,.05),0 8px 22px rgba(3,4,94,.07);--dcard:#fff;--dsoft:#F5F8FC;color:var(--dink)}
+  .lldash .dtitle{display:flex;align-items:center;gap:11px;margin:2px 2px 16px}
+  .lldash .dtitle .dic{width:40px;height:40px;border-radius:11px;background:var(--dgrad);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 6px 14px rgba(0,119,182,.28)}
+  .lldash .dtitle h2{font-size:1.18rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+  .lldash .dtitle .dsub{font-size:.78rem;color:var(--dmut);font-weight:500;margin-top:2px}
+  .lldash .kstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+  .lldash .kx{background:var(--dcard);border:1px solid var(--dline);border-radius:16px;padding:15px 16px;box-shadow:var(--dsh);position:relative;overflow:hidden;min-width:0}
+  .lldash .kx .kxl{font-size:.74rem;color:var(--dmut);font-weight:600;line-height:1.35;display:flex;align-items:center;gap:5px}
+  .lldash .kx .kxv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.05}
+  .lldash .kx .kxs{font-size:.72rem;color:var(--dmut);margin-top:3px;font-weight:500}
+  .lldash .kx.hi{background:var(--dgrad);border:none;color:#fff}
+  .lldash .kx.hi .kxl,.lldash .kx.hi .kxs{color:rgba(255,255,255,.9)}
+  .lldash .kx.hi .kxv{color:#fff}
+  .lldash .kx.warn .kxv{color:#0077B6}
+  .lldash .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .lldash .grid5{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-bottom:14px}
+  .lldash .c{background:var(--dcard);border:1px solid var(--dline);border-radius:18px;padding:17px 18px 18px;box-shadow:var(--dsh);min-width:0}
+  .lldash .c-h{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .lldash .c-h .cic{width:30px;height:30px;border-radius:9px;background:var(--dsoft);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+  .lldash .c-h .ct{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+  .lldash .c-h .ctag{margin-left:auto;font-size:.7rem;color:var(--dmut);font-weight:600;background:var(--dsoft);padding:3px 9px;border-radius:999px}
+  .lldash .bd{display:flex;flex-direction:column;gap:12px}
+  .lldash .bd .row{display:flex;flex-direction:column;gap:6px}
+  .lldash .bd .row .rt{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.85rem}
+  .lldash .bd .row .rt .rl{font-weight:600;color:var(--dink);display:flex;align-items:center;gap:7px;min-width:0}
+  .lldash .bd .row .rt .rl .rk{color:#0077B6;font-weight:800;width:15px;flex:none;text-align:center}
+  .lldash .bd .row .rt .rl .rsub{color:var(--dmut);font-weight:500;font-size:.78rem}
+  .lldash .bd .row .rt .rv{white-space:nowrap;font-variant-numeric:tabular-nums;flex:none;text-align:right}
+  .lldash .bd .row .rt .rv .amt{font-weight:800;color:#0E9F6E}
+  .lldash .bd .row .rt .rv .cnt{color:var(--dmut);font-weight:600;font-size:.8rem}
+  .lldash .bd .row .track{height:8px;background:var(--dsoft);border-radius:999px;overflow:hidden}
+  .lldash .bd .row .track>i{display:block;height:100%;border-radius:999px;background:var(--dgrad)}
+  .lldash .bd .row .track>i.g{background:linear-gradient(135deg,#34D399,#0E9F6E)}
+  .lldash .bd .row .track>i.p{background:linear-gradient(135deg,#A78BFA,#7C3AED)}
+  .lldash .empty{color:var(--dmut);font-size:.83rem;padding:8px 2px;text-align:center}
+  .lldash .donut{display:flex;align-items:center;gap:18px}
+  .lldash .donut .ring{width:132px;height:132px;flex:none;position:relative;display:flex;align-items:center;justify-content:center}
+  .lldash .donut .ring.nb::after{display:none}
+  .lldash .donut .ring svg{position:absolute;inset:0}
+  .lldash .donut .mid{position:relative;z-index:1;text-align:center}
+  .lldash .donut .mid .mv{font-size:1.35rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .lldash .donut .mid .ml{font-size:.68rem;color:var(--dmut);font-weight:600;margin-top:3px}
+  .lldash .donut .leg{display:flex;flex-direction:column;gap:9px;min-width:0}
+  .lldash .donut .leg .lg{display:flex;align-items:center;gap:8px;font-size:.82rem}
+  .lldash .donut .leg .lg .dot{width:11px;height:11px;border-radius:4px;flex:none}
+  .lldash .donut .leg .lg .lgn{font-weight:600;color:var(--dink)}
+  .lldash .donut .leg .lg .lgv{margin-left:auto;color:var(--dmut);font-weight:700;font-variant-numeric:tabular-nums;padding-left:12px}
+  .lldash .splitrow{display:flex;gap:10px}
+  .lldash .splitrow .sx{flex:1;background:var(--dsoft);border-radius:13px;padding:13px 14px;min-width:0}
+  .lldash .splitrow .sx .sxl{font-size:.76rem;color:var(--dmut);font-weight:600;display:flex;align-items:center;gap:6px}
+  .lldash .splitrow .sx .sxv{font-size:1.35rem;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .lldash .splitrow .sx .sxs{font-size:.72rem;color:var(--dmut);margin-top:2px}
+  .lldash .splitrow .sx.a{background:linear-gradient(135deg,rgba(0,180,216,.12),rgba(0,119,182,.12))}
+  @media(max-width:1100px){.lldash .kstrip{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:820px){.lldash .grid2,.lldash .grid5{grid-template-columns:1fr}.lldash .kstrip{grid-template-columns:repeat(2,1fr)}.lldash .donut{flex-direction:column;align-items:stretch}.lldash .donut .ring{margin:0 auto}}
 </style>
 
 <div class="app">
@@ -322,12 +379,13 @@
     return '<div class="head"><div><h1><span class="pill lean">EVENT</span> Dashboard — Lean Lab</h1>'
       + '<p>ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><button class="btn pri" id="dashLark">📤 ส่งรายงานเข้า Lark</button><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
-      + '<div id="dashCapture">'
       + '<div class="ofilt">'
       +   '<div class="ofchips" id="dfChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
       +   '<div class="ofrange" id="dfRange" style="display:none"><input type="date" id="dfFrom"><span>–</span><input type="date" id="dfTo"></div>'
       + '</div>'
-      + '<div id="dashBody"><div style="text-align:center;color:var(--muted);padding:52px 0">กำลังโหลดข้อมูล…</div></div>'
+      + '<div id="dashCapture" class="lldash" style="padding:18px;background:#EEF2F8;border-radius:16px">'
+      +   '<div class="dtitle"><div class="dic">📊</div><div><h2>รายงานผล Lean Lab</h2><div class="dsub" id="dashStamp">ภาพรวมสด · อัปเดตล่าสุดเมื่อสักครู่</div></div></div>'
+      +   '<div id="dashBody"><div style="text-align:center;color:var(--dmut);padding:52px 0">กำลังโหลดข้อมูล…</div></div>'
       + '</div>'
       + '<div id="larkMsg" style="margin-top:8px"></div>';
   }
@@ -391,48 +449,65 @@
       var mPay=Math.max(std,full.t0,full.t1,full.t2,full.t3,special,1);
       var mAge=Math.max(ab.a,ab.b,ab.c,ab.d,1), mG=Math.max(male,female,1), mS=Math.max(now,later,1);
       var pctOf=function(n){return total?Math.round(n/total*100):0;};
+      var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+      // แถวแท่ง: label + ค่าขวา + track
+      function brow(rl,rv,pct,cls,rk,rsub){
+        return '<div class="row"><div class="rt"><div class="rl">'+(rk?'<span class="rk">'+rk+'</span>':'')+'<span>'+rl+'</span>'+(rsub?'<span class="rsub">'+rsub+'</span>':'')+'</div><div class="rv">'+rv+'</div></div>'
+          + '<div class="track"><i'+(cls?' class="'+cls+'"':'')+' style="width:'+Math.max(3,Math.min(100,pct))+'%"></i></div></div>';
+      }
+      // โดนัท (SVG arcs — html2canvas จับภาพได้ชัวร์กว่า conic-gradient) + legend
+      function donut(segs,cv,cl){
+        var tot=segs.reduce(function(s,x){return s+x.v;},0)||0;
+        var R=48, C=2*Math.PI*R, acc=0, arcs='';
+        if(tot>0){ segs.forEach(function(x){ if(x.v<=0)return; var frac=x.v/tot, len=frac*C, off=-acc/tot*C;
+          arcs+='<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="'+x.color+'" stroke-width="16" stroke-dasharray="'+len.toFixed(2)+' '+C.toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'"'+(segs.length>1?' stroke-linecap="butt"':'')+'></circle>'; acc+=x.v; }); }
+        var svg='<svg width="132" height="132" viewBox="0 0 120 120" style="transform:rotate(-90deg)">'
+          + '<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="#E7ECF3" stroke-width="16"></circle>'+arcs+'</svg>';
+        var leg=segs.map(function(x){return '<div class="lg"><span class="dot" style="background:'+x.color+'"></span><span class="lgn">'+x.n+'</span><span class="lgv">'+x.v+' คน · '+(tot?Math.round(x.v/tot*100):0)+'%</span></div>';}).join('');
+        return '<div class="donut"><div class="ring nb">'+svg+'<div class="mid"><div class="mv">'+cv+'</div><div class="ml">'+cl+'</div></div></div><div class="leg">'+leg+'</div></div>';
+      }
       body.innerHTML=''
-        + '<div class="kpis">'
-        +   '<div class="kpi"><div class="lb">ผู้สมัครทั้งหมด</div><div class="v num">'+total+' <span style="font-size:.5em;color:var(--muted)">/ '+TARGET+'</span></div><div class="s"><div style="height:7px;background:var(--soft);border-radius:5px;margin:6px 0 4px;overflow:hidden"><div style="height:100%;width:'+pctT+'%;background:var(--good)"></div></div>'+pctT+'% ของเป้าหมาย</div></div>'
-        +   '<div class="kpi"><div class="lb">ยืนยันแล้ว</div><div class="v num" style="color:var(--good)">'+confirmed.length+'</div><div class="s">รอตรวจ <b>'+pending+'</b> คน'+(pastdue?' · <b style="color:var(--bad)">ตัดบัตรค้าง '+pastdue+'</b>':'')+'</div></div>'
-        +   '<div class="kpi"><div class="lb">รับเงินจริงแล้ว</div><div class="v num">฿'+received.toLocaleString('en-US')+'</div><div class="s">คาดเต็มโครงการ ฿'+projected.toLocaleString('en-US')+'</div></div>'
-        +   '<div class="kpi"><div class="lb">สิทธิ์โปรโมชั่นคงเหลือ 🎁</div><div class="v num" style="color:var(--warn)">'+promo.left+' <span style="font-size:.5em;color:var(--muted)">/ '+promo.quota+'</span></div><div class="s">ใช้ไป <b>'+promo.used+'</b> · นับเฉพาะยืนยันแล้ว</div></div>'
+        + '<div class="kstrip">'
+        +   '<div class="kx hi"><div class="kxl">💰 รับเงินจริงแล้ว</div><div class="kxv">฿'+received.toLocaleString('en-US')+'</div><div class="kxs">คาดเต็มโครงการ ฿'+projected.toLocaleString('en-US')+'</div></div>'
+        +   '<div class="kx"><div class="kxl">👥 ผู้สมัครทั้งหมด</div><div class="kxv">'+total+'</div><div class="kxs">/ '+TARGET+' · '+pctT+'% ของเป้า</div></div>'
+        +   '<div class="kx"><div class="kxl">✅ ยืนยันแล้ว</div><div class="kxv" style="color:#0E9F6E">'+confirmed.length+'</div><div class="kxs">'+pctOf(confirmed.length)+'% ของผู้สมัคร</div></div>'
+        +   '<div class="kx"><div class="kxl">⏳ รอตรวจสอบ</div><div class="kxv">'+pending+'</div><div class="kxs">'+(pastdue?'ตัดบัตรค้าง '+pastdue+' ราย':'ไม่มีค้างตรวจเร่งด่วน')+'</div></div>'
+        +   '<div class="kx warn"><div class="kxl">🎁 สิทธิ์โปรฯคงเหลือ</div><div class="kxv">'+promo.left+'</div><div class="kxs">/ '+promo.quota+' · ใช้ไป '+promo.used+'</div></div>'
+        +   '<div class="kx"><div class="kxl">🚀 เริ่มเลยตอนนี้</div><div class="kxv">'+now+'</div><div class="kxs">เริ่ม 8 พ.ย. '+later+' คน</div></div>'
         + '</div>'
-        + '<div class="panel"><div class="ph"><h3>รูปแบบการเริ่ม</h3><span style="font-size:.78rem;color:var(--muted)">จากผู้สมัครทั้งหมด '+total+' คน</span></div>'
-        +   dbar('เริ่มเลย ณ ตอนนี้',now,mS,'var(--good)',' ('+pctOf(now)+'%)')
-        +   dbar('เริ่ม 8 พ.ย. 69',later,mS,'#2E86FF',' ('+pctOf(later)+'%)')
-        + '</div>'
-        + '<div class="panel"><div class="ph"><h3>เงื่อนไขการชำระเงิน</h3><span style="font-size:.78rem;color:var(--muted)">แยกตามตัวเลือกที่ลูกค้าเลือก</span></div>'
-        +   dbar('ชำระเลย 3,900',std,mPay,'#56C8FF',' คน')
-        +   dbar('Grand Slam · 44,940 (t0)',full.t0,mPay,'#C8F56A',' คน')
-        +   dbar('Grand Slam · 39,950 (t1)',full.t1,mPay,'#C8F56A',' คน')
-        +   dbar('Grand Slam · 37,450 (t2)',full.t2,mPay,'#C8F56A',' คน')
-        +   dbar('Grand Slam · 32,460 (t3)',full.t3,mPay,'#C8F56A',' คน')
-        +   dbar('Special · ผ่อน 6 งวด',special,mPay,'#a98bff',' คน')
-        +   '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:.88rem;color:var(--muted)">สิทธิ์โปรโมชั่นคงเหลือ <b class="num" style="color:var(--warn)">'+promo.left+'</b> / '+promo.quota+' สิทธิ์ (นับเฉพาะที่ชำระ/ยืนยันแล้ว)</div>'
-        + '</div>'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="dash2col">'
-        +   '<div class="panel" style="margin-bottom:0"><div class="ph"><h3>🏋️ ทีมโค้ช</h3><span style="font-size:.78rem;color:var(--muted)">Top 5 · สมาชิก · รายได้ยืนยันแล้ว</span></div>'
-        +     (coachRank.length? coachRank.map(function(x){return dbar2(x.name, x.c+' คน · ฿'+x.v.toLocaleString('en-US'), Math.round(x.v/mCoachV*100), '#0EA5E9');}).join('') : '<div style="color:var(--muted);padding:14px 0">ยังไม่มีข้อมูลทีมโค้ช</div>')
-        +   '</div>'
-        +   '<div class="panel" style="margin-bottom:0"><div class="ph"><h3>🙋 ผู้แนะนำ</h3><span style="font-size:.78rem;color:var(--muted)">Top 5 · เรียงตามจำนวนคน</span></div>'
-        +     (refRank.length? refRank.map(function(x){return dbar2(x.name, x.c+' คน', Math.round(x.c/mRefC*100), '#8B5CF6');}).join('') : '<div style="color:var(--muted);padding:14px 0">ยังไม่มีข้อมูลผู้แนะนำ</div>')
+        + '<div class="grid5">'
+        +   '<div class="c"><div class="c-h"><span class="cic">💳</span><span class="ct">เงื่อนไขการชำระเงิน</span><span class="ctag">แยกตามตัวเลือก</span></div><div class="bd">'
+        +     brow('ชำระเลย · ฿3,900','<span class="cnt">'+std+' คน</span>',std/mPay*100,'g')
+        +     brow('Grand Slam · เซต 1 <span class="rsub">฿44,940</span>','<span class="cnt">'+full.t0+' คน</span>',full.t0/mPay*100,'')
+        +     brow('Grand Slam · เซต 2 <span class="rsub">฿39,950</span>','<span class="cnt">'+full.t1+' คน</span>',full.t1/mPay*100,'')
+        +     brow('Grand Slam · เซต 3 <span class="rsub">฿37,450</span>','<span class="cnt">'+full.t2+' คน</span>',full.t2/mPay*100,'')
+        +     brow('Grand Slam · เซต 4 <span class="rsub">฿32,460</span>','<span class="cnt">'+full.t3+' คน</span>',full.t3/mPay*100,'')
+        +     brow('เซต 5 · ทยอยจ่าย <span class="rsub">฿7,490 × 6</span>','<span class="cnt">'+special+' คน</span>',special/mPay*100,'p')
+        +   '</div></div>'
+        +   '<div class="c"><div class="c-h"><span class="cic">🚀</span><span class="ct">รูปแบบการเริ่ม</span></div>'
+        +     donut([{n:'เริ่มเลย ณ ตอนนี้',v:now,color:'#00B4D8'},{n:'เริ่ม 8 พ.ย. 69',v:later,color:'#7C3AED'}], total, 'ผู้สมัคร')
         +   '</div>'
         + '</div>'
-        + '<div class="panel" style="margin-top:20px"><div class="ph"><h3>สัดส่วนผู้สมัคร</h3></div>'
-        +   '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px">'
-        +     '<div><div style="font-size:.82rem;color:var(--muted);font-weight:700;margin-bottom:8px">เพศ</div>'
-        +       dbar('ชาย',male,mG,'#2E86FF',' ('+pctOf(male)+'%)')
-        +       dbar('หญิง',female,mG,'#ff5bb0',' ('+pctOf(female)+'%)')
-        +     '</div>'
-        +     '<div><div style="font-size:.82rem;color:var(--muted);font-weight:700;margin-bottom:8px">ช่วงอายุ</div>'
-        +       dbar('18–24 ปี',ab.a,mAge,'#56C8FF',' คน')
-        +       dbar('25–34 ปี',ab.b,mAge,'#56C8FF',' คน')
-        +       dbar('35–44 ปี',ab.c,mAge,'#56C8FF',' คน')
-        +       dbar('45 ปีขึ้นไป',ab.d,mAge,'#56C8FF',' คน')
-        +     '</div>'
+        + '<div class="grid2">'
+        +   '<div class="c"><div class="c-h"><span class="cic">🏋️</span><span class="ct">ทีมโค้ช</span><span class="ctag">Top 5 · รายได้ยืนยันแล้ว</span></div><div class="bd">'
+        +     (coachRank.length? coachRank.map(function(x,i){return brow(esc(x.name),'<span class="amt">฿'+x.v.toLocaleString('en-US')+'</span> <span class="cnt">· '+x.c+' คน</span>',x.v/mCoachV*100,'',i+1);}).join('') : '<div class="empty">ยังไม่มีข้อมูลทีมโค้ช</div>')
+        +   '</div></div>'
+        +   '<div class="c"><div class="c-h"><span class="cic">🙋</span><span class="ct">ผู้แนะนำ</span><span class="ctag">Top 5 · จำนวนคน</span></div><div class="bd">'
+        +     (refRank.length? refRank.map(function(x,i){return brow(esc(x.name),'<span class="cnt">'+x.c+' คน</span>',x.c/mRefC*100,'p',i+1);}).join('') : '<div class="empty">ยังไม่มีข้อมูลผู้แนะนำ</div>')
+        +   '</div></div>'
+        + '</div>'
+        + '<div class="grid2">'
+        +   '<div class="c"><div class="c-h"><span class="cic">⚧</span><span class="ct">สัดส่วนเพศ</span></div>'
+        +     donut([{n:'ชาย',v:male,color:'#0077B6'},{n:'หญิง',v:female,color:'#EC4899'}], total, 'ผู้สมัคร')
         +   '</div>'
+        +   '<div class="c"><div class="c-h"><span class="cic">🎂</span><span class="ct">ช่วงอายุ</span></div><div class="bd">'
+        +     brow('18–24 ปี','<span class="cnt">'+ab.a+' คน</span>',ab.a/mAge*100,'')
+        +     brow('25–34 ปี','<span class="cnt">'+ab.b+' คน</span>',ab.b/mAge*100,'')
+        +     brow('35–44 ปี','<span class="cnt">'+ab.c+' คน</span>',ab.c/mAge*100,'')
+        +     brow('45 ปีขึ้นไป','<span class="cnt">'+ab.d+' คน</span>',ab.d/mAge*100,'')
+        +   '</div></div>'
         + '</div>';
+      var stmp=document.getElementById('dashStamp'); if(stmp){var dn2=new Date();stmp.textContent='ภาพรวมสด · อัปเดต '+dn2.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.';}
       // ปุ่มส่งรายงานเข้า Lark (เรนเดอร์ภาพแดชบอร์ดแนบไปด้วย)
       var lk=document.getElementById('dashLark');
       if(lk)lk.onclick=function(){
