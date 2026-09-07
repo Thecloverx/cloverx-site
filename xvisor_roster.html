@@ -99,7 +99,7 @@ function readFile(f){
   var fr=new FileReader();
   fr.onload=function(e){
     try{
-      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
       // pick the sheet whose header row has both a name-ish and phone-ish column
       var best=null;
       wb.SheetNames.forEach(function(nm){
@@ -135,7 +135,7 @@ function readFile(f){
       recompute();
     }catch(err){ alert('อ่านไฟล์ไม่สำเร็จ: '+err.message); }
   };
-  fr.readAsBinaryString(f);
+  fr.readAsArrayBuffer(f);
 }
 
 function recompute(){
