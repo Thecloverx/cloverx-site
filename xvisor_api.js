@@ -15,6 +15,8 @@ module.exports = function (app, DATA) {
   const REGF = path.join(XV, 'registrations.json');
   const AUDITF = path.join(XV, 'audit.json'); // append-only admin action log
   const QSETF = path.join(XV, 'qsets.json'); // named question sets (each round picks one)
+  const ROSTERF = path.join(XV, 'roster.json'); // imported "paid registrants" roster (exam-entry autofill)
+  const ROSTER_SEED = path.join(__dirname, 'xvisor_roster_seed.json'); // bundled initial roster (works with no admin key)
   const REGUP = path.join(XV, 'reguploads'); // slip / id-card images
   if (!fs.existsSync(REGUP)) { try { fs.mkdirSync(REGUP, { recursive: true }); } catch (e) {} }
 
@@ -32,10 +34,10 @@ module.exports = function (app, DATA) {
      The JSON file is ALWAYS written too (a durable backup + the fallback source read
      before Postgres finishes hydrating), so switching to or from Postgres never loses
      data. Each collection (sessions/rounds/registrations) is one JSONB blob row. */
-  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF, qsets: QSETF };
-  const COLLS = ['sessions', 'rounds', 'registrations', 'audit', 'qsets'];
+  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF, qsets: QSETF, roster: ROSTERF };
+  const COLLS = ['sessions', 'rounds', 'registrations', 'audit', 'qsets', 'roster'];
   const USE_PG = !!process.env.DATABASE_URL;
-  const mem = { sessions: [], rounds: [], registrations: [], audit: [], qsets: [] };
+  const mem = { sessions: [], rounds: [], registrations: [], audit: [], qsets: [], roster: [] };
   let pool = null, pgReady = false;
   const persistQ = {};
   const pgPersist = (coll) => {
@@ -450,6 +452,62 @@ module.exports = function (app, DATA) {
     const r = findRByCode(req.params.code);
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open' } });
+  });
+
+  /* ---------------- roster: imported "paid registrants" for exam-entry autofill ----------------
+     - phone is the match key (digits only; also matched by last-9-digits to ignore 0/country-code)
+     - "roster only" mode: this NEVER blocks anyone — it just prefills the name when the phone matches. */
+  const xvPhoneKey = (s) => { const d = String(s == null ? '' : s).replace(/\D/g, ''); return d.length > 9 ? d.slice(-9) : d; };
+  const rosterSeed = () => { const s = rd(ROSTER_SEED, null); return (s && Array.isArray(s.entries)) ? s.entries : []; };
+  // merged view: imported roster (writable) layered over the bundled seed; imported wins on phone clash
+  const rosterAll = () => {
+    const out = {}; // key -> entry
+    rosterSeed().forEach(e => { const k = xvPhoneKey(e.phone); if (k) out[k] = { name: e.name || '', phone: e.phone || '', coach: e.coach || '', team: e.team || '', round: e.round || '', source: 'seed' }; });
+    (readColl('roster') || []).forEach(e => { const k = xvPhoneKey(e.phone); if (k) out[k] = { name: e.name || '', phone: e.phone || '', coach: e.coach || '', team: e.team || '', round: e.round || '', source: e.source || 'import' }; });
+    return out;
+  };
+  const rosterFind = (phone) => { const k = xvPhoneKey(phone); return k ? (rosterAll()[k] || null) : null; };
+
+  // public: look up a phone in the roster → prefill name (minimal fields only, no full PII dump)
+  app.get('/api/xv/roster/lookup', (req, res) => {
+    const hit = rosterFind(req.query.phone);
+    if (!hit) return res.json({ ok: true, found: false });
+    res.json({ ok: true, found: true, name: hit.name, round: hit.round || '', coach: hit.coach || '' });
+  });
+
+  // admin (read, open+masked per PDPA like other GETs): list the merged roster
+  app.get('/api/xv/admin/roster', (req, res) => {
+    const m = rosterAll();
+    const list = Object.keys(m).map(k => m[k]).sort((a, b) => String(a.name).localeCompare(String(b.name), 'th'));
+    const imported = (readColl('roster') || []).length;
+    res.json({ ok: true, total: list.length, imported: imported, seed: rosterSeed().length, entries: list });
+  });
+
+  // admin (ADMIN_KEY): import rows [{name, phone, coach?, team?, round?}] → merge into roster by phone
+  app.post('/api/xv/admin/roster/import', (req, res) => {
+    const b = req.body || {};
+    const rows = Array.isArray(b.rows) ? b.rows : [];
+    if (!rows.length) return res.status(400).json({ ok: false, error: 'no_rows' });
+    const cur = readColl('roster') || [];
+    const byKey = {}; cur.forEach(e => { const k = xvPhoneKey(e.phone); if (k) byKey[k] = e; });
+    let added = 0, updated = 0, skipped = 0;
+    const now = Date.now();
+    rows.forEach(r => {
+      const name = String(r.name == null ? '' : r.name).trim().slice(0, 120);
+      const phone = String(r.phone == null ? '' : r.phone).trim().slice(0, 40);
+      const k = xvPhoneKey(phone);
+      if (!name || !k) { skipped++; return; }
+      const entry = { name: name, phone: phone, coach: String(r.coach || '').trim().slice(0, 80), team: String(r.team || '').trim().slice(0, 120), round: String(r.round || '').trim().slice(0, 160), source: String(b.source || 'excel').slice(0, 40), importedAt: now };
+      if (byKey[k]) { Object.assign(byKey[k], entry); updated++; } else { byKey[k] = entry; cur.push(entry); added++; }
+    });
+    writeColl('roster', cur);
+    res.json({ ok: true, added: added, updated: updated, skipped: skipped, total: cur.length });
+  });
+
+  // admin (ADMIN_KEY): clear the imported roster (bundled seed stays)
+  app.post('/api/xv/admin/roster/clear', (req, res) => {
+    writeColl('roster', []);
+    res.json({ ok: true, cleared: true });
   });
 
   /* ---------------- admin endpoints (ADMIN_KEY) ---------------- */

@@ -1,0 +1,18 @@
+{
+  "source": "X-VISOR — รายชื่อผู้สมัครอบรมและสอบ (ก.ย. 2569)",
+  "note": "Seed roster used for exam-entry autofill. Admin imports add on top of this.",
+  "entries": [
+    { "name": "พัฒนภาส ลิ่วมโนคุณ", "phone": "0802896645", "coach": "โค้ชซิง", "team": "พี่ซิง", "round": "19 ก.ย. 2569 · ONSITE" },
+    { "name": "ศิริพร ศรีคำภา", "phone": "0993504989", "coach": "โค้ชซิง", "team": "ศราวุธ ศรีภิรมย์", "round": "27 ก.ย. 2569 · ONLINE" },
+    { "name": "วิรสันต์ วิรุฬห์สกุลภิบาล", "phone": "0621924559", "coach": "โค้ชจา", "team": "ชีวาวัชญ์", "round": "27 ก.ย. 2569 · ONLINE" },
+    { "name": "Thanaanan Siraphokinrattanachai", "phone": "0967824616", "coach": "โค้ชจา", "team": "รินทร์ปภัส", "round": "19 ก.ย. 2569 · ONSITE" },
+    { "name": "รุ่งนพนันท์ บุปผา", "phone": "0632461464", "coach": "โค้ชจา", "team": "จิราวัชร อัศวสันตกุล", "round": "19 ก.ย. 2569 · ONSITE" },
+    { "name": "Phonephet Thipsomphan", "phone": "+8562056564295", "coach": "โค้ชจา", "team": "Souchinda", "round": "27 ก.ย. 2569 · ONLINE" },
+    { "name": "ภัทรเดช อาชีวปาริสุทธิ", "phone": "0938200661", "coach": "โค้ชจา", "team": "คุณCheevawat", "round": "27 ก.ย. 2569 · ONLINE" },
+    { "name": "ภนิทธิศาฐ์ พิพัฒณาชัยภูมิ", "phone": "0947989642", "coach": "โค้ชซิง", "team": "พัฒนภาส", "round": "19 ก.ย. 2569 · ONSITE" },
+    { "name": "กาญจนา โพสุตา", "phone": "0832689424", "coach": "โค้ชจา", "team": "อนัญญา น้อมหนู", "round": "27 ก.ย. 2569 · ONLINE" },
+    { "name": "Tuntima Dhammaro", "phone": "0946163963", "coach": "โค้ชซิง", "team": "คณิศร ณ บางช้าง", "round": "19 ก.ย. 2569 · ONSITE" },
+    { "name": "รจนา ราหูรักษ์", "phone": "0626094044", "coach": "โค้ชจา", "team": "โสภิดา สังข์ปลอง", "round": "27 ก.ย. 2569 · ONLINE" },
+    { "name": "สโรชา ตันติสุนทร", "phone": "0985632459", "coach": "โค้ชจา", "team": "อุมารินทร์ เพิงสา", "round": "19 ก.ย. 2569 · ONSITE" }
+  ]
+}

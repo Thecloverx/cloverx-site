@@ -1,0 +1,191 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>นำเข้ารายชื่อผู้มีสิทธิ์สอบ — X-VISOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--ink:#12233B;--mut:#5E7691;--line:#E4EAF2;--brand:#0077B6;--cyan:#00B4D8;--grad:linear-gradient(135deg,#00B4D8,#0077B6);--ok:#0E9F6E;--okbg:#EAF7F0;--warn:#E8873A;--soft:#F5F8FC;--card:#fff;--bad:#D64545}
+  body{background:#EDF1F7;font-family:"Noto Sans Thai",system-ui,sans-serif;color:var(--ink);padding:26px 20px 44px}
+  .wrap{max-width:900px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .top .ic{width:44px;height:44px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 8px 18px rgba(0,119,182,.3);flex:none}
+  .top h1{font-size:1.3rem;font-weight:800}
+  .top .sub{font-size:.82rem;color:var(--mut);font-weight:500;margin-top:2px}
+  .top .back{margin-left:auto;font-size:.82rem;color:var(--brand);font-weight:700;text-decoration:none;background:#fff;border:1px solid var(--line);padding:8px 13px;border-radius:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(3,4,94,.04),0 10px 26px rgba(3,4,94,.06);padding:20px 22px;margin-bottom:16px}
+  .card h2{font-size:1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:9px}
+  .card .cnum{width:24px;height:24px;border-radius:7px;background:var(--grad);color:#fff;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center}
+  .card p.h{font-size:.83rem;color:var(--mut);margin-bottom:14px}
+  .drop{border:2px dashed #B6D9EC;border-radius:14px;background:linear-gradient(135deg,rgba(0,180,216,.05),rgba(0,119,182,.05));padding:26px;text-align:center;cursor:pointer;transition:.15s}
+  .drop:hover{border-color:var(--brand);background:rgba(0,119,182,.06)}
+  .drop .u{font-size:28px}
+  .drop .m{font-weight:700;margin-top:7px}
+  .drop .s{font-size:.78rem;color:var(--mut);margin-top:4px}
+  .filechip{display:none;align-items:center;gap:10px;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-top:12px}
+  .filechip .fi{width:30px;height:30px;border-radius:8px;background:#1D7C4D;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;flex:none}
+  .filechip .fn{font-weight:700;font-size:.86rem}.filechip .fs{font-size:.74rem;color:var(--mut)}
+  .maprow{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+  .maprow .lab{width:130px;font-size:.84rem;font-weight:700;flex:none}
+  .maprow select{flex:1;min-width:180px;border:1.5px solid var(--line);background:var(--soft);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.84rem;font-weight:600;color:var(--ink)}
+  .maprow .auto{font-size:.68rem;color:var(--ok);font-weight:800;background:var(--okbg);padding:3px 8px;border-radius:6px}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.82rem}
+  th{text-align:left;color:var(--mut);font-weight:700;font-size:.72rem;padding:6px 9px;border-bottom:1.5px solid var(--line)}
+  td{padding:6px 9px;border-bottom:1px solid #F0F3F8;font-variant-numeric:tabular-nums}
+  .sumrow{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .sm{flex:1;min-width:92px;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center}
+  .sm .v{font-size:1.15rem;font-weight:800}.sm .l{font-size:.68rem;color:var(--mut);font-weight:600;margin-top:1px}
+  .sm.ok .v{color:var(--ok)}.sm.warn .v{color:var(--warn)}
+  label.fl{font-size:.8rem;font-weight:700;display:block;margin-bottom:6px}
+  input.key{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.9rem;background:#fff}
+  input.key:focus{outline:none;border-color:var(--brand)}
+  .cta{margin-top:14px;background:var(--grad);color:#fff;font-weight:800;font-size:.92rem;border:none;border-radius:12px;padding:13px;width:100%;box-shadow:0 8px 18px rgba(0,119,182,.3);cursor:pointer}
+  .cta[disabled]{opacity:.5;cursor:not-allowed}
+  .msg{margin-top:12px;font-size:.86rem;font-weight:600;padding:11px 13px;border-radius:10px;display:none}
+  .msg.ok{display:block;background:var(--okbg);border:1px solid #A7F3D0;color:#047857}
+  .msg.err{display:block;background:#FDECEC;border:1px solid #F3C0C0;color:var(--bad)}
+  .hidden{display:none!important}
+  .cur{font-size:.82rem;color:var(--mut);margin-top:2px}
+  .cur b{color:var(--brand)}
+</style></head>
+<body><div class="wrap">
+  <div class="top"><div class="ic">📥</div><div><h1>นำเข้ารายชื่อผู้มีสิทธิ์สอบ</h1><div class="sub">X-VISOR · กรอกเบอร์วันสอบแล้วชื่อขึ้นเอง (ตัวช่วยกรอก — ไม่บล็อกใคร)</div></div><a class="back" href="/xvisor">← ไปหน้าสอบ</a></div>
+
+  <div class="card">
+    <div class="cur" id="curInfo">กำลังโหลดสถานะรายชื่อ…</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="cnum">1</span> เลือกไฟล์ Excel / CSV</h2>
+    <p class="h">รองรับไฟล์เดิมที่มีอยู่ (.xlsx / .xls / .csv) — ระบบจะจับคอลัมน์ชื่อ/เบอร์ให้อัตโนมัติ</p>
+    <div class="drop" id="drop"><div class="u">📄⬆️</div><div class="m">ลากไฟล์มาวาง หรือกดเพื่อเลือกไฟล์</div><div class="s">อ่านในเครื่องเท่านั้น — ไฟล์ไม่ถูกอัปโหลดไปไหนจนกว่าจะกด “นำเข้า”</div>
+      <input type="file" id="file" accept=".xlsx,.xls,.csv" class="hidden"></div>
+    <div class="filechip" id="fchip"><span class="fi">XLS</span><div><div class="fn" id="fname"></div><div class="fs" id="fmeta"></div></div><span style="margin-left:auto;color:var(--ok);font-weight:800;font-size:.82rem">✓ อ่านแล้ว</span></div>
+  </div>
+
+  <div class="card hidden" id="mapCard">
+    <h2><span class="cnum">2</span> จับคู่คอลัมน์ <span style="font-weight:600;color:var(--mut);font-size:.8rem">(แก้ได้ถ้าจับผิด)</span></h2>
+    <div class="maprow"><span class="lab">ชื่อ (จำเป็น)</span><select id="mName"></select></div>
+    <div class="maprow"><span class="lab">นามสกุล</span><select id="mLast"></select><span style="font-size:.74rem;color:var(--mut)">ถ้ามีคอลัมน์ชื่อ–นามสกุลรวมกัน เว้นช่องนี้ไว้ได้</span></div>
+    <div class="maprow"><span class="lab">เบอร์โทร ★</span><select id="mPhone"></select></div>
+    <div class="maprow"><span class="lab">รอบ</span><select id="mRound"></select></div>
+    <div class="maprow"><span class="lab">โค้ช</span><select id="mCoach"></select></div>
+    <div class="maprow"><span class="lab">ทีม/ผู้แนะนำ</span><select id="mTeam"></select></div>
+    <div class="sumrow">
+      <div class="sm ok"><div class="v" id="cReady">0</div><div class="l">พร้อมนำเข้า</div></div>
+      <div class="sm warn"><div class="v" id="cNoPhone">0</div><div class="l">เบอร์ว่าง (ข้าม)</div></div>
+      <div class="sm warn"><div class="v" id="cDup">0</div><div class="l">เบอร์ซ้ำ (รวม)</div></div>
+    </div>
+    <table><thead><tr><th>#</th><th>ชื่อ</th><th>เบอร์โทร</th><th>รอบ</th></tr></thead><tbody id="pvBody"></tbody></table>
+  </div>
+
+  <div class="card hidden" id="impCard">
+    <h2><span class="cnum">3</span> ยืนยันการนำเข้า</h2>
+    <label class="fl">รหัสผู้ดูแล (ADMIN KEY)</label>
+    <input class="key" id="adminKey" type="password" placeholder="กรอกคีย์ของทีมเพื่อยืนยัน" autocomplete="off">
+    <button class="cta" id="doImport" disabled>นำเข้ารายชื่อ</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+<script>
+var ROWS=[], HEADERS=[], parsed=[];
+function normPhone(s){return String(s==null?'':s).replace(/\D/g,'');}
+function pick(sel){var s=document.getElementById(sel);return s?parseInt(s.value,10):-1;}
+function fillSelect(sel,guessIdx){var s=document.getElementById(sel);s.innerHTML='<option value="-1">— ไม่ใช้ —</option>'+HEADERS.map(function(h,i){return '<option value="'+i+'"'+(i===guessIdx?' selected':'')+'>'+esc(h||('คอลัมน์ '+(i+1)))+'</option>';}).join('');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function guess(keys,neg){for(var i=0;i<HEADERS.length;i++){var h=String(HEADERS[i]||'').toLowerCase();var bad=neg&&neg.some(function(n){return h.indexOf(n)>=0;});if(bad)continue;if(keys.some(function(k){return h.indexOf(k)>=0;}))return i;}return -1;}
+
+function readFile(f){
+  var fr=new FileReader();
+  fr.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary'});
+      // pick the sheet whose header row has both a name-ish and phone-ish column
+      var best=null;
+      wb.SheetNames.forEach(function(nm){
+        var aoa=XLSX.utils.sheet_to_json(wb.Sheets[nm],{header:1,defval:''});
+        for(var r=0;r<Math.min(aoa.length,8);r++){
+          var row=aoa[r].map(function(x){return String(x).toLowerCase();});
+          var hasName=row.some(function(c){return c.indexOf('ชื่อ')>=0;});
+          var hasPhone=row.some(function(c){return c.indexOf('เบอร์')>=0||c.indexOf('โทร')>=0||c.indexOf('phone')>=0||c.indexOf('mobile')>=0;});
+          if(hasName&&hasPhone){ if(!best){best={sheet:nm,aoa:aoa,hdr:r};} return; }
+        }
+      });
+      if(!best){ // fallback: first sheet, row 0
+        var aoa0=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+        best={sheet:wb.SheetNames[0],aoa:aoa0,hdr:0};
+      }
+      HEADERS=best.aoa[best.hdr].map(function(x){return String(x).trim();});
+      ROWS=best.aoa.slice(best.hdr+1).filter(function(r){return r.some(function(c){return String(c).trim();});});
+      document.getElementById('fname').textContent=f.name;
+      document.getElementById('fmeta').textContent='ชีท “'+best.sheet+'” · '+ROWS.length+' แถว · '+HEADERS.length+' คอลัมน์';
+      document.getElementById('fchip').style.display='flex';
+      // auto-map
+      fillSelect('mName',guess(['ชื่อ-นามสกุล','ชื่อ–นามสกุล','ชื่อ - นามสกุล','ชื่อ']));
+      fillSelect('mLast',guess(['นามสกุล']));
+      fillSelect('mPhone',guess(['เบอร์','โทร','phone','mobile']));
+      fillSelect('mRound',guess(['เลือกรอบ','รอบ']));
+      fillSelect('mCoach',guess(['โค้ชหลักใด','โค้ชหลัก','โค้ช'],['อื่น']));
+      fillSelect('mTeam',guess(['ผู้แนะนำ','ทีม']));
+      // if the name guess accidentally == last-name col, and there is a separate first-name, fix
+      if(pick('mName')===pick('mLast')&&pick('mLast')>=0){var g=guess(['ชื่อ'],['นามสกุล']);if(g>=0)document.getElementById('mName').value=g;}
+      document.getElementById('mapCard').classList.remove('hidden');
+      document.getElementById('impCard').classList.remove('hidden');
+      ['mName','mLast','mPhone','mRound','mCoach','mTeam'].forEach(function(id){document.getElementById(id).onchange=recompute;});
+      recompute();
+    }catch(err){ alert('อ่านไฟล์ไม่สำเร็จ: '+err.message); }
+  };
+  fr.readAsBinaryString(f);
+}
+
+function recompute(){
+  var iN=pick('mName'),iL=pick('mLast'),iP=pick('mPhone'),iR=pick('mRound'),iC=pick('mCoach'),iT=pick('mTeam');
+  parsed=[]; var seen={},dup=0,noPhone=0;
+  ROWS.forEach(function(r){
+    var nm=(iN>=0?String(r[iN]||'').trim():''); if(iL>=0){var ln=String(r[iL]||'').trim(); if(ln)nm=(nm+' '+ln).trim();}
+    var ph=(iP>=0?String(r[iP]||'').trim():'');
+    if(!nm){return;}
+    if(!normPhone(ph)){noPhone++;return;}
+    var k=normPhone(ph); k=k.length>9?k.slice(-9):k;
+    if(seen[k]){dup++;} seen[k]=1;
+    parsed.push({name:nm,phone:ph,round:(iR>=0?String(r[iR]||'').trim():''),coach:(iC>=0?String(r[iC]||'').trim():''),team:(iT>=0?String(r[iT]||'').trim():'')});
+  });
+  document.getElementById('cReady').textContent=parsed.length;
+  document.getElementById('cNoPhone').textContent=noPhone;
+  document.getElementById('cDup').textContent=dup;
+  var tb=document.getElementById('pvBody');
+  tb.innerHTML=parsed.slice(0,6).map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.phone)+'</td><td>'+esc(x.round||'-')+'</td></tr>';}).join('')
+    +(parsed.length>6?'<tr><td colspan="4" style="text-align:center;color:var(--mut);padding-top:8px">… และอีก '+(parsed.length-6)+' รายชื่อ</td></tr>':'');
+  syncBtn();
+}
+function syncBtn(){document.getElementById('doImport').disabled=!(parsed.length&&document.getElementById('adminKey').value.trim());}
+
+// file wiring
+var drop=document.getElementById('drop'), fileInput=document.getElementById('file');
+drop.onclick=function(){fileInput.click();};
+fileInput.onchange=function(){if(fileInput.files[0])readFile(fileInput.files[0]);};
+drop.ondragover=function(e){e.preventDefault();drop.style.borderColor='var(--brand)';};
+drop.ondragleave=function(){drop.style.borderColor='';};
+drop.ondrop=function(e){e.preventDefault();drop.style.borderColor='';if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);};
+document.getElementById('adminKey').addEventListener('input',syncBtn);
+
+document.getElementById('doImport').onclick=function(){
+  var btn=this, key=document.getElementById('adminKey').value.trim(), msg=document.getElementById('msg');
+  msg.className='msg'; btn.disabled=true; var old=btn.textContent; btn.textContent='กำลังนำเข้า…';
+  fetch('/api/xv/admin/roster/import',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({rows:parsed,source:'excel'})})
+    .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+    .then(function(o){ btn.textContent=old; btn.disabled=false;
+      if(o.j&&o.j.ok){ msg.className='msg ok'; msg.textContent='✓ นำเข้าสำเร็จ — เพิ่มใหม่ '+o.j.added+' · อัปเดต '+o.j.updated+' · ข้าม '+o.j.skipped+' · รวมในระบบ '+o.j.total+' รายชื่อ'; loadCur(); }
+      else if(o.s===403){ msg.className='msg err'; msg.textContent='รหัสผู้ดูแลไม่ถูกต้อง (หรือถูกล็อกชั่วคราวจากการกรอกผิดหลายครั้ง)'; }
+      else { msg.className='msg err'; msg.textContent='นำเข้าไม่สำเร็จ'+(o.j&&o.j.error?' — '+o.j.error:''); }
+    }).catch(function(){ btn.textContent=old; btn.disabled=false; msg.className='msg err'; msg.textContent='เชื่อมต่อไม่สำเร็จ'; });
+};
+
+function loadCur(){
+  fetch('/api/xv/admin/roster').then(function(r){return r.json();}).then(function(j){
+    if(j&&j.ok){document.getElementById('curInfo').innerHTML='📋 รายชื่อในระบบตอนนี้ <b>'+j.total+'</b> คน (นำเข้าเอง '+j.imported+' · ชุดเริ่มต้น '+j.seed+')';}
+    else document.getElementById('curInfo').textContent='โหลดสถานะไม่สำเร็จ';
+  }).catch(function(){document.getElementById('curInfo').textContent='โหลดสถานะไม่สำเร็จ';});
+}
+loadCur();
+</script></body></html>

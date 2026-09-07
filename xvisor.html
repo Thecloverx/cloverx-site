@@ -183,6 +183,13 @@ input{font-family:inherit}
 .step .dash{width:40px;height:2px;background:var(--border);border-radius:2px}
 .reg-grid{display:grid;grid-template-columns:1fr 1.05fr .95fr;gap:var(--space-5);align-items:stretch}
 .field-title{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--space-3)}
+.rosterhit{display:flex;align-items:center;gap:9px;border-radius:var(--radius-control);padding:9px 12px;margin:-2px 0 var(--space-3);font-size:13px;animation:rhin .2s ease}
+.rosterhit.ok{background:#ECFDF5;border:1px solid #A7F3D0;color:#047857}
+.rosterhit .rk{width:22px;height:22px;border-radius:50%;background:#10B981;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none}
+.rosterhit .rt{display:flex;flex-direction:column;line-height:1.35;min-width:0}
+.rosterhit .rt b{font-weight:700}
+.rosterhit .rt .rs{font-size:11.5px;color:#3f7a5e;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@keyframes rhin{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .frow{display:flex;align-items:center;gap:var(--space-3);background:linear-gradient(180deg,#fff,#f6faff);border:1px solid var(--border);border-radius:var(--radius-control);padding:11px var(--space-4);margin-bottom:var(--space-3);transition:box-shadow .22s,border-color .22s}
 .frow:focus-within{border-color:rgba(45,136,255,.5);box-shadow:0 0 0 3px rgba(39,200,255,.14),0 0 18px rgba(39,200,255,.2)}
 .frow .fi{width:32px;height:32px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e9f3ff,#d4e7ff);color:var(--primary-500);box-shadow:inset 0 1px 0 rgba(255,255,255,.8);transition:.22s}
@@ -503,7 +510,8 @@ function renderRegistration(){const c=S.candidate;
      <div><div class="field-title">ข้อมูลผู้สอบ</div>
        <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>ชื่อ</label><input id="fn" placeholder="กรอกชื่อ" value="${c.firstName}"></span></div>
        <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>นามสกุล</label><input id="ln" placeholder="กรอกนามสกุล" value="${c.lastName}"></span></div>
-       <div class="frow"><span class="fi">${I.phone}</span><span class="fc"><label>เบอร์โทรศัพท์</label><input id="ph" placeholder="08X-XXX-XXXX" value="${c.phone}"></span></div></div>
+       <div class="frow"><span class="fi">${I.phone}</span><span class="fc"><label>เบอร์โทรศัพท์</label><input id="ph" placeholder="08X-XXX-XXXX" value="${c.phone}"></span></div>
+       <div id="rosterHit" class="rosterhit" style="display:none"></div></div>
      <div style="display:flex;flex-direction:column"><div class="field-title">รูปแบบการสอบ</div>
        <div class="modes">
          <div class="mode ${c.mode==='online'?'on':''}" data-mode="online"><span class="mi">${I.monitor}</span><div class="mt">Online</div><div class="ms">สอบผ่านระบบออนไลน์</div><span class="rc2">${I.check}</span></div>
@@ -518,6 +526,24 @@ function renderRegistration(){const c=S.candidate;
  const upd=()=>{c.firstName=$('#fn').value.trim();c.lastName=$('#ln').value.trim();c.phone=$('#ph').value.trim();
    $('#start').disabled=!(c.firstName&&c.lastName&&c.phone&&(c.mode==='onsite'||c.cameraConsent)&&roundOpen());};
  ['#fn','#ln','#ph'].forEach(s=>$(s).addEventListener('input',upd));
+ // ค้นรายชื่อที่ทีมนำเข้าไว้ → กรอกเบอร์แล้วชื่อขึ้นเอง (เป็นตัวช่วยกรอกเฉย ๆ ไม่บล็อกใคร)
+ (function(){
+   var box=$('#rosterHit'); if(!box)return; var last='', t=null, filled=false;
+   function showFound(n,extra){ box.style.display='block'; box.className='rosterhit ok';
+     box.innerHTML='<span class="rk">✓</span><span class="rt"><b>พบในรายชื่อผู้ลงทะเบียน</b>'+(extra?'<span class="rs">'+extra+'</span>':'')+'</span>'; }
+   function clearBox(){ box.style.display='none'; box.innerHTML=''; }
+   function lookup(){ var ph=($('#ph').value||'').replace(/\D/g,''); if(ph.length<6){clearBox();return;} if(ph===last)return; last=ph;
+     apiGet('/api/xv/roster/lookup?phone='+encodeURIComponent(ph)).then(function(r){
+       if(!r||!r.found){ if(filled){filled=false;} clearBox(); return; }
+       var fnEl=$('#fn'), lnEl=$('#ln');
+       // เติมชื่อให้อัตโนมัติเฉพาะเมื่อช่องยังว่าง หรือเป็นค่าที่เราเติมไว้ก่อนหน้า (ไม่ทับที่ผู้ใช้พิมพ์เอง)
+       if(!fnEl.value.trim() && !lnEl.value.trim()){ var parts=String(r.name||'').trim().split(/\s+/); fnEl.value=parts.shift()||''; lnEl.value=parts.join(' '); filled=true; upd(); }
+       showFound(r.name, [r.round,r.coach].filter(Boolean).join(' · '));
+     }).catch(function(){ clearBox(); });
+   }
+   $('#ph').addEventListener('input',function(){ if(t)clearTimeout(t); t=setTimeout(lookup,350); });
+   if(($('#ph').value||'').replace(/\D/g,'').length>=6) lookup();
+ })();
  $$('.mode').forEach(m=>m.onclick=()=>{c.mode=m.dataset.mode;$$('.mode').forEach(x=>x.classList.toggle('on',x===m));
    const on=c.mode==='online';$('#consent').style.display=on?'':'none';$('#camReady').textContent=on?'กล้องพร้อมใช้งาน':'สำหรับ Online เท่านั้น';$('#camReady').style.color=on?'var(--success)':'var(--text-secondary)';$('#camPanel').style.opacity=on?1:.5;upd();});
  $('#consent').onclick=()=>{c.cameraConsent=!c.cameraConsent;$('#consent').classList.toggle('on',c.cameraConsent);upd();};
