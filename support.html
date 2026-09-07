@@ -382,7 +382,7 @@
   var TITLES={lldash:'Dashboard',llreg:'Registration',llmstart:'Start Member',llmafter:'After Member',llorder:'Order · Management',settings:'ตั้งค่า'};
 
   // ผู้แนะนำที่จริง ๆ แล้วเป็น "โค้ช" → ให้นับเป็นโค้ช ไม่นับเป็นผู้แนะนำ
-  var LL_COACH_ALIAS={'นที เหลืองอรุณโรจน์':'โค้ชซิง','มนัสวี ผิวคำ':'โค้ชต๊ะ','ชีวาวัชญ์ จรัสนิรัติศัย':'โค้ชจา','Sukanya Thirakomen Kanogart':'โค้ชนุ่น'};
+  var LL_COACH_ALIAS={'นที เหลืองอรุณโรจน์':'โค้ชซิง','ปริญ จารุกุลวนิช':'โค้ชซิง','มนัสวี ผิวคำ':'โค้ชต๊ะ','ชีวาวัชญ์ จรัสนิรัติศัย':'โค้ชจา','Sukanya Thirakomen Kanogart':'โค้ชนุ่น'};
   function llAliasCoach(name){
     var s=String(name||'').replace(/\s+/g,' ').trim(); if(!s||s==='-')return '';
     if(LL_COACH_ALIAS[s])return LL_COACH_ALIAS[s];
