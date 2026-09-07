@@ -18,8 +18,57 @@ const SETTINGS = path.join(DATA, 'settings.json');
 const DEFAULT_SETTINGS = {
   preorderOpen: true,
   closedTitle: 'ปิดรับพรีออเดอร์ชั่วคราว',
-  closedMsg: 'ขณะนี้สินค้าใกล้หมด เราปิดรับคำสั่งซื้อล่วงหน้าไว้ชั่วคราว ขอบคุณสำหรับความสนใจ 💙 โปรดติดตามรอบถัดไปเร็ว ๆ นี้'
+  closedMsg: 'ขณะนี้สินค้าใกล้หมด เราปิดรับคำสั่งซื้อล่วงหน้าไว้ชั่วคราว ขอบคุณสำหรับความสนใจ 💙 โปรดติดตามรอบถัดไปเร็ว ๆ นี้',
+  // ===== สต๊อกสินค้า Pre-Order (จำนวนที่พร้อมขาย นับถอยหลังเมื่อมีออเดอร์ใหม่) =====
+  // key ที่ไม่อยู่ในนี้ = ไม่จำกัดสต๊อก (เช่น เสื้อโปโล). เพิ่ม/แก้จำนวนได้จากหลังบ้าน
+  stock: { 'band-cream': 10, 'band-black': 10, 'scale': 10, 'routinex': 10 },
+  // ตัดยอดจริง: ถ้าเปิด จะบล็อกออเดอร์ใหม่เมื่อสินค้าหมด; ถ้าปิด จะแค่โชว์จำนวนคงเหลือ (ติดลบได้)
+  stockEnforce: true
 };
+
+// ===== แยกออเดอร์ออกเป็นชิ้นส่วนสต๊อก (1 หน่วยต่อ 1 รายการ) =====
+// เสื้อโปโล = ไม่นับสต๊อก (ยกเว้น). เซตรวมตัดชิ้นส่วนตามที่ประกอบ
+const STOCK_LABELS = { 'band-cream': 'Xircle Band · สีครีม', 'band-black': 'Xircle Band · สีดำ', 'scale': 'Xircle Scale', 'routinex': 'RoutineX' };
+const STOCK_ORDER = ['band-cream', 'band-black', 'scale', 'routinex'];
+function stockColorOf(nm) { if (/สีดำ|black/i.test(nm)) return 'black'; if (/สีครีม|cream/i.test(nm)) return 'cream'; if (/ดำ/.test(nm)) return 'black'; if (/ครีม/.test(nm)) return 'cream'; return 'cream'; }
+function stockBandKey(nm) { return stockColorOf(nm) === 'black' ? 'band-black' : 'band-cream'; }
+// ชิ้นส่วนที่ 1 รายการกิน (คืน array ของ key); ไม่รู้จัก/เสื้อ = []
+function itemComponents(nm) {
+  nm = String(nm || '');
+  if (/polo|โปโล|เสื้อ/i.test(nm)) return [];
+  if (/TRIPLE/i.test(nm)) return [stockBandKey(nm), 'scale', 'routinex'];
+  if (/DUO/i.test(nm)) return [stockBandKey(nm), 'scale'];
+  if (/TWIN/i.test(nm)) return [stockBandKey(nm), 'routinex'];
+  if (/RoutineX/i.test(nm)) return ['routinex'];
+  if (/Scale/i.test(nm)) return ['scale'];
+  if (/Band/i.test(nm)) return [stockBandKey(nm)];
+  return [];
+}
+// รวมชิ้นส่วนของทั้งออเดอร์ => { key: จำนวน }
+function orderComponents(items) {
+  var need = {};
+  (Array.isArray(items) ? items : []).forEach(function (it) {
+    itemComponents(it && it.nm).forEach(function (k) { need[k] = (need[k] || 0) + 1; });
+  });
+  return need;
+}
+function readStock() { var s = readSettings(); return Object.assign({}, DEFAULT_SETTINGS.stock, (s.stock && typeof s.stock === 'object') ? s.stock : {}); }
+function stockEnforceOn() { var s = readSettings(); return s.stockEnforce !== false; }
+// คืนสต๊อกเมื่อออเดอร์ถูกยกเลิก/ปฏิเสธ/คืนเงิน (กันคืนซ้ำด้วย stockReleased). แก้ที่ order object — ผู้เรียกต้อง write(list) เพื่อบันทึกธง
+function releaseStock(order) {
+  if (!order || !order.stockUsed || order.stockReleased) return false;
+  var st = readStock(), u = order.stockUsed;
+  Object.keys(u).forEach(function (k) { st[k] = (typeof st[k] === 'number' ? st[k] : 0) + u[k]; });
+  writeSettings({ stock: st }); order.stockReleased = true; return true;
+}
+// จองสต๊อกกลับเมื่อออเดอร์ที่เคยยกเลิก ถูกเปิดใช้งานใหม่
+function reserveStockBack(order) {
+  if (!order || !order.stockUsed || !order.stockReleased) return false;
+  var st = readStock(), u = order.stockUsed;
+  Object.keys(u).forEach(function (k) { st[k] = (typeof st[k] === 'number' ? st[k] : 0) - u[k]; });
+  writeSettings({ stock: st }); order.stockReleased = false; return true;
+}
+var STOCK_DEAD = { cancelled: 1, rejected: 1, refunded: 1 };
 function readSettings() {
   try { return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(fs.readFileSync(SETTINGS, 'utf8'))); }
   catch (e) { return Object.assign({}, DEFAULT_SETTINGS); }
@@ -365,6 +414,23 @@ app.post('/api/orders', (req, res) => {
     return res.status(403).json({ ok: false, error: 'preorder_closed', message: readSettings().closedMsg });
   }
   const o = req.body || {};
+
+  // ===== ตรวจสต๊อก: ถ้าเปิดตัดยอด และของไม่พอ ให้ปฏิเสธก่อนสร้างออเดอร์ =====
+  const _need = orderComponents(o.items);
+  const _stock = readStock();
+  if (stockEnforceOn()) {
+    var _short = [];
+    STOCK_ORDER.forEach(function (k) {
+      if (typeof _stock[k] === 'number' && (_need[k] || 0) > 0 && _stock[k] < (_need[k] || 0)) {
+        _short.push(STOCK_LABELS[k] + ' (เหลือ ' + Math.max(0, _stock[k]) + ')');
+      }
+    });
+    if (_short.length) {
+      return res.status(409).json({ ok: false, error: 'out_of_stock', shortages: _short,
+        message: 'ขออภัย สินค้าบางรายการหมดสต๊อกแล้ว: ' + _short.join(', ') + ' — กรุณาติดต่อทีมงานเพื่อรอบถัดไป' });
+    }
+  }
+
   const list = read();
   const seq = (list.length ? Math.max.apply(null, list.map(x => x.seq || 0)) : 0) + 1;
   const id = 'PO-' + String(1000000 + seq).slice(-6);
@@ -391,6 +457,15 @@ app.post('/api/orders', (req, res) => {
     famMembers: Array.isArray(o.famMembers) ? o.famMembers : [],
     payEmail: o.payEmail || '', tax: o.tax || null
   };
+  // จองสต๊อก: บันทึกชิ้นส่วนที่ออเดอร์นี้กิน (เฉพาะ key ที่มีการนับสต๊อก) แล้วตัดจำนวน
+  var _used = {};
+  STOCK_ORDER.forEach(function (k) { if (typeof _stock[k] === 'number' && (_need[k] || 0) > 0) _used[k] = _need[k]; });
+  if (Object.keys(_used).length) {
+    rec.stockUsed = _used;
+    var _ns = Object.assign({}, _stock);
+    Object.keys(_used).forEach(function (k) { _ns[k] = (_ns[k] || 0) - _used[k]; });
+    writeSettings({ stock: _ns });
+  }
   list.unshift(rec);
   write(list);
 
@@ -443,6 +518,7 @@ function sweepExpiredCard(list) {
         o.status = 'cancelled';
         o.cancelledAt = new Date().toISOString();
         o.cancelReason = 'payment_timeout';
+        releaseStock(o); // คืนสต๊อกที่จองไว้เมื่อออเดอร์บัตรหมดอายุ
         changed = true;
         console.log('[sweep] order ' + o.id + ' auto-cancelled (card unpaid > 3 days)');
       }
@@ -485,7 +561,11 @@ app.patch('/api/orders/:id', (req, res) => {
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ ok: false });
   const b = req.body || {};
-  if (b.status) o.status = b.status;
+  if (b.status) {
+    o.status = b.status;
+    // สต๊อก: ยกเลิก/ปฏิเสธ/คืนเงิน → คืนของ; กลับมา active → จองใหม่
+    if (STOCK_DEAD[o.status]) releaseStock(o); else reserveStockBack(o);
+  }
   // แก้ไขข้อมูลลูกค้า/รายการ (จากหน้าแอดมิน) — อัปเดตเฉพาะฟิลด์ที่ส่งมาและอยู่ในรายการที่อนุญาต
   ['name', 'phone', 'email', 'addr', 'note'].forEach(function (k) { if (typeof b[k] === 'string') o[k] = b[k].slice(0, 500); });
   if (typeof b.itemName === 'string' && Array.isArray(o.items) && o.items[0]) o.items[0].nm = b.itemName.slice(0, 200);
@@ -565,6 +645,7 @@ app.delete("/api/orders/:id", (req, res) => {
   const i = list.findIndex(x => x.id === req.params.id);
   if (i < 0) return res.status(404).json({ ok: false, error: "not_found" });
   const removed = list.splice(i, 1)[0];
+  releaseStock(removed); // คืนสต๊อกที่ออเดอร์นี้จองไว้ (ถ้ายังไม่คืน)
   write(list);
   res.json({ ok: true, id: removed.id });
 });
@@ -759,7 +840,43 @@ app.post('/api/orders/:id/invoice', (req, res) => {
 // ---- ตั้งค่า: เปิด/ปิดรับ Pre-Order ----
 app.get('/api/settings', (req, res) => {
   var s = readSettings();
-  res.json({ preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg });
+  res.json({ preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg, stock: readStock(), stockEnforce: s.stockEnforce !== false });
+});
+
+// ===== สต๊อก Pre-Order: อ่าน/ตั้งค่า จำนวนคงเหลือ (สำหรับหลังบ้าน + หน้าเว็บ) =====
+app.get('/api/stock', (req, res) => {
+  var st = readStock(), enforce = stockEnforceOn();
+  var items = STOCK_ORDER.map(function (k) {
+    var q = (typeof st[k] === 'number') ? st[k] : null;
+    return { key: k, label: STOCK_LABELS[k], qty: q, out: (q != null && q <= 0), low: (q != null && q > 0 && q <= 3) };
+  });
+  res.json({ ok: true, enforce: enforce, items: items,
+    excluded: [{ key: 'polo', label: 'เสื้อยืดโปโล X-Visor', note: 'ไม่จำกัดสต๊อก' }] });
+});
+app.post('/api/stock', (req, res) => {
+  var b = req.body || {}, cur = readStock(), next = Object.assign({}, cur), changed = false;
+  if (b.stock && typeof b.stock === 'object') {
+    STOCK_ORDER.forEach(function (k) {
+      if (b.stock[k] != null && b.stock[k] !== '') {
+        var n = Math.round(Number(b.stock[k]));
+        if (!isNaN(n)) { next[k] = n; changed = true; }
+      }
+    });
+  }
+  // เพิ่มทีละจำนวน (delta) — เช่น เติมสต๊อก +10
+  if (b.add && typeof b.add === 'object') {
+    STOCK_ORDER.forEach(function (k) {
+      if (b.add[k] != null && b.add[k] !== '') {
+        var n = Math.round(Number(b.add[k]));
+        if (!isNaN(n)) { next[k] = (typeof next[k] === 'number' ? next[k] : 0) + n; changed = true; }
+      }
+    });
+  }
+  var patch = {};
+  if (changed) patch.stock = next;
+  if (typeof b.enforce === 'boolean') patch.stockEnforce = b.enforce;
+  var s = writeSettings(patch);
+  res.json({ ok: true, stock: readStock(), enforce: s.stockEnforce !== false });
 });
 app.post('/api/settings', (req, res) => {
   var b = req.body || {};

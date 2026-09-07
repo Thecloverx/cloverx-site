@@ -1785,6 +1785,50 @@
   function poLoadToggle(){
     fetch('/api/settings').then(function(r){return r.json();}).then(function(s){PO_OPEN=!!s.preorderOpen;poRenderToggle();}).catch(function(){poRenderToggle();});
   }
+  /* ===== สต๊อกสินค้า Pre-Order ===== */
+  var PO_STOCK=null;
+  function poRenderStock(){
+    var wrap=document.getElementById('poStockWrap');if(!wrap||!PO_STOCK)return;
+    var enforce=PO_STOCK.enforce, items=PO_STOCK.items||[];
+    var rows=items.map(function(it){
+      var q=(it.qty==null?'':it.qty);
+      var col=it.out?'#dc2626':(it.low?'#d97706':'#15803d');
+      var tag=it.out?'หมด':(it.low?'ใกล้หมด':'พร้อมขาย');
+      var tagbg=it.out?'#fef2f2':(it.low?'#fffbeb':'#f0fdf4');
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)">'
+        +'<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.92rem;color:var(--ink)">'+poEsc(it.label)+'</div>'
+        +'<span style="display:inline-block;margin-top:4px;font-size:.72rem;font-weight:700;color:'+col+';background:'+tagbg+';padding:2px 9px;border-radius:999px">'+tag+' · เหลือ '+(it.qty==null?'∞':it.qty)+'</span></div>'
+        +'<button onclick="poStockAdd(\''+it.key+'\',10)" style="border:1px solid var(--line);background:none;border-radius:9px;padding:8px 11px;font-family:inherit;font-weight:700;font-size:.82rem;color:var(--brand);cursor:pointer">+10</button>'
+        +'<input id="pst_'+it.key+'" type="number" value="'+q+'" style="width:72px;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.9rem;text-align:center;box-sizing:border-box">'
+      +'</div>';
+    }).join('');
+    wrap.innerHTML=rows
+      +'<div style="display:flex;align-items:center;gap:10px;padding:13px 0 4px;border-top:1px solid var(--line);margin-top:2px">'
+        +'<div style="flex:1"><div style="font-weight:700;font-size:.9rem">ตัดสต๊อกอัตโนมัติ (บล็อกเมื่อของหมด)</div>'
+        +'<div style="font-size:.76rem;color:var(--muted);margin-top:2px">'+(enforce?'เปิดอยู่ — ลูกค้าสั่งเกินจำนวนไม่ได้':'ปิดอยู่ — รับออเดอร์ได้ไม่จำกัด (แค่แสดงจำนวน)')+'</div></div>'
+        +'<button onclick="poStockEnforce('+(!enforce)+')" role="switch" aria-checked="'+enforce+'" style="position:relative;width:52px;height:30px;border:0;border-radius:999px;cursor:pointer;background:'+(enforce?'#16a34a':'#cbd5e1')+';transition:background .2s"><span style="position:absolute;top:3px;left:'+(enforce?'25px':'3px')+';width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s"></span></button>'
+      +'</div>'
+      +'<div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px"><button onclick="poStockSave()" style="'+btnPri()+'">บันทึกจำนวน</button></div>'
+      +'<p style="font-size:.74rem;color:var(--muted);margin-top:10px;line-height:1.55">เซตรวม (TRIPLE/DUO/TWIN) จะตัดชิ้นส่วนที่ประกอบให้อัตโนมัติ · <b>เสื้อโปโล = ไม่จำกัดสต๊อก</b> · เมื่อยกเลิก/ปฏิเสธออเดอร์ ระบบคืนสต๊อกให้เอง</p>';
+  }
+  function poLoadStock(){
+    fetch('/api/stock').then(function(r){return r.json();}).then(function(s){PO_STOCK=s;poRenderStock();}).catch(function(){var w=document.getElementById('poStockWrap');if(w)w.innerHTML='<div style="color:#dc2626;font-size:.85rem">โหลดสต๊อกไม่สำเร็จ</div>';});
+  }
+  function poStockSave(){
+    var st={};(PO_STOCK.items||[]).forEach(function(it){var el=document.getElementById('pst_'+it.key);if(el&&el.value!=='')st[it.key]=el.value;});
+    fetch('/api/stock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stock:st})})
+      .then(function(r){return r.json();}).then(function(){xvToast('บันทึกจำนวนสต๊อกแล้ว','ok');poLoadStock();}).catch(function(){xvToast('บันทึกไม่สำเร็จ','bad');});
+  }
+  function poStockAdd(key,n){
+    var add={};add[key]=n;
+    fetch('/api/stock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({add:add})})
+      .then(function(r){return r.json();}).then(function(){xvToast('เติมสต๊อก +'+n+' แล้ว','ok');poLoadStock();}).catch(function(){xvToast('เติมไม่สำเร็จ','bad');});
+  }
+  function poStockEnforce(next){
+    if(!next && !confirm('ปิดการตัดสต๊อกอัตโนมัติ?\n\nลูกค้าจะสั่งซื้อได้แม้สินค้าหมด (ระบบจะแค่แสดงจำนวนคงเหลือ)')) return;
+    fetch('/api/stock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enforce:next})})
+      .then(function(r){return r.json();}).then(function(){xvToast(next?'เปิดตัดสต๊อกแล้ว':'ปิดตัดสต๊อกแล้ว','ok');poLoadStock();}).catch(function(){xvToast('ทำรายการไม่สำเร็จ','bad');});
+  }
   function poToggleOpen(){
     var next=!PO_OPEN;
     if(!next && !confirm('ปิดรับพรีออเดอร์?\n\nลูกค้าจะสั่งซื้อผ่านลิงก์/QR ไม่ได้จนกว่าจะเปิดรับอีกครั้ง')) return;
@@ -2061,6 +2105,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function renderQR(){
     gen.innerHTML='<div class="head"><h1>QR Code สั่งซื้อ Pre-Order</h1><p>ส่ง QR หรือลิงก์นี้ให้ลูกค้าเพื่อเปิดหน้าสั่งซื้อ — คำสั่งซื้อจะเข้ามาที่หน้า "จัดการ Pre-Order" อัตโนมัติ</p></div>'
       +'<div class="panel" style="max-width:640px;margin-bottom:20px"><div class="ph"><h3>สถานะการรับพรีออเดอร์</h3><span style="font-size:.78rem;color:var(--muted)">เปิด/ปิดรับคำสั่งซื้อจากลูกค้า</span></div><div id="poToggleWrap"><div style="color:var(--muted);font-size:.85rem;padding:6px 0">กำลังโหลด…</div></div></div>'
+      +'<div class="panel" style="max-width:640px;margin-bottom:20px"><div class="ph"><h3>สต๊อกสินค้า Pre-Order</h3><span style="font-size:.78rem;color:var(--muted)">จำนวนคงเหลือ — ตัดอัตโนมัติเมื่อมีออเดอร์ใหม่</span></div><div id="poStockWrap"><div style="color:var(--muted);font-size:.85rem;padding:6px 0">กำลังโหลด…</div></div></div>'
       +'<div class="panel" style="max-width:640px"><div class="ph"><h3>ลิงก์ &amp; QR สำหรับส่งลูกค้า</h3></div>'
       +'<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">'
       +'<div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;flex:none;text-align:center"><img src="'+PO_QR+'" alt="QR Pre-Order" style="width:190px;height:190px;display:block;image-rendering:pixelated"><a href="'+PO_QR+'" download="cloverx-preorder-qr.png" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--brand);font-weight:700;text-decoration:none">ดาวน์โหลด QR ⤓</a></div>'
@@ -2074,7 +2119,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<a href="'+PO_LINK+'?agent=1" target="_blank" style="background:#fff;color:var(--brand);border:1.5px solid var(--brand);border-radius:10px;padding:10px 16px;font-weight:700;font-size:.86rem;text-decoration:none">เปิดโหมดตัวแทน ↗</a></div>'
       +'<p style="font-size:.78rem;color:var(--muted);margin-top:12px">* ลูกค้าสั่งเอง = เด้งไปหน้าชำระเงินอัตโนมัติ · ตัวแทน = ได้ลิงก์ชำระเงินไว้ส่งต่อให้ลูกค้า</p>'
       +'</div></div></div>';
-    poLoadToggle();
+    poLoadToggle();poLoadStock();
   }
   function renderPreorder(){ poDraw(); poRefresh(); }
 
