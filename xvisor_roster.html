@@ -99,7 +99,9 @@ function readFile(f){
   var fr=new FileReader();
   fr.onload=function(e){
     try{
-      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var wb;
+      if(/\.csv$/i.test(f.name)){ var txt=new TextDecoder('utf-8').decode(new Uint8Array(e.target.result)); wb=XLSX.read(txt,{type:'string',raw:true}); }
+      else { wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); }
       // pick the sheet whose header row has both a name-ish and phone-ish column
       var best=null;
       wb.SheetNames.forEach(function(nm){
