@@ -87,6 +87,118 @@ module.exports = function (app, DATA_DIR) {
     larkSend(larkCard({ title: '🎉 ชำระเงินสำเร็จ · Lean Lab', color: 'green', lines: lines, note: '⏰ ' + when }), { to: 'pay' });
   }
 
+  // ================= ระบบรายงานสรุป Lean Lab เข้า Lark (4 รอบ/วัน + กดส่งเอง) =================
+  var REPORT_TIERS = [
+    { key: 't0', label: 'เซต 1', price: 44940 },
+    { key: 't1', label: 'เซต 2', price: 39950 },
+    { key: 't2', label: 'เซต 3', price: 37450 },
+    { key: 't3', label: 'เซต 4', price: 32460 }
+  ];
+  function money(n) { return '฿' + Number(n || 0).toLocaleString('en-US'); }
+  // รวมสถิติจากใบสมัครที่ "ยืนยันแล้ว" — นับเงินที่เก็บได้จริง (ผ่อน = งวดที่จ่าย × ต่อเดือน)
+  function buildReportData() {
+    var regs = readR().filter(function (r) { return r.status === 'confirmed'; });
+    var d = { totalPaid: 0, buyers: regs.length, startNow: 0, startLater: 0,
+      setCount: { t0: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 },
+      setAmt: { t0: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 }, coach: {}, ref: {} };
+    regs.forEach(function (r) {
+      if (r.startChoice === 'now') d.startNow++; else if (r.startChoice === 'later') d.startLater++;
+      var key, val = 0;
+      if (r.promoPlan === 'special' || r.pay === 'installment') {
+        key = 'special';
+        var per = (r.installment && r.installment.perMonth) || 7490, paid = (r.installment && r.installment.paidCount) || 0;
+        val = per * paid;
+      } else if (r.promoPlan === 'full' && r.promoTier && d.setCount.hasOwnProperty(r.promoTier)) {
+        key = r.promoTier;
+        var tt = REPORT_TIERS.filter(function (t) { return t.key === r.promoTier; })[0];
+        val = (tt && tt.price) || r.fee || 0;
+      } else { key = 'base'; val = r.fee || EVENT.fee; }
+      d.setCount[key]++; d.setAmt[key] += val; d.totalPaid += val;
+      var cn = String(r.coach || '').trim(); if (cn) { d.coach[cn] = d.coach[cn] || { c: 0, v: 0 }; d.coach[cn].c++; d.coach[cn].v += val; }
+      var rf = String(r.referrer || '').trim(); if (rf && rf !== '-') { d.ref[rf] = d.ref[rf] || { c: 0, v: 0 }; d.ref[rf].c++; d.ref[rf].v += val; }
+    });
+    d.coachRank = Object.keys(d.coach).map(function (k) { return { name: k, c: d.coach[k].c, v: d.coach[k].v }; }).sort(function (a, b) { return b.v - a.v; }).slice(0, 5);
+    d.refRank = Object.keys(d.ref).map(function (k) { return { name: k, c: d.ref[k].c, v: d.ref[k].v }; }).sort(function (a, b) { return b.c - a.c; }).slice(0, 5);
+    return d;
+  }
+  function reportLines(d, roundLabel) {
+    var dateStr = ''; try { dateStr = new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { dateStr = new Date().toISOString().slice(0, 10); }
+    var L = [];
+    L.push('**🗓️ ณ วันที่** ' + dateStr + ' · **รอบ** ' + roundLabel);
+    L.push('**💰 ยอดชำระแล้วทั้งหมด** ' + money(d.totalPaid));
+    L.push('**👥 จำนวนผู้สั่งซื้อ** ' + d.buyers + ' คน');
+    if (d.startNow > 0 || d.startLater > 0) {
+      L.push(''); L.push('**🚀 รูปแบบการเข้าร่วม**');
+      if (d.startNow > 0) L.push('• เริ่มเลย ณ ตอนนี้ · ' + d.startNow + ' คน');
+      if (d.startLater > 0) L.push('• เริ่มวันที่ ' + EVENT.startLaterLabel + ' · ' + d.startLater + ' คน');
+    }
+    L.push(''); L.push('**📦 รายการสั่งซื้อ** (เฉพาะเซตที่มียอด)');
+    REPORT_TIERS.forEach(function (t) { if (d.setCount[t.key] > 0) L.push('• ' + t.label + ' · ' + money(t.price) + ' → ' + money(d.setAmt[t.key]) + ' · ' + d.setCount[t.key] + ' คน'); });
+    if (d.setCount.special > 0) L.push('• เซต 5 · ทยอยจ่าย ฿7,490 × 6 · ' + d.setCount.special + ' คน');
+    if (d.setCount.base > 0) L.push('• ค่า Lean Lab · ฿3,900 → ' + money(d.setAmt.base) + ' · ' + d.setCount.base + ' คน');
+    if (d.coachRank.length) { L.push(''); L.push('**🏋️ โค้ชผู้แนะนำ** (เรียงตามยอด)'); d.coachRank.forEach(function (x, i) { L.push((i + 1) + '. ' + x.name + ' · ' + money(x.v) + ' · ' + x.c + ' คน'); }); }
+    if (d.refRank.length) { L.push(''); L.push('**🙋 ผู้แนะนำ** (เรียงตามยอด)'); d.refRank.forEach(function (x, i) { L.push((i + 1) + '. ' + x.name + ' · ' + x.c + ' คน'); }); }
+    return L;
+  }
+  function larkReportCard(roundLabel) {
+    return larkCard({ title: '📊 รายงานผล Lean Lab', color: 'blue', lines: reportLines(buildReportData(), roundLabel), note: '⏰ รายงานอัตโนมัติ 4 รอบ/วัน · 09:00 / 12:00 / 17:00 / 20:00 น. (เวลาไทย) · ดึงข้อมูลสด' });
+  }
+  // ---- อัปโหลดรูปเข้า Lark ผ่าน Custom App แล้วส่งเป็นข้อความรูปผ่าน webhook ----
+  var _larkTok = { v: null, exp: 0 }, _dashSnap = null;   // _dashSnap = ภาพแดชบอร์ดล่าสุดจากเบราว์เซอร์
+  function larkAppReady() { return !!(process.env.LARK_APP_ID && process.env.LARK_APP_SECRET); }
+  function larkTenantToken(cb) {
+    if (!larkAppReady()) { cb(null); return; }
+    if (_larkTok.v && Date.now() < _larkTok.exp) { cb(_larkTok.v); return; }
+    var body = JSON.stringify({ app_id: process.env.LARK_APP_ID, app_secret: process.env.LARK_APP_SECRET });
+    var req = https.request({ hostname: 'open.larksuite.com', path: '/open-apis/auth/v3/tenant_access_token/internal', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, function (resp) {
+      var dt = ''; resp.on('data', function (c) { dt += c; });
+      resp.on('end', function () { try { var j = JSON.parse(dt); if (j.tenant_access_token) { _larkTok.v = j.tenant_access_token; _larkTok.exp = Date.now() + (((j.expire || 7000) - 300) * 1000); cb(j.tenant_access_token); } else { console.log('[lean-lab] lark token fail ' + dt.slice(0, 120)); cb(null); } } catch (e) { cb(null); } });
+    });
+    req.on('error', function (e) { console.log('[lean-lab] lark token err ' + e.message); cb(null); });
+    req.setTimeout(15000, function () { try { req.destroy(); } catch (e) {} });
+    req.write(body); req.end();
+  }
+  function larkUploadImage(buf, cb) {
+    larkTenantToken(function (tok) {
+      if (!tok) { cb(null); return; }
+      var boundary = '----LL' + Date.now();
+      var pre = Buffer.from('--' + boundary + '\r\nContent-Disposition: form-data; name="image_type"\r\n\r\nmessage\r\n--' + boundary + '\r\nContent-Disposition: form-data; name="image"; filename="dashboard.png"\r\nContent-Type: image/png\r\n\r\n', 'utf8');
+      var post = Buffer.from('\r\n--' + boundary + '--\r\n', 'utf8');
+      var body = Buffer.concat([pre, buf, post]);
+      var req = https.request({ hostname: 'open.larksuite.com', path: '/open-apis/im/v1/images', method: 'POST', headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'multipart/form-data; boundary=' + boundary, 'Content-Length': body.length } }, function (resp) {
+        var dt = ''; resp.on('data', function (c) { dt += c; });
+        resp.on('end', function () { try { var j = JSON.parse(dt); cb((j.data && j.data.image_key) || null); } catch (e) { cb(null); } });
+      });
+      req.on('error', function (e) { console.log('[lean-lab] lark img err ' + e.message); cb(null); });
+      req.setTimeout(20000, function () { try { req.destroy(); } catch (e) {} });
+      req.write(body); req.end();
+    });
+  }
+  // ส่งรายงาน: การ์ดข้อความก่อน แล้วตามด้วยภาพแดชบอร์ด (ถ้ามี) — fire-and-forget
+  function sendLeanLabReport(roundLabel, imgBuf) {
+    larkSend(larkReportCard(roundLabel));
+    if (imgBuf && imgBuf.length && larkAppReady()) {
+      larkUploadImage(imgBuf, function (key) { if (key) larkSend({ msg_type: 'image', content: { image_key: key } }); });
+    }
+  }
+  // ตัวจับเวลา 4 รอบ/วัน (เวลาไทย) — ตรวจทุก 30 วิ, กันส่งซ้ำในรอบเดียวกัน
+  var REPORT_TIMES = ['09:00', '12:00', '17:00', '20:00'], _lastReportKey = '';
+  function reportTick() {
+    try {
+      if (process.env.LEANLAB_REPORT_ENABLED === 'false') return;
+      if (!larkConfigured()) return;
+      var th = new Date(Date.now() + 7 * 3600000);   // UTC+7
+      var hh = ('0' + th.getUTCHours()).slice(-2), mm = ('0' + th.getUTCMinutes()).slice(-2), hhmm = hh + ':' + mm;
+      if (REPORT_TIMES.indexOf(hhmm) < 0) return;
+      var key = th.getUTCFullYear() + '-' + th.getUTCMonth() + '-' + th.getUTCDate() + '_' + hhmm;
+      if (_lastReportKey === key) return;
+      _lastReportKey = key;
+      console.log('[lean-lab] auto report ' + hhmm);
+      sendLeanLabReport('รอบ ' + hhmm + ' น.', _dashSnap);
+    } catch (e) { console.log('[lean-lab] reportTick err ' + e.message); }
+  }
+  setInterval(reportTick, 30000);
+
   // ---- Lean Lab event config (Season 1) ----
   const EVENT = {
     season: 1,
@@ -589,7 +701,6 @@ module.exports = function (app, DATA_DIR) {
       // ปิดการตรวจสอบชั่วคราว → ยืนยันการชำระเงินอัตโนมัติ (แอดมินมากระทบยอดสลิปย้อนหลังได้)
       r.status = 'confirmed'; assignPO(r); r.autoApproved = true; r.reviewedAt = new Date().toISOString();
       console.log('[lean-lab] registration ' + r.id + ' auto-confirmed (no-review mode, slip)');
-      notifyLarkPaid(r);
     } else {
       r.status = 'pending_review';
     }
@@ -657,7 +768,6 @@ module.exports = function (app, DATA_DIR) {
     r.reviewedAt = new Date().toISOString();
     writeR(l);
     console.log('[lean-lab] registration ' + regId + ' paid by card (webhook) → confirmed');
-    notifyLarkPaid(r);
     return true;
   };
 
@@ -740,7 +850,6 @@ module.exports = function (app, DATA_DIR) {
     r.reviewedAt = new Date().toISOString();
     writeR(l);
     console.log('[lean-lab] installment ' + regId + ' first payment ok (webhook) → confirmed, sub=' + subId);
-    notifyLarkPaid(r);
     // เลื่อนงวดถัดไปไปวันที่ลูกค้าเลือก โดยไม่คิดเงินระหว่างทาง (trial_end + proration none) — ไม่กระทบงวดแรกที่จ่ายแล้ว
     // และตั้ง cancel_at เป็นเพดานความปลอดภัย: หยุดตัดบัตรหลังงวดที่ 6 เสมอ แม้ webhook งวดถัดไปจะพลาด
     if (subId && r.installment.day) {
@@ -879,6 +988,31 @@ module.exports = function (app, DATA_DIR) {
     notifyLarkPaid({ name: 'ทดสอบระบบ (Test)', po: 'LL-TEST01', fee: 39950, pay: 'bank', phone: '08x-xxx-xxxx', email: 'test@cloverxth.com', coach: 'โค้ชนุ่น', referrer: '-' }, true);
     res.json({ ok: true, sent: true, room: st.payRoom ? 'pay' : 'main' });
   });
+  // ข้อมูลรายงานสรุป (ให้แดชบอร์ดดึงไปแสดงตัวเลขชุดเดียวกับรายงาน)
+  app.get('/api/leanlab/admin/report-data', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    res.json({ ok: true, data: buildReportData(), startLaterLabel: EVENT.startLaterLabel });
+  });
+  // แดชบอร์ดส่งภาพที่เรนเดอร์มาเก็บไว้ (ใช้แนบในรายงานอัตโนมัติ) — ไม่ส่งเข้า Lark
+  app.post('/api/leanlab/admin/dashboard-snapshot', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    var b = req.body || {};
+    if (typeof b.image === 'string' && /^data:image\/png;base64,/.test(b.image)) {
+      try { _dashSnap = Buffer.from(b.image.split(',')[1], 'base64'); } catch (e) {}
+    }
+    res.json({ ok: true, cached: !!_dashSnap });
+  });
+  // กดส่งรายงานเข้า Lark ตอนนี้ (ปุ่มบนแดชบอร์ด) — แนบภาพที่ส่งมา หรือใช้ภาพล่าสุดที่ cache ไว้
+  app.post('/api/leanlab/admin/lark-report', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    if (!larkConfigured()) return res.status(503).json({ ok: false, error: 'no_webhook', message: 'ยังไม่ได้ตั้ง webhook ใน Railway' });
+    var b = req.body || {}, img = null;
+    if (typeof b.image === 'string' && /^data:image\/png;base64,/.test(b.image)) { try { img = Buffer.from(b.image.split(',')[1], 'base64'); _dashSnap = img; } catch (e) {} }
+    if (!img) img = _dashSnap;
+    var when = ''; try { when = new Date().toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit' }); } catch (e) { when = ''; }
+    sendLeanLabReport('กดส่งเอง' + (when ? (' · ' + when + ' น.') : ''), img);
+    res.json({ ok: true, sent: true, withImage: !!img });
+  });
   app.post('/api/leanlab/admin/registration/:id', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {}; var st = b.status;
@@ -890,7 +1024,6 @@ module.exports = function (app, DATA_DIR) {
     if (st === 'confirmed') assignPO(r);
     if (st === 'rejected') r.rejectReason = String(b.reason || '').slice(0, 200) || 'หลักฐานไม่ถูกต้อง';
     writeR(l);
-    if (st === 'confirmed' && !wasConfirmed) notifyLarkPaid(r);   // แจ้ง Lark เฉพาะตอนยืนยันครั้งแรก
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
