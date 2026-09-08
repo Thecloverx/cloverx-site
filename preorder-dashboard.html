@@ -54,6 +54,18 @@ a{color:inherit}
 .kpi .v{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .kpi .d{margin-top:5px;font-size:.78rem;color:var(--sub)}
 .kpi .d.up{color:var(--good)}.kpi .d.down{color:var(--bad)}.kpi .d.warn{color:var(--warn)}
+/* Lean Lab-style KPI strip */
+.kstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+.kx{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;min-width:0}
+.kx .kxl{font-size:.74rem;color:var(--sub);font-weight:600;line-height:1.35;display:flex;align-items:center;gap:5px}
+.kx .kxv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.05}
+.kx .kxs{font-size:.72rem;color:var(--sub);margin-top:3px;font-weight:500}
+.kx.hi{background:linear-gradient(135deg,#00B4D8,#0077B6);border:none;color:#fff}
+.kx.hi .kxl,.kx.hi .kxs{color:rgba(255,255,255,.9)}
+.kx.hi .kxv{color:#fff}
+.kx.warn .kxv{color:#0077B6}
+@media(max-width:1100px){.kstrip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.kstrip{grid-template-columns:repeat(2,1fr)}}
 /* section */
 .sec{margin-top:22px}
 .sec>h2{font-size:1.05rem;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:9px}
@@ -294,20 +306,14 @@ function render(){
 function kpiRow(A){
  var goalPct=(A.sales/GOAL_AMOUNT*100);
  var setsPct=pct(A.sets,GOAL_SETS);
- function k(lb,ic,icbg,iccol,v,d,dc){return '<div class="card kpi"><div class="top"><div class="lb">'+lb+'</div><div class="ic" style="background:'+icbg+';color:'+iccol+'">'+ic+'</div></div><div class="v num">'+v+'</div><div class="d '+(dc||'')+'">'+d+'</div></div>';}
- var I={money:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-  bag:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>',
-  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>',
-  clock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
-  user:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
-  target:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>'};
- return '<div class="grid g6 mb">'
-  +k('ยอดขายรวม',I.money,'var(--tint)','var(--brand)',baht(A.sales),goalPct.toFixed(1)+'% ของเป้า '+baht(GOAL_AMOUNT),goalPct>=100?'up':'')
-  +k('ออเดอร์รวม',I.bag,'var(--goodbg)','var(--good)',num(A.n),num(A.pieces)+' ชิ้น (รวม Family)')
-  +k('ชำระสำเร็จ',I.check,'var(--goodbg)','var(--good)',num(A.paidN),baht(A.paidAmt),'up')
-  +k('รอตรวจสอบ',I.clock,'var(--warnbg)','var(--warn)',num(A.pendN),baht(A.pendAmt)+(A.awaitN?(' · +รอชำระ '+num(A.awaitN)):''),'warn')
-  +k('ผู้ซื้อไม่ซ้ำ',I.user,'var(--infobg)','var(--info)',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
-  +k('ถึงเป้าจำนวน',I.target,'var(--tint)','var(--brand)',setsPct+'%',num(A.sets)+' จาก '+num(GOAL_SETS)+' ชุด',setsPct>=100?'up':'')
+ function kx(cls,emoji,lb,v,s){return '<div class="kx '+cls+'"><div class="kxl">'+emoji+' '+lb+'</div><div class="kxv">'+v+'</div><div class="kxs">'+s+'</div></div>';}
+ return '<div class="kstrip">'
+  +kx('hi','💰','ยอดขายรวม',baht(A.sales),goalPct.toFixed(1)+'% ของเป้า '+baht(GOAL_AMOUNT))
+  +kx('','📦','ออเดอร์รวม',num(A.n),num(A.pieces)+' ชิ้น (รวม Family)')
+  +kx('','✅','ชำระสำเร็จ',num(A.paidN),baht(A.paidAmt))
+  +kx('warn','⏳','รอตรวจสอบ',num(A.pendN),baht(A.pendAmt)+(A.awaitN?(' · +รอชำระ '+num(A.awaitN)):''))
+  +kx('','👥','ผู้ซื้อไม่ซ้ำ',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
+  +kx('','🎯','ถึงเป้าจำนวน',setsPct+'%',num(A.sets)+' จาก '+num(GOAL_SETS)+' ชุด')
   +'</div>';
 }
 
@@ -535,16 +541,16 @@ function isRefund(o){ return o.status==='refunded'||!!o.refunded; }
 function ceoSection(A){
  var delivered=0, refundN=0, refundAmt=0;
  VIEW.forEach(function(o){ if(isDelivered(o))delivered++; if(isRefund(o)){refundN++;refundAmt+=(Number(o.total)||0);} });
- function tile(lb,v,sub,cls){ return '<div class="card kpi"><div class="lb" style="color:var(--sub);font-size:.8rem;font-weight:600;margin-bottom:6px">'+lb+'</div><div class="v num" style="font-size:1.5rem">'+v+'</div><div class="d '+(cls||'')+'">'+sub+'</div></div>'; }
+ function tile(emoji,lb,v,sub){ return '<div class="kx"><div class="kxl">'+emoji+' '+lb+'</div><div class="kxv">'+v+'</div><div class="kxs">'+sub+'</div></div>'; }
  var tiles='<div class="grid g4 mb">'
-  +tile('Order (คำสั่งซื้อ)',num(A.n),num(A.sets)+' ที่ยังอยู่ · '+num(A.pieces)+' ชิ้น')
-  +tile('Customer (ลูกค้า)',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
-  +tile('Revenue (ยอดขาย)',baht(A.sales),'เก็บเงินได้ '+baht(A.paidAmt),'up')
-  +tile('Package (แพ็กเกจ)',num(A.sets),num(A.family)+' สิทธิ์ Family')
-  +tile('Payment (ชำระแล้ว)',num(A.paidN),pct(A.paidN,A.n)+'% · รอ '+num(A.pendN),'up')
-  +tile('Delivered (จัดส่งแล้ว)',num(delivered),delivered?'':'ยังไม่เก็บสถานะจัดส่ง')
-  +tile('Cancel (ยกเลิก)',num(A.cancN),baht(A.cancAmt),A.cancN?'down':'')
-  +tile('Refund (คืนเงิน)',num(refundN),refundN?baht(refundAmt):'ยังไม่มีการคืนเงิน',refundN?'down':'')
+  +tile('🧾','Order (คำสั่งซื้อ)',num(A.n),num(A.sets)+' ที่ยังอยู่ · '+num(A.pieces)+' ชิ้น')
+  +tile('👥','Customer (ลูกค้า)',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
+  +tile('💰','Revenue (ยอดขาย)',baht(A.sales),'เก็บเงินได้ '+baht(A.paidAmt))
+  +tile('📦','Package (แพ็กเกจ)',num(A.sets),num(A.family)+' สิทธิ์ Family')
+  +tile('✅','Payment (ชำระแล้ว)',num(A.paidN),pct(A.paidN,A.n)+'% · รอ '+num(A.pendN))
+  +tile('🚚','Delivered (จัดส่งแล้ว)',num(delivered),delivered?'':'ยังไม่เก็บสถานะจัดส่ง')
+  +tile('🚫','Cancel (ยกเลิก)',num(A.cancN),baht(A.cancAmt))
+  +tile('↩️','Refund (คืนเงิน)',num(refundN),refundN?baht(refundAmt):'ยังไม่มีการคืนเงิน')
   +'</div>';
  var dims=[['day','วัน'],['team','ทีม'],['xvisor','X-Visor'],['channel','Channel'],['campaign','Campaign']];
  var picker='<select class="f" onchange="setSeg(this.value)" style="font-weight:700;color:var(--brand)">'+dims.map(function(d){return '<option value="'+d[0]+'"'+(SEG===d[0]?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select>';
