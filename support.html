@@ -388,6 +388,8 @@
     if(LL_COACH_ALIAS[s])return LL_COACH_ALIAS[s];
     var first=s.split(' ')[0];
     for(var k in LL_COACH_ALIAS){ if(first && first===k.split(' ')[0]) return LL_COACH_ALIAS[k]; }
+    // กรอกเป็นชื่อเล่นโค้ชตรง ๆ (เฉพาะ 4 โค้ช XGEN: ซิง/จา/นุ่น/ต๊ะ) ก็ให้จับได้
+    for(var kk in LL_COACH_ALIAS){ if(s===LL_COACH_ALIAS[kk]) return LL_COACH_ALIAS[kk]; }
     return '';
   }
   // คืนค่า coach/referrer ที่ผ่านกฎแล้ว: ถ้า referrer เป็นชื่อโค้ช → ย้ายไปเป็น coach, ล้าง referrer
