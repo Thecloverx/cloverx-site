@@ -6,13 +6,13 @@
 <title>พรีออเดอร์ · CloverX</title>
 <style>
 :root{
- --bg:#EEF3FA;--card:#FFFFFF;--ink:#0F1B2D;--sub:#64748B;--mut:#94A3B8;--line:#E4EAF2;
- --brand:#2563EB;--brand2:#1D4ED8;--tint:#EAF1FE;
+ --bg:#EFF8FC;--card:#FFFFFF;--ink:#12233B;--sub:#61708A;--mut:#94A3B8;--line:#E3EFF6;
+ --brand:#0077B6;--brand2:#023E8A;--tint:#E1F1FA;
  --good:#16A34A;--goodbg:#DCFCE7;--goodtint:#ECFDF3;
  --warn:#B45309;--warnbg:#FEF3C7;--warntint:#FFFBEB;
  --info:#0EA5E9;--infobg:#E0F2FE;--bad:#DC2626;--badbg:#FEE2E2;
  --violet:#7C3AED;--pink:#EC4899;--teal:#0D9488;
- --shadow:0 1px 3px rgba(16,27,45,.05),0 8px 24px rgba(16,27,45,.05);
+ --shadow:0 1px 2px rgba(3,4,94,.04),0 6px 18px rgba(3,4,94,.06);
  --radius:16px;
 }
 *{box-sizing:border-box}
@@ -60,7 +60,7 @@ a{color:inherit}
 .kx .kxl{font-size:.74rem;color:var(--sub);font-weight:600;line-height:1.35;display:flex;align-items:center;gap:5px}
 .kx .kxv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.05}
 .kx .kxs{font-size:.72rem;color:var(--sub);margin-top:3px;font-weight:500}
-.kx.hi{background:linear-gradient(135deg,#00B4D8,#0077B6);border:none;color:#fff}
+.kx.hi{background:linear-gradient(135deg,#00B4D8 0%,#0077B6 55%,#023E8A 100%);border:none;color:#fff;box-shadow:0 10px 24px rgba(0,119,182,.28)}
 .kx.hi .kxl,.kx.hi .kxs{color:rgba(255,255,255,.9)}
 .kx.hi .kxv{color:#fff}
 .kx.warn .kxv{color:#0077B6}
@@ -98,7 +98,7 @@ a{color:inherit}
 .hc .ic{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;margin-bottom:26px}
 .hc .v{font-size:1.6rem;font-weight:800}
 .hc .lb{font-size:.8rem;opacity:.92;margin-top:2px}
-.hc.blue{background:linear-gradient(135deg,#2E7DF6,#1B54C7);color:#fff}
+.hc.blue{background:linear-gradient(135deg,#00B4D8 0%,#0077B6 55%,#023E8A 100%);color:#fff}
 .hc.plain{background:var(--card);border:1px solid var(--line);color:var(--ink)}
 .hc.plain .ic{background:var(--tint);color:var(--brand)}
 .hc.plain .lb{color:var(--sub);opacity:1}
@@ -325,11 +325,11 @@ function stockRow(A){
  function scalePaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Scale/.test(c))s+=A.comp[c].paid;});return s;}
  function rxPaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/RoutineX/.test(c))s+=A.comp[c].paid;});return s;}
  function bandPend(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Band/.test(c))s+=A.comp[c].pending;});return s;}
- function card(lb,big,sub){return '<div class="card kpi"><div class="lb" style="margin-bottom:6px">'+lb+'</div><div class="v num">'+big+'</div><div class="d">'+sub+'</div></div>';}
+ function card(emoji,lb,big,sub){return '<div class="kx"><div class="kxl">'+emoji+' '+lb+'</div><div class="kxv">'+big+'</div><div class="kxs">'+sub+'</div></div>';}
  return '<div class="grid g3 mb">'
-  +card('Band ขายแล้ว',num(band),num(bandPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(bandPend()))
-  +card('Scale ขายแล้ว',num(scale),num(scalePaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(scale-scalePaid()))
-  +card('RoutineX ขายแล้ว',num(rx),num(rxPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(rx-rxPaid()))
+  +card('🏷️','Band ขายแล้ว',num(band),num(bandPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(bandPend()))
+  +card('⚖️','Scale ขายแล้ว',num(scale),num(scalePaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(scale-scalePaid()))
+  +card('📦','RoutineX ขายแล้ว',num(rx),num(rxPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(rx-rxPaid()))
   +'</div>';
 }
 
