@@ -541,18 +541,16 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, registration: publicReg(r), needProof: !!t.needProof });
   });
 
-  // เลือกแพ็กเกจ Special Option (ผ่อน 6 งวด) + วันตัดบัตรที่ลูกค้าเลือก (1-28)
+  // เลือกแพ็กเกจ Special Option (ผ่อน 6 งวด) — วันตัดบัตร = วันที่ชำระงวดแรก (กำหนดตอน checkout ไม่ต้องเลือกเอง)
   app.post('/api/leanlab/register/promo/special', function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!PROMO.special.available) return res.status(400).json({ ok: false, error: 'special_not_available' });
-    var day = Math.floor(Number((req.body || {}).billingDay));
-    if (!(day >= 1 && day <= 28)) return res.status(400).json({ ok: false, error: 'bad_day' }); // 1-28 เท่านั้น (ทุกเดือนมีวันนี้)
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     var ins = PROMO.special.installment;
     r.promo = true; r.promoPlan = 'special'; r.promoTier = 'special'; r.promoAmount = ins.total;
     r.fee = ins.perMonth; r.pay = 'installment'; r.promoVerify = 'not_required';
-    r.installment = { months: ins.months, perMonth: ins.perMonth, total: ins.total, day: day, paidCount: 0, status: 'pending' };
+    r.installment = { months: ins.months, perMonth: ins.perMonth, total: ins.total, day: null, paidCount: 0, status: 'pending' };
     r.status = 'awaiting_payment';
     r.updatedAt = new Date().toISOString();
     writeR(l);
@@ -859,19 +857,22 @@ module.exports = function (app, DATA_DIR) {
     r.stripe = { checkoutId: (s && s.id) || null, subscriptionId: subId, at: new Date().toISOString() };
     r.reviewedAt = new Date().toISOString();
     writeR(l);
-    console.log('[lean-lab] installment ' + regId + ' first payment ok (webhook) → confirmed, sub=' + subId);
-    // เลื่อนงวดถัดไปไปวันที่ลูกค้าเลือก โดยไม่คิดเงินระหว่างทาง (trial_end + proration none) — ไม่กระทบงวดแรกที่จ่ายแล้ว
-    // และตั้ง cancel_at เป็นเพดานความปลอดภัย: หยุดตัดบัตรหลังงวดที่ 6 เสมอ แม้ webhook งวดถัดไปจะพลาด
-    if (subId && r.installment.day) {
-      var ts = nextBillingTs(r.installment.day);              // งวดที่ 2
-      var aD = new Date(ts * 1000);
+    // วันตัดบัตร = วันที่ชำระงวดแรก (เวลาไทย UTC+7) — Stripe จะตัดงวด 2-6 ตรงวันครบรอบเดือนของวันที่จ่ายเองอยู่แล้ว
+    var thai = new Date(Date.now() + 7 * 3600 * 1000);
+    r.installment.day = thai.getUTCDate();
+    writeR(l);
+    console.log('[lean-lab] installment ' + regId + ' first payment ok (webhook) → confirmed, sub=' + subId + ', billDay=' + r.installment.day);
+    // ไม่เลื่อนวันตัดบัตรอีกต่อไป — ปล่อยให้ Stripe ตัดตามวันครบรอบของวันที่ชำระงวดแรก
+    // ตั้ง cancel_at เป็นเพดานความปลอดภัย: หยุดตัดบัตรหลังงวดที่ 6 เสมอ แม้ webhook งวดถัดไปจะพลาด
+    if (subId) {
       var months = r.installment.months || 6;
-      // งวด 2..months = ts + (0..months-2) เดือน → งวดสุดท้าย = ts + (months-2) เดือน; cancel หลังจากนั้น 2 วัน
-      var cancelTs = Math.floor(Date.UTC(aD.getUTCFullYear(), aD.getUTCMonth() + (months - 2), aD.getUTCDate() + 2, 3, 0, 0) / 1000);
-      stripeApi('POST', '/v1/subscriptions/' + encodeURIComponent(subId), [['trial_end', String(ts)], ['proration_behavior', 'none'], ['cancel_at', String(cancelTs)]]).then(function (j) {
+      var now = new Date();
+      // งวดสุดท้าย (งวดที่ months) = วันชำระ + (months-1) เดือน; cancel หลังจากนั้น 2 วัน
+      var cancelTs = Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + (months - 1), now.getUTCDate() + 2, now.getUTCHours(), now.getUTCMinutes(), 0) / 1000);
+      stripeApi('POST', '/v1/subscriptions/' + encodeURIComponent(subId), [['cancel_at', String(cancelTs)]]).then(function (j) {
         var l2 = readR(); var r2 = l2.find(function (x) { return x.id === regId; });
-        if (r2 && r2.installment) { r2.installment.nextChargeTs = ts; r2.installment.cancelAtTs = cancelTs; r2.installment.rescheduled = !!j; writeR(l2); }
-        console.log('[lean-lab] installment ' + regId + ' next charge @' + aD.toISOString() + ' cancel_at @' + new Date(cancelTs * 1000).toISOString() + ' ' + (j ? 'ok' : 'FAILED'));
+        if (r2 && r2.installment) { r2.installment.cancelAtTs = cancelTs; writeR(l2); }
+        console.log('[lean-lab] installment ' + regId + ' cancel_at @' + new Date(cancelTs * 1000).toISOString() + ' ' + (j ? 'ok' : 'FAILED'));
       });
     }
     return true;

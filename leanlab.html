@@ -1191,11 +1191,9 @@ document.addEventListener('click',function(e){
     var spItems=(sp.items||[]).map(function(i){return esc(i);}).join(' · ');
     // ตัวเลือก Special (ผ่อน) — เป็นปุ่มเลือกได้เหมือน tier
     var specialBtn=sp.available?('<button type="button" class="tierbtn" data-plan="special"><div class="tl"><b>'+thb(ins.perMonth)+'<span style="font-size:.9rem;font-weight:600;color:var(--muted)"> ×'+(ins.months||6)+' เดือน</span></b><span>ผ่อนบัตรเครดิต/เดบิต · รวม '+thb(ins.total||44940)+'</span></div><span class="tsplit">ผ่อน 6 งวด</span></button>'):'';
-    // day picker (ซ่อนไว้ก่อน โผล่เมื่อเลือก Special)
-    var dayOpts='';for(var d=1;d<=28;d++){dayOpts+='<option value="'+d+'">'+d+'</option>';}
-    var dayPick='<div class="daypick" id="dayPick" hidden><label>เลือกวันที่ตัดบัตรของงวดที่ 2-6 (ทุกเดือน)</label>'
-      +'<div class="dsel"><span>ทุกวันที่</span><select id="billDay">'+dayOpts+'</select><span>ของเดือน</span></div>'
-      +'<div class="dhint">งวดแรก <b>'+thb(ins.perMonth)+'</b> ตัดบัตรทันทีที่ยืนยัน · จากนั้นงวดที่ 2-6 ตัดอัตโนมัติทุกวันที่ที่เลือก จนครบ '+(ins.months||6)+' งวด (รวม '+thb(ins.total||44940)+')</div></div>';
+    // แจ้งเงื่อนไขการตัดบัตร (ไม่ต้องเลือกวันเอง — วันตัดบัตร = วันที่ชำระงวดแรก)
+    var dayPick='<div class="daypick" id="dayPick" hidden>'
+      +'<div class="dhint">งวดแรก <b>'+thb(ins.perMonth)+'</b> ตัดบัตรทันทีที่ยืนยัน · จากนั้นงวดที่ 2-6 ตัดอัตโนมัติ<b>ทุกเดือน ตรงกับวันที่คุณชำระงวดแรก</b> จนครบ '+(ins.months||6)+' งวด (รวม '+thb(ins.total||44940)+')</div></div>';
     app.innerHTML='<div class="card">'
      +'<span class="eyebrow" style="color:var(--orange);background:rgba(255,196,107,.1);border-color:rgba(255,196,107,.3)">Grand Slam Offer</span>'
      +'<h2 class="tt" style="margin-top:12px">รับของรวมมูลค่า '+thb(full.valueTotal)+' ฟรี 🎁</h2>'
@@ -1225,9 +1223,7 @@ document.addEventListener('click',function(e){
     if(!promoPlanSel)return;
     var b=$('#pmNext');b.disabled=true;var old=b.textContent;b.textContent='กำลังดำเนินการ…';clearMsg($('#pmMsg'));
     if(promoPlanSel==='special'){
-      var day=parseInt(($('#billDay')&&$('#billDay').value)||'0',10);
-      if(!(day>=1&&day<=28)){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','กรุณาเลือกวันตัดบัตร');}
-      fetch('/api/leanlab/register/promo/special',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({billingDay:day})})
+      fetch('/api/leanlab/register/promo/special',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({})})
         .then(function(r){return r.json();}).then(function(j){
           if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
           REG=j.registration;vPay();
@@ -1362,12 +1358,12 @@ document.addEventListener('click',function(e){
     +'<div style="text-align:center;margin:8px 0 16px"><div class="fee">'+thb(per)+'<span style="font-size:1.1rem;font-weight:600;color:var(--muted)"> / เดือน</span></div><div class="sub" style="margin:2px 0 0">รวมทั้งหมด '+thb(total)+' ('+months+' งวด)</div></div>'
     +'<div class="bank" style="gap:10px">'
     +  '<div class="r"><span>งวดที่ 1 (วันนี้)</span><b style="color:var(--lime)">'+thb(per)+' · ตัดทันที</b></div>'
-    +  '<div class="r"><span>งวดที่ 2-'+months+'</span><b>'+thb(per)+' · ทุกวันที่ '+day+' ของเดือน</b></div>'
+    +  '<div class="r"><span>งวดที่ 2-'+months+'</span><b>'+thb(per)+' · ทุกเดือน ตรงกับวันที่ชำระงวดแรก</b></div>'
     +  '<div class="r"><span>วิธีชำระ</span><b>บัตรเครดิต/เดบิต (อัตโนมัติ)</b></div>'
     +'</div>'
     +'<div style="background:rgba(200,245,106,.06);border:1px solid var(--line2,#233);border-radius:12px;padding:14px 14px 2px;margin-top:18px"><div class="sub" style="margin:0 0 10px;font-weight:700;color:var(--ink)">📦 ที่อยู่จัดส่งสินค้า</div>'+addrFieldsHTML()+'</div>'
     +'<button class="btn lime block lg" id="insBtn" style="margin-top:18px">เริ่มผ่อน · ตัดงวดแรก '+thb(per)+' ↗</button>'
-    +'<p class="hint" style="text-align:center;margin-top:12px">จะพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe · งวดแรกตัดทันที ยืนยันสิทธิ์อัตโนมัติ แล้วงวดถัดไปตัดเองทุกวันที่ '+day+'</p>'
+    +'<p class="hint" style="text-align:center;margin-top:12px">จะพาไปหน้าชำระเงินที่ปลอดภัยของ Stripe · งวดแรกตัดทันที ยืนยันสิทธิ์อัตโนมัติ แล้วงวดถัดไปตัดเองทุกเดือน ตรงกับวันที่คุณชำระงวดแรก</p>'
     +'<div class="msg" id="insMsg"></div>'
     +'<button class="btn ghost block" id="insBack" style="margin-top:10px">ย้อนกลับ</button>'
     +'</div>';
