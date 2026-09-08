@@ -481,9 +481,12 @@
       var coachMap={}, refMap={};
       R.forEach(function(x){
         var val = (x.status==='confirmed') ? (x.installment ? ((x.installment.perMonth||0)*(x.installment.paidCount||0)) : (x.promoAmount||x.fee||0)) : 0;
-        var eff=llEffCR(x); // ใช้กฎ: ผู้แนะนำที่เป็นชื่อโค้ช → นับเป็นโค้ช
-        var cn=eff.coach; if(cn){ coachMap[cn]=coachMap[cn]||{c:0,v:0,m:[]}; coachMap[cn].c++; coachMap[cn].v+=val; coachMap[cn].m.push(_pp(x)); }
-        var rf=eff.referrer; if(rf){ refMap[rf]=refMap[rf]||{c:0,v:0,m:[]}; refMap[rf].c++; refMap[rf].v+=val; refMap[rf].m.push(_pp(x)); }
+        var eff=llEffCR(x); // กฎ: ผู้แนะนำที่เป็นชื่อโค้ช → นับเป็นโค้ช
+        // ยอดวิ่งเข้า "ผู้แนะนำ" ก่อนเสมอ — ถ้ามีผู้แนะนำ (คนธรรมดา) ยอดจะไม่เข้าโค้ช
+        // โค้ชได้ยอดเฉพาะ: ไม่มีผู้แนะนำ (ลูกค้าตรงของโค้ช) หรือผู้แนะนำที่กรอกมาเป็นชื่อโค้ชเอง
+        var rf=eff.referrer;
+        if(rf){ refMap[rf]=refMap[rf]||{c:0,v:0,m:[]}; refMap[rf].c++; refMap[rf].v+=val; refMap[rf].m.push(_pp(x)); }
+        else { var cn=eff.coach; if(cn){ coachMap[cn]=coachMap[cn]||{c:0,v:0,m:[]}; coachMap[cn].c++; coachMap[cn].v+=val; coachMap[cn].m.push(_pp(x)); } }
       });
       var coachRank=Object.keys(coachMap).map(function(k){return {name:k,c:coachMap[k].c,v:coachMap[k].v,m:coachMap[k].m};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
       var refRank=Object.keys(refMap).map(function(k){return {name:k,c:refMap[k].c,v:refMap[k].v,m:refMap[k].m};}).sort(function(a,b){return b.c-a.c;}).slice(0,5);
