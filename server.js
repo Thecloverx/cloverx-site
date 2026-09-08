@@ -993,6 +993,17 @@ app.use(function (req, res, next) {
   return res.redirect('/login?next=' + encodeURIComponent(req.path));
 });
 
+// ---- ซ่อนโดเมน railway สำหรับ Lean Lab: เข้าหน้า Lean Lab ผ่านโดเมน railway → เด้งไปโดเมนสวย ----
+// (เฉพาะหน้า /leanlab เท่านั้น · ไม่แตะ /preorder เพราะ QR พรีออเดอร์เดิมยังชี้ railway อยู่ และ shopping ยังไม่ live)
+app.use(function (req, res, next) {
+  if (req.method !== 'GET') return next();
+  var h = String(req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
+  if (h.indexOf('railway.app') < 0) return next();
+  var p = req.path || '';
+  if (p === '/leanlab' || p.indexOf('/leanlab/') === 0) return res.redirect(302, 'https://leanlab.cloverxth.com' + (req.originalUrl || p));
+  return next();
+});
+
 // ---- แยกหน้าแรกตาม subdomain (career / center / shopping / leanlab) — กันหน้าปนกัน ----
 // ทุก subdomain ชี้มาแอปเดียวกัน แต่ "หน้าแรก" (/) จะต่างกันตามชื่อโดเมนที่เข้ามา
 function siteForHost(req) {
