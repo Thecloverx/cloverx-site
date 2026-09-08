@@ -497,7 +497,7 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/register/promo', function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var claim = !!(req.body && req.body.claim);
-    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (claim) {
       var st = promoStats();
@@ -525,7 +525,7 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/register/promo/plan', function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
-    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (b.plan === 'special') return res.status(400).json({ ok: false, error: 'special_not_available' });
     if (b.plan !== 'full') return res.status(400).json({ ok: false, error: 'bad_plan' });
@@ -547,7 +547,7 @@ module.exports = function (app, DATA_DIR) {
     if (!PROMO.special.available) return res.status(400).json({ ok: false, error: 'special_not_available' });
     var day = Math.floor(Number((req.body || {}).billingDay));
     if (!(day >= 1 && day <= 28)) return res.status(400).json({ ok: false, error: 'bad_day' }); // 1-28 เท่านั้น (ทุกเดือนมีวันนี้)
-    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     var ins = PROMO.special.installment;
     r.promo = true; r.promoPlan = 'special'; r.promoTier = 'special'; r.promoAmount = ins.total;
@@ -594,7 +594,7 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/register/promo/proof', limit('proof', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
-    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r || r.promoPlan !== 'full') return res.status(404).json({ ok: false, error: 'no_registration' });
     if (!(typeof b.proof === 'string' && /^data:image\//.test(b.proof))) return res.status(400).json({ ok: false, error: 'bad_proof' });
     var url = saveImg(b.proof, 'proof-' + m.id); if (!url) return res.status(400).json({ ok: false, error: 'save_failed' });
@@ -624,8 +624,18 @@ module.exports = function (app, DATA_DIR) {
 
   app.get('/api/leanlab/register/me', function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
-    var r = readR().find(function (x) { return x.memberId === m.id; });
+    var r = readR().find(function (x) { return x.memberId === m.id && !x.archived; });
     res.json({ ok: true, registration: publicReg(r) });
+  });
+
+  // สั่งซื้อรายการใหม่ (1 บัญชีสั่งได้หลายครั้ง แบบ Shopee): เก็บใบที่ยืนยันแล้วเป็นประวัติ แล้วเปิดใบใหม่
+  app.post('/api/leanlab/register/reorder', function (req, res) {
+    var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
+    if (!r) return res.json({ ok: true, note: 'no_active' });                 // ไม่มีใบ active = พร้อมเริ่มใหม่อยู่แล้ว
+    if (r.status !== 'confirmed') return res.status(409).json({ ok: false, error: 'order_in_progress', registration: publicReg(r) });
+    r.archived = true; r.archivedAt = new Date().toISOString(); writeR(l);     // ใบเดิมกลายเป็นประวัติ (ยังนับในสถิติ/แอดมิน)
+    res.json({ ok: true });
   });
 
   app.post('/api/leanlab/register', limit('register', 25, 300000), function (req, res) {
@@ -650,12 +660,12 @@ module.exports = function (app, DATA_DIR) {
       if (!(weightKg > 0) || !(fatPct >= 0) || !(vFat >= 0) || !(muscleKg >= 0) || !(waterPct >= 0)) return res.status(400).json({ ok: false, error: 'bad_measurements' });
       var photoUrl = null;
       if (typeof b.beforePhoto === 'string' && /^data:image\//.test(b.beforePhoto)) photoUrl = saveImg(b.beforePhoto, 'before-' + m.id);
-      if (!photoUrl) { var _ex = readR().find(function (x) { return x.memberId === m.id; }); if (_ex && _ex.baseline && _ex.baseline.beforePhotoUrl) photoUrl = _ex.baseline.beforePhotoUrl; }  // แก้ไขภายหลัง: เก็บรูปเดิมไว้ถ้าไม่ได้แนบใหม่
+      if (!photoUrl) { var _ex = readR().find(function (x) { return x.memberId === m.id && !x.archived; }); if (_ex && _ex.baseline && _ex.baseline.beforePhotoUrl) photoUrl = _ex.baseline.beforePhotoUrl; }  // แก้ไขภายหลัง: เก็บรูปเดิมไว้ถ้าไม่ได้แนบใหม่
       if (!photoUrl) return res.status(400).json({ ok: false, error: 'bad_photo' });
       baseline = { weightKg: weightKg, fatPct: fatPct, vFat: vFat, muscleKg: muscleKg, waterPct: waterPct, beforePhotoUrl: photoUrl };
     }
     var l = readR();
-    var r = l.find(function (x) { return x.memberId === m.id; });
+    var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (r && r.status === 'confirmed') return res.status(409).json({ ok: false, error: 'already_registered', registration: publicReg(r) });
     if (!r) { r = { id: genRid(), memberId: m.id, season: EVENT.season, createdAt: new Date().toISOString() }; l.push(r); }
     r.name = name.slice(0, 80); r.dob = dob; r.age = age; r.gender = gender; r.heightCm = heightCm;
@@ -688,7 +698,7 @@ module.exports = function (app, DATA_DIR) {
   app.post('/api/leanlab/register/slip', limit('slip', 15, 300000), function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     var b = req.body || {};
-    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id; });
+    var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (!(typeof b.slip === 'string' && /^data:image\//.test(b.slip))) return res.status(400).json({ ok: false, error: 'bad_slip' });
     if (typeof b.address === 'string' && b.address.trim()) r.address = b.address.trim().slice(0, 300);
@@ -745,7 +755,7 @@ module.exports = function (app, DATA_DIR) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!stripeCfg()) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
     var b = req.body || {};
-    var r = readR().find(function (x) { return x.memberId === m.id; });
+    var r = readR().find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (typeof b.address === 'string' && b.address.trim()) r.address = b.address.trim().slice(0, 300);
     if (typeof b.postcode === 'string' && b.postcode) r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
@@ -820,7 +830,7 @@ module.exports = function (app, DATA_DIR) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
     if (!process.env.STRIPE_SECRET_KEY) return res.status(400).json({ ok: false, error: 'stripe_not_configured' });
     var b = req.body || {};
-    var r = readR().find(function (x) { return x.memberId === m.id; });
+    var r = readR().find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (typeof b.address === 'string' && b.address.trim()) r.address = b.address.trim().slice(0, 300);
     if (typeof b.postcode === 'string' && b.postcode) r.postcode = b.postcode.replace(/\D/g, '').slice(0, 5);
