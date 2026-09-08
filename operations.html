@@ -52,6 +52,11 @@
   .nav .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45;flex:none}
   .nav .navfoot{margin-top:auto;padding-top:8px;margin-bottom:0;border-top:1px solid var(--line)}
   .nav .navfoot .item{margin-top:2px}
+  /* nested project sub-groups (same visual language) */
+  .nav .subgrp{margin:2px 0}
+  .nav .subhead{padding-left:38px;font-size:.82rem;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none}
+  .nav .subhead .pdot{width:8px;height:8px;border-radius:50%;flex:none;margin-right:2px}
+  .nav .children .children .item.lvl3{padding-left:56px}
 
   /* MAIN */
   .main{display:flex;flex-direction:column;min-width:0}
@@ -315,76 +320,57 @@
       <div><b>ฝ่ายปฏิบัติการ</b><span>Operations</span></div>
     </div>
     <nav class="nav" id="nav">
-      <!-- ภาพรวม -->
+      <!-- Overview -->
       <div class="group open" id="g-overview">
-        <button class="item ghead" data-toggle="g-overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="lbl">ภาพรวม</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="item ghead" data-toggle="g-overview"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="lbl">Overview</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
           <button class="item active" data-view="podash"><span class="dot"></span><span class="lbl">Dashboard</span></button>
         </div>
       </div>
 
-      <!-- การขาย -->
-      <div class="group open" id="g-manage">
-        <button class="item ghead" data-toggle="g-manage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span class="lbl">การขาย</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <!-- Sale -->
+      <div class="group open" id="g-sale">
+        <button class="item ghead" data-toggle="g-sale"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span class="lbl">Sale</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item" data-view="order"><span class="dot"></span><span class="lbl">Order</span></button>
-          <button class="item" data-view="preorder"><span class="dot"></span><span class="lbl">Pre-Order</span></button>
-          <button class="item" data-view="qr"><span class="dot"></span><span class="lbl">QR Code</span></button>
-          <button class="item" data-view="customers"><span class="dot"></span><span class="lbl">Customers</span></button>
+          <div class="group open subgrp" id="g-xh">
+            <button class="item ghead subhead" data-toggle="g-xh"><span class="pdot" style="background:#2E7FE4"></span><span class="lbl">Xircle &amp; HabiX</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="children">
+              <button class="item lvl3" data-view="preorder"><span class="dot"></span><span class="lbl">Order</span></button>
+              <button class="item lvl3" data-view="qr"><span class="dot"></span><span class="lbl">Management</span></button>
+            </div>
+          </div>
+          <div class="group open subgrp" id="g-ll">
+            <button class="item ghead subhead" data-toggle="g-ll"><span class="pdot" style="background:#16a34a"></span><span class="lbl">Lean Lab</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="children">
+              <button class="item lvl3" onclick="location.href='/support'"><span class="dot"></span><span class="lbl">Member</span></button>
+              <button class="item lvl3" onclick="location.href='/support'"><span class="dot"></span><span class="lbl">Management</span></button>
+            </div>
+          </div>
+          <button class="item" data-view="channels"><span class="dot"></span><span class="lbl">Channels</span></button>
+          <button class="item" data-view="stock"><span class="dot"></span><span class="lbl">Stock</span></button>
         </div>
       </div>
 
-      <!-- X-Visor -->
-      <div class="group" id="g-xvisor">
-        <button class="item ghead" data-toggle="g-xvisor"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg><span class="lbl">X-Visor</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <!-- Exam -->
+      <div class="group open" id="g-exam">
+        <button class="item ghead" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">Exam</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <button class="item" data-view="cert"><span class="dot"></span><span class="lbl">Certification</span></button>
-          <button class="item" data-view="activity"><span class="dot"></span><span class="lbl">Activity</span></button>
+          <button class="item" data-view="exam-session"><span class="dot"></span><span class="lbl">Session</span></button>
+          <button class="item" data-view="exam-tracker"><span class="dot"></span><span class="lbl">Tracker</span></button>
+          <button class="item" data-view="exam-result"><span class="dot"></span><span class="lbl">Result</span></button>
+          <div class="group subgrp" id="g-reg">
+            <button class="item ghead subhead" data-toggle="g-reg"><span class="pdot" style="background:#7c5cff"></span><span class="lbl">Registration</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <div class="children">
+              <button class="item lvl3" data-view="reg-overview"><span class="dot"></span><span class="lbl">Overview</span></button>
+              <button class="item lvl3" data-view="reg-schedules"><span class="dot"></span><span class="lbl">Exam Schedules</span></button>
+              <button class="item lvl3" data-view="reg-people"><span class="dot"></span><span class="lbl">Registrants</span></button>
+              <button class="item lvl3" data-view="reg-payments"><span class="dot"></span><span class="lbl">Payment Verification</span></button>
+              <button class="item lvl3" data-view="reg-history"><span class="dot"></span><span class="lbl">History</span></button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Registration -->
-      <div class="group" id="g-reg">
-        <button class="item ghead" data-toggle="g-reg"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4M9 3v4h6V3M8 12h8M8 16h5"/></svg><span class="lbl">Registration</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="children">
-          <button class="item" data-view="reg-overview"><span class="dot"></span><span class="lbl">Registration Overview</span></button>
-          <button class="item" data-view="reg-schedules"><span class="dot"></span><span class="lbl">Exam Schedules</span></button>
-          <button class="item" data-view="reg-people"><span class="dot"></span><span class="lbl">Registrants</span></button>
-          <button class="item" data-view="reg-payments"><span class="dot"></span><span class="lbl">Payment Verification</span></button>
-          <button class="item" data-view="reg-history"><span class="dot"></span><span class="lbl">Registration History</span></button>
-        </div>
-      </div>
-
-      <!-- Exam Management -->
-      <div class="group" id="g-exam">
-        <button class="item ghead" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">Exam Management</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="children">
-          <button class="item" data-view="exam-overview"><span class="dot"></span><span class="lbl">Exam Overview</span></button>
-          <button class="item" data-view="exam-session"><span class="dot"></span><span class="lbl">Exam Session</span></button>
-          <button class="item" data-view="exam-tracker"><span class="dot"></span><span class="lbl">Exam Tracker</span></button>
-          <button class="item" data-view="exam-result"><span class="dot"></span><span class="lbl">Exam Result</span></button>
-        </div>
-      </div>
-
-      <!-- งานประจำวัน -->
-      <div class="group" id="g-work">
-        <button class="item ghead" data-toggle="g-work"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="lbl">งานประจำวัน</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="children">
-          <button class="item" data-view="tasks"><span class="dot"></span><span class="lbl">Tasks</span></button>
-          <button class="item" data-view="issues"><span class="dot"></span><span class="lbl">Issues / Tickets</span></button>
-        </div>
-      </div>
-
-      <!-- รายงาน & เอกสาร -->
-      <div class="group" id="g-docs">
-        <button class="item ghead" data-toggle="g-docs"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg><span class="lbl">รายงาน &amp; เอกสาร</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="children">
-          <button class="item" data-view="reports"><span class="dot"></span><span class="lbl">Reports</span></button>
-          <button class="item" data-view="documents"><span class="dot"></span><span class="lbl">Documents</span></button>
-        </div>
-      </div>
-
-      <!-- ตั้งค่า (ปักหมุดล่างสุด) -->
       <div class="navfoot">
         <button class="item" data-view="settings"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 17 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span class="lbl">Settings</span></button>
       </div>
@@ -397,6 +383,8 @@
       <button class="burger" onclick="toggleSide()" aria-label="เมนู"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="crumb">ฝ่ายปฏิบัติการ<b id="crumbTitle">Overview</b></div>
       <div class="right">
+        <a href="/center" title="กลับหน้าเลือกแผนก" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-weight:700;font-size:.84rem;text-decoration:none;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Center</a>
+        <button onclick="staffLogout()" title="ออกจากระบบ" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid rgba(229,72,77,.3);border-radius:10px;background:rgba(229,72,77,.06);color:#e5484d;font-weight:700;font-size:.84rem;cursor:pointer;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</button>
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>ค้นหา...</div>
         <div class="bell"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="badge">5</span></div>
         <div class="user"><div class="av">ณ</div><div class="info"><b>ณัฐวุฒิ</b><span>Operations</span></div></div>
@@ -494,6 +482,7 @@
 </div>
 <script>
   function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
+  function staffLogout(){ fetch('/api/staff/logout',{method:'POST',credentials:'same-origin'}).then(function(){location.href='/';}).catch(function(){location.href='/';}); }
 
   // view meta for non-overview pages
   var META={
@@ -517,7 +506,9 @@
     issues:{t:'Issues / Tickets',th:'ปัญหา / ทิกเก็ต',d:'จัดการปัญหาและคำร้องขอความช่วยเหลือ',kind:'plain'},
     reports:{t:'Reports',th:'รายงาน',d:'รายงานสรุปและการวิเคราะห์',kind:'plain'},
     documents:{t:'Documents',th:'เอกสาร',d:'คลังเอกสารและไฟล์ของฝ่าย',kind:'plain'},
-    settings:{t:'Settings',th:'ตั้งค่า',d:'ตั้งค่าการทำงานของฝ่ายปฏิบัติการ',kind:'plain'}
+    settings:{t:'Settings',th:'ตั้งค่า',d:'ตั้งค่าการทำงานของฝ่ายปฏิบัติการ',kind:'plain'},
+    stock:{t:'Stock',th:'สต๊อกสินค้า',d:'คงเหลือสินค้า Pre-Order — ตัดสต๊อกอัตโนมัติเมื่อมีออเดอร์ใหม่',kind:'stock'},
+    channels:{t:'Channels',th:'ช่องทางการขาย',d:'LINE OA / Shopee / เว็บ Pre-order และสถานะการเชื่อมต่อ (เร็ว ๆ นี้)',kind:'plain'}
   };
   var gen=document.getElementById('view-generic');
   function renderGeneric(v){
@@ -2121,6 +2112,11 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'</div></div></div>';
     poLoadToggle();poLoadStock();
   }
+  function renderStockView(){
+    gen.innerHTML='<div class="head"><h1>สต๊อกสินค้า</h1><p>คงเหลือสินค้า Pre-Order — ตัดอัตโนมัติเมื่อมีออเดอร์ใหม่ · คืนสต๊อกเมื่อยกเลิก/ปฏิเสธ</p></div>'
+      +'<div class="panel" style="max-width:640px"><div class="ph"><h3>จำนวนคงเหลือ</h3><span style="font-size:.78rem;color:var(--muted)">เซตรวมตัดชิ้นส่วนอัตโนมัติ · เสื้อโปโล = ไม่จำกัด</span></div><div id="poStockWrap"><div style="color:var(--muted);font-size:.85rem;padding:6px 0">กำลังโหลด…</div></div></div>';
+    poLoadStock();
+  }
   function renderPreorder(){ poDraw(); poRefresh(); }
 
   /* ============ SALES ANALYTICS DASHBOARD ============ */
@@ -2135,23 +2131,39 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       return '<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:.85rem;margin-bottom:5px"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.label+'</span><span class="num" style="color:var(--muted);white-space:nowrap">'+(x.sub||'')+'</span></div>'
         +'<div class="progress"><b style="width:'+pct+'%;background:'+(color||'var(--brand)')+'"></b></div></div>';}).join('');
   }
-  var DASH_SRC={ preorder:'/preorder-dashboard.html' };
   function renderPoDash(){
     gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
         +'<h1 style="margin:0">Dashboard</h1>'
         +'<select id="dashPick" onchange="pickDash(this.value)" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-family:inherit;font-weight:700;color:var(--brand);font-size:.9rem;cursor:pointer">'
-          +'<option value="preorder">พรีออเดอร์ (Pre-Order)</option>'
-          +'<option value="order" disabled>ออเดอร์ (Order) · เร็ว ๆ นี้</option>'
-          +'<option value="finance" disabled>การเงิน (Finance) · เร็ว ๆ นี้</option>'
-          +'<option value="exam" disabled>ระบบสอบ (Exam) · เร็ว ๆ นี้</option>'
+          +'<option value="xh">Xircle &amp; HabiX</option>'
+          +'<option value="ll">Lean Lab</option>'
+          +'<option value="exam">Exam (X-VISOR)</option>'
         +'</select>'
       +'</div>'
-      +'<a href="/preorder-dashboard.html" target="_blank" rel="noopener" style="background:var(--brand);border:1px solid var(--brand);border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a>'
     +'</div>'
-    +'<iframe id="dashFrame" src="'+DASH_SRC.preorder+'" style="width:100%;height:calc(100vh - 168px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
+    +'<div id="dashBody"></div>';
+    pickDash('xh');
   }
-  function pickDash(v){ var f=document.getElementById('dashFrame'); if(f&&DASH_SRC[v])f.src=DASH_SRC[v]; }
+  function pickDash(v){
+    var b=document.getElementById('dashBody'); if(!b)return;
+    if(v==='xh'){
+      b.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><a href="/preorder-dashboard.html" target="_blank" rel="noopener" style="background:var(--brand);border:1px solid var(--brand);border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a></div>'
+        +'<iframe id="dashFrame" src="/preorder-dashboard.html" style="width:100%;height:calc(100vh - 210px);min-height:600px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
+    } else if(v==='ll'){
+      b.innerHTML=dashLinkCard('#16a34a','แดชบอร์ด Lean Lab','ยอดสมาชิก · โค้ช XGEN · ผู้แนะนำ · attribution',"เปิด Lean Lab Dashboard →","location.href='/support'");
+    } else if(v==='exam'){
+      b.innerHTML=dashLinkCard('#7c5cff','แดชบอร์ด Exam (X-VISOR)','รอบสอบ · ผู้เข้าสอบ · อัตราผ่าน · ผลสอบ',"ไปที่ Exam ▸ Session →","go('exam-session')");
+    }
+  }
+  function dashLinkCard(c,title,desc,btn,act){
+    return '<div style="border:1px solid var(--line);border-radius:16px;background:#fff;min-height:520px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;box-shadow:0 1px 3px rgba(16,27,45,.05)"><div>'
+      +'<div style="width:60px;height:60px;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:'+c+'18;color:'+c+'"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>'
+      +'<div style="font-size:1.15rem;font-weight:800;color:var(--ink)">'+title+'</div>'
+      +'<div style="color:var(--muted);font-size:.9rem;margin-top:8px">'+desc+'</div>'
+      +'<button onclick="'+act+'" style="margin-top:18px;background:'+c+';color:#fff;border:0;border-radius:11px;padding:11px 20px;font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer">'+btn+'</button>'
+      +'</div></div>';
+  }
   function pdDraw(orders){
     var PAID=['confirmed','paid'];
     var rev=orders.filter(function(o){return PAID.indexOf(o.status)>=0;});
@@ -2224,7 +2236,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(isExam)examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)
