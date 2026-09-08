@@ -1,4 +1,5 @@
 <title>CloverX Support</title>
+<script>try{if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +21,10 @@
   .num{font-variant-numeric:tabular-nums}
 
   .app{display:grid;grid-template-columns:262px 1fr;min-height:100vh}
+  /* embed mode: ฝังแดชบอร์ดในหน้าอื่น (ซ่อน sidebar/topbar) */
+  .embed .side,.embed .topbar{display:none!important}
+  .embed .app{grid-template-columns:1fr!important}
+  .embed .content{padding-top:12px}
 
   /* SIDEBAR */
   .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
