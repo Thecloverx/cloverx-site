@@ -274,10 +274,15 @@
   .lldash .hastip{cursor:help}
   .lldash .hastip:hover{background:rgba(0,119,182,.05);border-radius:8px}
   .lldash .donut .leg .lg.hastip:hover{background:rgba(0,119,182,.06)}
-  #llTip{position:fixed;z-index:99999;display:none;max-width:300px;max-height:320px;overflow:auto;background:#0A2472;color:#fff;border-radius:11px;padding:11px 13px;font-family:"Noto Sans Thai",system-ui,sans-serif;font-size:12.5px;line-height:1.55;box-shadow:0 12px 34px rgba(3,4,94,.4);pointer-events:none}
-  #llTip .tth{font-weight:800;font-size:11px;color:#8FD3F4;margin-bottom:6px;letter-spacing:.02em;position:sticky;top:0}
-  #llTip .ttr{white-space:nowrap;font-variant-numeric:tabular-nums;padding:1px 0}
-  #llTip::-webkit-scrollbar{width:6px}#llTip::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
+  #llTip{position:fixed;z-index:99999;display:none;width:min(320px,calc(100vw - 24px));background:#0A2472;color:#fff;border-radius:12px;padding:11px 13px 9px;font-family:"Noto Sans Thai",system-ui,sans-serif;font-size:12.5px;line-height:1.55;box-shadow:0 12px 34px rgba(3,4,94,.4)}
+  #llTip .tth{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;font-size:11px;color:#8FD3F4;margin-bottom:7px;letter-spacing:.02em}
+  #llTip .ttx{cursor:pointer;color:#8FD3F4;font-size:14px;line-height:1;padding:0 2px;user-select:none}
+  #llTip .ttlist{overflow:auto;max-height:min(52vh,260px)}
+  #llTip .ttr{white-space:nowrap;font-variant-numeric:tabular-nums;padding:2px 0}
+  #llTip .ttp{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.15)}
+  #llTip .ttpb{min-width:24px;height:24px;padding:0 6px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#dbeafe;border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer}
+  #llTip .ttpb.on{background:#00B4D8;border-color:#00B4D8;color:#04263b;font-weight:800}
+  #llTip .ttlist::-webkit-scrollbar{width:6px}#llTip .ttlist::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
 </style>
 
 <div class="app">
@@ -550,28 +555,51 @@
         +   '</div></div>'
         + '</div>';
       var stmp=document.getElementById('dashStamp'); if(stmp){var dn2=new Date();stmp.textContent='ภาพรวมสด · อัปเดต '+dn2.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.';}
-      // Hover tooltip: ชี้แถว/สัดส่วน → เห็นรายชื่อลูกค้า + เบอร์ (ไม่รกหน้าจอ)
+      // Popover รายชื่อลูกค้า: ชี้ (คอม) หรือแตะ (มือถือ) → เห็นรายชื่อ + เบอร์ แบ่งหน้า 10 รายชื่อ/หน้า
       (function(){
         var cap=document.getElementById('dashCapture'); if(!cap)return;
         var tp=document.getElementById('llTip');
         if(!tp){tp=document.createElement('div');tp.id='llTip';document.body.appendChild(tp);}
-        function show(el){
-          var t=el.getAttribute('data-tip'); if(!t){tp.style.display='none';return;}
-          var lines=t.split('\n').filter(function(s){return s.length;});
-          tp.innerHTML=''; var h=document.createElement('div'); h.className='tth'; h.textContent='รายชื่อลูกค้า · '+lines.length+' คน'; tp.appendChild(h);
-          lines.forEach(function(l){var d=document.createElement('div');d.className='ttr';d.textContent=l;tp.appendChild(d);});
-          tp.style.display='block';
+        var PAGE=10, state={lines:[],page:0,anchor:null}, hideT=null;
+        function eesc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+        function render(){
+          var lines=state.lines, pages=Math.max(1,Math.ceil(lines.length/PAGE));
+          if(state.page>pages-1)state.page=pages-1; if(state.page<0)state.page=0;
+          var p=state.page, slice=lines.slice(p*PAGE,p*PAGE+PAGE);
+          var html='<div class="tth"><span>รายชื่อลูกค้า · '+lines.length+' คน'+(pages>1?(' · หน้า '+(p+1)+'/'+pages):'')+'</span><span class="ttx" data-x="1">✕</span></div>';
+          html+='<div class="ttlist">'+slice.map(function(l){return '<div class="ttr">'+eesc(l)+'</div>';}).join('')+'</div>';
+          if(pages>1){ html+='<div class="ttp">'; for(var i=0;i<pages;i++){ html+='<button class="ttpb'+(i===p?' on':'')+'" data-pg="'+i+'">'+(i+1)+'</button>'; } html+='</div>'; }
+          tp.innerHTML=html;
         }
-        function move(e){var x=e.clientX+15,y=e.clientY+15,w=tp.offsetWidth,hh=tp.offsetHeight;
-          if(x+w>window.innerWidth-8)x=e.clientX-w-15; if(x<8)x=8;
-          if(y+hh>window.innerHeight-8)y=window.innerHeight-hh-8; if(y<8)y=8;
-          tp.style.left=x+'px'; tp.style.top=y+'px';}
+        function position(el){
+          tp.style.display='block';
+          var r=el.getBoundingClientRect(), w=tp.offsetWidth, hh=tp.offsetHeight;
+          var x=r.left, y=r.bottom+8;
+          if(x+w>window.innerWidth-8)x=window.innerWidth-w-8; if(x<8)x=8;
+          if(y+hh>window.innerHeight-8)y=r.top-hh-8; if(y<8)y=8;
+          tp.style.left=x+'px'; tp.style.top=y+'px';
+        }
+        function open(el){
+          var t=el.getAttribute('data-tip'); if(!t){hide();return;}
+          state.lines=t.split('\n').filter(function(s){return s.length;}); state.page=0; state.anchor=el;
+          render(); position(el);
+        }
+        function hide(){ tp.style.display='none'; state.anchor=null; }
+        function cancelHide(){ if(hideT){clearTimeout(hideT);hideT=null;} }
+        function scheduleHide(){ cancelHide(); hideT=setTimeout(hide,280); }
+        tp.addEventListener('mouseenter',cancelHide);
+        tp.addEventListener('mouseleave',scheduleHide);
+        tp.addEventListener('click',function(e){
+          if(e.target.closest('.ttx')){hide();return;}
+          var b=e.target.closest('.ttpb'); if(b){ state.page=+b.getAttribute('data-pg'); render(); if(state.anchor)position(state.anchor); }
+        });
         var els=cap.querySelectorAll('.hastip[data-tip]');
         [].forEach.call(els,function(el){
-          el.addEventListener('mouseenter',function(){show(el);});
-          el.addEventListener('mousemove',move);
-          el.addEventListener('mouseleave',function(){tp.style.display='none';});
+          el.addEventListener('mouseenter',function(){cancelHide();open(el);});
+          el.addEventListener('mouseleave',scheduleHide);
+          el.addEventListener('click',function(e){ e.stopPropagation(); cancelHide(); open(el); });
         });
+        document.addEventListener('click',function(e){ if(tp.style.display==='block' && !tp.contains(e.target) && !e.target.closest('.hastip')) hide(); });
       })();
       // ปุ่มส่งรายงานเข้า Lark (เรนเดอร์ภาพแดชบอร์ดแนบไปด้วย)
       var lk=document.getElementById('dashLark');
