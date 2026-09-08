@@ -60,17 +60,52 @@ a{color:inherit}
 .kx .kxl{font-size:.74rem;color:var(--sub);font-weight:600;line-height:1.35;display:flex;align-items:center;gap:5px}
 .kx .kxv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.05}
 .kx .kxs{font-size:.72rem;color:var(--sub);margin-top:3px;font-weight:500}
-.kx.hi{background:linear-gradient(135deg,#00B4D8 0%,#0077B6 55%,#023E8A 100%);border:none;color:#fff;box-shadow:0 10px 24px rgba(0,119,182,.28)}
-.kx.hi .kxl,.kx.hi .kxs{color:rgba(255,255,255,.9)}
-.kx.hi .kxv{color:#fff}
-.kx.warn .kxv{color:#0077B6}
+.kx.hi{border-color:#C7DBFE;box-shadow:0 1px 2px rgba(3,4,94,.04),0 6px 18px rgba(3,4,94,.07)}
+.kx.hi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#00B4D8,#0077B6)}
+.kx.hi .kxv{color:var(--brand)}
+.kx.warn .kxv{color:#B45309}
+.kx.stk .kxv{font-size:1.35rem}
 @media(max-width:1100px){.kstrip{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:640px){.kstrip{grid-template-columns:repeat(2,1fr)}}
+/* 12-column grid (reference layout) */
+.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
+.grid12>*{min-width:0}
+.w4{grid-column:span 4}.w5{grid-column:span 5}.w6{grid-column:span 6}.w7{grid-column:span 7}.w8{grid-column:span 8}.w12{grid-column:span 12}
+@media(max-width:960px){.w4,.w5,.w6,.w7,.w8{grid-column:span 12}}
+/* card (reference .c) */
+.c{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.c-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:13px}
+.c-h h3{margin:0;font-size:.98rem;font-weight:800;display:flex;align-items:center;gap:8px}
+.c-h .meta{font-size:.77rem;color:var(--mut);text-align:right;white-space:nowrap}
+/* day card */
+.daypick{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:6px 9px;font-family:inherit;font-size:.8rem;color:var(--ink);cursor:pointer}
+.dayk{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.dayk .dk{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:10px 11px}
+.dayk .dk span{display:block;color:var(--sub);font-size:.72rem;margin-bottom:4px;line-height:1.3}
+.dayk .dk b{font-size:1.15rem;font-weight:800}
+.dayst{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.dsub{font-size:.82rem;font-weight:700;color:var(--sub);margin:0 0 8px;padding-top:2px;border-top:1px solid var(--line);padding-top:12px}
+.drow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:.85rem}
+.drow:last-child{border-bottom:none}
+/* donut card */
+.donutwrap{display:flex;align-items:center;gap:20px}
+.donutstat .big{font-size:1.5rem;font-weight:800}
+.donutstat .lb{color:var(--sub);font-size:.82rem}
+.donutstat p{margin:3px 0 0;color:var(--sub);font-size:.8rem}
+/* sales overview */
+.ovgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ov{background:var(--bg);border:1px solid var(--line);border-radius:13px;padding:14px 15px}
+.ov .ovl{color:var(--sub);font-size:.78rem;font-weight:600}
+.ov .ovv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:6px;line-height:1.05}
+.ov .ovs{color:var(--sub);font-size:.74rem;margin-top:3px}
+/* ceo seg */
+.segbox{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
+@media(max-width:560px){.dayk{grid-template-columns:1fr}.ovgrid{grid-template-columns:1fr}}
 /* section */
-.sec{margin-top:22px}
-.sec>h2{font-size:1.05rem;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:9px}
+.sec{margin-top:18px}
+.sec>h2{font-size:1.05rem;font-weight:800;margin:0 0 11px;display:flex;align-items:center;gap:9px}
 .sec .stamp{margin-left:auto;font-size:.74rem;color:var(--mut);font-weight:400}
-.panel{padding:18px}
+.panel{padding:16px}
 .ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
 .ph h3{margin:0;font-size:.98rem;font-weight:700}
 .ph .meta{font-size:.78rem;color:var(--mut)}
@@ -218,7 +253,7 @@ function maskName(n){ n=String(n||'').trim(); if(!n)return 'ลูกค้า';
 
 /* ================= STATE ================= */
 var ALL=[], VIEW=[], RANGE='all';
-var custPage=1, refPage=1, provPage=1;
+var custPage=1, refPage=1, provPage=1, DAY='';
 var custFilters={team:'',status:'',product:''};
 var SEG='day'; // มิติแบ่งกลุ่มสำหรับรายงาน CEO: day|team|xvisor|channel|campaign
 function setSeg(v){ SEG=v; render(); }
@@ -288,17 +323,15 @@ function render(){
  if(!VIEW.length){ el('app').innerHTML='<div class="card panel"><div class="center">ยังไม่มีข้อมูลออเดอร์ในช่วงเวลานี้</div></div>'; return; }
  var h='';
  h+=kpiRow(A);
- h+=ceoSection(A);
- h+=stockRow(A);
- h+=perProductTable(A);
- h+=actionCards(A);
- h+=heroBlock(A);
- h+=paymentBlocks(A);
- h+=itemsAndFamily(A);
- h+=dailyChart();
- h+=customerSection();
- h+=referrerSection(A);
- h+=provinceSection(A);
+ h+='<div class="grid12">'+dayCard(A)+perProductCard(A)+'</div>';
+ h+='<div class="grid12">'+actionCard(A)+'</div>';
+ h+='<div class="grid12">'+donutCard(A)+salesOverviewCard(A)+'</div>';
+ h+='<div class="grid12">'+payChannelCard(A)+payStatusCard(A)+'</div>';
+ h+='<div class="grid12">'+orderedItemsCard(A)+'</div>';
+ h+='<div class="grid12">'+familyCard(A)+dailyChartCard()+'</div>';
+ h+='<div class="grid12">'+customerCard()+'</div>';
+ h+='<div class="grid12">'+referrerCard(A)+provinceCard(A)+'</div>';
+ h+='<div class="grid12">'+ceoCard(A)+'</div>';
  el('app').innerHTML=h;
  drawChart();
 }
@@ -307,108 +340,128 @@ function kpiRow(A){
  var goalPct=(A.sales/GOAL_AMOUNT*100);
  var setsPct=pct(A.sets,GOAL_SETS);
  function kx(cls,emoji,lb,v,s){return '<div class="kx '+cls+'"><div class="kxl">'+emoji+' '+lb+'</div><div class="kxv">'+v+'</div><div class="kxs">'+s+'</div></div>';}
- return '<div class="kstrip">'
-  +kx('hi','💰','ยอดขายรวม',baht(A.sales),goalPct.toFixed(1)+'% ของเป้า '+baht(GOAL_AMOUNT))
+ var main=kx('hi','💰','ยอดขายรวม',baht(A.sales),goalPct.toFixed(1)+'% ของเป้า '+baht(GOAL_AMOUNT))
   +kx('','📦','ออเดอร์รวม',num(A.n),num(A.pieces)+' ชิ้น (รวม Family)')
   +kx('','✅','ชำระสำเร็จ',num(A.paidN),baht(A.paidAmt))
-  +kx('warn','⏳','รอตรวจสอบ',num(A.pendN),baht(A.pendAmt)+(A.awaitN?(' · +รอชำระ '+num(A.awaitN)):''))
+  +kx((A.pendN>0?'warn':''),'⏳','รอตรวจสอบ',num(A.pendN),baht(A.pendAmt)+(A.awaitN?(' · +รอชำระ '+num(A.awaitN)):''))
   +kx('','👥','ผู้ซื้อไม่ซ้ำ',num(A.uniqueBuyers),'ซื้อซ้ำ '+num(A.repeatBuyers)+' คน')
-  +kx('','🎯','ถึงเป้าจำนวน',setsPct+'%',num(A.sets)+' จาก '+num(GOAL_SETS)+' ชุด')
-  +'</div>';
+  +kx('','🎯','ถึงเป้าจำนวน',setsPct+'%',num(A.sets)+' จาก '+num(GOAL_SETS)+' ชุด');
+ // การ์ดสต็อกรายสินค้า — วนจากข้อมูลจริง ต่อท้ายอัตโนมัติ (ไม่จำกัดจำนวน)
+ var stEmoji={'Xircle Band':'🏷️','Xircle Band สีดำ':'🏷️','Xircle Band สีครีม':'🏷️','Xircle Scale':'⚖️','RoutineX':'📦'};
+ var groups={};
+ Object.keys(A.comp).forEach(function(c){
+  var g = /Band/.test(c)?'Band':(/Scale/.test(c)?'Scale':(/RoutineX/.test(c)?'RoutineX':c));
+  if(!groups[g])groups[g]={paid:0,pend:0}; groups[g].paid+=A.comp[c].paid; groups[g].pend+=A.comp[c].pending;
+ });
+ var order=['Band','Scale','RoutineX'];
+ var gkeys=order.filter(function(k){return groups[k];}).concat(Object.keys(groups).filter(function(k){return order.indexOf(k)<0;}));
+ var stock=gkeys.map(function(g){var v=groups[g];var tot=v.paid+v.pend;var em=(g==='Band'?'🏷️':g==='Scale'?'⚖️':'📦');
+  return kx('stk',em,g+' ขายแล้ว',num(tot),num(v.paid)+' ชำระแล้ว · รอชำระ '+num(v.pend));}).join('');
+ return '<div class="kstrip">'+main+stock+'</div>';
 }
 
-function stockRow(A){
- function comp(name){return A.comp[name]||{paid:0,pending:0};}
- var band=0,scale=0,rx=0;
- Object.keys(A.comp).forEach(function(c){var v=A.comp[c],t=v.paid+v.pending; if(/Band/.test(c))band+=t; else if(/Scale/.test(c))scale+=t; else if(/RoutineX/.test(c))rx+=t;});
- function bandPaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Band/.test(c))s+=A.comp[c].paid;});return s;}
- function scalePaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Scale/.test(c))s+=A.comp[c].paid;});return s;}
- function rxPaid(){var s=0;Object.keys(A.comp).forEach(function(c){if(/RoutineX/.test(c))s+=A.comp[c].paid;});return s;}
- function bandPend(){var s=0;Object.keys(A.comp).forEach(function(c){if(/Band/.test(c))s+=A.comp[c].pending;});return s;}
- function card(emoji,lb,big,sub){return '<div class="kx"><div class="kxl">'+emoji+' '+lb+'</div><div class="kxv">'+big+'</div><div class="kxs">'+sub+'</div></div>';}
- return '<div class="grid g3 mb">'
-  +card('🏷️','Band ขายแล้ว',num(band),num(bandPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(bandPend()))
-  +card('⚖️','Scale ขายแล้ว',num(scale),num(scalePaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(scale-scalePaid()))
-  +card('📦','RoutineX ขายแล้ว',num(rx),num(rxPaid())+' ชิ้นชำระแล้ว · รอชำระ '+num(rx-rxPaid()))
+/* ===== ยอดของวันที่เลือก (w5) ===== */
+function dayList(){ var m={}; VIEW.forEach(function(o){ if(!isLive(bucket(o)))return; var d=new Date(o.at); if(isNaN(d))return; m[d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)]=1; }); return Object.keys(m).sort(); }
+function dayCard(A){
+ var days=dayList();
+ if(!DAY||days.indexOf(DAY)<0) DAY=days.length?days[days.length-1]:'';
+ var min=days[0]||'', max=days[days.length-1]||'';
+ var sel=VIEW.filter(function(o){ var d=new Date(o.at); if(isNaN(d))return false; var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); return k===DAY; });
+ var ord=0,pieces=0,amt=0,paidN=0,pendN=0,cancN=0,prodMap={};
+ sel.forEach(function(o){ var b=bucket(o); ord++; if(b==='paid')paidN++; else if(b==='cancel')cancN++; else pendN++;
+   if(isLive(b)){ amt+=Number(o.total)||0; (o.items||[]).forEach(function(it){ pieces++; var nm=String(it.nm||'-'); prodMap[nm]=(prodMap[nm]||0)+1; }); } });
+ var prodRows=Object.keys(prodMap).sort(function(a,b){return prodMap[b]-prodMap[a];}).map(function(nm){
+   return '<div class="drow"><span>'+esc(shortItem(nm))+'</span><b class="num">'+num(prodMap[nm])+' ชิ้น</b></div>';}).join('');
+ var dlabel=DAY?new Date(DAY).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'—';
+ return '<div class="c w5">'
+  +'<div class="c-h"><h3>ยอดของวันที่เลือก</h3><input type="date" class="daypick" value="'+DAY+'"'+(min?' min="'+min+'"':'')+(max?' max="'+max+'"':'')+' onchange="DAY=this.value;render()"></div>'
+  +'<div class="dayk"><div class="dk"><span>ออเดอร์</span><b class="num">'+num(ord)+'</b></div><div class="dk"><span>ชิ้น (รวม Family)</span><b class="num">'+num(pieces)+'</b></div><div class="dk"><span>ยอดเงิน</span><b class="num">'+baht(amt)+'</b></div></div>'
+  +'<div class="dayst"><span class="st paid">ชำระแล้ว '+num(paidN)+'</span><span class="st pending">รอตรวจสอบ '+num(pendN)+'</span><span class="st cancel">ยกเลิก '+num(cancN)+'</span></div>'
+  +'<div class="dsub">สินค้าที่ออกวัน'+dlabel+'</div>'
+  +(prodRows||'<div class="center" style="padding:14px 0">ไม่มีสินค้าในวันนี้</div>')
   +'</div>';
 }
-
-function perProductTable(A){
- var rows=Object.keys(A.prod).map(function(nm){var v=A.prod[nm];return {nm:nm,paid:v.paid,pending:v.pending,cancel:v.cancel,alive:v.paid+v.pending};})
+function perProductCard(A){
+ var rows=Object.keys(A.prod).map(function(nm){var v=A.prod[nm];var fam=(A.familyMap[nm]||{}).n||0;return {nm:nm,paid:v.paid,pending:v.pending,cancel:v.cancel,alive:v.paid+v.pending,fam:fam};})
   .sort(function(a,b){return b.alive-a.alive;});
- var body=rows.map(function(r){return '<tr><td><div class="pname">'+esc(r.nm)+'</div></td><td class="n" style="color:var(--good)">'+num(r.paid)+'</td><td class="n" style="color:var(--warn)">'+num(r.pending)+'</td><td class="n" style="color:var(--bad)">'+num(r.cancel)+'</td><td class="n"><b>'+num(r.alive)+'</b></td></tr>';}).join('');
- return '<div class="sec"><h2>ยอดรวมรายสินค้า <span class="stamp">นับตามรายการที่สั่งจริง</span></h2>'
-  +'<div class="card panel"><div class="twrap"><table><thead><tr><th>สินค้า / เซต</th><th class="n">ชำระแล้ว</th><th class="n">รอตรวจสอบ</th><th class="n">ยกเลิก</th><th class="n">รวมที่ยังอยู่</th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="center">—</td></tr>')+'</tbody></table></div>'
-  +'<p class="priv">“รวมที่ยังอยู่” = ชำระแล้ว + รอตรวจสอบ (ไม่รวมที่ยกเลิก) — ใช้ตัวเลขนี้อ้างอิงการสั่งผลิต</p></div></div>';
+ var body=rows.map(function(r){var main=r.alive-r.fam;return '<tr><td><div class="pname">'+esc(r.nm)+'</div><div class="psub">สินค้าหลัก '+num(main<0?r.alive:main)+(r.fam?(' · Family '+num(r.fam)):'')+'</div></td><td class="n" style="color:var(--good);font-weight:750">'+num(r.paid)+'</td><td class="n" style="color:#B07407">'+num(r.pending)+'</td><td class="n" style="color:var(--mut)">'+num(r.cancel)+'</td><td class="n"><b>'+num(r.alive)+'</b></td></tr>';}).join('');
+ return '<div class="c w7">'
+  +'<div class="c-h"><h3>ยอดรวมรายสินค้า</h3><span class="meta">นับชิ้นจริง</span></div>'
+  +'<div class="twrap"><table><thead><tr><th style="min-width:150px">สินค้า / เซต</th><th class="n">ชำระแล้ว</th><th class="n">รอตรวจสอบ</th><th class="n">ยกเลิก</th><th class="n">รวมที่ยังอยู่</th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="center">—</td></tr>')+'</tbody></table></div>'
+  +'<p class="priv">“รวมที่ยังอยู่” = ชำระแล้ว + รอตรวจสอบ (ไม่รวมที่ยกเลิก) — ใช้อ้างอิงการสั่งผลิต · ออเดอร์เดียวอาจนับหลายชิ้น</p></div>';
 }
 
-function actionCards(A){
+function actionCard(A){
  var gap=A.sales-GOAL_AMOUNT;
  var over=gap>=0;
  var potential=A.pendAmt*CLOSE_RATE;
- var pend24=A.pendN, pend24amt=A.pendAmt;
  var setsLeft=GOAL_SETS-A.sets;
- return '<div class="sec"><h2>สิ่งที่ต้องลงมือ</h2><div class="grid g4">'
+ var stamp=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+ return '<div class="c w12">'
+  +'<div class="c-h"><h3>สิ่งที่ต้องลงมือ</h3><span class="meta">อัปเดต '+stamp+'</span></div>'
+  +'<div class="grid g4">'
   +'<div class="act '+(over?'good':'warn')+'"><div class="lb">🎯 Gap ถึงเป้ายอดขาย</div><div class="v">'+(over?'ถึงเป้าแล้ว':baht(-gap))+'</div><div class="s">'+(over?('เกินเป้า '+baht(gap)):'ยังขาดอีกถึงเป้า '+baht(GOAL_AMOUNT))+'</div></div>'
-  +'<div class="act warn"><div class="lb">⏰ รอตรวจสอบ</div><div class="v">'+num(pend24)+' ออเดอร์</div><div class="s">'+baht(pend24amt)+' · ควรติดตามให้ชำระ</div></div>'
-  +'<div class="act info"><div class="lb">💠 ยอดที่มีโอกาสปิด</div><div class="v">'+baht(potential)+'</div><div class="s">จากรอตรวจสอบ '+baht(A.pendAmt)+' × อัตราปิด '+Math.round(CLOSE_RATE*100)+'%</div></div>'
+  +'<div class="act warn"><div class="lb">⏰ รอตรวจสอบ</div><div class="v">'+num(A.pendN)+' ออเดอร์</div><div class="s">'+baht(A.pendAmt)+' · ควรติดตามให้ชำระ</div></div>'
+  +'<div class="act info"><div class="lb">💠 ยอดที่มีโอกาสปิด</div><div class="v">'+baht(potential)+'</div><div class="s">จากรอตรวจสอบ × อัตราปิด '+Math.round(CLOSE_RATE*100)+'%</div></div>'
   +'<div class="act '+(setsLeft<=0?'good':'brand')+'"><div class="lb">📦 เป้า '+num(GOAL_SETS)+' ชุด</div><div class="v">'+(setsLeft<=0?'ครบแล้ว':num(setsLeft)+' ชุด')+'</div><div class="s">'+(setsLeft<=0?'ปิดการขายได้':'เหลือถึงเป้าจำนวน')+'</div></div>'
   +'</div></div>';
 }
 
-function heroBlock(A){
+function donutCard(A){
  var setsPct=Math.min(100,A.sets/GOAL_SETS*100);
+ var left=GOAL_SETS-A.sets;
+ return '<div class="c w5"><div class="donutwrap"><div class="ring" style="--p:'+setsPct.toFixed(1)+'"><div class="inner"><b class="num">'+num(A.sets)+'</b><small>จาก '+num(GOAL_SETS)+' ชุด</small></div></div>'
+   +'<div class="donutstat"><div class="lb">ความคืบหน้าล็อตจำกัด</div><div class="big num">'+(A.sets/GOAL_SETS*100).toFixed(1)+'%</div><p>'+(left>0?('เหลืออีก '+num(left)+' ชุด'):'ครบเป้าแล้ว ✓')+'</p><p>จาก '+num(A.n)+' ออเดอร์ · สิทธิ์ Family '+num(A.family)+' รายการ</p></div></div></div>';
+}
+function salesOverviewCard(A){
  var aov=A.sets?A.sales/A.sets:0;
  var paidPct=pct(A.paidN,A.n);
- var cart='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>';
- var chart='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg>';
- var user='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
- var repeat='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
- return '<div class="sec"><div class="herowrap">'
-  +'<div class="card panel"><div class="donut"><div class="ring" style="--p:'+setsPct.toFixed(1)+'"><div class="inner"><b class="num">'+num(A.sets)+'</b><small>จาก '+num(GOAL_SETS)+' ชุด</small></div></div>'
-    +'<div class="herostat"><div class="lb">ยอดสั่งจองสะสม</div><div class="big num">'+ (A.sets/GOAL_SETS*100).toFixed(1) +'%</div><p>'+(GOAL_SETS-A.sets>0?('เหลืออีก '+num(GOAL_SETS-A.sets)+' ชุด'):'ครบเป้าแล้ว')+'</p><p>จาก '+num(A.n)+' ออเดอร์ · สิทธิ์ Family '+num(A.family)+' รายการ</p></div></div></div>'
-  +'<div class="herocards">'
-    +'<div class="hc blue"><div class="ic">'+cart+'</div><div class="v num">'+num(A.sets)+'</div><div class="lb">ชุดที่สั่งจองแล้ว</div></div>'
-    +'<div class="hc plain"><div class="ic">'+chart+'</div><div class="v num">'+baht(A.sales)+'</div><div class="lb">มูลค่าสั่งจองรวม</div></div>'
-    +'<div class="hc plain"><div class="ic">'+user+'</div><div class="v num">'+baht(aov)+'</div><div class="lb">เฉลี่ยต่อออเดอร์</div></div>'
-    +'<div class="hc plain"><div class="corner">'+paidPct+'%</div><div class="ic">'+repeat+'</div><div class="v num">'+num(A.paidN)+'</div><div class="lb">ออเดอร์ที่ชำระแล้ว</div></div>'
-  +'</div></div></div>';
+ function st(lb,v,sub){return '<div class="ov"><div class="ovl">'+lb+'</div><div class="ovv num">'+v+'</div><div class="ovs">'+sub+'</div></div>';}
+ return '<div class="c w7"><div class="c-h"><h3>ภาพรวมการขาย</h3><span class="meta">อัปเดตเรียลไทม์</span></div>'
+  +'<div class="ovgrid">'
+  +st('ชุดที่สั่งจองแล้ว',num(A.sets),num(A.pieces)+' ชิ้น (รวม Family)')
+  +st('มูลค่าสั่งจองรวม',baht(A.sales),'เก็บเงินได้ '+baht(A.paidAmt))
+  +st('เฉลี่ยต่อออเดอร์',baht(aov),num(A.uniqueBuyers)+' ผู้ซื้อไม่ซ้ำ')
+  +st('ออเดอร์ที่ชำระแล้ว',num(A.paidN),paidPct+'% ของทั้งหมด')
+  +'</div></div>';
 }
 
-function paymentBlocks(A){
+function payChannelCard(A){
  var totalPay=A.byPay.card.amt+A.byPay.bank.amt;
  function bar(lb,n,amt,col){var p=totalPay?Math.max(3,Math.round(amt/totalPay*100)):0;return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
- var pay='<div class="card panel"><div class="ph"><h3>ยอดชำระเงินแยกช่องทาง</h3><span class="meta num">'+baht(totalPay)+'</span></div>'
+ return '<div class="c w6"><div class="c-h"><h3>ยอดชำระเงินแยกช่องทาง</h3><span class="meta num">'+baht(totalPay)+'</span></div>'
    +bar('บัตรเครดิต (Stripe)',A.byPay.card.n,A.byPay.card.amt,'var(--brand)')
    +bar('โอนเงินผ่านธนาคาร',A.byPay.bank.n,A.byPay.bank.amt,'var(--good)')
-   +'<p class="priv">ออเดอร์บัตรจับคู่การชำระเงินแบบเรียลไทม์ผ่าน Stripe Webhook · โอนธนาคารยืนยันจากสลิปในหน้า Operations</p></div>';
+   +'<p class="priv">บัตรจับคู่ผ่าน Stripe Webhook แบบเรียลไทม์ · โอนธนาคารยืนยันจากสลิปในหน้า Operations</p></div>';
+}
+function payStatusCard(A){
  var stmax=Math.max(A.byBucket.paid,A.byBucket.pending,A.byBucket.cancel,1);
  function stbar(lb,n,amt,col){var p=Math.max(3,Math.round(n/stmax*100));return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
  var refPctN=0; VIEW.forEach(function(o){if(isLive(bucket(o))&&(o.ref||'').trim())refPctN++;});
- var status='<div class="card panel"><div class="ph"><h3>สถานะการชำระเงิน</h3></div>'
+ return '<div class="c w6"><div class="c-h"><h3>สถานะการชำระเงิน</h3></div>'
    +stbar('ชำระสำเร็จแล้ว',A.paidN,A.paidAmt,'var(--good)')
    +stbar('รอตรวจสอบ',A.pendN,A.pendAmt,'var(--warn)')
    +stbar('ยกเลิก',A.cancN,A.cancAmt,'var(--bad)')
    +'<p class="priv">มาจากผู้แนะนำ '+num(refPctN)+' ออเดอร์ ('+pct(refPctN,A.sets)+'%)</p></div>';
- return '<div class="sec"><div class="grid g2">'+pay+status+'</div></div>';
 }
 
-function itemsAndFamily(A){
+function orderedItemsCard(A){
  var rows=Object.keys(A.prod).map(function(nm){var v=A.prod[nm];var alive=v.paid+v.pending;var amt=0;
    VIEW.forEach(function(o){if(isLive(bucket(o)))(o.items||[]).forEach(function(it){if(String(it.nm)===nm)amt+=(Number(it.price)||0);});});
    return {nm:nm,qty:alive,amt:amt};}).filter(function(r){return r.qty>0;}).sort(function(a,b){return b.amt-a.amt;});
  var totQ=rows.reduce(function(s,r){return s+r.qty;},0), totA=rows.reduce(function(s,r){return s+r.amt;},0);
  var body=rows.map(function(r,i){return '<tr><td><span class="rank" style="display:inline-flex;margin-right:8px">'+(i+1)+'</span>'+esc(r.nm)+'</td><td class="n">'+num(r.qty)+'</td><td class="n"><b>'+baht(r.amt)+'</b></td><td class="n">'+pct(r.qty,totQ)+'%</td></tr>';}).join('');
- var items='<div class="card panel"><div class="ph"><h3>รายการที่สั่งจอง</h3><span class="meta">'+num(rows.length)+' รายการ · '+num(totQ)+' ชิ้น · '+baht(totA)+'</span></div><div class="twrap"><table><thead><tr><th>รายการ</th><th class="n">จำนวน</th><th class="n">มูลค่า</th><th class="n">สัดส่วน</th></tr></thead><tbody>'+(body||'<tr><td colspan=4 class=center>—</td></tr>')+'</tbody></table></div></div>';
+ return '<div class="c w12"><div class="c-h"><h3>รายการที่สั่งจอง</h3><span class="meta">'+num(rows.length)+' รายการ · '+num(totQ)+' ชิ้น · '+baht(totA)+'</span></div><div class="twrap"><table><thead><tr><th>รายการ</th><th class="n">จำนวน</th><th class="n">มูลค่า</th><th class="n">สัดส่วน</th></tr></thead><tbody>'+(body||'<tr><td colspan=4 class=center>—</td></tr>')+'</tbody></table></div></div>';
+}
+function familyCard(A){
  var fam=Object.keys(A.familyMap).map(function(nm){return {nm:nm,n:A.familyMap[nm].n,amt:A.familyMap[nm].amt};}).sort(function(a,b){return b.amt-a.amt;});
  var famTotN=fam.reduce(function(s,r){return s+r.n;},0), famTotA=fam.reduce(function(s,r){return s+r.amt;},0);
  var famBody=fam.slice(0,6).map(function(r,i){return '<div class="li"><div class="rank">'+(i+1)+'</div><div class="body"><div class="t">'+esc(r.nm)+'</div></div><div class="amt">'+num(r.n)+'<small>'+baht(r.amt)+'</small></div></div>';}).join('');
- var famCard='<div class="card panel"><div class="ph"><h3>สิทธิ์ Family</h3><span class="meta">'+num(famTotN)+' สิทธิ์ · '+baht(famTotA)+'</span></div>'+(famBody||'<div class="center">ยังไม่มีการใช้สิทธิ์ Family</div>')+'<p class="priv">สิทธิ์ Family เป็นรายการเสริม ยังไม่นับรวมในเป้า '+num(GOAL_SETS)+' ชุด</p></div>';
- return '<div class="sec"><div class="grid g2">'+items+famCard+'</div></div>';
+ return '<div class="c w5"><div class="c-h"><h3>สิทธิ์ Family</h3><span class="meta">'+num(famTotN)+' สิทธิ์ · '+baht(famTotA)+'</span></div>'+(famBody||'<div class="center">ยังไม่มีการใช้สิทธิ์ Family</div>')+'<p class="priv">สิทธิ์ Family เป็นรายการเสริม ยังไม่นับรวมในเป้า '+num(GOAL_SETS)+' ชุด</p></div>';
 }
 
-function dailyChart(){
- return '<div class="sec"><h2>ยอดสั่งจองรายวัน</h2><div class="card panel"><div class="legend"><span><i style="background:var(--brand)"></i>สะสม (ชุด)</span><span><i style="background:#93C5FD"></i>ต่อวัน (ออเดอร์)</span></div><svg class="chart" id="dchart" preserveAspectRatio="none"></svg><div id="dchartx" style="display:flex;justify-content:space-between;color:var(--mut);font-size:.72rem;margin-top:6px"></div></div></div>';
+function dailyChartCard(){
+ return '<div class="c w7"><div class="c-h"><h3>ยอดสั่งจองรายวัน</h3><div class="legend"><span><i style="background:var(--brand)"></i>สะสม</span><span><i style="background:#93C5FD"></i>ต่อวัน</span></div></div><svg class="chart" id="dchart" preserveAspectRatio="none"></svg><div id="dchartx" style="display:flex;justify-content:space-between;color:var(--mut);font-size:.72rem;margin-top:6px"></div></div>';
 }
 function drawChart(){
  var svg=el('dchart'); if(!svg)return;
@@ -457,7 +510,7 @@ function custData(){
   return {name:c.name,phone:c.phone,prov:c.prov,team:c.team,items:c.items,pieces:c.pieces,orders:c.orders,amt:c.amt,status:status};
  }).sort(function(a,b){return b.amt-a.amt;});
 }
-function customerSection(){
+function customerCard(){
  var data=custData();
  var teams={},prods={};
  data.forEach(function(c){ teams[c.team||'ไม่มีทีม']=1; Object.keys(c.items).forEach(function(p){prods[p]=1;}); });
@@ -483,8 +536,7 @@ function customerSection(){
   if(itemKeys.length>2)itxt+='<br><span class="psub">+'+(itemKeys.length-2)+'</span>';
   return '<tr><td class="n">'+idx+'</td><td><div class="pname">'+esc(maskName(c.name))+'</div><div class="psub">'+maskPhone(c.phone)+' · '+esc(c.prov)+'</div></td><td><span class="psub">'+esc(c.team||'ไม่มีทีม')+'</span></td><td style="font-size:.8rem">'+itxt+'</td><td class="n">'+num(c.pieces)+'</td><td class="n">'+num(c.orders)+'</td><td class="n"><b>'+baht(c.amt)+'</b></td><td><span class="st '+c.status+'">'+(ST_LABEL[c.status]||'หลายสถานะ')+'</span></td></tr>';
  }).join('');
- return '<div class="sec"><h2>รายชื่อลูกค้าทั้งหมด <span class="stamp">'+num(data.length)+' คน</span></h2>'
-  +'<div class="card panel">'
+ return '<div class="c w12"><div class="c-h"><h3>รายชื่อลูกค้าทั้งหมด</h3><span class="meta">'+num(data.length)+' คน</span></div>'
   +'<div class="selrow">'
    +'<select class="f" onchange="custFilters.team=this.value;custPage=1;render()">'+teamOpts+'</select>'
    +'<select class="f" onchange="custFilters.status=this.value;custPage=1;render()">'+statusOpts+'</select>'
@@ -493,12 +545,12 @@ function customerSection(){
   +'<div style="color:var(--sub);font-size:.83rem;margin-bottom:6px">แสดง '+num(filtered.length)+' คน · '+num(totPieces)+' ชิ้น · มูลค่ารวม '+baht(totAmt)+'</div>'
   +'<div class="twrap"><table><thead><tr><th class="n">#</th><th>ลูกค้า</th><th>ทีม</th><th>รายการที่ซื้อ</th><th class="n">ชิ้น</th><th class="n">ออเดอร์</th><th class="n">มูลค่า</th><th>สถานะ</th></tr></thead><tbody>'+(body||'<tr><td colspan=8 class=center>ไม่พบลูกค้าตามเงื่อนไข</td></tr>')+'</tbody></table></div>'
   +pager(custPage,pages,'custPage')
-  +'<p class="priv">แสดงชื่อย่อและเบอร์ 4 ตัวท้ายเพื่อคุ้มครองข้อมูลส่วนบุคคล (PDPA) · ทีมดึงจากช่อง “ผู้แนะนำ/ทีมโค้ช” ในออเดอร์</p></div></div>';
+  +'<p class="priv">แสดงชื่อย่อและเบอร์ 4 ตัวท้ายเพื่อคุ้มครองข้อมูลส่วนบุคคล (PDPA) · ทีมดึงจากช่อง “ผู้แนะนำ/ทีมโค้ช” ในออเดอร์</p></div>';
 }
 function shortItem(nm){ return String(nm).replace('TRIPLE SET','Triple').replace('DUO SET','Duo').replace('TWIN SET','Twin').replace('Xircle Band','Band').replace('Xircle Scale','Scale').replace(' · ',' '); }
 
 /* ================= REFERRERS ================= */
-function referrerSection(A){
+function referrerCard(A){
  var refs=Object.keys(A.ref).map(function(name){var v=A.ref[name];var ti=tier(v.amt);return {name:name,n:v.n,amt:v.amt,tier:ti.t,comm:v.amt*ti.r};}).sort(function(a,b){return b.amt-a.amt;});
  var totComm=refs.reduce(function(s,r){return s+r.comm;},0);
  var totOrders=refs.reduce(function(s,r){return s+r.n;},0);
@@ -510,13 +562,13 @@ function referrerSection(A){
    +'<div class="amt" style="min-width:96px">'+baht(r.amt)+'<small>ยอดขาย</small></div>'
    +'<div class="amt" style="min-width:90px;color:var(--good)">'+baht(r.comm)+'<small>ค่าคอม</small></div></div>';
  }).join('');
- return '<div class="sec"><h2>ผู้แนะนำทั้งหมด <span class="stamp">'+num(refs.length)+' คน · '+num(totOrders)+' ออเดอร์</span></h2>'
-  +'<div class="card panel">'+(body||'<div class="center">ยังไม่มีข้อมูลผู้แนะนำ</div>')+pager(refPage,pages,'refPage')
-  +'<p class="priv">ประมาณการค่าคอมรวม '+baht(totComm)+' · คำนวณตามขั้นบันได 20/23/25% จากยอดสะสมของแต่ละคน (ค่าประมาณ) · แสดงเฉพาะออเดอร์ที่มีผู้แนะนำ</p></div></div>';
+ return '<div class="c w7"><div class="c-h"><h3>ผู้แนะนำทั้งหมด</h3><span class="meta">'+num(refs.length)+' คน · '+num(totOrders)+' ออเดอร์</span></div>'
+  +(body||'<div class="center">ยังไม่มีข้อมูลผู้แนะนำ</div>')+pager(refPage,pages,'refPage')
+  +'<p class="priv">ประมาณการค่าคอมรวม '+baht(totComm)+' · คำนวณตามขั้นบันได 20/23/25% จากยอดสะสมของแต่ละคน (ค่าประมาณ) · แสดงเฉพาะออเดอร์ที่มีผู้แนะนำ</p></div>';
 }
 
 /* ================= PROVINCES ================= */
-function provinceSection(A){
+function provinceCard(A){
  var arr=Object.keys(A.prov).map(function(p){return {p:p,n:A.prov[p]};}).sort(function(a,b){return b.n-a.n;});
  var pages=Math.max(1,Math.ceil(arr.length/PAGE_PROV)); if(provPage>pages)provPage=pages;
  var slice=arr.slice((provPage-1)*PAGE_PROV, provPage*PAGE_PROV);
@@ -524,7 +576,7 @@ function provinceSection(A){
  var body=slice.map(function(r,i){var idx=(provPage-1)*PAGE_PROV+i+1;var p=Math.max(4,Math.round(r.n/max*100));
   return '<div class="li"><div class="rank">'+idx+'</div><div class="body"><div class="t">'+esc(r.p)+'</div><div class="track" style="margin-top:6px"><b style="width:'+p+'%;background:var(--pink)"></b></div></div><div class="amt">'+num(r.n)+'<small>ราย</small></div></div>';
  }).join('');
- return '<div class="sec"><h2>ปลายทางจัดส่ง <span class="stamp">'+num(arr.length)+' จังหวัด</span></h2><div class="card panel">'+(body||'<div class="center">—</div>')+pager(provPage,pages,'provPage')+'</div></div>';
+ return '<div class="c w5"><div class="c-h"><h3>ปลายทางจัดส่ง</h3><span class="meta">'+num(arr.length)+' จังหวัด</span></div>'+(body||'<div class="center">—</div>')+pager(provPage,pages,'provPage')+'</div>';
 }
 
 /* ================= CEO SUMMARY (รายงานผู้บริหาร) ================= */
@@ -538,7 +590,7 @@ function segValue(o){
 }
 function isDelivered(o){ return !!(o.delivered||o.deliveredAt); }
 function isRefund(o){ return o.status==='refunded'||!!o.refunded; }
-function ceoSection(A){
+function ceoCard(A){
  var delivered=0, refundN=0, refundAmt=0;
  VIEW.forEach(function(o){ if(isDelivered(o))delivered++; if(isRefund(o)){refundN++;refundAmt+=(Number(o.total)||0);} });
  function tile(emoji,lb,v,sub){ return '<div class="kx"><div class="kxl">'+emoji+' '+lb+'</div><div class="kxv">'+v+'</div><div class="kxs">'+sub+'</div></div>'; }
@@ -563,15 +615,18 @@ function ceoSection(A){
  var keys=Object.keys(groups);
  keys.sort(function(a,b){ if(SEG==='day')return a<b?1:-1; return groups[b].rev-groups[a].rev; });
  var noData=(keys.length===1 && keys[0]==='ไม่ระบุ');
- var rows=keys.slice(0,SEG==='day'?15:30).map(function(k){var g=groups[k];
+ var capN=(SEG==='day'?8:12);
+ var moreN=Math.max(0,keys.length-capN);
+ var rows=keys.slice(0,capN).map(function(k){var g=groups[k];
    return '<tr><td><b>'+esc(k)+'</b></td><td class="n">'+num(g.orders)+'</td><td class="n">'+num(Object.keys(g.cust).length)+'</td><td class="n"><b>'+baht(g.rev)+'</b></td><td class="n">'+num(g.deliv)+'</td><td class="n" style="color:var(--bad)">'+num(g.cancel)+'</td><td class="n">'+num(g.refund)+'</td></tr>';
  }).join('');
+ if(moreN>0)rows+='<tr><td colspan="7" class="center" style="padding:9px 0;font-size:.78rem">+ อีก '+num(moreN)+' รายการ</td></tr>';
  var dimLabel=(dims.filter(function(d){return d[0]===SEG;})[0]||['','กลุ่ม'])[1];
  var note = noData ? '<div class="note amber" style="margin:0 0 12px">มิติ “'+dimLabel+'” ยังไม่ได้เก็บข้อมูลในออเดอร์ชุดนี้ — ตัวเลขจะขึ้นเมื่อออเดอร์ใหม่บันทึกฟิลด์นี้ (เพิ่มช่องเก็บได้ในหน้าสั่งซื้อ/Operations)</div>' : '';
- var seg='<div class="card panel">'
-   +'<div class="ph"><h3>แบ่งตาม</h3>'+picker+'</div>'+note
+ var seg='<div class="segbox">'
+   +'<div class="c-h" style="margin-top:4px"><h3 style="font-size:.92rem">แบ่งตาม</h3>'+picker+'</div>'+note
    +'<div class="twrap"><table><thead><tr><th>'+dimLabel+'</th><th class="n">Order</th><th class="n">Customer</th><th class="n">Revenue</th><th class="n">Delivered</th><th class="n">Cancel</th><th class="n">Refund</th></tr></thead><tbody>'+(rows||'<tr><td colspan=7 class=center>—</td></tr>')+'</tbody></table></div></div>';
- return '<div class="sec"><h2>รายงานผู้บริหาร (CEO Summary) <span class="stamp">สำหรับช่วง Launch</span></h2>'+tiles+seg+'</div>';
+ return '<div class="c w12"><div class="c-h"><h3>รายงานผู้บริหาร (CEO Summary)</h3><span class="meta">สำหรับช่วง Launch</span></div>'+tiles+seg+'</div>';
 }
 
 /* ================= PAGER ================= */
