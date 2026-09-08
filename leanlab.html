@@ -821,10 +821,9 @@ document.addEventListener('click',function(e){
        +(paid>=mo?'<div class="r"><span>สถานะ</span><b style="color:var(--lime)">ผ่อนครบแล้ว ✓</b></div>':'')+'</div>';
     }
     var acts='<div class="rowbtns" style="margin-top:20px">'
-      +'<button class="btn lime block" id="tyNew">สั่งซื้อรายการใหม่</button>'
-      +'<button class="btn ghost block" id="tyLogout">ออกจากระบบ</button>'
-      +'</div>'
-      +'<p style="margin-top:11px;font-size:.82rem;line-height:1.55;color:var(--muted);text-align:center">สั่งซื้อให้ลูกค้าอีกคน หรือสั่งซ้ำ → กด “สั่งซื้อรายการใหม่” (ไม่ต้องออกจากระบบ) · เปลี่ยนบัญชี → “ออกจากระบบ”</p>';
+      +'<button class="btn lime block" id="tyNew">สั่งซื้อเพิ่ม</button>'
+      +'<button class="btn ghost block" id="tyLogout">สลับบัญชี / ออกจากระบบ</button>'
+      +'</div>';
     return '<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการสั่งซื้อ</h2><p>เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว ทีมงานจะดำเนินการตรวจสอบและแจ้งรายละเอียดให้ทราบอีกครั้ง</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">หมายเลขคำสั่งซื้อ</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บหมายเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+acts+'</div>';
   }
   // ผูกปุ่มในการ์ดขอบคุณ (สั่งซื้อรายการใหม่ / ออกจากระบบ) — เรียกหลัง render ทุกจุด
