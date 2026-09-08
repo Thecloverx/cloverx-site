@@ -337,6 +337,8 @@
       <button class="burger" onclick="toggleSide()" aria-label="เมนู"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="crumb">ฝ่ายซัพพอร์ต<b id="crumbTitle">Lean Lab</b></div>
       <div class="right">
+        <a href="/center" title="กลับหน้าเลือกแผนก" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-weight:700;font-size:.84rem;text-decoration:none;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Center</a>
+        <button onclick="staffLogout()" title="ออกจากระบบ" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid rgba(229,72,77,.3);border-radius:10px;background:rgba(229,72,77,.06);color:#e5484d;font-weight:700;font-size:.84rem;cursor:pointer;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</button>
         <div class="user"><div class="av">S</div><div class="info"><b>Support</b><span>CloverX</span></div></div>
       </div>
     </header>
@@ -347,6 +349,7 @@
 
 <script>
   var gen=document.getElementById('gen');
+  function staffLogout(){ fetch('/api/staff/logout',{method:'POST',credentials:'same-origin'}).then(function(){location.href='/login';}).catch(function(){location.href='/login';}); }
   // ---- Admin key (ล็อกหลังบ้าน) ----
   var ADM_KEY=(function(){try{return sessionStorage.getItem('llAdminKey')||'';}catch(e){return '';}})();
   function admQ(){return '';}
@@ -480,14 +483,25 @@
       // ทีมโค้ช + ผู้แนะนำ (รายได้นับเฉพาะยืนยันแล้ว) — Top 5
       var coachMap={}, refMap={};
       R.forEach(function(x){
-        var val = (x.status==='confirmed') ? (x.installment ? ((x.installment.perMonth||0)*(x.installment.paidCount||0)) : (x.promoAmount||x.fee||0)) : 0;
+        if(x.status!=='confirmed') return; // ✅ นับเฉพาะที่ "ชำระเงินแล้ว" — ยังไม่จ่าย = ยังไม่นับ
+        var val = (x.installment ? ((x.installment.perMonth||0)*(x.installment.paidCount||0)) : (x.promoAmount||x.fee||0));
         var eff=llEffCR(x); // กฎ: ผู้แนะนำที่เป็นชื่อโค้ช → นับเป็นโค้ช
         // ยอดวิ่งเข้า "ผู้แนะนำ" ก่อนเสมอ — ถ้ามีผู้แนะนำ (คนธรรมดา) ยอดจะไม่เข้าโค้ช
         // โค้ชได้ยอดเฉพาะ: ไม่มีผู้แนะนำ (ลูกค้าตรงของโค้ช) หรือผู้แนะนำที่กรอกมาเป็นชื่อโค้ชเอง
+        // นับตาม "ยอดชำระ" (แต่ละออเดอร์ที่จ่ายแล้ว = 1) — ซื้อซ้ำด้วยบัญชีเดิมนับเพิ่ม แต่ detail รวมเป็นคนเดียวพร้อม (xN)
+        var pid = x.memberId || _pp(x);
         var rf=eff.referrer;
-        if(rf){ refMap[rf]=refMap[rf]||{c:0,v:0,m:[]}; refMap[rf].c++; refMap[rf].v+=val; refMap[rf].m.push(_pp(x)); }
-        else { var cn=eff.coach; if(cn){ coachMap[cn]=coachMap[cn]||{c:0,v:0,m:[]}; coachMap[cn].c++; coachMap[cn].v+=val; coachMap[cn].m.push(_pp(x)); } }
+        var bk=null;
+        if(rf){ bk=(refMap[rf]=refMap[rf]||{c:0,v:0,m:[],ppl:{}}); }
+        else { var cn=eff.coach; if(cn){ bk=(coachMap[cn]=coachMap[cn]||{c:0,v:0,m:[],ppl:{}}); } }
+        if(!bk) return;
+        bk.c++; bk.v+=val;
+        if(bk.ppl[pid]) bk.ppl[pid].n++; else bk.ppl[pid]={name:_pp(x),n:1};
       });
+      // รายชื่อ detail: ต่อคน 1 บรรทัด + (xN) ถ้าซื้อซ้ำด้วยบัญชีเดิม
+      function _mkList(bk){ bk.m=Object.keys(bk.ppl).map(function(k){var p=bk.ppl[k];return p.name+(p.n>1?' (x'+p.n+')':'');}); }
+      Object.keys(coachMap).forEach(function(k){_mkList(coachMap[k]);});
+      Object.keys(refMap).forEach(function(k){_mkList(refMap[k]);});
       var coachRank=Object.keys(coachMap).map(function(k){return {name:k,c:coachMap[k].c,v:coachMap[k].v,m:coachMap[k].m};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
       var refRank=Object.keys(refMap).map(function(k){return {name:k,c:refMap[k].c,v:refMap[k].v,m:refMap[k].m};}).sort(function(a,b){return b.c-a.c;}).slice(0,5);
       var mCoachV=Math.max(1,(coachRank[0]||{}).v||0), mRefC=Math.max(1,(refRank[0]||{}).c||0);
