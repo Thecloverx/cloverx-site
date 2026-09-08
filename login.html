@@ -1,0 +1,69 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>เข้าสู่ระบบ · CloverX</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+  :root{--blue:#2E7FE4;--blue2:#1F6FDB;--ink:#12161d;--ink2:#3a4453;--muted:#6b7688;--line:#e7ebf1;--bg:#ffffff;--soft:#f4f7fb;--danger:#e5484d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans Thai","Manrope",system-ui,sans-serif;color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:radial-gradient(1100px 620px at 12% -10%,rgba(46,127,228,.12),transparent 60%),radial-gradient(900px 560px at 100% 0%,rgba(46,127,228,.07),transparent 55%),var(--bg)}
+  .eng{font-family:"Manrope","Noto Sans Thai",sans-serif}
+  .card{width:100%;max-width:400px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:38px 32px 30px;box-shadow:0 30px 70px -34px rgba(30,80,160,.28)}
+  .brand{display:flex;align-items:center;gap:2px;justify-content:center;font-family:"Manrope";font-weight:800;font-size:1.45rem;letter-spacing:.02em;color:#1b2532}
+  .brand .x{color:var(--blue);font-weight:800;transform:translateY(1px)}
+  h1{text-align:center;font-size:1.35rem;font-weight:700;margin:20px 0 4px}
+  .sub{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:24px}
+  label{display:block;font-weight:600;font-size:.82rem;color:var(--ink2);margin:0 0 6px}
+  .fld{margin-bottom:15px}
+  input{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:.98rem;color:var(--ink);background:var(--soft);transition:.15s;-webkit-text-size-adjust:100%}
+  input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(46,127,228,.12)}
+  .pwwrap{position:relative}
+  .pwwrap .eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--muted);cursor:pointer;padding:8px;font-size:.8rem;font-weight:600}
+  .btn{width:100%;margin-top:8px;padding:14px;border:0;border-radius:12px;background:var(--blue);color:#fff;font-family:inherit;font-weight:700;font-size:1rem;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--blue2)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .err{display:none;background:rgba(229,72,77,.08);border:1px solid rgba(229,72,77,.3);color:var(--danger);font-size:.85rem;font-weight:600;padding:10px 13px;border-radius:11px;margin-bottom:15px}
+  .err.on{display:block}
+  .foot{text-align:center;color:var(--muted);font-size:.78rem;margin-top:20px;line-height:1.6}
+  .foot a{color:var(--blue);text-decoration:none}
+  .lock{width:52px;height:52px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;background:rgba(46,127,228,.1);color:var(--blue)}
+  @media(prefers-color-scheme:dark){
+    :root{--ink:#e9eef7;--ink2:#aeb9cc;--muted:#8493aa;--line:#212a3e;--bg:#0a0f1b;--soft:#111a2b}
+    body{background:radial-gradient(1100px 620px at 12% -10%,rgba(79,155,255,.14),transparent 60%),var(--bg)}
+    .card{background:#121b2d;box-shadow:0 30px 70px -34px #000}
+    .brand{color:#e9eef7}
+    input{background:#0d1626;color:var(--ink)} input:focus{background:#0d1626}
+  }
+</style></head>
+<body>
+  <form class="card" id="lf" autocomplete="on">
+    <div class="lock"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg></div>
+    <div class="brand eng">CLOVER<span class="x">✕</span></div>
+    <h1>เข้าสู่ระบบพนักงาน</h1>
+    <div class="sub">CloverX Center · สำหรับทีมงานเท่านั้น</div>
+    <div class="err" id="err"></div>
+    <div class="fld"><label for="em">อีเมล</label><input id="em" name="email" type="email" autocomplete="username" placeholder="you@cloverxth.com" required></div>
+    <div class="fld"><label for="pw">รหัสผ่าน</label><div class="pwwrap"><input id="pw" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required><button type="button" class="eye" id="eye">แสดง</button></div></div>
+    <button class="btn" id="sb" type="submit">เข้าสู่ระบบ</button>
+    <div class="foot">รหัสผ่านกำหนดโดยบริษัท · ลืมรหัส? ติดต่อผู้ดูแลระบบ</div>
+  </form>
+<script>
+  var $=function(s){return document.querySelector(s);};
+  function nextUrl(){ try{ var n=new URLSearchParams(location.search).get('next')||''; if(n && /^\/[A-Za-z0-9_\-\/]*$/.test(n) && n.indexOf('//')<0) return n; }catch(e){} return '/center'; }
+  $('#eye').onclick=function(){ var p=$('#pw'); if(p.type==='password'){p.type='text';this.textContent='ซ่อน';}else{p.type='password';this.textContent='แสดง';} };
+  $('#lf').addEventListener('submit',function(e){
+    e.preventDefault();
+    var err=$('#err'); err.classList.remove('on');
+    var sb=$('#sb'); sb.disabled=true; sb.textContent='กำลังเข้าสู่ระบบ…';
+    fetch('/api/staff/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({email:$('#em').value,password:$('#pw').value})})
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(o){
+      if(o.ok && o.j && o.j.ok){ location.href=nextUrl(); return; }
+      sb.disabled=false; sb.textContent='เข้าสู่ระบบ';
+      err.textContent='อีเมลหรือรหัสผ่านไม่ถูกต้อง'; err.classList.add('on');
+    })
+    .catch(function(){ sb.disabled=false; sb.textContent='เข้าสู่ระบบ'; err.textContent='เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง'; err.classList.add('on'); });
+  });
+</script>
+</body></html>

@@ -934,6 +934,65 @@ app.use(function (req, res, next) {
   next();
 });
 
+// ================= STAFF LOGIN (พนักงาน CloverX — กั้นหน้าหลังบ้าน center/operations/support) =================
+const STAFF = path.join(DATA, 'staff.json');
+const STAFF_TTL = 30 * 24 * 3600 * 1000; // ล็อกอินค้าง 30 วัน
+const STAFF_SECRET = process.env.STAFF_SECRET || crypto.randomBytes(32).toString('hex');
+if (!process.env.STAFF_SECRET) console.log('[staff] ⚠ STAFF_SECRET ไม่ได้ตั้ง — ใช้ค่าสุ่ม (พนักงานจะถูกล็อกเอาต์เมื่อรีสตาร์ท). แนะนำตั้ง STAFF_SECRET ใน Railway');
+function staffRead() { try { return JSON.parse(fs.readFileSync(STAFF, 'utf8')) || []; } catch (e) { return []; } }
+function staffWrite(l) { try { fs.writeFileSync(STAFF, JSON.stringify(l, null, 2)); } catch (e) {} }
+function staffHash(pw, salt) { salt = salt || crypto.randomBytes(16).toString('hex'); return salt + ':' + crypto.scryptSync(String(pw), salt, 64).toString('hex'); }
+function staffVerify(pw, stored) { try { var a = String(stored).split(':'); var hh = crypto.scryptSync(String(pw), a[0], 64).toString('hex'); var x = Buffer.from(a[1], 'hex'), y = Buffer.from(hh, 'hex'); return x.length === y.length && crypto.timingSafeEqual(x, y); } catch (e) { return false; } }
+function staffSign(p) { var body = Buffer.from(JSON.stringify(p)).toString('base64url'); var sig = crypto.createHmac('sha256', STAFF_SECRET).update(body).digest('base64url'); return body + '.' + sig; }
+function staffVerifyToken(t) { try { var a = String(t).split('.'); var exp = crypto.createHmac('sha256', STAFF_SECRET).update(a[0]).digest('base64url'); var x = Buffer.from(a[1]), y = Buffer.from(exp); if (x.length !== y.length || !crypto.timingSafeEqual(x, y)) return null; var p = JSON.parse(Buffer.from(a[0], 'base64url').toString()); if (!p.exp || p.exp < Date.now()) return null; return p; } catch (e) { return null; } }
+function currentStaff(req) { var h = req.headers.cookie || ''; var m = h.match(/(?:^|;\s*)cx_staff=([^;]+)/); if (!m) return null; var p = staffVerifyToken(decodeURIComponent(m[1])); if (!p) return null; var s = staffRead().find(function (x) { return x.email === p.email; }); return s ? { email: s.email, name: s.name } : null; }
+function setStaffCookie(res, payload) { var tok = staffSign(Object.assign({}, payload, { exp: Date.now() + STAFF_TTL })); res.setHeader('Set-Cookie', 'cx_staff=' + encodeURIComponent(tok) + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + Math.floor(STAFF_TTL / 1000) + '; Secure'); }
+// seed บัญชีเริ่มต้น (ครั้งแรกเท่านั้น) — เปลี่ยน/ลบได้จากหน้า Center
+(function () { var l = staffRead(); if (!l.length) { staffWrite([{ email: 'admin@cloverxth.com', name: 'ผู้ดูแลระบบ', pwHash: staffHash('cloverx1234'), createdAt: new Date().toISOString(), seeded: true }]); console.log('[staff] seeded default: admin@cloverxth.com / cloverx1234 — โปรดเปลี่ยนรหัสจากหน้า Center'); } })();
+function staffAdminGuard(req, res) { var k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key']; if (!process.env.ADMIN_KEY || String(k) !== process.env.ADMIN_KEY) { res.status(403).json({ ok: false, error: 'forbidden' }); return false; } return true; }
+
+app.post('/api/staff/login', function (req, res) {
+  var b = req.body || {}, email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
+  var s = staffRead().find(function (x) { return String(x.email).toLowerCase() === email; });
+  if (!s || !staffVerify(pw, s.pwHash)) return res.status(401).json({ ok: false, error: 'bad_credentials' });
+  setStaffCookie(res, { email: s.email, name: s.name });
+  res.json({ ok: true, name: s.name, mustChange: !!s.seeded });
+});
+app.post('/api/staff/logout', function (req, res) { res.setHeader('Set-Cookie', 'cx_staff=; Path=/; HttpOnly; Max-Age=0'); res.json({ ok: true }); });
+app.get('/api/staff/me', function (req, res) { var s = currentStaff(req); res.json({ loggedIn: !!s, email: s ? s.email : null, name: s ? s.name : null }); });
+// จัดการพนักงาน (ต้องใช้ ADMIN_KEY — บริษัทเป็นผู้กำหนด)
+app.get('/api/staff/admin/list', function (req, res) { if (!staffAdminGuard(req, res)) return; res.json({ ok: true, staff: staffRead().map(function (x) { return { email: x.email, name: x.name, createdAt: x.createdAt, seeded: !!x.seeded }; }) }); });
+app.post('/api/staff/admin/create', function (req, res) {
+  if (!staffAdminGuard(req, res)) return; var b = req.body || {}, email = String(b.email || '').trim().toLowerCase(), name = String(b.name || '').trim().slice(0, 80), pw = String(b.password || '');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ ok: false, error: 'bad_email' });
+  if (pw.length < 6) return res.status(400).json({ ok: false, error: 'weak_password' });
+  var l = staffRead(); if (l.some(function (x) { return x.email.toLowerCase() === email; })) return res.status(409).json({ ok: false, error: 'email_taken' });
+  l.push({ email: email, name: name || email, pwHash: staffHash(pw), createdAt: new Date().toISOString() }); staffWrite(l); res.json({ ok: true });
+});
+app.post('/api/staff/admin/reset', function (req, res) {
+  if (!staffAdminGuard(req, res)) return; var b = req.body || {}, email = String(b.email || '').trim().toLowerCase(), pw = String(b.password || '');
+  if (pw.length < 6) return res.status(400).json({ ok: false, error: 'weak_password' });
+  var l = staffRead(), s = l.find(function (x) { return x.email.toLowerCase() === email; }); if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
+  s.pwHash = staffHash(pw); delete s.seeded; staffWrite(l); res.json({ ok: true });
+});
+app.post('/api/staff/admin/delete', function (req, res) {
+  if (!staffAdminGuard(req, res)) return; var b = req.body || {}, email = String(b.email || '').trim().toLowerCase();
+  var l = staffRead(), n = l.filter(function (x) { return x.email.toLowerCase() !== email; });
+  if (n.length === l.length) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (!n.length) return res.status(400).json({ ok: false, error: 'last_account' });
+  staffWrite(n); res.json({ ok: true });
+});
+// หน้า login (ต้องมาก่อน guard/static)
+app.get('/login', function (req, res) { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'login.html')); });
+// ประตูกั้น: หน้าหลังบ้านต้องล็อกอินพนักงานก่อน (เข้าตรงผ่าน URL ก็ถูกกั้น)
+var STAFF_GATED = /^\/(center|operations|support)(\.html)?\/?$/i;
+app.use(function (req, res, next) {
+  if (req.method !== 'GET' || !STAFF_GATED.test(req.path)) return next();
+  if (currentStaff(req)) return next();
+  res.set('Cache-Control', 'no-store');
+  return res.redirect('/login?next=' + encodeURIComponent(req.path));
+});
+
 // ---- static site (index.html, center.html, operations.html, preorder.html) ----
 app.use(express.static(__dirname, { extensions: ['html'] }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
