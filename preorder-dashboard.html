@@ -55,11 +55,11 @@ a{color:inherit}
 .kpi .d{margin-top:5px;font-size:.78rem;color:var(--sub)}
 .kpi .d.up{color:var(--good)}.kpi .d.down{color:var(--bad)}.kpi .d.warn{color:var(--warn)}
 /* Lean Lab-style KPI strip */
-.kstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
-.kx{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;min-width:0}
-.kx .kxl{font-size:.74rem;color:var(--sub);font-weight:600;line-height:1.35;display:flex;align-items:center;gap:5px}
-.kx .kxv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.05}
-.kx .kxs{font-size:.72rem;color:var(--sub);margin-top:3px;font-weight:500}
+.kstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:12px}
+.kx{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 13px;box-shadow:var(--shadow);position:relative;overflow:hidden;min-width:0}
+.kx .kxl{font-size:.72rem;color:var(--sub);font-weight:600;line-height:1.3;display:flex;align-items:center;gap:5px}
+.kx .kxv{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.05}
+.kx .kxs{font-size:.7rem;color:var(--sub);margin-top:2px;font-weight:500}
 .kx.hi{border-color:#C7DBFE;box-shadow:0 1px 2px rgba(3,4,94,.04),0 6px 18px rgba(3,4,94,.07)}
 .kx.hi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#00B4D8,#0077B6)}
 .kx.hi .kxv{color:var(--brand)}
@@ -68,13 +68,13 @@ a{color:inherit}
 @media(max-width:1100px){.kstrip{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:640px){.kstrip{grid-template-columns:repeat(2,1fr)}}
 /* 12-column grid (reference layout) */
-.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
+.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:12px}
 .grid12>*{min-width:0}
 .w4{grid-column:span 4}.w5{grid-column:span 5}.w6{grid-column:span 6}.w7{grid-column:span 7}.w8{grid-column:span 8}.w12{grid-column:span 12}
 @media(max-width:960px){.w4,.w5,.w6,.w7,.w8{grid-column:span 12}}
 /* card (reference .c) */
-.c{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-.c-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:13px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px}
+.c-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:11px}
 .c-h h3{margin:0;font-size:.98rem;font-weight:800;display:flex;align-items:center;gap:8px}
 .c-h .meta{font-size:.77rem;color:var(--mut);text-align:right;white-space:nowrap}
 /* day card */
@@ -88,8 +88,8 @@ a{color:inherit}
 .drow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:.85rem}
 .drow:last-child{border-bottom:none}
 /* donut card */
-.donutwrap{display:flex;align-items:center;gap:20px}
-.donutstat .big{font-size:1.5rem;font-weight:800}
+.donutwrap{display:flex;align-items:center;gap:14px}
+.donutstat .big{font-size:1.4rem;font-weight:800}
 .donutstat .lb{color:var(--sub);font-size:.82rem}
 .donutstat p{margin:3px 0 0;color:var(--sub);font-size:.8rem}
 /* sales overview */
@@ -121,9 +121,9 @@ a{color:inherit}
 /* hero block */
 .herowrap{display:grid;grid-template-columns:300px 1fr;gap:14px}
 .donut{display:flex;align-items:center;gap:20px}
-.ring{--p:0;width:132px;height:132px;border-radius:50%;flex:none;background:conic-gradient(var(--brand) calc(var(--p)*1%),#E5EEFB 0);display:flex;align-items:center;justify-content:center}
-.ring .inner{width:104px;height:104px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring .inner b{font-size:1.5rem;font-weight:800;line-height:1}
+.ring{--p:0;width:112px;height:112px;border-radius:50%;flex:none;background:conic-gradient(var(--brand) calc(var(--p)*1%),#E5EEFB 0);display:flex;align-items:center;justify-content:center}
+.ring .inner{width:88px;height:88px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .inner b{font-size:1.3rem;font-weight:800;line-height:1}
 .ring .inner small{color:var(--mut);font-size:.68rem;margin-top:2px}
 .herostat .big{font-size:1.4rem;font-weight:800}
 .herostat .lb{color:var(--sub);font-size:.82rem}
@@ -140,7 +140,7 @@ a{color:inherit}
 .hc .corner{position:absolute;top:14px;right:16px;font-size:.8rem;font-weight:700;color:var(--good)}
 /* tables */
 table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:11px 10px;font-size:.85rem;border-bottom:1px solid var(--line)}
+th,td{text-align:left;padding:8px 9px;font-size:.84rem;border-bottom:1px solid var(--line)}
 th{color:var(--mut);font-weight:600;font-size:.76rem;text-transform:none}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:none}
@@ -325,8 +325,7 @@ function render(){
  h+=kpiRow(A);
  h+='<div class="grid12">'+dayCard(A)+perProductCard(A)+'</div>';
  h+='<div class="grid12">'+actionCard(A)+'</div>';
- h+='<div class="grid12">'+donutCard(A)+salesOverviewCard(A)+'</div>';
- h+='<div class="grid12">'+payChannelCard(A)+payStatusCard(A)+'</div>';
+ h+='<div class="grid12">'+donutCard(A)+payChannelCard(A)+payStatusCard(A)+'</div>';
  h+='<div class="grid12">'+orderedItemsCard(A)+'</div>';
  h+='<div class="grid12">'+familyCard(A)+dailyChartCard()+'</div>';
  h+='<div class="grid12">'+customerCard()+'</div>';
@@ -409,7 +408,7 @@ function actionCard(A){
 function donutCard(A){
  var setsPct=Math.min(100,A.sets/GOAL_SETS*100);
  var left=GOAL_SETS-A.sets;
- return '<div class="c w5"><div class="donutwrap"><div class="ring" style="--p:'+setsPct.toFixed(1)+'"><div class="inner"><b class="num">'+num(A.sets)+'</b><small>จาก '+num(GOAL_SETS)+' ชุด</small></div></div>'
+ return '<div class="c w4"><div class="donutwrap"><div class="ring" style="--p:'+setsPct.toFixed(1)+'"><div class="inner"><b class="num">'+num(A.sets)+'</b><small>จาก '+num(GOAL_SETS)+' ชุด</small></div></div>'
    +'<div class="donutstat"><div class="lb">ความคืบหน้าล็อตจำกัด</div><div class="big num">'+(A.sets/GOAL_SETS*100).toFixed(1)+'%</div><p>'+(left>0?('เหลืออีก '+num(left)+' ชุด'):'ครบเป้าแล้ว ✓')+'</p><p>จาก '+num(A.n)+' ออเดอร์ · สิทธิ์ Family '+num(A.family)+' รายการ</p></div></div></div>';
 }
 function salesOverviewCard(A){
@@ -428,7 +427,7 @@ function salesOverviewCard(A){
 function payChannelCard(A){
  var totalPay=A.byPay.card.amt+A.byPay.bank.amt;
  function bar(lb,n,amt,col){var p=totalPay?Math.max(3,Math.round(amt/totalPay*100)):0;return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
- return '<div class="c w6"><div class="c-h"><h3>ยอดชำระเงินแยกช่องทาง</h3><span class="meta num">'+baht(totalPay)+'</span></div>'
+ return '<div class="c w4"><div class="c-h"><h3>ยอดชำระเงินแยกช่องทาง</h3><span class="meta num">'+baht(totalPay)+'</span></div>'
    +bar('บัตรเครดิต (Stripe)',A.byPay.card.n,A.byPay.card.amt,'var(--brand)')
    +bar('โอนเงินผ่านธนาคาร',A.byPay.bank.n,A.byPay.bank.amt,'var(--good)')
    +'<p class="priv">บัตรจับคู่ผ่าน Stripe Webhook แบบเรียลไทม์ · โอนธนาคารยืนยันจากสลิปในหน้า Operations</p></div>';
@@ -437,7 +436,7 @@ function payStatusCard(A){
  var stmax=Math.max(A.byBucket.paid,A.byBucket.pending,A.byBucket.cancel,1);
  function stbar(lb,n,amt,col){var p=Math.max(3,Math.round(n/stmax*100));return '<div class="barrow"><div class="l"><b>'+lb+'</b><span class="num">'+num(n)+' ออเดอร์ · '+baht(amt)+'</span></div><div class="track"><b style="width:'+p+'%;background:'+col+'"></b></div></div>';}
  var refPctN=0; VIEW.forEach(function(o){if(isLive(bucket(o))&&(o.ref||'').trim())refPctN++;});
- return '<div class="c w6"><div class="c-h"><h3>สถานะการชำระเงิน</h3></div>'
+ return '<div class="c w4"><div class="c-h"><h3>สถานะการชำระเงิน</h3></div>'
    +stbar('ชำระสำเร็จแล้ว',A.paidN,A.paidAmt,'var(--good)')
    +stbar('รอตรวจสอบ',A.pendN,A.pendAmt,'var(--warn)')
    +stbar('ยกเลิก',A.cancN,A.cancAmt,'var(--bad)')
