@@ -1101,26 +1101,56 @@ module.exports = function (app, DATA_DIR) {
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
-  // คืนเงิน (บัตรเครดิต) — เต็มจำนวน หรือบางส่วน
+  // คืนเงิน (บัตรเครดิต) — ชำระครั้งเดียว: เต็ม/บางส่วนผ่าน Stripe · แผนผ่อน: ยกเลิก subscription หยุดตัดงวดถัดไป (งวดที่จ่ายแล้วไม่คืน)
   app.post('/api/leanlab/admin/registration/:id/refund', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    function done(r2) { var byId = {}; readM().forEach(function (m) { byId[m.id] = m; }); res.json({ ok: true, registration: adminReg(r2, byId) }); }
+
+    // ---- แผนผ่อน: ยกเลิก subscription (หยุดตัดบัตรงวดถัดไป) — งวดที่จ่ายมาแล้วไม่คืน ----
+    if (r.installment) {
+      var subId = (r.installment && r.installment.subId) || (r.stripe && r.stripe.subscriptionId);
+      if (!subId) return res.status(400).json({ ok: false, error: 'no_subscription' });
+      var paidKept = (Number(r.installment.perMonth) || 0) * (Number(r.installment.paidCount) || 0);
+      // subscription ปิดไปแล้ว (ครบ 6 งวด หรือยกเลิกไปแล้ว) → ไม่ต้องเรียก Stripe ซ้ำ แค่บันทึกสถานะ
+      if (r.installment.status === 'completed' || r.installment.status === 'cancelled') {
+        var lc = readR(); var rc = lc.find(function (x) { return x.id === req.params.id; });
+        if (rc) { if (rc.installment) rc.installment.status = 'cancelled'; rc.status = 'refunded'; rc.refund = { mode: 'installment_cancel', subId: subId, paidKept: paidKept, paidCount: (rc.installment ? rc.installment.paidCount : 0), amount: 0, note: 'subscription_already_closed', at: new Date().toISOString() }; writeR(lc); }
+        return done(rc);
+      }
+      stripeApi('DELETE', '/v1/subscriptions/' + encodeURIComponent(subId), []).then(function (j) {
+        if (!j || !j.id) return res.status(502).json({ ok: false, error: 'stripe_error' });
+        var l2 = readR(); var r2 = l2.find(function (x) { return x.id === req.params.id; });
+        if (r2) {
+          if (r2.installment) { r2.installment.status = 'cancelled'; r2.installment.cancelledAt = new Date().toISOString(); }
+          r2.status = 'refunded';
+          r2.refund = { mode: 'installment_cancel', subId: subId, paidKept: paidKept, paidCount: (r2.installment ? r2.installment.paidCount : 0), amount: 0, at: new Date().toISOString() };
+          writeR(l2);
+        }
+        console.log('[lean-lab] installment ' + req.params.id + ' cancelled by admin (sub=' + subId + ', paidKept=' + paidKept + ' not refunded)');
+        done(r2);
+      });
+      return;
+    }
+
+    // ---- ชำระครั้งเดียว (บัตร): คืนเต็ม/บางส่วนผ่าน Stripe ----
     var pi = r.stripe && r.stripe.paymentIntent;
-    if (!pi) return res.status(400).json({ ok: false, error: (r.installment ? 'installment_refund_manual' : 'no_card_payment') });
+    if (!pi) return res.status(400).json({ ok: false, error: 'no_card_payment' });
     var params = [['payment_intent', pi]];
     if (b.mode === 'partial') {
       var amt = Number(b.amount);
       if (!(amt > 0)) return res.status(400).json({ ok: false, error: 'bad_amount' });
+      var maxAmt = (Number(r.promoAmount) || Number(r.fee) || 0);
+      if (maxAmt > 0 && amt > maxAmt) return res.status(400).json({ ok: false, error: 'amount_too_high' });
       params.push(['amount', String(Math.round(amt * 100))]);
     }
     stripeApi('POST', '/v1/refunds', params).then(function (j) {
       if (!j || !j.id) return res.status(502).json({ ok: false, error: 'stripe_error' });
       var l2 = readR(); var r2 = l2.find(function (x) { return x.id === req.params.id; });
       if (r2) { r2.refund = { id: j.id, amount: (j.amount != null ? j.amount / 100 : null), mode: (b.mode === 'partial' ? 'partial' : 'full'), at: new Date().toISOString() }; if (b.mode !== 'partial') r2.status = 'refunded'; writeR(l2); }
-      var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
-      res.json({ ok: true, registration: adminReg(r2, byId) });
+      done(r2);
     });
   });
   // ลบผู้สมัคร (ลบทั้งใบสมัคร + บัญชีสมาชิก ถ้า withMember=1)
