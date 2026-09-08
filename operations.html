@@ -76,6 +76,7 @@
 
   .content{padding:26px;flex:1}
   .wrapc{max-width:1200px;margin:0 auto}
+  .wrapc.dashfull{max-width:none}
   .head{margin-bottom:20px}
   .head h1{font-size:1.6rem}
   .head p{color:var(--muted);margin-top:4px;font-size:.95rem}
@@ -2149,10 +2150,10 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var b=document.getElementById('dashBody'); if(!b)return;
     if(v==='xh'){
       b.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><a href="/preorder-dashboard.html" target="_blank" rel="noopener" style="background:var(--brand);border:1px solid var(--brand);border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a></div>'
-        +'<iframe id="dashFrame" src="/preorder-dashboard.html" style="width:100%;height:calc(100vh - 210px);min-height:600px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
+        +'<iframe id="dashFrame" src="/preorder-dashboard.html" style="width:100%;height:calc(100vh - 165px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
     } else if(v==='ll'){
       b.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><a href="/support" target="_blank" rel="noopener" style="background:#16a34a;border:1px solid #16a34a;border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a></div>'
-        +'<iframe id="dashFrame" src="/support?embed=1" style="width:100%;height:calc(100vh - 210px);min-height:600px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
+        +'<iframe id="dashFrame" src="/support?embed=1" style="width:100%;height:calc(100vh - 165px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
     } else if(v==='exam'){
       b.innerHTML=dashLinkCard('#7c5cff','แดชบอร์ด Exam (X-VISOR)','รอบสอบ · ผู้เข้าสอบ · อัตราผ่าน · ผลสอบ',"ไปที่ Exam ▸ Session →","go('exam-session')");
     }
@@ -2234,6 +2235,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function go(v){
     var isOv=(v==='overview');
     var isExam=(v.indexOf('exam-')===0||v.indexOf('reg-')===0);
+    var _wc=document.querySelector('.wrapc'); if(_wc)_wc.classList.toggle('dashfull', v==='podash');
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
