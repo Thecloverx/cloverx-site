@@ -100,7 +100,13 @@ a{color:inherit}
 .ov .ovs{color:var(--sub);font-size:.74rem;margin-top:3px}
 /* ceo seg */
 .segbox{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
-@media(max-width:560px){.dayk{grid-template-columns:1fr}.ovgrid{grid-template-columns:1fr}}
+/* mobile: referrer rows reflow so name isn't clipped */
+@media(max-width:640px){
+ .li.ref3{flex-wrap:wrap;row-gap:9px}
+ .li.ref3 .body{flex:1 1 calc(100% - 34px)}
+ .li.ref3 .amt{flex:1 1 30%;min-width:0!important;text-align:left}
+}
+@media(max-width:560px){.ovgrid{grid-template-columns:1fr}.dayk .dk b{font-size:1rem}.act .v{font-size:1.1rem}.donutstat .big{font-size:1.2rem}}
 /* section */
 .sec{margin-top:18px}
 .sec>h2{font-size:1.05rem;font-weight:800;margin:0 0 11px;display:flex;align-items:center;gap:9px}
@@ -555,7 +561,7 @@ function referrerCard(A){
  var pages=Math.max(1,Math.ceil(refs.length/PAGE_REF)); if(refPage>pages)refPage=pages;
  var slice=refs.slice((refPage-1)*PAGE_REF, refPage*PAGE_REF);
  var body=slice.map(function(r,i){var idx=(refPage-1)*PAGE_REF+i+1;
-  return '<div class="li"><div class="rank">'+idx+'</div><div class="body"><div class="t">'+esc(r.name)+'</div><div class="s">Tier '+r.tier+'</div></div>'
+  return '<div class="li ref3"><div class="rank">'+idx+'</div><div class="body"><div class="t">'+esc(r.name)+'</div><div class="s">Tier '+r.tier+'</div></div>'
    +'<div class="amt" style="min-width:70px">'+num(r.n)+'<small>ออเดอร์</small></div>'
    +'<div class="amt" style="min-width:96px">'+baht(r.amt)+'<small>ยอดขาย</small></div>'
    +'<div class="amt" style="min-width:90px;color:var(--good)">'+baht(r.comm)+'<small>ค่าคอม</small></div></div>';
