@@ -993,8 +993,25 @@ app.use(function (req, res, next) {
   return res.redirect('/login?next=' + encodeURIComponent(req.path));
 });
 
+// ---- แยกหน้าแรกตาม subdomain (career / center / shopping / leanlab) — กันหน้าปนกัน ----
+// ทุก subdomain ชี้มาแอปเดียวกัน แต่ "หน้าแรก" (/) จะต่างกันตามชื่อโดเมนที่เข้ามา
+function siteForHost(req) {
+  var h = String(req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase().split(':')[0];
+  if (h.indexOf('leanlab') === 0) return 'leanlab';
+  if (h.indexOf('center') === 0) return 'center';
+  if (h.indexOf('shop') === 0) return 'shop';        // shopping.cloverxth.com / shop.*
+  return 'career';                                    // career(s).cloverxth.com, โดเมน railway, apex → หน้าเว็บสมัครงาน
+}
+
 // ---- static site (index.html, center.html, operations.html, preorder.html) ----
-app.use(express.static(__dirname, { extensions: ['html'] }));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// index:false → ไม่ให้ static เสิร์ฟ index.html ที่ "/" อัตโนมัติ จะได้ให้ตัวแยกตาม subdomain ด้านล่างทำงาน
+app.use(express.static(__dirname, { extensions: ['html'], index: false }));
+app.get('/', (req, res) => {
+  var s = siteForHost(req);
+  if (s === 'leanlab') return res.redirect('/leanlab');   // leanlab.cloverxth.com → โครงการ Lean Lab
+  if (s === 'center') return res.redirect('/center');     // center.cloverxth.com → ระบบพนักงาน (ผ่านล็อกอิน)
+  if (s === 'shop') return res.redirect('/preorder');     // shopping.cloverxth.com → หน้าสั่งซื้อ
+  return res.sendFile(path.join(__dirname, 'index.html'));// career → หน้าเว็บสมัครงาน
+});
 
 app.listen(PORT, () => console.log('CloverX site + API on ' + PORT));
