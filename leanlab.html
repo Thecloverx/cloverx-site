@@ -820,10 +820,17 @@ document.addEventListener('click',function(e){
        +'<div class="r"><span>วันตัดบัตร</span><b>ทุกวันที่ '+(ins.day||'-')+' ของเดือน</b></div>'
        +(paid>=mo?'<div class="r"><span>สถานะ</span><b style="color:var(--lime)">ผ่อนครบแล้ว ✓</b></div>':'')+'</div>';
     }
-    return '<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการสั่งซื้อ</h2><p>เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว ทีมงานจะดำเนินการตรวจสอบและแจ้งรายละเอียดให้ทราบอีกครั้ง</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">หมายเลขคำสั่งซื้อ</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บหมายเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+'</div>';
+    var acts='<div class="rowbtns" style="margin-top:20px">'
+      +'<button class="btn ghost block" id="tyHome">กลับหน้าแรก</button>'
+      +'<button class="btn lime block" id="tyLogout">ออกจากระบบ</button>'
+      +'</div>'
+      +'<p style="margin-top:11px;font-size:.82rem;line-height:1.55;color:var(--muted);text-align:center">ต้องการสั่งซื้อให้ลูกค้าอีกคน หรือสั่งซ้ำ? กด “ออกจากระบบ” แล้วเข้าสั่งใหม่ได้เลย</p>';
+    return '<div class="card"><div class="stbig"><div class="ic ok"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div><h2>ขอบคุณสำหรับการสั่งซื้อ</h2><p>เราได้รับคำสั่งซื้อของคุณเรียบร้อยแล้ว ทีมงานจะดำเนินการตรวจสอบและแจ้งรายละเอียดให้ทราบอีกครั้ง</p></div>'+(REG.po?'<div class="pobox"><span class="polbl">หมายเลขคำสั่งซื้อ</span><span class="poval">'+esc(REG.po)+'</span><span class="pohint">โปรดเก็บหมายเลขนี้ไว้อ้างอิงกับทีมงาน</span></div>':'')+insBox+acts+'</div>';
   }
+  // ผูกปุ่มในการ์ดขอบคุณ (กลับหน้าแรก / ออกจากระบบ) — เรียกหลัง render ทุกจุด
+  function wireThank(){ var h=document.getElementById('tyHome'); if(h)h.onclick=function(){location.href='/leanlab';}; var o=document.getElementById('tyLogout'); if(o)o.onclick=logout; }
   // พาไปหน้าขอบคุณเต็มจอทันที (ไม่ต้องเลื่อนหา)
-  function vThankYou(){ showApp(); app.innerHTML=thankHTML(); }
+  function vThankYou(){ showApp(); app.innerHTML=thankHTML(); wireThank(); }
   function fillSide(){
     stopPoll();
     if(!ME.loggedIn){renderAuth();return;}
@@ -850,7 +857,7 @@ document.addEventListener('click',function(e){
       p.innerHTML='<div class="card"><div class="stbig"><div class="ic wait"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>รอตรวจสอบการชำระเงิน</h2><p>เราได้รับสลิปของคุณแล้ว ทีมงานกำลังตรวจสอบ เมื่อยืนยันสำเร็จระบบจะอัปเดตให้อัตโนมัติ</p></div></div>';
       startPoll('pending_review');
     } else if(st==='confirmed'){
-      p.innerHTML=thankHTML();
+      p.innerHTML=thankHTML(); wireThank();
     } else {
       p.innerHTML='<div class="card"><h2 class="tt">Lean Lab</h2><p class="sub">สถานะการสมัคร: '+esc(st||'-')+'</p></div>';
     }
