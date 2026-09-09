@@ -257,6 +257,48 @@
   .poacts button.good{background:#16a34a;color:#fff;border-color:#16a34a}
   .poacts button.danger{color:#dc2626;border-color:#f5c0c0}
   @media(max-width:560px){.podrw .pnl{width:100%}}
+  /* ===== Pre-Order Order — Lean Lab Member style layout ===== */
+  .pomemhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .pomemhead h1{font-size:1.5rem;margin:0}
+  .pomemhead .sub{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+  .pomemhead-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pokpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .pokpi{background:var(--panel,#fff);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px}
+  .pokpi .k-top{display:flex;align-items:center;gap:9px}
+  .pokpi .k-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+  .pokpi .k-ic svg{width:18px;height:18px}
+  .pokpi .k-lb{font-size:.8rem;color:var(--muted);font-weight:600;line-height:1.25}
+  .pokpi .k-v{font-size:1.5rem;font-weight:800;color:var(--ink);line-height:1}
+  .pogrid{display:grid;grid-template-columns:minmax(0,1fr) 374px;gap:16px;align-items:start}
+  .pomcard{background:var(--panel,#fff);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .pomfilters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .pomsearch{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:0 12px}
+  .pomsearch svg{width:16px;height:16px;color:var(--muted);flex:none}
+  .pomsearch input{flex:1;border:0;background:none;padding:10px 0;font-family:inherit;font-size:.9rem;color:var(--ink);outline:none}
+  .pomsel{border:1px solid var(--line);background:var(--panel,#fff);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:.86rem;color:var(--ink);cursor:pointer}
+  .pomdate{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--panel,#fff);font-size:.84rem;color:var(--ink)}
+  .pomdate .ic{color:var(--muted);flex:none}
+  .pomdate input{border:0;background:none;font-family:inherit;font-size:.82rem;color:var(--ink);outline:none;padding:0;min-width:106px}
+  .pomlistmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .pomcount{font-size:.82rem;color:var(--muted);font-weight:600}
+  .pomlistmeta-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  table.pordt{width:100%;border-collapse:collapse;font-size:.86rem}
+  table.pordt thead th{text-align:left;color:var(--muted);font-weight:600;font-size:.74rem;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.pordt thead th.num{text-align:right}
+  table.pordt tbody td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.pordt tbody td.num{text-align:right}
+  .pomdetail{position:relative;min-height:240px;padding:18px}
+  .pomdetail-empty{color:var(--muted);text-align:center;padding:60px 18px;font-size:.9rem}
+  .pomscrim{display:none}
+  @media(max-width:980px){
+    .pokpis{grid-template-columns:1fr 1fr}
+    .pogrid{grid-template-columns:1fr}
+    .pomdetail{position:fixed;top:0;right:0;bottom:0;width:min(410px,92vw);z-index:1300;border-radius:0;overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,.22);transform:translateX(105%);transition:transform .22s;margin:0}
+    .pomdetail.open{transform:none}
+    .pomdetail-empty{display:none}
+    .pomscrim.on{display:block;position:fixed;inset:0;background:rgba(20,30,55,.35);z-index:1290}
+  }
+  @media(max-width:520px){.pokpis{grid-template-columns:1fr 1fr}.pomemhead h1{font-size:1.3rem}}
   .it-modal{position:fixed;inset:0;z-index:2000;display:none}
   .it-modal.on{display:block}
   .it-back{position:absolute;inset:0;background:rgba(20,30,55,.5)}
@@ -2236,7 +2278,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var o=null;for(var i=0;i<PO_ORDERS.length;i++){if(PO_ORDERS[i].id===id){o=PO_ORDERS[i];break;}}
     if(!o)return;
     PO_SEL=id;
-    var pnl=document.getElementById('poDrawerPnl'), drw=document.getElementById('poDrawer'); if(!pnl||!drw)return;
+    var pnl=document.getElementById('poDrawerPnl'); if(!pnl)return;
     var chan=o.channel||o.brand||'Xircle';
     var gs=poGroup(o);
     var itemsHtml=gs.map(function(g){
@@ -2263,25 +2305,44 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<div class="posec"><div class="posec-t">🧾 สรุปการชำระเงิน</div>'+sum+'</div>'
       +'<div class="posec"><div class="posec-t">📋 รายการดำเนินการ</div><div class="potl">'+step1+step2+'</div></div>'
       +poDetailActions(o);
-    drw.classList.add('on');
+    var empty=document.getElementById('poDetailEmpty'); if(empty)empty.style.display='none';
+    var card=document.getElementById('poDetailCard'); if(card)card.classList.add('open');
+    var scr=document.getElementById('poDetailScrim'); if(scr)scr.classList.add('on');
     poRenderOrderRows();
   }
-  function poOrderClose(){var d=document.getElementById('poDrawer');if(d)d.classList.remove('on');PO_SEL=null;poRenderOrderRows();}
+  function poOrderClose(){var pnl=document.getElementById('poDrawerPnl');if(pnl)pnl.innerHTML='';var empty=document.getElementById('poDetailEmpty');if(empty)empty.style.display='';var card=document.getElementById('poDetailCard');if(card)card.classList.remove('open');var scr=document.getElementById('poDetailScrim');if(scr)scr.classList.remove('on');PO_SEL=null;poRenderOrderRows();}
   poDraw=function(){
     var g=document.getElementById('view-generic'); if(!g)return;
+    var totalN=PO_ORDERS.length;
+    var paidN=PO_ORDERS.filter(function(o){return o.status==='paid'||o.status==='confirmed';}).length;
+    var pendN=PO_ORDERS.filter(function(o){return poNeeds(o)||poAwaitPay(o);}).length;
+    var salesN=PO_ORDERS.filter(function(o){return o.status==='confirmed'||o.status==='paid';}).reduce(function(a,o){return a+(Number(o.total)||0);},0);
+    function kc(bg,col,ic,lb,v){return '<div class="pokpi"><div class="k-top"><div class="k-ic" style="background:'+bg+';color:'+col+'">'+ic+'</div><div class="k-lb">'+lb+'</div></div><div class="k-v">'+v+'</div></div>';}
+    var unit='<span style="font-size:.8rem;font-weight:600;color:var(--muted);margin-left:4px">รายการ</span>';
+    var IC_BAG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>';
+    var IC_CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>';
+    var IC_CLK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+    var IC_BAHT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    var kpis='<div class="pokpis">'
+      +kc('#EEF0FF','#4F6DF5',IC_BAG,'คำสั่งซื้อทั้งหมด',totalN+unit)
+      +kc('#E7F7EE','#15A34A',IC_CHK,'ชำระเงินแล้ว',paidN+unit)
+      +kc('#FEF3E2','#D97706',IC_CLK,'รอตรวจสอบ',pendN+unit)
+      +kc('#EAF4FB','#0077B6',IC_BAHT,'ยอดขายรวม','฿'+salesN.toLocaleString('en-US'))
+      +'</div>';
     var statusOpts=[['all','สถานะการชำระเงิน · ทั้งหมด'],['paid','ชำระเงินแล้ว'],['pending','รอชำระ/ตรวจสอบ'],['refunded','คืนเงิน'],['cancelled','ยกเลิก/ปฏิเสธ']].map(function(s){return '<option value="'+s[0]+'"'+(PO_STATUSF===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('');
-    var head='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>Pre-Order · Order</h1><p>จัดการคำสั่งซื้อและตรวจสอบสถานะการชำระเงินของแต่ละรายการ</p></div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button onclick="poRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button><a class="link" href="#" onclick="poExportExcel();return false" style="align-self:center">ส่งออก Excel →</a></div></div>';
-    var filt='<div class="panel" style="margin-bottom:16px"><div class="pofil">'
-      +'<div class="srbox"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="poSearch" value="'+poEsc(PO_Q)+'" oninput="PO_Q=this.value;PO_PAGE=1;poRenderOrderRows()" placeholder="ค้นหาเลขคำสั่งซื้อ ชื่อลูกค้า เบอร์ หรือสินค้า"></div>'
-      +'<div style="display:flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff"><span style="color:var(--muted)">📅</span><input type="date" id="poCFrom" value="'+PO_CFROM+'" onchange="PO_RANGE=\'custom\';PO_CFROM=this.value;PO_PAGE=1;poRenderOrderRows()" style="border:0;font-family:inherit;font-size:.84rem;background:none;color:var(--ink)"><span style="color:var(--muted)">–</span><input type="date" id="poCTo" value="'+PO_CTO+'" onchange="PO_RANGE=\'custom\';PO_CTO=this.value;PO_PAGE=1;poRenderOrderRows()" style="border:0;font-family:inherit;font-size:.84rem;background:none;color:var(--ink)"></div>'
-      +'<select id="poStatusF" onchange="PO_STATUSF=this.value;PO_PAGE=1;poRenderOrderRows()" style="padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;font-weight:600;background:#fff;color:var(--ink)">'+statusOpts+'</select>'
-      +'<button onclick="poClearFilter()" style="background:none;border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-family:inherit;font-weight:600;font-size:.84rem;color:var(--muted);cursor:pointer">ล้างตัวกรอง</button>'
-      +'</div></div>';
-    var tbl='<div class="panel"><div class="ph"><h3>รายการคำสั่งซื้อ <span style="font-size:.8rem;font-weight:500;color:var(--muted)" id="poCount">('+PO_ORDERS.length+')</span></h3><span style="font-size:.78rem;color:var(--muted)">แตะแถวเพื่อดูรายละเอียด</span></div>'
-      +'<div style="overflow-x:auto"><table class="potbl pordt"><thead><tr><th>วันที่ซื้อ</th><th>เลขที่คำสั่งซื้อ</th><th>ชื่อ-นามสกุล</th><th>รายการสินค้า</th><th>ช่องทางการชำระเงิน</th><th>สถานะการชำระเงิน</th><th class="num">ยอดชำระ</th><th>การจัดการ</th></tr></thead><tbody id="poOrdBody"></tbody></table></div>'
-      +'<div class="popager" id="poOrdPager"></div></div>';
-    g.innerHTML=head+filt+tbl+'<div class="podrw" id="poDrawer"><div class="scr" onclick="poOrderClose()"></div><div class="pnl" id="poDrawerPnl"></div></div>';
+    var psOpts=[10,20,50].map(function(n){return '<option value="'+n+'"'+(PO_PS===n?' selected':'')+'>'+n+' / หน้า</option>';}).join('');
+    var head='<div class="pomemhead"><div><h1>Pre-Order · Order</h1><p class="sub">รายการคำสั่งซื้อ ตรวจสอบสถานะการชำระเงิน และจัดการแต่ละรายการ</p></div>'
+      +'<div class="pomemhead-act"><button onclick="poRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button><button onclick="poExportExcel()" style="background:var(--brand);border:1px solid var(--brand);border-radius:9px;padding:8px 16px;color:#fff;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">ส่งออก Excel</button></div></div>';
+    var listCard='<div class="pomcard"><div class="pomfilters">'
+      +'<div class="pomsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="poSearch" value="'+poEsc(PO_Q)+'" oninput="PO_Q=this.value;PO_PAGE=1;poRenderOrderRows()" placeholder="ค้นหาเลขคำสั่งซื้อ ชื่อลูกค้า เบอร์ หรือสินค้า"></div>'
+      +'<div class="pomdate"><span class="ic">📅</span><input type="date" id="poCFrom" value="'+PO_CFROM+'" onchange="PO_RANGE=\'custom\';PO_CFROM=this.value;PO_PAGE=1;poRenderOrderRows()"><span style="color:var(--muted)">–</span><input type="date" id="poCTo" value="'+PO_CTO+'" onchange="PO_RANGE=\'custom\';PO_CTO=this.value;PO_PAGE=1;poRenderOrderRows()"></div>'
+      +'<select class="pomsel" onchange="PO_STATUSF=this.value;PO_PAGE=1;poRenderOrderRows()">'+statusOpts+'</select>'
+      +'<button class="pomsel" onclick="poClearFilter()" style="color:var(--muted);font-weight:600;cursor:pointer">ล้างข้อมูล</button>'
+      +'</div>'
+      +'<div class="pomlistmeta"><span class="pomcount" id="poCount">–</span><div class="pomlistmeta-right"><select class="pomsel" onchange="PO_PS=parseInt(this.value,10)||10;PO_PAGE=1;poRenderOrderRows()">'+psOpts+'</select><div class="popager" id="poOrdPager" style="margin-top:0"></div></div></div>'
+      +'<div style="overflow-x:auto"><table class="pordt"><thead><tr><th>วันที่ซื้อ</th><th>เลขที่คำสั่งซื้อ</th><th>ชื่อ-นามสกุล</th><th>รายการสินค้า</th><th>ช่องทางการชำระเงิน</th><th>สถานะการชำระเงิน</th><th class="num">ยอดชำระ</th><th>จัดการ</th></tr></thead><tbody id="poOrdBody"></tbody></table></div></div>';
+    var detailCard='<div class="pomcard pomdetail" id="poDetailCard"><div class="pomdetail-empty" id="poDetailEmpty">เลือกออเดอร์เพื่อดูรายละเอียด</div><div id="poDrawerPnl"></div></div>';
+    g.innerHTML=head+kpis+'<div class="pogrid">'+listCard+detailCard+'</div><div class="pomscrim" id="poDetailScrim" onclick="poOrderClose()"></div>';
     poRenderOrderRows();
   };
   function poProdPanel(){
