@@ -205,6 +205,58 @@
   .itembtn .ib-more{align-self:center;font-size:.72rem;font-weight:700;color:var(--muted)}
   .itembtn .ib-txt{font-weight:700;font-size:.8rem;color:var(--ink);white-space:nowrap}
   .itembtn .ib-cv{color:var(--muted);flex:none;transition:transform .15s}
+  /* ===== Pre-Order · Order redesign ===== */
+  .pofil{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .pofil .srbox{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+  .pofil .srbox input{flex:1;border:0;padding:0;font-family:inherit;font-size:.88rem;color:var(--ink);background:none;outline:none}
+  .pordt tbody tr.clk{cursor:pointer;transition:background .12s}
+  .pordt tbody tr.clk:hover{background:var(--soft)}
+  .pordt tbody tr.clk.sel{background:var(--brand-tint)}
+  .polink{color:var(--brand);font-weight:700}
+  .popager{display:flex;gap:6px;justify-content:flex-end;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .popager button{min-width:34px;height:34px;padding:0 8px;border:1px solid var(--line);background:#fff;border-radius:9px;font-family:inherit;font-weight:600;font-size:.85rem;color:var(--ink);cursor:pointer}
+  .popager button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .popager button:disabled{opacity:.4;cursor:default}
+  .podrw{position:fixed;inset:0;z-index:1500;display:none}
+  .podrw.on{display:block}
+  .podrw .scr{position:absolute;inset:0;background:rgba(20,30,55,.35)}
+  .podrw .pnl{position:absolute;top:0;right:0;height:100%;width:404px;max-width:92vw;background:var(--panel,#fff);box-shadow:-16px 0 44px -18px rgba(20,30,55,.4);overflow-y:auto;padding:20px 20px 30px;animation:poslide .22s ease}
+  @keyframes poslide{from{transform:translateX(26px);opacity:.5}to{transform:none;opacity:1}}
+  .podh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .podh h3{font-size:1.06rem;font-weight:800}
+  .podh .oid{font-size:.76rem;color:var(--muted);margin-top:3px;font-family:ui-monospace,SFMono-Regular,monospace}
+  .podx{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.05rem;line-height:1;padding:4px}
+  .posec{margin-top:20px}
+  .posec-t{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:800;color:var(--ink);margin-bottom:11px}
+  .poinfo{display:flex;justify-content:space-between;gap:12px;font-size:.86rem;padding:5px 0}
+  .poinfo .k{color:var(--muted)}
+  .poinfo .v{font-weight:600;text-align:right}
+  .poit{display:flex;gap:11px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .poit:first-child{border-top:0;padding-top:2px}
+  .poit .th{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#EEF3FB,#E2E9F6);display:flex;align-items:center;justify-content:center;color:var(--brand);flex:none;overflow:hidden}
+  .poit .th img{width:100%;height:100%;object-fit:cover}
+  .poit .th svg{width:22px;height:22px}
+  .poit .nm{font-weight:700;font-size:.88rem}
+  .poit .sb{font-size:.76rem;color:var(--muted);margin-top:2px}
+  .poit .pr{margin-left:auto;font-weight:700;font-size:.86rem;white-space:nowrap}
+  .posum{background:var(--soft);border-radius:12px;padding:12px 14px}
+  .posum .r{display:flex;justify-content:space-between;font-size:.86rem;padding:4px 0}
+  .posum .r.tot{border-top:1px solid var(--line);margin-top:6px;padding-top:9px;font-weight:800}
+  .posum .r.tot .amt{color:var(--brand);font-size:1.05rem}
+  .potl .step{display:flex;gap:11px;padding-bottom:16px;position:relative}
+  .potl .step:last-child{padding-bottom:0}
+  .potl .step:not(:last-child):before{content:"";position:absolute;left:9px;top:22px;bottom:-2px;width:2px;background:var(--line)}
+  .potl .step.done:not(:last-child):before{background:var(--good)}
+  .potl .dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);background:#fff;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;z-index:1}
+  .potl .step.done .dot{background:var(--good);border-color:var(--good)}
+  .potl .dot svg{width:12px;height:12px}
+  .potl .sl{font-weight:700;font-size:.88rem}
+  .potl .ss{font-size:.75rem;color:var(--muted);margin-top:2px}
+  .poacts{display:flex;flex-direction:column;gap:8px;margin-top:22px}
+  .poacts button{width:100%;padding:11px;border-radius:10px;font-family:inherit;font-weight:700;font-size:.88rem;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .poacts button.good{background:#16a34a;color:#fff;border-color:#16a34a}
+  .poacts button.danger{color:#dc2626;border-color:#f5c0c0}
+  @media(max-width:560px){.podrw .pnl{width:100%}}
   .it-modal{position:fixed;inset:0;z-index:2000;display:none}
   .it-modal.on{display:block}
   .it-back{position:absolute;inset:0;background:rgba(20,30,55,.5)}
@@ -483,7 +535,7 @@
   // view meta for non-overview pages
   var META={
     order:{t:'Order Management',th:'จัดการคำสั่งซื้อ',d:'ติดตามและจัดการคำสั่งซื้อทั้งหมด สถานะ และการจัดส่ง',kind:'plain'},
-    preorder:{t:'Pre-Order Management',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบรับเงินมัดจำ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
+    preorder:{t:'Order',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบรับเงินมัดจำ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
     qr:{t:'QR Code',th:'QR Code สั่งซื้อ Pre-Order',d:'ลิงก์และ QR สำหรับส่งให้ลูกค้าเปิดหน้าสั่งซื้อ',kind:'plain'},
     podash:{t:'Dashboard',th:'แดชบอร์ด',d:'เลือกหัวข้อแดชบอร์ดจากฟิลเตอร์ด้านบน',kind:'dash'},
     cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
@@ -2081,6 +2133,157 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>จัดการ Pre-Order</h1><p>ตรวจสลิป ยืนยันการชำระเงิน ออกใบรับเงินมัดจำ และจัดคิวคำสั่งซื้อ</p></div><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button></div>'
       +kpis+ordersPanel;
   }
+  /* ===== Pre-Order · Order — redesigned list + detail drawer (overrides poDraw above; reuses all money fns) ===== */
+  var PO_STATUSF='all', PO_PAGE=1, PO_PS=10, PO_SEL=null;
+  var PO_CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  function poStatusBucket(o){
+    if(o.status==='paid'||o.status==='confirmed')return 'paid';
+    if(o.status==='refunded'||o.status==='partially_refunded')return 'refunded';
+    if(o.status==='cancelled'||o.status==='rejected'||o.status==='failed')return 'cancelled';
+    return 'pending';
+  }
+  function poChannel(o){return o.pay==='card'?'บัตรเครดิต':(o.pay==='promptpay'?'PromptPay QR':'โอนธนาคาร');}
+  function poPayPill(o){
+    if(poAwaitPay(o))return '<span class="pill wait">รอลูกค้าชำระ</span>';
+    var b=poStatusBucket(o);
+    if(b==='paid')return '<span class="pill ok">ชำระเงินแล้ว</span>';
+    if(b==='refunded')return '<span class="pill bad">'+(o.status==='partially_refunded'?'คืนเงินบางส่วน':'คืนเงินแล้ว')+'</span>';
+    if(b==='cancelled')return '<span class="pill bad">'+(o.status==='rejected'?'ปฏิเสธ':'ยกเลิก')+'</span>';
+    return '<span class="pill pend">รอตรวจสอบ</span>';
+  }
+  function poDateOnly(iso){var d=new Date(iso);if(isNaN(d))return'-';return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();}
+  function poTimeOnly(iso){var d=new Date(iso);if(isNaN(d))return'';return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+  function poFullTime(iso){var d=new Date(iso);if(isNaN(d))return'-';return poDateOnly(iso)+' '+poTimeOnly(iso)+' โดย Admin';}
+  function poItemsCellStatic(o){var units=(o.items||[]).length;if(!units)return '<span style="color:var(--muted)">-</span>';
+    var gs=poGroup(o);var extra=gs.length>3?('<span class="ib-more">+'+(gs.length-3)+'</span>'):'';
+    var thumbs='<span class="ib-thumbs">'+gs.slice(0,3).map(function(g){return '<span class="ib-thumb">'+poThumbInner(g.nm)+'</span>';}).join('')+extra+'</span>';
+    return '<span class="itembtn" style="cursor:pointer">'+thumbs+'<span class="ib-txt">'+units+' รายการ</span></span>';}
+  function poKebab(o){
+    var isSettled=(o.status==='paid'||o.status==='confirmed');
+    var cardCaptured=(poStripe(o)&&o.stripe&&o.stripe.paymentIntent);
+    var refundedTot=Number(o.refundedTotal)||0, totalAmt=Number(o.total)||0;
+    var everSettled=(!!o.invoiceNo||isSettled||o.status==='partially_refunded'||cardCaptured);
+    var canRefund=(everSettled&&o.status!=='refunded'&&refundedTot<totalAmt-0.001);
+    function mI(label,onc,col){return '<button class="kebab-item'+(col?(' k-'+col):'')+'" onclick="poMenuClose(this);'+onc+'">'+label+'</button>';}
+    var refArgs="'"+o.id+"',"+totalAmt+",'"+(o.pay||'')+"',"+refundedTot;
+    var cancelJS="if(confirm('ยกเลิกออเดอร์ "+o.id+" ?'))poSetStatus('"+o.id+"','cancelled')";
+    var mItems=[mI('👁 ดูรายละเอียด',"poOrderDetail('"+o.id+"')",'brand')];
+    if(o.pay==='bank'&&o.status==='pending'){ mItems.push(mI('✓ ยืนยันการชำระ',"poSetStatus('"+o.id+"','confirmed')",'good')); if(o.slipUrl){ mItems.push(mI('🔄 ตรวจสลิปอีกครั้ง (EasySlip)',"poReverify('"+o.id+"')",'brand')); } mItems.push(mI('✕ ปฏิเสธ',"poSetStatus('"+o.id+"','rejected')",'bad')); }
+    else {
+      if(canRefund){ mItems.push(mI('↩ คืนเงิน',"poRefundOpen("+refArgs+")",'bad')); }
+      if(isSettled){ mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+      else if(o.status==='pending'){ mItems.push(mI('✕ ยกเลิก',cancelJS,'bad')); }
+      else if(o.status==='rejected'){ mItems.push(mI('↺ กู้คืน',"poSetStatus('"+o.id+"','confirmed')",'good')); }
+    }
+    if(isSettled){ mItems.push(mI('🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':''),"poInvoice('"+o.id+"')",'brand')); }
+    if(o.slipUrl){ mItems.push(mI('📄 ดูสลิป',"poSlip('"+o.slipUrl+"')",'brand')); }
+    mItems.push(mI('✏️ แก้ไขข้อมูลลูกค้า',"poEditOpen('"+o.id+"')",'brand'));
+    mItems.push(mI('🗑 ลบจากระบบ',"poDelete('"+o.id+"')",'muted'));
+    return '<div class="kebab-wrap"><button class="kebab-btn" onclick="event.stopPropagation();poMenu(this)" aria-label="เมนู">⋮</button><div class="kebab-menu">'+mItems.join('')+'</div></div>';
+  }
+  function poOrderRow(o){
+    return '<tr class="clk'+(o.id===PO_SEL?' sel':'')+'" onclick="poOrderDetail(\''+o.id+'\')">'
+      +'<td style="white-space:nowrap"><div style="font-weight:600">'+poDateOnly(o.at)+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTimeOnly(o.at)+'</div></td>'
+      +'<td><span class="polink">'+poEsc(o.id)+'</span></td>'
+      +'<td><div style="font-weight:600">'+poEsc(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+poEsc(o.phone||'')+'</div></td>'
+      +'<td>'+poItemsCellStatic(o)+'</td>'
+      +'<td style="white-space:nowrap;color:var(--muted)">'+poChannel(o)+'</td>'
+      +'<td>'+poPayPill(o)+'</td>'
+      +'<td class="num" style="font-weight:700">฿'+(Number(o.total)||0).toLocaleString('en-US')+'</td>'
+      +'<td style="white-space:nowrap" onclick="event.stopPropagation()">'+poKebab(o)+'</td></tr>';
+  }
+  function poOrderPager(cur,pages){
+    if(pages<=1)return '';
+    function b(l,p,dis,on){return '<button '+(dis?'disabled':'')+' onclick="PO_PAGE='+p+';poRenderOrderRows()" '+(on?'class="on"':'')+'>'+l+'</button>';}
+    var h=b('‹',Math.max(1,cur-1),cur<=1,false);
+    var show=[];for(var i=1;i<=pages;i++){if(i<=2||i>pages-2||Math.abs(i-cur)<=1)show.push(i);else if(show[show.length-1]!=='…')show.push('…');}
+    show.forEach(function(i){if(i==='…')h+='<span style="padding:0 4px;color:var(--muted)">…</span>';else h+=b(String(i),i,false,i===cur);});
+    h+=b('›',Math.min(pages,cur+1),cur>=pages,false);
+    return h;
+  }
+  function poRenderOrderRows(){
+    var tb=document.getElementById('poOrdBody'); if(!tb)return;
+    var f=poFilterOrders(PO_ORDERS);
+    if(PO_STATUSF!=='all')f=f.filter(function(o){return poStatusBucket(o)===PO_STATUSF;});
+    var c=document.getElementById('poCount'); if(c)c.textContent='('+f.length+(f.length!==PO_ORDERS.length?(' / '+PO_ORDERS.length):'')+')';
+    var pages=Math.max(1,Math.ceil(f.length/PO_PS));
+    if(PO_PAGE>pages)PO_PAGE=pages; if(PO_PAGE<1)PO_PAGE=1;
+    var slice=f.slice((PO_PAGE-1)*PO_PS,PO_PAGE*PO_PS);
+    tb.innerHTML=slice.length?slice.map(poOrderRow).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:34px 0">'+(PO_ORDERS.length?'ไม่พบคำสั่งซื้อตามเงื่อนไขที่กรอง':'ยังไม่มีคำสั่งซื้อ — เมื่อลูกค้าสั่งผ่านลิงก์/QR รายการจะขึ้นที่นี่')+'</td></tr>';
+    var pg=document.getElementById('poOrdPager'); if(pg)pg.innerHTML=poOrderPager(PO_PAGE,pages);
+  }
+  function poClearFilter(){PO_Q='';PO_STATUSF='all';PO_RANGE='all';PO_CFROM='';PO_CTO='';PO_PAGE=1;poDraw();}
+  function poDetailActions(o){
+    var isSettled=(o.status==='paid'||o.status==='confirmed');
+    var cardCaptured=(poStripe(o)&&o.stripe&&o.stripe.paymentIntent);
+    var refundedTot=Number(o.refundedTotal)||0, totalAmt=Number(o.total)||0;
+    var everSettled=(!!o.invoiceNo||isSettled||o.status==='partially_refunded'||cardCaptured);
+    var canRefund=(everSettled&&o.status!=='refunded'&&refundedTot<totalAmt-0.001);
+    var btns=[];
+    if(o.pay==='bank'&&o.status==='pending'){ btns.push('<button class="good" onclick="poSetStatus(\''+o.id+'\',\'confirmed\')">✓ ยืนยันการชำระ</button>'); if(o.slipUrl)btns.push('<button onclick="poReverify(\''+o.id+'\')">🔄 ตรวจสลิปอีกครั้ง (EasySlip)</button>'); btns.push('<button class="danger" onclick="poSetStatus(\''+o.id+'\',\'rejected\')">✕ ปฏิเสธ</button>'); }
+    else {
+      if(canRefund)btns.push('<button class="danger" onclick="poRefundOpen(\''+o.id+'\','+totalAmt+',\''+(o.pay||'')+'\','+refundedTot+')">↩ คืนเงิน</button>');
+      if(isSettled)btns.push('<button class="danger" onclick="if(confirm(\'ยกเลิกออเดอร์ '+o.id+' ?\'))poSetStatus(\''+o.id+'\',\'cancelled\')">✕ ยกเลิก</button>');
+      else if(o.status==='rejected')btns.push('<button class="good" onclick="poSetStatus(\''+o.id+'\',\'confirmed\')">↺ กู้คืน</button>');
+    }
+    if(o.slipUrl)btns.push('<button onclick="poSlip(\''+o.slipUrl+'\')">📄 ดูสลิป</button>');
+    if(isSettled)btns.push('<button onclick="poInvoice(\''+o.id+'\')">🧾 ใบรับเงินมัดจำ'+(o.invoiceNo?' ✓':'')+'</button>');
+    btns.push('<button onclick="poEditOpen(\''+o.id+'\')">✏️ แก้ไขข้อมูลลูกค้า</button>');
+    return btns.length?('<div class="poacts">'+btns.join('')+'</div>'):'';
+  }
+  function poOrderDetail(id){
+    poMenuCloseAll();
+    var o=null;for(var i=0;i<PO_ORDERS.length;i++){if(PO_ORDERS[i].id===id){o=PO_ORDERS[i];break;}}
+    if(!o)return;
+    PO_SEL=id;
+    var pnl=document.getElementById('poDrawerPnl'), drw=document.getElementById('poDrawer'); if(!pnl||!drw)return;
+    var chan=o.channel||o.brand||'Xircle';
+    var gs=poGroup(o);
+    var itemsHtml=gs.map(function(g){
+      var pr=0;(o.items||[]).forEach(function(it){if((it.nm||'-')===g.nm && it.price!=null)pr=Number(it.price);});
+      var priceHtml=pr>0?('<div class="pr">฿'+(pr*g.qty).toLocaleString('en-US')+'</div>'):'';
+      return '<div class="poit"><div class="th">'+poThumbInner(g.nm)+'</div><div style="flex:1;min-width:0"><div class="nm">'+poEsc(g.nm)+'</div><div class="sb">Pre-Order · จำนวน '+g.qty+'</div></div>'+priceHtml+'</div>';
+    }).join('')||'<div style="color:var(--muted);font-size:.85rem;padding:8px 0">ไม่มีรายการสินค้า</div>';
+    var total=Number(o.total)||0, subtotal=(o.subtotal!=null?Number(o.subtotal):total), discount=Number(o.discount)||0, fee=Number(o.fee||o.shippingFee||0)||0;
+    var sum='<div class="posum">'
+      +'<div class="r"><span>ยอดรวมสินค้า</span><span class="num">฿'+subtotal.toLocaleString('en-US')+'</span></div>'
+      +'<div class="r"><span>ส่วนลด</span><span class="num">'+(discount>0?'-฿'+discount.toLocaleString('en-US'):'฿0')+'</span></div>'
+      +'<div class="r"><span>ค่าธรรมเนียม</span><span class="num">฿'+fee.toLocaleString('en-US')+'</span></div>'
+      +'<div class="r tot"><span>ยอดรวมทั้งหมด</span><span class="amt num">฿'+total.toLocaleString('en-US')+'</span></div></div>';
+    var paid=(o.status==='paid'||o.status==='confirmed'||o.status==='partially_refunded'||o.status==='refunded'||!!o.invoiceNo);
+    var step1='<div class="step done"><div class="dot">'+PO_CHK+'</div><div><div class="sl">รับออเดอร์</div><div class="ss">'+poFullTime(o.at)+' · ลูกค้าสั่งซื้อเข้ามา</div></div></div>';
+    var step2='<div class="step '+(paid?'done':'')+'"><div class="dot">'+(paid?PO_CHK:'')+'</div><div><div class="sl">ยืนยันการชำระเงิน</div><div class="ss">'+(paid?(poFullTime(o.confirmedAt||o.paidAt||o.slipAt||o.at)+' · ตรวจสลิป/ตัดบัตรผ่าน'):'รอตรวจสอบการชำระเงิน')+'</div></div></div>';
+    pnl.innerHTML='<div class="podh"><div><h3>รายละเอียดออเดอร์</h3><div class="oid">'+poEsc(o.id)+'</div></div><button class="podx" onclick="poOrderClose()">✕</button></div>'
+      +'<div class="posec"><div class="posec-t">👤 ข้อมูลลูกค้า</div>'
+      +'<div class="poinfo"><span class="k">ชื่อลูกค้า</span><span class="v">'+poEsc(o.name||'-')+'</span></div>'
+      +'<div class="poinfo"><span class="k">เบอร์โทรศัพท์</span><span class="v">'+poEsc(o.phone||'-')+'</span></div>'
+      +'<div class="poinfo"><span class="k">อีเมล</span><span class="v">'+poEsc(o.email||'-')+'</span></div>'
+      +'<div class="poinfo"><span class="k">ช่องทาง</span><span class="v">'+poEsc(chan)+'</span></div></div>'
+      +'<div class="posec"><div class="posec-t">📦 รายการสินค้า</div>'+itemsHtml+'</div>'
+      +'<div class="posec"><div class="posec-t">🧾 สรุปการชำระเงิน</div>'+sum+'</div>'
+      +'<div class="posec"><div class="posec-t">📋 รายการดำเนินการ</div><div class="potl">'+step1+step2+'</div></div>'
+      +poDetailActions(o);
+    drw.classList.add('on');
+    poRenderOrderRows();
+  }
+  function poOrderClose(){var d=document.getElementById('poDrawer');if(d)d.classList.remove('on');PO_SEL=null;poRenderOrderRows();}
+  poDraw=function(){
+    var g=document.getElementById('view-generic'); if(!g)return;
+    var statusOpts=[['all','สถานะการชำระเงิน · ทั้งหมด'],['paid','ชำระเงินแล้ว'],['pending','รอชำระ/ตรวจสอบ'],['refunded','คืนเงิน'],['cancelled','ยกเลิก/ปฏิเสธ']].map(function(s){return '<option value="'+s[0]+'"'+(PO_STATUSF===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('');
+    var head='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h1>Pre-Order · Order</h1><p>จัดการคำสั่งซื้อและตรวจสอบสถานะการชำระเงินของแต่ละรายการ</p></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button onclick="poRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button><a class="link" href="#" onclick="poExportExcel();return false" style="align-self:center">ส่งออก Excel →</a></div></div>';
+    var filt='<div class="panel" style="margin-bottom:16px"><div class="pofil">'
+      +'<div class="srbox"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="poSearch" value="'+poEsc(PO_Q)+'" oninput="PO_Q=this.value;PO_PAGE=1;poRenderOrderRows()" placeholder="ค้นหาเลขคำสั่งซื้อ ชื่อลูกค้า เบอร์ หรือสินค้า"></div>'
+      +'<div style="display:flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff"><span style="color:var(--muted)">📅</span><input type="date" id="poCFrom" value="'+PO_CFROM+'" onchange="PO_RANGE=\'custom\';PO_CFROM=this.value;PO_PAGE=1;poRenderOrderRows()" style="border:0;font-family:inherit;font-size:.84rem;background:none;color:var(--ink)"><span style="color:var(--muted)">–</span><input type="date" id="poCTo" value="'+PO_CTO+'" onchange="PO_RANGE=\'custom\';PO_CTO=this.value;PO_PAGE=1;poRenderOrderRows()" style="border:0;font-family:inherit;font-size:.84rem;background:none;color:var(--ink)"></div>'
+      +'<select id="poStatusF" onchange="PO_STATUSF=this.value;PO_PAGE=1;poRenderOrderRows()" style="padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;font-weight:600;background:#fff;color:var(--ink)">'+statusOpts+'</select>'
+      +'<button onclick="poClearFilter()" style="background:none;border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-family:inherit;font-weight:600;font-size:.84rem;color:var(--muted);cursor:pointer">ล้างตัวกรอง</button>'
+      +'</div></div>';
+    var tbl='<div class="panel"><div class="ph"><h3>รายการคำสั่งซื้อ <span style="font-size:.8rem;font-weight:500;color:var(--muted)" id="poCount">('+PO_ORDERS.length+')</span></h3><span style="font-size:.78rem;color:var(--muted)">แตะแถวเพื่อดูรายละเอียด</span></div>'
+      +'<div style="overflow-x:auto"><table class="potbl pordt"><thead><tr><th>วันที่ซื้อ</th><th>เลขที่คำสั่งซื้อ</th><th>ชื่อ-นามสกุล</th><th>รายการสินค้า</th><th>ช่องทางการชำระเงิน</th><th>สถานะการชำระเงิน</th><th class="num">ยอดชำระ</th><th>การจัดการ</th></tr></thead><tbody id="poOrdBody"></tbody></table></div>'
+      +'<div class="popager" id="poOrdPager"></div></div>';
+    g.innerHTML=head+filt+tbl+'<div class="podrw" id="poDrawer"><div class="scr" onclick="poOrderClose()"></div><div class="pnl" id="poDrawerPnl"></div></div>';
+    poRenderOrderRows();
+  };
   function poProdPanel(){
     var prows=PO_PROD.map(function(p){
       var pct=Math.round(p.left/p.quota*100);
