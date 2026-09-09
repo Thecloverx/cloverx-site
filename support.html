@@ -106,7 +106,7 @@
 
   .content{padding:26px;flex:1}
   .wrapc{max-width:1200px;margin:0 auto}
-  .wrapc.wide{max-width:1600px}
+  .wrapc.wide{max-width:none}
   .head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .head h1{font-size:1.6rem;display:flex;align-items:center;gap:10px}
   .head p{color:var(--muted);margin-top:4px;font-size:.95rem}
@@ -818,7 +818,7 @@
 
   // ----- Member (redesign — การ์ด KPI + ตาราง + แผงรายละเอียด) -----
   var MEM_FILT={q:'',seg:'all',status:'all',date:'all',from:'',to:'',gender:'all',start:'all'};
-  var MEM_PAGE=1, MEM_PS=20, MEM_SEL=null, MEM_MODE='now', MEM_TAB='info';
+  var MEM_PAGE=1, MEM_PS=10, MEM_SEL=null, MEM_MODE='now', MEM_TAB='info';
   function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
   function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ทั่วไป',cls:'mseg-base'};}
   function memAmount(r){var ins=r.installment;return ins?(ins.total||44940):(r.fee||0);}
@@ -855,7 +855,7 @@
     +       '<label>วันเริ่มโครงการ<select id="mAdvStart"><option value="all">ทั้งหมด</option><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></label>'
     +       '<button type="button" class="btn ghost" id="mAdvClear" style="padding:8px 14px;font-size:.82rem">ล้างตัวกรอง</button>'
     +     '</div>'
-    +     '<div class="mlistmeta"><span id="memCount" class="mcount">–</span><div class="mlistmeta-right"><select id="memPS" class="mfsel sm"><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="memPager" class="mpager"></div></div></div>'
+    +     '<div class="mlistmeta"><span id="memCount" class="mcount">–</span><div class="mlistmeta-right"><select id="memPS" class="mfsel sm"><option value="10">10 / หน้า</option><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="memPager" class="mpager"></div></div></div>'
     +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th class="ck"><input type="checkbox" id="memAll"></th><th>ชื่อ-นามสกุล</th><th>รหัสสมาชิก</th><th>แพ็กเกจ</th><th>เบอร์โทร</th><th>สถานะ</th><th class="num">ยอดซื้อรวม</th><th>เข้าร่วมล่าสุด</th><th></th></tr></thead><tbody id="memBody"><tr><td colspan="9" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
     +   '</div>'
     +   '<div class="mcard mdetail" id="memDetail"><div class="mdetail-empty">เลือกสมาชิกเพื่อดูรายละเอียด</div></div>'
