@@ -49,7 +49,7 @@
   </form>
 <script>
   var $=function(s){return document.querySelector(s);};
-  function nextUrl(){ try{ var n=new URLSearchParams(location.search).get('next')||''; if(n && /^\/[A-Za-z0-9_\-\/]*$/.test(n) && n.indexOf('//')<0) return n; }catch(e){} return '/center'; }
+  function nextUrl(){ try{ var n=new URLSearchParams(location.search).get('next')||''; if(n && /^\/[A-Za-z0-9_\-\/]*$/.test(n) && n.indexOf('//')<0){ if(n==='/support'||n==='/support/') return '/operations.html'; return n; } }catch(e){} return '/center'; }
   $('#eye').onclick=function(){ var p=$('#pw'); if(p.type==='password'){p.type='text';this.textContent='ซ่อน';}else{p.type='password';this.textContent='แสดง';} };
   $('#lf').addEventListener('submit',function(e){
     e.preventDefault();

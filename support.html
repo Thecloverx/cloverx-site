@@ -914,7 +914,7 @@
     if(r.slipUrl) items+=mi('','📄','ดูสลิปการโอน','window.open(\''+r.slipUrl+'\',\'_blank\')');
     if(r.promoProofUrl) items+=mi('','📄','ดูหลักฐานการซื้อ','window.open(\''+r.promoProofUrl+'\',\'_blank\')');
     if(r.slipUrl||r.promoProofUrl) items+=sep;
-    if(r.status==='confirmed'){ if(instm) items+=mi('warn','↩','ยกเลิกแผนผ่อน (หยุดตัดบัตร)','llRefund(\''+id+'\')'); else if(card) items+=mi('warn','↩','คืนเงิน','llRefund(\''+id+'\')'); items+=mi('','🧾','ใบรับเงินมัดจำ','llReceipt(\''+id+'\')'); }
+    if(r.status==='confirmed'){ if(instm) items+=mi('warn','↩','ยกเลิกแผนผ่อน (หยุดตัดบัตร)','llRefund(\''+id+'\')'); else if(card) items+=mi('warn','↩','คืนเงิน','llRefund(\''+id+'\')'); items+=mi('','✅','บันทึกว่าคืนเงิน/ยกเลิกแล้ว (นอกระบบ)','llMarkRefunded(\''+id+'\')')+mi('','🧾','ใบรับเงินมัดจำ','llReceipt(\''+id+'\')'); }
     if(['awaiting_payment','confirmed','refunded'].indexOf(r.status)<0) items+=mi('warn','↩','ยกเลิก · ส่งกลับหน้าชำระเงิน','llCancel(\''+id+'\')');
     items+=sep+mi('','✏️','แก้ไขข้อมูลลูกค้า','llEdit(\''+id+'\')')+mi('danger','🗑','ลบข้อมูล','llDel(\''+id+'\')');
     return '<div class="menuwrap"><button class="kebab" onclick="llMenu(this)" aria-label="จัดการ">⋮</button><div class="menu">'+items+'</div></div>';
@@ -987,6 +987,16 @@
     var sel=document.getElementById('rfM');sel.onchange=function(){document.getElementById('rfAW').style.display=sel.value==='partial'?'block':'none';};
     document.getElementById('rfG').onclick=function(){var b=this,body={mode:sel.value};if(sel.value==='partial'){body.amount=Number(document.getElementById('rfA').value);if(!(body.amount>0)){alert('กรุณาระบุจำนวนเงิน');return;}}b.disabled=true;b.textContent='กำลังคืนเงิน…';
       llPost(id,'/refund',body).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent='ยืนยันคืนเงิน';alert(j&&j.error==='no_card_payment'?'รายการนี้ไม่ได้ชำระผ่านบัตร':j&&j.error==='bad_amount'?'จำนวนเงินไม่ถูกต้อง':j&&j.error==='amount_too_high'?'จำนวนเงินเกินยอดที่ชำระ':j&&j.error==='stripe_error'?'คืนเงินกับ Stripe ไม่สำเร็จ ลองใหม่':'คืนเงินไม่สำเร็จ');}}).catch(function(){b.disabled=false;b.textContent='ยืนยันคืนเงิน';alert('เชื่อมต่อไม่สำเร็จ');});};
+  };
+  // บันทึกว่าคืนเงิน/ยกเลิกแล้ว โดยไม่แตะ Stripe (ใช้เมื่อทำนอกระบบไปแล้ว)
+  window.llMarkRefunded=function(id){var r=LL_REGS[id]||{};
+    llModal('<h3>บันทึกว่าคืนเงิน/ยกเลิกแล้ว</h3><p class="sub">ใช้เมื่อคุณ<b>คืนเงิน/ยกเลิกไปเองแล้วนอกระบบ</b> (เช่นใน Stripe Dashboard) — ระบบจะเปลี่ยนสถานะเป็น "คืนเงินแล้ว" <b>โดยไม่สั่ง Stripe ซ้ำ</b>'+(r.installment?' และหยุดนับแผนผ่อน':'')+'</p>'
+      +'<label>จำนวนเงินที่คืน (บาท · ไม่บังคับ)</label><input id="mrA" type="number" min="0" placeholder="เช่น 3900 (เว้นว่างได้)">'
+      +'<label style="margin-top:8px">หมายเหตุ (ไม่บังคับ)</label><input id="mrN" type="text" placeholder="เช่น คืนผ่าน Stripe แล้ว 9 ก.ย.">'
+      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="mrG">ยืนยันบันทึกสถานะ</button></div>');
+    document.getElementById('mrG').onclick=function(){var b=this;b.disabled=true;b.textContent='กำลังบันทึก…';
+      var body={mode:'manual'};var a=Number(document.getElementById('mrA').value);if(a>0)body.amount=a;var n=document.getElementById('mrN').value;if(n)body.note=n;
+      llPost(id,'/refund',body).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent='ยืนยันบันทึกสถานะ';alert('บันทึกไม่สำเร็จ ลองใหม่');}}).catch(function(){b.disabled=false;b.textContent='ยืนยันบันทึกสถานะ';alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llReceipt=function(id){var r=LL_REGS[id]||{};var amt=r.installment?(r.installment.total||44940):(r.promoAmount||r.fee||0);var w=window.open('','_blank');if(!w){alert('เบราว์เซอร์บล็อกป๊อปอัพ');return;}
     w.document.write('<html><head><meta charset="utf-8"><title>ใบรับเงิน '+id+'</title><style>body{font-family:"Noto Sans Thai",sans-serif;padding:44px;color:#1E2A44;max-width:560px;margin:0 auto}h1{color:#16A34A;font-size:1.5rem}.r{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.r b{font-weight:700}</style></head><body><h1>ใบรับเงิน — Lean Lab</h1><p style="color:#6B7793">เลขที่ '+id+' · '+new Date().toLocaleDateString("th-TH")+'</p><div class="r"><span>ผู้สมัคร</span><b>'+llEsc(r.name||"")+'</b></div><div class="r"><span>อีเมล</span><b>'+llEsc(r.email||"")+'</b></div><div class="r"><span>รายการ</span><b>Lean Lab Season 1'+(r.promoPlan?" · "+llEsc(r.promoPlan):"")+'</b></div><div class="r"><span>จำนวนเงิน</span><b>฿'+Number(amt).toLocaleString("en-US")+'</b></div><div class="r"><span>สถานะ</span><b style="color:#16A34A">ยืนยันแล้ว</b></div><p style="margin-top:28px;color:#6B7793">บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด</p><button onclick="window.print()" style="margin-top:16px;padding:10px 22px;background:#2563EB;color:#fff;border:0;border-radius:8px;cursor:pointer">พิมพ์</button></body></html>');w.document.close();

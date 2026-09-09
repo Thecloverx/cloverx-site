@@ -1128,6 +1128,18 @@ module.exports = function (app, DATA_DIR) {
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
     function done(r2) { var byId = {}; readM().forEach(function (m) { byId[m.id] = m; }); res.json({ ok: true, registration: adminReg(r2, byId) }); }
 
+    // ---- บันทึกว่าคืนเงิน/ยกเลิกแล้ว (ทำนอกระบบ) — ไม่แตะ Stripe เลย ----
+    // ใช้เมื่อ staff คืนเงิน/ยกเลิกไปเองแล้วนอกระบบ (เช่นใน Stripe Dashboard) แค่ต้องการมาร์กสถานะให้ตรง
+    if (b.mode === 'manual') {
+      if (r.installment) { r.installment.status = 'cancelled'; r.installment.cancelledAt = new Date().toISOString(); }
+      r.status = 'refunded';
+      var mamt = Number(b.amount);
+      r.refund = { mode: 'manual_external', amount: (mamt > 0 ? mamt : 0), note: (typeof b.note === 'string' ? b.note.slice(0, 200) : 'ทำนอกระบบโดยทีมงาน'), at: new Date().toISOString() };
+      writeR(l);
+      console.log('[lean-lab] ' + req.params.id + ' marked refunded/cancelled MANUALLY (no Stripe) by admin');
+      return done(r);
+    }
+
     // ---- แผนผ่อน: ยกเลิก subscription (หยุดตัดบัตรงวดถัดไป) — งวดที่จ่ายมาแล้วไม่คืน ----
     if (r.installment) {
       var subId = (r.installment && r.installment.subId) || (r.stripe && r.stripe.subscriptionId);
