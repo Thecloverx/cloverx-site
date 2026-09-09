@@ -163,6 +163,100 @@
   .c-eye{background:none;border:0;padding:1px 2px;margin:0;cursor:pointer;color:var(--muted);line-height:0;display:inline-flex;flex:none;border-radius:5px}
   .c-eye:hover{color:var(--brand,#2563EB);background:var(--soft,#F1F8FC)}
   .c-eye svg{width:15px;height:15px;display:block}
+
+  /* ===== Member (redesign) ===== */
+  .memhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .memhead h1{font-size:1.5rem;margin:0}
+  .memhead .sub{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+  .memhead-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative}
+  .mkpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .mkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px}
+  .mkpi .k-top{display:flex;align-items:center;gap:9px}
+  .mkpi .k-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+  .mkpi .k-ic svg{width:18px;height:18px}
+  .mkpi .k-lb{font-size:.8rem;color:var(--muted);font-weight:600;line-height:1.25}
+  .mkpi .k-v{font-size:1.5rem;font-weight:800;color:var(--ink);line-height:1}
+  .mgrid{display:grid;grid-template-columns:minmax(0,1fr) 374px;gap:16px;align-items:start}
+  .mcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+  .mfilters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .mfsearch{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:0 12px}
+  .mfsearch svg{width:16px;height:16px;color:var(--muted);flex:none}
+  .mfsearch input{flex:1;border:0;background:none;padding:10px 0;font-family:inherit;font-size:.9rem;color:var(--ink);outline:none}
+  .mfsel{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font-family:inherit;font-size:.86rem;color:var(--ink);cursor:pointer}
+  .mfsel.sm{padding:7px 10px;font-size:.82rem}
+  .mfbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font-family:inherit;font-size:.86rem;color:var(--ink);cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  .mfbtn .badge{background:#0077B6;color:#fff;border-radius:999px;font-size:.66rem;font-weight:800;min-width:17px;height:17px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center}
+  .madv{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:14px 16px;background:#F1F8FC;border:1px solid #E3EFF6;border-radius:12px}
+  .madv label{font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px}
+  .madv select,.madv input{border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B}
+  .mlistmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .mcount{font-size:.82rem;color:var(--muted);font-weight:600}
+  .mlistmeta-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .mtblwrap{overflow-x:auto}
+  .memtbl{width:100%;border-collapse:collapse;font-size:.86rem}
+  .memtbl thead th{text-align:left;color:var(--muted);font-weight:600;font-size:.74rem;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .memtbl thead th.num{text-align:right}
+  .memtbl tbody td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .memtbl tbody td.num{text-align:right;font-weight:700}
+  .memtbl tbody tr{cursor:pointer;transition:background .1s}
+  .memtbl tbody tr:hover{background:var(--soft)}
+  .memtbl tbody tr.sel{background:#EAF4FB}
+  .memtbl .ck{width:34px}
+  .memtbl input[type=checkbox]{width:15px;height:15px;cursor:pointer}
+  .mnamecell{display:flex;align-items:center;gap:10px}
+  .mavatar{border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden;line-height:1}
+  .mname-t{font-weight:600;color:var(--ink);white-space:nowrap}
+  .mnew{background:#E6F0FF;color:#2563EB;font-size:.62rem;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:4px}
+  .mseg{display:inline-block;font-size:.72rem;font-weight:700;border-radius:7px;padding:3px 10px;white-space:nowrap}
+  .mseg-grand{background:#F1EBFF;color:#7C3AED}
+  .mseg-special{background:#E6F0FF;color:#2563EB}
+  .mseg-base{background:#EEF2F6;color:#64748B}
+  .mstat{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;border-radius:999px;padding:3px 11px;white-space:nowrap}
+  .mstat::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .mstat-on{background:#E7F7EE;color:#15A34A}
+  .mstat-off{background:#FDECEC;color:#E5484D}
+  .mrowmenu{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.15rem;padding:0 6px;border-radius:6px;line-height:1}
+  .mrowmenu:hover{background:var(--soft);color:var(--ink)}
+  .mpager{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .mpager button{min-width:30px;height:30px;padding:0 6px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+  .mpager button.on{background:#0077B6;color:#fff;border-color:#0077B6}
+  .mpager button:disabled{opacity:.4;cursor:default}
+  .mempty{text-align:center;color:var(--muted);padding:30px 0}
+  .mhmenu{position:absolute;top:44px;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px -18px rgba(20,40,80,.35);padding:6px;min-width:190px;z-index:20}
+  .mhmenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 12px;border-radius:8px;font-family:inherit;font-size:.86rem;color:var(--ink);cursor:pointer}
+  .mhmenu button:hover{background:var(--soft)}
+  .mkebab{background:none;border:1px solid var(--line);border-radius:10px;width:38px;height:38px;cursor:pointer;color:var(--muted);font-size:1.1rem}
+  .mkebab:hover{background:var(--soft)}
+  /* detail panel */
+  .mdetail{position:relative;min-height:220px}
+  .mdetail-empty{color:var(--muted);text-align:center;padding:60px 20px;font-size:.9rem}
+  .mdet-x{position:absolute;top:12px;right:12px;background:none;border:0;color:var(--muted);font-size:1.05rem;cursor:pointer;line-height:1;padding:5px;border-radius:7px}
+  .mdet-x:hover{background:var(--soft);color:var(--ink)}
+  .mdet-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-right:26px}
+  .mdet-name{font-size:1.05rem;font-weight:800;color:var(--ink);margin-bottom:6px}
+  .mdet-contact{display:flex;flex-direction:column;gap:9px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:14px}
+  .mdet-crow{font-size:.84rem;color:var(--ink2,#3a4453);display:flex;gap:9px;align-items:center;word-break:break-word}
+  .mtabs{display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+  .mtab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 11px;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-1px}
+  .mtab.on{color:#0077B6;border-bottom-color:#0077B6}
+  .msec-t{font-size:.8rem;font-weight:800;color:var(--ink);margin:16px 0 8px}
+  .msec-t:first-child{margin-top:0}
+  .minfo-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:.84rem;border-bottom:1px dashed var(--line)}
+  .minfo-row:last-child{border-bottom:0}
+  .minfo-row .k{color:var(--muted);flex:none}
+  .minfo-row .v{color:var(--ink);font-weight:600;text-align:right;word-break:break-word}
+  .mdet-edit{width:100%;margin-top:18px;justify-content:center;display:flex}
+  .mdrawer-scrim{display:none}
+  @media(max-width:980px){
+    .mkpis{grid-template-columns:1fr 1fr}
+    .mgrid{grid-template-columns:1fr}
+    .mdetail{position:fixed;top:0;right:0;bottom:0;width:min(410px,92vw);z-index:120;border-radius:0;overflow-y:auto;box-shadow:-8px 0 40px rgba(0,0,0,.22);transform:translateX(105%);transition:transform .22s;margin:0}
+    .mdetail.open{transform:none}
+    .mdetail-empty{display:none}
+    .mdrawer-scrim.on{display:block;position:fixed;inset:0;background:rgba(10,20,40,.35);z-index:110}
+  }
+  @media(max-width:520px){.mkpis{grid-template-columns:1fr 1fr}.memhead h1{font-size:1.3rem}}
+
   table .acts .btn{padding:7px 13px;font-size:.8rem;border-radius:9px}
   table .acts .btn.icon{padding:7px 9px}
   /* มือถือ: เปลี่ยนตารางเป็นการ์ดซ้อนกัน อ่านง่าย ไม่ต้องเลื่อนแนวนอน */
@@ -722,75 +816,271 @@
     orderLoad();
   }
 
-  // ----- Member (เฉพาะลูกค้าที่ชำระ/ยืนยันแล้ว แยกตาม Choice การเริ่ม) -----
-  function memberView(mode){
-    var isNow=mode==='now';
-    return ''
-      + '<div class="head"><div><h1><span class="pill '+(isNow?'lean':'ok')+'">MEMBER</span> '+(isNow?'Start Member':'After Member')+'</h1>'
-      +   '<p>'+(isNow?'ลูกค้าที่ชำระแล้ว และเลือกเริ่มลด ณ ตอนนี้':'ลูกค้าที่ชำระแล้ว และเลือกเริ่มวันที่ 8 พ.ย. 2569')+' · แสดงเฉพาะที่ยืนยันการชำระเงินแล้ว</p></div>'
-      +   '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" onclick="llExportMembers(\''+mode+'\')">⬇ ส่งออก CSV</button><button class="btn ghost" id="memRefresh" data-mode="'+mode+'">รีเฟรช ⟳</button></div></div>'
-      + '<div class="panel">'
-      +   '<div class="ph"><h3>รายชื่อสมาชิก</h3><span class="pill '+(isNow?'lean':'ok')+'" id="memCount">–</span></div>'
-      +   '<div class="ofilt">'
-      +     '<button type="button" class="ofc" id="mfToggle" style="font-weight:700;display:inline-flex;align-items:center;gap:6px">⚙ ตัวกรอง<span id="mfCount" style="display:none;background:#0077B6;color:#fff;border-radius:999px;font-size:.66rem;font-weight:800;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center"></span></button>'
-      +     '<input type="search" id="mofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / รหัสไปรษณีย์">'
-      +   '</div>'
-      +   '<div id="mfPanel" style="display:none;gap:14px;flex-wrap:wrap;align-items:flex-end;margin:2px 0 14px;padding:14px 16px;background:#F1F8FC;border:1px solid #E3EFF6;border-radius:12px">'
-      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">ช่วงวันที่ยืนยัน<select id="mfDate" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:150px"><option value="all">ทั้งหมด</option><option value="today">วันนี้</option><option value="7d">สัปดาห์นี้</option><option value="30d">เดือนนี้</option><option value="custom">กำหนดเอง</option></select></label>'
-      +     '<div class="ofrange" id="mofRange" style="display:none"><input type="date" id="mofFrom"><span>–</span><input type="date" id="mofTo"></div>'
-      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">แพ็กเกจ<select id="mfPkg" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:160px"><option value="all">ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ค่าสมัครปกติ</option></select></label>'
-      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">เพศ<select id="mfGender" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:120px"><option value="all">ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></label>'
-      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">วันเริ่มโครงการ<select id="mfStart" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:150px"><option value="all">ทั้งหมด</option><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></label>'
-      +     '<button type="button" class="btn ghost" id="mfClear" style="padding:8px 14px;font-size:.82rem">ล้างตัวกรอง</button>'
-      +   '</div>'
-      +   '<div style="overflow-x:auto"><table><thead><tr><th>สมาชิก</th><th>ข้อมูล</th><th>แพ็กเกจ/ยอด</th><th>'+(isNow?'ค่าตั้งต้น (Before)':'สถานะเริ่ม')+'</th><th>ยืนยันเมื่อ</th></tr></thead><tbody id="memBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
-      + '</div>';
-  }
-  // ตัวกรองสมาชิก (วันที่ยืนยัน + ค้นหา) — ใช้แบบเดียวกับหน้า Order
-  var MEM_FILT={date:'all',from:'',to:'',q:'',pkg:'all',gender:'all',start:'all'};
+  // ----- Member (redesign — การ์ด KPI + ตาราง + แผงรายละเอียด) -----
+  var MEM_FILT={q:'',seg:'all',status:'all',date:'all',from:'',to:'',gender:'all',start:'all'};
+  var MEM_PAGE=1, MEM_PS=20, MEM_SEL=null, MEM_MODE='now', MEM_TAB='info';
   function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
-  function memFilterList(regs){
+  function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ทั่วไป',cls:'mseg-base'};}
+  function memAmount(r){var ins=r.installment;return ins?(ins.total||44940):(r.fee||0);}
+  function memDate(iso){iso=String(iso||'');if(iso.length<10)return '-';var p=iso.slice(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+  function memDateTime(iso){iso=String(iso||'');if(iso.length<10)return '-';return memDate(iso)+' '+iso.slice(11,16);}
+  function memIsNew(r){var t=new Date(r.reviewedAt||r.createdAt||0).getTime();return !!t&&(Date.now()-t)<30*86400000;}
+  function memInitials(nm){nm=String(nm||'').trim();if(!nm)return '?';var p=nm.split(/\s+/);if(p.length>=2&&/^[A-Za-z]/.test(nm))return (p[0].charAt(0)+p[1].charAt(0)).toUpperCase();return nm.charAt(0);}
+  var MEM_AV=['#6366F1','#0EA5E9','#10B981','#F59E0B','#EC4899','#8B5CF6','#14B8A6','#F97316'];
+  function memAvColor(nm){var s=String(nm||''),h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return MEM_AV[h%MEM_AV.length];}
+  function memAvatar(nm,sz){sz=sz||34;return '<span class="mavatar" style="width:'+sz+'px;height:'+sz+'px;font-size:'+Math.round(sz*0.42)+'px;background:'+memAvColor(nm)+'">'+llEsc(memInitials(nm))+'</span>';}
+  function memberView(mode){
+    MEM_MODE=mode; MEM_SEL=null; MEM_TAB='info';
+    return ''
+    + '<div class="memhead"><div><h1>Member</h1><p class="sub">จัดการข้อมูลสมาชิกและข้อมูลลูกค้า</p></div>'
+    +   '<div class="memhead-act">'
+    +     '<button class="btn ghost" onclick="memImportOpen()">⬆ นำเข้าข้อมูล</button>'
+    +     '<button class="btn pri" onclick="memAddOpen()">+ เพิ่มสมาชิก</button>'
+    +     '<button class="mkebab" onclick="memHeadMenu(event)" aria-label="เมนู">⋮</button>'
+    +     '<div id="memHMenu" class="mhmenu" style="display:none"><button onclick="memHeadClose();llExportMembers(MEM_MODE)">⬇ ส่งออก CSV (ตามตัวกรอง)</button><button onclick="memHeadClose();memberLoad(MEM_MODE)">⟳ รีเฟรชข้อมูล</button></div>'
+    +   '</div></div>'
+    + '<div class="mkpis" id="memKpis"></div>'
+    + '<div class="mgrid">'
+    +   '<div class="mcard">'
+    +     '<div class="mfilters">'
+    +       '<div class="mfsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="memSearch" placeholder="ค้นหาชื่อ, เบอร์โทร, อีเมล, รหัสสมาชิก"></div>'
+    +       '<select id="memSeg" class="mfsel"><option value="all">ทุกแพ็กเกจ</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ทั่วไป</option></select>'
+    +       '<select id="memStatus" class="mfsel"><option value="all">ทุกสถานะ</option><option value="active">ใช้งานอยู่</option><option value="inactive">ไม่ใช้งาน</option></select>'
+    +       '<button type="button" class="mfbtn" id="memAdvToggle">▾ ตัวกรอง<span id="memAdvCount" class="badge" style="display:none"></span></button>'
+    +     '</div>'
+    +     '<div class="madv" id="memAdv" style="display:none">'
+    +       '<label>ช่วงวันที่เข้าร่วม<select id="mAdvDate"><option value="all">ทั้งหมด</option><option value="today">วันนี้</option><option value="7d">สัปดาห์นี้</option><option value="30d">เดือนนี้</option><option value="custom">กำหนดเอง</option></select></label>'
+    +       '<div id="mAdvRange" style="display:none;gap:6px;align-items:center"><input type="date" id="mAdvFrom"><span style="color:var(--muted)">–</span><input type="date" id="mAdvTo"></div>'
+    +       '<label>เพศ<select id="mAdvGender"><option value="all">ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></label>'
+    +       '<label>วันเริ่มโครงการ<select id="mAdvStart"><option value="all">ทั้งหมด</option><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></label>'
+    +       '<button type="button" class="btn ghost" id="mAdvClear" style="padding:8px 14px;font-size:.82rem">ล้างตัวกรอง</button>'
+    +     '</div>'
+    +     '<div class="mlistmeta"><span id="memCount" class="mcount">–</span><div class="mlistmeta-right"><select id="memPS" class="mfsel sm"><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="memPager" class="mpager"></div></div></div>'
+    +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th class="ck"><input type="checkbox" id="memAll"></th><th>ชื่อ-นามสกุล</th><th>รหัสสมาชิก</th><th>แพ็กเกจ</th><th>เบอร์โทร</th><th>สถานะ</th><th class="num">ยอดซื้อรวม</th><th>เข้าร่วมล่าสุด</th><th></th></tr></thead><tbody id="memBody"><tr><td colspan="9" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
+    +   '</div>'
+    +   '<div class="mcard mdetail" id="memDetail"><div class="mdetail-empty">เลือกสมาชิกเพื่อดูรายละเอียด</div></div>'
+    + '</div>'
+    + '<div class="mdrawer-scrim" id="memScrim"></div>';
+  }
+  function memFilterList(list){
     var f=MEM_FILT;
     function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
     var t0=dayStart(new Date()),DAY=86400000,lo=null,hi=null;
     if(f.date==='today'){lo=t0;hi=t0+DAY;}
-    else if(f.date==='yst'){lo=t0-DAY;hi=t0;}
     else if(f.date==='7d'){lo=t0-6*DAY;hi=t0+DAY;}
     else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
-    else if(f.date==='custom'){ if(f.from)lo=dayStart(f.from); if(f.to)hi=dayStart(f.to)+DAY; }
-    var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
-    return (regs||[]).filter(function(r){
-      if(lo!=null||hi!=null){ var t=new Date(r.reviewedAt||r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; }
-      if(f.pkg&&f.pkg!=='all'&&memPkgOf(r)!==f.pkg)return false;
+    else if(f.date==='custom'){if(f.from)lo=dayStart(f.from);if(f.to)hi=dayStart(f.to)+DAY;}
+    var q=(f.q||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
+    return (list||[]).filter(function(r){
+      if(lo!=null||hi!=null){var t=new Date(r.reviewedAt||r.createdAt||0).getTime();if(lo!=null&&t<lo)return false;if(hi!=null&&t>=hi)return false;}
+      if(f.seg&&f.seg!=='all'&&memPkgOf(r)!==f.seg)return false;
+      if(f.status==='active'&&r.status!=='confirmed')return false;
+      if(f.status==='inactive'&&r.status==='confirmed')return false;
       if(f.gender&&f.gender!=='all'&&String(r.gender||'')!==f.gender)return false;
       if(f.start&&f.start!=='all'&&String(r.startChoice||'')!==f.start)return false;
-      if(q){
-        var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')).toLowerCase();
-        var okText=hay.indexOf(q)>=0;
-        var okPhone=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0||String(r.postcode||'').indexOf(qd)>=0);
-        if(!okText&&!okPhone)return false;
-      }
+      if(q){var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')).toLowerCase();var okT=hay.indexOf(q)>=0;var okP=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0);if(!okT&&!okP)return false;}
       return true;
     });
   }
+  function memAdvCount(){var n=0;if(MEM_FILT.date!=='all')n++;if(MEM_FILT.gender!=='all')n++;if(MEM_FILT.start!=='all')n++;var c=document.getElementById('memAdvCount');if(c){c.textContent=n;c.style.display=n?'inline-flex':'none';}}
+  function memHeadMenu(e){if(e)e.stopPropagation();var m=document.getElementById('memHMenu');if(m)m.style.display=(m.style.display==='none')?'block':'none';}
+  function memHeadClose(){var m=document.getElementById('memHMenu');if(m)m.style.display='none';}
+  document.addEventListener('click',function(e){if(!e.target.closest('.memhead-act'))memHeadClose();});
   function memberInit(mode){
-    MEM_FILT={date:'all',from:'',to:'',q:'',pkg:'all',gender:'all',start:'all'};
-    var mt=document.getElementById('mfToggle'), mp=document.getElementById('mfPanel');
-    if(mt&&mp)mt.onclick=function(){var open=mp.style.display!=='none';mp.style.display=open?'none':'flex';mt.classList.toggle('on',!open);};
-    function memCountUpd(){var n=0;if(MEM_FILT.date!=='all')n++;if(MEM_FILT.pkg!=='all')n++;if(MEM_FILT.gender!=='all')n++;if(MEM_FILT.start!=='all')n++;var c=document.getElementById('mfCount');if(c){c.textContent=n;c.style.display=n?'inline-flex':'none';}}
-    function memApply(){memCountUpd();memberLoad(mode);}
-    var mdt=document.getElementById('mfDate'); if(mdt)mdt.onchange=function(){MEM_FILT.date=mdt.value;var rg=document.getElementById('mofRange');if(rg)rg.style.display=(MEM_FILT.date==='custom')?'flex':'none';memApply();};
-    var mpk=document.getElementById('mfPkg'); if(mpk)mpk.onchange=function(){MEM_FILT.pkg=mpk.value;memApply();};
-    var mg=document.getElementById('mfGender'); if(mg)mg.onchange=function(){MEM_FILT.gender=mg.value;memApply();};
-    var mst=document.getElementById('mfStart'); if(mst)mst.onchange=function(){MEM_FILT.start=mst.value;memApply();};
-    var mcl=document.getElementById('mfClear'); if(mcl)mcl.onclick=function(){MEM_FILT.date='all';MEM_FILT.from='';MEM_FILT.to='';MEM_FILT.pkg='all';MEM_FILT.gender='all';MEM_FILT.start='all';if(mdt)mdt.value='all';if(mpk)mpk.value='all';if(mg)mg.value='all';if(mst)mst.value='all';var rg=document.getElementById('mofRange');if(rg)rg.style.display='none';var ef=document.getElementById('mofFrom'),et=document.getElementById('mofTo');if(ef)ef.value='';if(et)et.value='';memApply();};
-    var ff=document.getElementById('mofFrom'), ft=document.getElementById('mofTo');
-    if(ff)ff.onchange=function(){MEM_FILT.from=ff.value;memApply();};
-    if(ft)ft.onchange=function(){MEM_FILT.to=ft.value;memApply();};
-    var s=document.getElementById('mofSearch'), tmr;
-    if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){memApply();},280);};
+    MEM_FILT={q:'',seg:'all',status:'all',date:'all',from:'',to:'',gender:'all',start:'all'};
+    MEM_PAGE=1; MEM_SEL=null; MEM_TAB='info';
+    var s=document.getElementById('memSearch'),tmr;
+    if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){MEM_PAGE=1;memRender();},260);};
+    var sg=document.getElementById('memSeg');if(sg)sg.onchange=function(){MEM_FILT.seg=sg.value;MEM_PAGE=1;memRender();};
+    var st=document.getElementById('memStatus');if(st)st.onchange=function(){MEM_FILT.status=st.value;MEM_PAGE=1;memRender();};
+    var ps=document.getElementById('memPS');if(ps)ps.onchange=function(){MEM_PS=parseInt(ps.value,10)||20;MEM_PAGE=1;memRender();};
+    var at=document.getElementById('memAdvToggle'),ap=document.getElementById('memAdv');
+    if(at&&ap)at.onclick=function(){ap.style.display=(ap.style.display==='none')?'flex':'none';};
+    var md=document.getElementById('mAdvDate');if(md)md.onchange=function(){MEM_FILT.date=md.value;var rg=document.getElementById('mAdvRange');if(rg)rg.style.display=(md.value==='custom')?'flex':'none';memAdvCount();MEM_PAGE=1;memRender();};
+    var mg=document.getElementById('mAdvGender');if(mg)mg.onchange=function(){MEM_FILT.gender=mg.value;memAdvCount();MEM_PAGE=1;memRender();};
+    var mss=document.getElementById('mAdvStart');if(mss)mss.onchange=function(){MEM_FILT.start=mss.value;memAdvCount();MEM_PAGE=1;memRender();};
+    var mf=document.getElementById('mAdvFrom'),mt2=document.getElementById('mAdvTo');
+    if(mf)mf.onchange=function(){MEM_FILT.from=mf.value;MEM_PAGE=1;memRender();};
+    if(mt2)mt2.onchange=function(){MEM_FILT.to=mt2.value;MEM_PAGE=1;memRender();};
+    var mc=document.getElementById('mAdvClear');if(mc)mc.onclick=function(){MEM_FILT.date='all';MEM_FILT.from='';MEM_FILT.to='';MEM_FILT.gender='all';MEM_FILT.start='all';if(md)md.value='all';if(mg)mg.value='all';if(mss)mss.value='all';if(mf)mf.value='';if(mt2)mt2.value='';var rg=document.getElementById('mAdvRange');if(rg)rg.style.display='none';memAdvCount();MEM_PAGE=1;memRender();};
+    var sc=document.getElementById('memScrim');if(sc)sc.onclick=memCloseDetail;
+    var ca=document.getElementById('memAll');if(ca)ca.onclick=function(){[].forEach.call(document.querySelectorAll('#memBody input[type=checkbox]'),function(x){x.checked=ca.checked;});};
     memberLoad(mode);
   }
+  function memKpiIc(n){var m={
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
+    card:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'};return m[n]||'';}
+  function memKpi(bg,fg,ic,lb,v){return '<div class="mkpi"><div class="k-top"><span class="k-ic" style="background:'+bg+';color:'+fg+'">'+memKpiIc(ic)+'</span><span class="k-lb">'+lb+'</span></div><div class="k-v">'+v+'</div></div>';}
+  function memRender(){
+    var base=window.LL_MEM_ALL||[];
+    var kp=document.getElementById('memKpis');
+    if(kp){
+      var total=base.length;
+      var now=new Date(),mStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+      var newM=base.filter(function(r){return new Date(r.reviewedAt||r.createdAt||0).getTime()>=mStart;}).length;
+      var confs=base.filter(function(r){return r.status==='confirmed';});
+      var active=confs.length;
+      var avg=confs.length?Math.round(confs.reduce(function(a,r){return a+memAmount(r);},0)/confs.length):0;
+      kp.innerHTML=memKpi('#EEF0FF','#6366F1','users','ลูกค้าทั้งหมด',total.toLocaleString('en-US'))
+        +memKpi('#E7F7EE','#15A34A','plus','ลูกค้าใหม่ (เดือนนี้)',newM.toLocaleString('en-US'))
+        +memKpi('#E4F6F1','#0E9F86','check','ลูกค้าที่ใช้งานอยู่',active.toLocaleString('en-US'))
+        +memKpi('#E6F0FF','#2563EB','card','ยอดซื้อเฉลี่ย',avg.toLocaleString('en-US')+' บาท');
+    }
+    var list=memFilterList(base);
+    var tb=document.getElementById('memBody'); if(!tb)return;
+    var PS=MEM_PS,pages=Math.max(1,Math.ceil(list.length/PS));
+    if(MEM_PAGE>pages)MEM_PAGE=pages; if(MEM_PAGE<1)MEM_PAGE=1;
+    var from=list.length?((MEM_PAGE-1)*PS+1):0,to=Math.min(list.length,MEM_PAGE*PS);
+    var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent='แสดง '+from+'-'+to+' จาก '+list.length.toLocaleString('en-US')+' รายการ';
+    if(!list.length){tb.innerHTML='<tr><td colspan="9" class="mempty">'+(base.length?'ไม่พบสมาชิกที่ตรงกับตัวกรอง':'ยังไม่มีสมาชิก')+'</td></tr>';}
+    else{tb.innerHTML=list.slice((MEM_PAGE-1)*PS,MEM_PAGE*PS).map(memRowHtml).join('');}
+    var pg=document.getElementById('memPager'); if(pg)pg.innerHTML=memPagerHtml(MEM_PAGE,pages);
+    memMarkSel();
+  }
+  function memRowHtml(r){
+    var seg=memSeg(r),active=r.status==='confirmed';
+    var nw=memIsNew(r)?'<span class="mnew">ใหม่</span>':'';
+    return '<tr data-id="'+llEsc(r.id)+'" onclick="memSelect(\''+r.id+'\')"'+(r.id===MEM_SEL?' class="sel"':'')+'>'
+      +'<td class="ck" onclick="event.stopPropagation()"><input type="checkbox"></td>'
+      +'<td><div class="mnamecell">'+memAvatar(r.name,34)+'<span class="mname-t">'+llEsc(r.name||'-')+nw+'</span></div></td>'
+      +'<td style="color:var(--muted);white-space:nowrap">'+llEsc(r.po||'-')+'</td>'
+      +'<td><span class="mseg '+seg.cls+'">'+seg.label+'</span></td>'
+      +'<td style="white-space:nowrap">'+llEsc(r.phone||'-')+'</td>'
+      +'<td><span class="mstat '+(active?'mstat-on':'mstat-off')+'">'+(active?'ใช้งานอยู่':'ไม่ใช้งาน')+'</span></td>'
+      +'<td class="num">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
+      +'<td style="color:var(--muted);white-space:nowrap">'+memDate(r.reviewedAt||r.createdAt)+'</td>'
+      +'<td onclick="event.stopPropagation()"><button class="mrowmenu" onclick="memSelect(\''+r.id+'\')">⋮</button></td>'
+      +'</tr>';
+  }
+  function memPagerHtml(cur,pages){
+    if(pages<=1)return '';
+    function b(l,p,dis,on){return '<button '+(dis?'disabled':'')+' onclick="MEM_PAGE='+p+';memRender();window.scrollTo(0,0);" '+(on?'class="on"':'')+'>'+l+'</button>';}
+    var h=b('‹',Math.max(1,cur-1),cur<=1,false);
+    var show=[];for(var i=1;i<=pages;i++){if(i<=2||i>pages-2||Math.abs(i-cur)<=1)show.push(i);else if(show[show.length-1]!=='…')show.push('…');}
+    show.forEach(function(i){if(i==='…')h+='<span style="padding:0 5px;color:var(--muted)">…</span>';else h+=b(String(i),i,false,i===cur);});
+    h+=b('›',Math.min(pages,cur+1),cur>=pages,false);
+    return h;
+  }
+  function memMarkSel(){[].forEach.call(document.querySelectorAll('#memBody tr[data-id]'),function(tr){tr.classList.toggle('sel',tr.getAttribute('data-id')===MEM_SEL);});}
+  function memFind(id){return (window.LL_MEM_ALL||[]).filter(function(x){return x.id===id;})[0];}
+  function memSelect(id){
+    MEM_SEL=id; MEM_TAB='info';
+    var r=memFind(id),d=document.getElementById('memDetail'); if(!d)return;
+    if(!r){d.innerHTML='<div class="mdetail-empty">เลือกสมาชิกเพื่อดูรายละเอียด</div>';return;}
+    d.innerHTML=memDetailHtml(r); memMarkSel();
+    d.classList.add('open');var sc=document.getElementById('memScrim');if(sc)sc.classList.add('on');
+  }
+  function memCloseDetail(){MEM_SEL=null;var d=document.getElementById('memDetail');if(d){d.classList.remove('open');d.innerHTML='<div class="mdetail-empty">เลือกสมาชิกเพื่อดูรายละเอียด</div>';}var sc=document.getElementById('memScrim');if(sc)sc.classList.remove('on');memMarkSel();}
+  function memTab(id,t){MEM_TAB=t;var r=memFind(id);if(!r)return;var d=document.getElementById('memDetail');if(d)d.innerHTML=memDetailHtml(r);}
+  function minfoRow(k,v){return '<div class="minfo-row"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+  function memTabInfo(r){
+    var cr=llEffCR(r);
+    return '<div class="msec-t">ข้อมูลทั่วไป</div>'
+      +minfoRow('รหัสสมาชิก',llEsc(r.po||'-'))
+      +minfoRow('เพศ',llEsc(r.gender||'-'))
+      +minfoRow('อายุ',r.age?(llEsc(r.age)+' ปี'):'-')
+      +minfoRow('ส่วนสูง',r.heightCm?(llEsc(r.heightCm)+' ซม.'):'-')
+      +minfoRow('ที่อยู่',llEsc(r.address||'-')+(r.postcode?(' '+llEsc(r.postcode)):''))
+      +'<div class="msec-t">ข้อมูลเพิ่มเติม</div>'
+      +minfoRow('แหล่งที่มา (ผู้แนะนำ)',llEsc(cr.referrer||'-'))
+      +minfoRow('ผู้ดูแลลูกค้า (โค้ช)',llEsc(cr.coach||'-'))
+      +minfoRow('วันเริ่มโครงการ',r.startChoice==='now'?'เริ่มตอนนี้':'8 พ.ย. 2569');
+  }
+  function memTabBuy(r){
+    var ins=r.installment,amt=memAmount(r);
+    var h='<div class="msec-t">แพ็กเกจ</div>'+minfoRow('แพ็กเกจ',memSeg(r).label)+minfoRow('ยอดรวม','฿'+Number(amt).toLocaleString('en-US'))+minfoRow('วิธีชำระ',llPayLabel2(r));
+    if(ins)h+=minfoRow('ผ่อน','฿'+Number(ins.perMonth||7490).toLocaleString('en-US')+' × '+(ins.months||6)+' งวด')+minfoRow('จ่ายแล้ว',(ins.paidCount||0)+'/'+(ins.months||6)+' งวด')+minfoRow('ตัดทุกวันที่',ins.day||'-');
+    if(r.baseline)h+='<div class="msec-t">ค่าตั้งต้น (Before)</div>'+minfoRow('น้ำหนัก',llEsc(r.baseline.weightKg||'-')+' kg')+minfoRow('ไขมัน',llEsc(r.baseline.fatPct||'-')+' %')+minfoRow('กล้ามเนื้อ',llEsc(r.baseline.muscleKg||'-')+' kg');
+    return h;
+  }
+  function memTabAct(r){
+    var items=[];
+    if(r.createdAt)items.push(['สมัครเข้าร่วม',memDateTime(r.createdAt)]);
+    if(r.slipAt)items.push(['แนบสลิป / ชำระเงิน',memDateTime(r.slipAt)]);
+    if(r.reviewedAt)items.push(['ยืนยันการชำระเงิน',memDateTime(r.reviewedAt)]);
+    var stl=(LL_ST[r.status]||[r.status])[0];
+    return '<div class="msec-t">กิจกรรม</div>'+items.map(function(it){return minfoRow(it[0],it[1]);}).join('')+minfoRow('สถานะปัจจุบัน',stl);
+  }
+  function memDetailHtml(r){
+    var seg=memSeg(r);
+    var body=MEM_TAB==='buy'?memTabBuy(r):(MEM_TAB==='act'?memTabAct(r):memTabInfo(r));
+    return '<button class="mdet-x" onclick="memCloseDetail()" aria-label="ปิด">✕</button>'
+      +'<div class="mdet-head">'+memAvatar(r.name,54)+'<div><div class="mdet-name">'+llEsc(r.name||'-')+'</div><span class="mseg '+seg.cls+'">'+seg.label+'</span></div></div>'
+      +'<div class="mdet-contact"><div class="mdet-crow">📞 '+llEsc(r.phone||'-')+'</div><div class="mdet-crow">✉️ '+llEsc(r.email||'-')+'</div><div class="mdet-crow">📅 เข้าร่วมเมื่อ '+memDate(r.reviewedAt||r.createdAt)+'</div></div>'
+      +'<div class="mtabs"><button class="mtab'+(MEM_TAB==='info'?' on':'')+'" onclick="memTab(\''+r.id+'\',\'info\')">ข้อมูลลูกค้า</button><button class="mtab'+(MEM_TAB==='buy'?' on':'')+'" onclick="memTab(\''+r.id+'\',\'buy\')">ประวัติการซื้อ</button><button class="mtab'+(MEM_TAB==='act'?' on':'')+'" onclick="memTab(\''+r.id+'\',\'act\')">กิจกรรม</button></div>'
+      +'<div>'+body+'</div>'
+      +'<button class="btn ghost mdet-edit" onclick="llEdit(\''+r.id+'\')">แก้ไขข้อมูลลูกค้า</button>';
+  }
+  // เพิ่มสมาชิกแบบ manual
+  function memAddOpen(){
+    llModal('<h3>เพิ่มสมาชิกใหม่ (Manual)</h3><p class="sub">ใช้เพิ่มลูกค้าที่สมัครนอกระบบ — จะบันทึกเป็นสมาชิกที่ยืนยันแล้ว</p>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div><label>ชื่อ–นามสกุล *</label><input id="maN" placeholder="ชื่อ นามสกุล"></div>'
+      +'<div><label>เบอร์โทร</label><input id="maP" placeholder="08x-xxx-xxxx"></div>'
+      +'<div><label>อีเมล</label><input id="maE" placeholder="you@email.com"></div>'
+      +'<div><label>เพศ</label><select id="maG" style="width:100%"><option value="">-</option><option>ชาย</option><option>หญิง</option></select></div>'
+      +'<div><label>แพ็กเกจ</label><select id="maPkg" style="width:100%"><option value="base">ทั่วไป</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option></select></div>'
+      +'<div><label>ยอดซื้อ (บาท)</label><input id="maAmt" type="number" placeholder="0"></div>'
+      +'<div><label>วันเริ่มโครงการ</label><select id="maStart" style="width:100%"><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></div>'
+      +'<div><label>โค้ช</label><input id="maCoach" placeholder="ชื่อโค้ช"></div>'
+      +'</div>'
+      +'<label>ที่อยู่</label><textarea id="maA" rows="2" style="width:100%;font-family:inherit;resize:vertical" placeholder="ที่อยู่จัดส่ง"></textarea>'
+      +'<div style="display:flex;gap:10px;margin-top:16px"><button class="btn ghost" style="flex:1" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" style="flex:1" id="maSave">บันทึกสมาชิก</button></div>');
+    var sv=document.getElementById('maSave');
+    if(sv)sv.onclick=function(){
+      var name=(document.getElementById('maN').value||'').trim();
+      if(name.length<2){alert('กรุณากรอกชื่อ–นามสกุล');return;}
+      sv.disabled=true;sv.textContent='กำลังบันทึก…';
+      var body={name:name,phone:document.getElementById('maP').value,email:document.getElementById('maE').value,gender:document.getElementById('maG').value,pkg:document.getElementById('maPkg').value,amount:document.getElementById('maAmt').value,startChoice:document.getElementById('maStart').value,coach:document.getElementById('maCoach').value,address:document.getElementById('maA').value};
+      fetch('/api/leanlab/admin/member/manual-add'+admQ(),{method:'POST',credentials:'same-origin',headers:admHdr({'Content-Type':'application/json'}),body:JSON.stringify(body)})
+        .then(function(r){return r.json();}).then(function(j){ if(admForbidden(j)){sv.disabled=false;sv.textContent='บันทึกสมาชิก';return;}
+          if(j&&j.ok){llCloseModal();memberLoad(MEM_MODE);}else{sv.disabled=false;sv.textContent='บันทึกสมาชิก';alert(j&&j.error==='email_taken'?'อีเมลนี้ถูกใช้แล้ว':j&&j.error==='bad_email'?'รูปแบบอีเมลไม่ถูกต้อง':'บันทึกไม่สำเร็จ');}
+        }).catch(function(){sv.disabled=false;sv.textContent='บันทึกสมาชิก';alert('เชื่อมต่อไม่สำเร็จ');});
+    };
+  }
+  // นำเข้าข้อมูลจาก CSV
+  function memImportOpen(){
+    llModal('<h3>นำเข้าข้อมูลสมาชิก (CSV)</h3><p class="sub">ไฟล์ CSV คอลัมน์: <b>ชื่อ, เบอร์โทร, อีเมล, เพศ, แพ็กเกจ, ยอดซื้อ, โค้ช, ที่อยู่</b> (แถวแรกเป็นหัวตาราง)</p>'
+      +'<input type="file" id="miFile" accept=".csv,text/csv" style="width:100%;padding:10px;border:1.5px dashed var(--line);border-radius:10px;background:var(--soft)">'
+      +'<div id="miPrev" style="margin-top:12px;font-size:.84rem;color:var(--muted)"></div>'
+      +'<div style="display:flex;gap:10px;margin-top:16px"><button class="btn ghost" style="flex:1" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" style="flex:1" id="miRun" disabled>นำเข้า</button></div>');
+    var rows=[];
+    var fi=document.getElementById('miFile');
+    if(fi)fi.onchange=function(){
+      var f=fi.files&&fi.files[0]; if(!f)return;
+      var rd=new FileReader();
+      rd.onload=function(){ rows=memParseCsv(String(rd.result||'')); var pv=document.getElementById('miPrev'),run=document.getElementById('miRun');
+        if(pv)pv.innerHTML=rows.length?('พบ <b>'+rows.length+'</b> รายชื่อพร้อมนำเข้า'):'ไม่พบข้อมูลที่ถูกต้อง (ต้องมีชื่ออย่างน้อย)';
+        if(run)run.disabled=!rows.length;
+      };
+      rd.readAsText(f,'utf-8');
+    };
+    var run=document.getElementById('miRun');
+    if(run)run.onclick=function(){
+      if(!rows.length)return; run.disabled=true; var done=0,okN=0,failN=0,pv=document.getElementById('miPrev');
+      function next(){
+        if(done>=rows.length){ if(pv)pv.innerHTML='นำเข้าเสร็จ: สำเร็จ '+okN+' · ไม่สำเร็จ '+failN; llCloseModal(); memberLoad(MEM_MODE); return; }
+        var b=rows[done++]; if(pv)pv.textContent='กำลังนำเข้า '+done+'/'+rows.length+'…';
+        fetch('/api/leanlab/admin/member/manual-add'+admQ(),{method:'POST',credentials:'same-origin',headers:admHdr({'Content-Type':'application/json'}),body:JSON.stringify(b)})
+          .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)okN++;else failN++;next();}).catch(function(){failN++;next();});
+      }
+      next();
+    };
+  }
+  function memParseCsv(text){
+    text=text.replace(/^﻿/,''); var lines=text.split(/\r?\n/).filter(function(l){return l.trim();}); if(lines.length<2)return [];
+    function splitCsv(line){var out=[],cur='',q=false;for(var i=0;i<line.length;i++){var c=line[i];if(q){if(c==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}else{if(c==='"')q=true;else if(c===','){out.push(cur);cur='';}else cur+=c;}}out.push(cur);return out;}
+    var seg={'grand slam':'grand','grand':'grand','special':'special','ผ่อน':'special','ทั่วไป':'base','ปกติ':'base'};
+    var res=[];
+    for(var i=1;i<lines.length;i++){var c=splitCsv(lines[i]);var name=(c[0]||'').trim();if(name.length<2)continue;
+      var pkgRaw=String(c[4]||'').trim().toLowerCase();var pkg=seg[pkgRaw]||'base';
+      res.push({name:name,phone:(c[1]||'').trim(),email:(c[2]||'').trim(),gender:(c[3]||'').trim(),pkg:pkg,amount:(c[5]||'').replace(/[^\d.]/g,''),coach:(c[6]||'').trim(),address:(c[7]||'').trim(),startChoice:'now'});
+    }
+    return res;
+  }
+
   // ---- ส่งออก CSV (เปิดใน Excel ได้ · ใส่ BOM ให้ภาษาไทยไม่เพี้ยน) ----
   function llCsvCell(v){v=(v==null?'':String(v));return /[",\n\r]/.test(v)?('"'+v.replace(/"/g,'""')+'"'):v;}
   function llDownloadCSV(filename,header,rows){
@@ -879,33 +1169,15 @@
     });
   };
   function memberLoad(mode){
-    var rb=document.getElementById('memRefresh'); if(rb)rb.onclick=function(){memberLoad(mode);};
     fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin',headers:admHdr()}).then(function(r){return r.json();}).then(function(j){ if(admForbidden(j))return;
       var tb=document.getElementById('memBody'); if(!tb)return;
-      if(!j||!j.ok){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">โหลดข้อมูลไม่สำเร็จ</td></tr>';return;}
+      if(!j||!j.ok){tb.innerHTML='<tr><td colspan="9" class="mempty" style="color:var(--bad)">โหลดข้อมูลไม่สำเร็จ</td></tr>';return;}
       window.LL_ALL=j.registrations||[];
-      var all=(j.registrations||[]).filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
-      var mem=memFilterList(all);
-      var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent=(mem.length===all.length?all.length+' คน':mem.length+' / '+all.length+' คน');
-      if(!mem.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">'+(all.length?'ไม่พบสมาชิกที่ตรงกับตัวกรอง':'ยังไม่มีสมาชิกในกลุ่มนี้')+'</td></tr>';return;}
-      tb.innerHTML=mem.map(function(r){
-        var ins=r.installment||null;
-        var pkg = ins?('Special · ผ่อน '+Number(ins.perMonth||7490).toLocaleString('en-US')+'×'+(ins.months||6)+' <span style="color:#2E86FF">('+(ins.paidCount||0)+'/'+(ins.months||6)+')</span>')
-          : (r.promoPlan==='full'?('Grand Slam · '+(r.promoTier||'')) : 'ค่าสมัครปกติ');
-        var amt=ins?(ins.total||44940):(r.fee||0);
-        var col4 = mode==='now'
-          ? (r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub metric">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>')
-          : '<span class="pill ok">เริ่ม 8 พ.ย. 69</span>';
-        return '<tr>'
-          +'<td style="min-width:170px"><div style="font-weight:700">'+llEsc(r.name||'-')+'</div>'+llContact(r)+'</td>'
-          +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
-          +'<td style="min-width:150px"><div style="font-weight:600">'+pkg+'</div><div class="cell-amt" style="font-size:.88rem;margin-top:2px">฿'+Number(amt).toLocaleString('en-US')+'</div></td>'
-          +'<td style="min-width:120px">'+col4+'</td>'
-          +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc((r.reviewedAt||r.createdAt||'').slice(0,10))+'</td>'
-          +'</tr>';
-      }).join('');
-    }).catch(function(){var tb=document.getElementById('memBody');if(tb)tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--bad);padding:26px 0">เชื่อมต่อไม่สำเร็จ</td></tr>';});
+      window.LL_MEM_ALL=(j.registrations||[]).filter(function(r){return r.status==='confirmed'||r.status==='cancelled'||r.status==='refunded';});
+      MEM_PAGE=1; memRender();
+    }).catch(function(){var tb=document.getElementById('memBody');if(tb)tb.innerHTML='<tr><td colspan="9" class="mempty" style="color:var(--bad)">เชื่อมต่อไม่สำเร็จ</td></tr>';});
   }
+
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   // ---- ปิดบังข้อมูลติดต่อ (PDPA) · กดดวงตาเพื่อดูเต็ม แบบ TikTok Seller ----

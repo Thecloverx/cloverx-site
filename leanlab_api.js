@@ -1120,6 +1120,40 @@ module.exports = function (app, DATA_DIR) {
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
+  // เพิ่มสมาชิกแบบ manual (แอดมิน) — สร้างใบสมัครสถานะ confirmed จากหน้า Member · ใช้กับลูกค้าที่สมัครนอกระบบ
+  app.post('/api/leanlab/admin/member/manual-add', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    var b = req.body || {};
+    var name = String(b.name || '').trim();
+    if (name.length < 2) return res.status(400).json({ ok: false, error: 'bad_name' });
+    var email = String(b.email || '').trim().toLowerCase();
+    if (email) {
+      if (!EMAIL_RE.test(email)) return res.status(400).json({ ok: false, error: 'bad_email' });
+      var clash = readM().some(function (m) { return String(m.email || '').toLowerCase() === email; });
+      if (clash) return res.status(409).json({ ok: false, error: 'email_taken' });
+    }
+    var pkg = (b.pkg === 'grand' || b.pkg === 'special') ? b.pkg : 'base';
+    var amt = Math.max(0, Math.round(Number(b.amount) || 0));
+    var gender = (['ชาย', 'หญิง'].indexOf(String(b.gender || '')) >= 0) ? String(b.gender) : '';
+    var choice = (b.startChoice === 'later') ? 'later' : 'now';
+    var now = new Date().toISOString();
+    var l = readR();
+    var r = {
+      id: genRid(), memberId: null, season: EVENT.season, createdAt: now, reviewedAt: now, updatedAt: now,
+      name: name.slice(0, 80), email: email, phone: String(b.phone || '').trim().slice(0, 30),
+      gender: gender, age: (b.age ? Number(b.age) : null), heightCm: (b.heightCm ? Number(b.heightCm) : null),
+      address: String(b.address || '').slice(0, 300), postcode: String(b.postcode || '').replace(/\D/g, '').slice(0, 5),
+      startChoice: choice, coach: String(b.coach || '').trim().slice(0, 60), referrer: String(b.referrer || '').trim().slice(0, 80),
+      fee: amt, pay: 'manual', status: 'confirmed', manualAdded: true, baseline: null,
+      promo: pkg === 'grand', promoPlan: (pkg === 'grand' ? 'full' : (pkg === 'special' ? 'special' : null)),
+      promoTier: null, promoAmount: (pkg !== 'base' ? amt : null), installment: null
+    };
+    assignPO(r);
+    l.push(r);
+    writeR(l);
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    res.json({ ok: true, registration: adminReg(r, byId) });
+  });
   // คืนเงิน (บัตรเครดิต) — ชำระครั้งเดียว: เต็ม/บางส่วนผ่าน Stripe · แผนผ่อน: ยกเลิก subscription หยุดตัดงวดถัดไป (งวดที่จ่ายแล้วไม่คืน)
   app.post('/api/leanlab/admin/registration/:id/refund', function (req, res) {
     if (!adminGuard(req, res)) return;
