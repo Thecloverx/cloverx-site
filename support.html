@@ -824,7 +824,7 @@
   var MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};
   var MEM_PAGE=1, MEM_PS=10, MEM_SEL=null, MEM_MODE='now', MEM_TAB='info';
   function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
-  function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ทั่วไป',cls:'mseg-base'};}
+  function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ค่าสมัคร',cls:'mseg-base'};}
   function memAmount(r){var ins=r.installment;return ins?(ins.total||44940):(r.fee||0);}
   function memDate(iso){iso=String(iso||'');if(iso.length<10)return '-';var p=iso.slice(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
   function memDateTime(iso){iso=String(iso||'');if(iso.length<10)return '-';return memDate(iso)+' '+iso.slice(11,16);}
@@ -850,7 +850,7 @@
     +       '<select id="memGender" class="mfsel"><option value="all">เพศ · ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select>'
     +       '<select id="memAge" class="mfsel"><option value="all">ช่วงอายุ · ทั้งหมด</option><option value="18-29">18–29 ปี</option><option value="30-39">30–39 ปี</option><option value="40-49">40–49 ปี</option><option value="50-">50 ปีขึ้นไป</option></select>'
     +       '<div class="mdaterange" title="วันที่เริ่ม"><span class="mdr-ic">📅</span><input type="date" id="memFrom" aria-label="ตั้งแต่วันที่"><span style="color:var(--muted)">–</span><input type="date" id="memTo" aria-label="ถึงวันที่"></div>'
-    +       '<select id="memSeg" class="mfsel"><option value="all">แพ็คเกจ · ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ทั่วไป</option></select>'
+    +       '<select id="memSeg" class="mfsel"><option value="all">แพ็คเกจ · ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ค่าสมัคร</option></select>'
     +       '<button type="button" class="btn ghost" id="memClear" style="padding:9px 16px;font-size:.84rem">ล้างข้อมูล</button>'
     +     '</div>'
     +     '<div class="mlistmeta"><span id="memCount" class="mcount">–</span><div class="mlistmeta-right"><select id="memPS" class="mfsel sm"><option value="10">10 / หน้า</option><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="memPager" class="mpager"></div></div></div>'
@@ -1031,7 +1031,7 @@
       +'<div><label>เบอร์โทร</label><input id="maP" placeholder="08x-xxx-xxxx"></div>'
       +'<div><label>อีเมล</label><input id="maE" placeholder="you@email.com"></div>'
       +'<div><label>เพศ</label><select id="maG" style="width:100%"><option value="">-</option><option>ชาย</option><option>หญิง</option></select></div>'
-      +'<div><label>แพ็กเกจ</label><select id="maPkg" style="width:100%"><option value="base">ทั่วไป</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option></select></div>'
+      +'<div><label>แพ็กเกจ</label><select id="maPkg" style="width:100%"><option value="base">ค่าสมัคร</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option></select></div>'
       +'<div><label>ยอดซื้อ (บาท)</label><input id="maAmt" type="number" placeholder="0"></div>'
       +'<div><label>วันเริ่มโครงการ</label><select id="maStart" style="width:100%"><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></div>'
       +'<div><label>โค้ช</label><input id="maCoach" placeholder="ชื่อโค้ช"></div>'
@@ -1357,7 +1357,8 @@
     document.getElementById('cnG').onclick=function(){var reason=sel.value==='__o'?(document.getElementById('cnO').value.trim()||'อื่น ๆ'):sel.value;
       llPost(id,'/cancel',{reason:reason}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
-  window.llEdit=function(id){var r=LL_REGS[id]||{};
+  function llFindReg(id){if(window.LL_REGS&&LL_REGS[id])return LL_REGS[id];var a=window.LL_ALL||window.LL_MEM_ALL||[];for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i];}return null;}
+  window.llEdit=function(id){var r=llFindReg(id)||{};
     var COACHES=['โค้ชซิง','โค้ชนุ่น','โค้ชจา','โค้ชต๊ะ'];
     var curC=String(r.coach||''), isStd=COACHES.indexOf(curC)>=0, isOther=(curC&&!isStd);
     var copts='<option value=""'+(!curC?' selected':'')+'>— ยังไม่ระบุ —</option>'
@@ -1373,7 +1374,11 @@
       var coachVal=document.getElementById('edC').value;
       var body={name:document.getElementById('edN').value,phone:document.getElementById('edP').value,email:document.getElementById('edE').value,address:document.getElementById('edA').value,postcode:document.getElementById('edZ').value,coach:coachVal,referrer:document.getElementById('edR').value};
       if(coachVal==='อื่น ๆ')body.coachOther=document.getElementById('edCO').value;
-      llPost(id,'/edit',body).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert(j&&j.error==='email_taken'?'อีเมลนี้ถูกใช้แล้ว':j&&j.error==='bad_email'?'รูปแบบอีเมลไม่ถูกต้อง':j&&j.error==='not_found'?'ไม่พบข้อมูล':'บันทึกไม่สำเร็จ (ชื่อสั้นเกินไป?)');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
+      llPost(id,'/edit',body).then(function(j){if(j&&j.ok){llCloseModal();
+        if(j.registration){var arr=window.LL_MEM_ALL||[];for(var k=0;k<arr.length;k++){if(arr[k].id===id)Object.assign(arr[k],j.registration);}var a2=window.LL_ALL||[];for(var m2=0;m2<a2.length;m2++){if(a2[m2].id===id)Object.assign(a2[m2],j.registration);}if(window.LL_REGS&&LL_REGS[id])Object.assign(LL_REGS[id],j.registration);}
+        if(document.getElementById('memBody')){if(typeof memRender==='function')memRender();if(typeof MEM_SEL!=='undefined'&&MEM_SEL===id&&typeof memSelect==='function')memSelect(id);}
+        else if(typeof orderLoad==='function'){orderLoad();}
+      }else alert(j&&j.error==='email_taken'?'อีเมลนี้ถูกใช้แล้ว':j&&j.error==='bad_email'?'รูปแบบอีเมลไม่ถูกต้อง':j&&j.error==='not_found'?'ไม่พบข้อมูล':'บันทึกไม่สำเร็จ (ชื่อสั้นเกินไป?)');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llRefund=function(id){var r=LL_REGS[id]||{};
     // แผนผ่อน: ยกเลิก subscription หยุดตัดบัตรงวดถัดไป — งวดที่จ่ายมาแล้วไม่คืน
