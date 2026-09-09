@@ -113,6 +113,10 @@
   th{text-align:left;color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;padding:0 10px 10px}
   td{padding:12px 10px;border-top:1px solid var(--line)}
   tbody tr:hover{background:var(--soft)}
+  /* order table: คอลัมน์เต็มความกว้าง สมดุล ไม่เหลือช่องขวา */
+  .potbl{table-layout:fixed;width:100%;min-width:1060px}
+  .potbl th,.potbl td{overflow-wrap:break-word;word-break:break-word}
+  .potbl tbody td{vertical-align:top}
   .pill{font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-block}
   .pill.ok{background:var(--good-tint);color:var(--good)}
   .pill.pend{background:var(--warn-tint);color:var(--warn)}
@@ -2082,7 +2086,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       }).join('');
     }
     var ordersPanel='<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>รายการคำสั่งซื้อ <span style="font-size:.8rem;font-weight:500;color:var(--muted)">('+PO_ORDERS.length+')</span></h3><div style="display:flex;gap:14px;align-items:center"><button onclick="poRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button><a class="link" href="#" onclick="poExportExcel();return false">ส่งออก Excel →</a></div></div>'
-      +'<div style="overflow-x:auto"><table><thead><tr><th>เลขที่คำสั่งซื้อ</th><th>ลูกค้า</th><th>สินค้า</th><th>สถานะคำสั่งซื้อ</th><th>ทั้งหมด</th><th>ทีมโค้ช</th><th>ผู้แนะนำ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+      +'<div style="overflow-x:auto"><table class="potbl"><colgroup><col style="width:11.5%"><col style="width:15.5%"><col style="width:12.5%"><col style="width:13%"><col style="width:12%"><col style="width:11%"><col style="width:18%"><col style="width:6.5%"></colgroup><thead><tr><th>เลขที่คำสั่งซื้อ</th><th>ลูกค้า</th><th>สินค้า</th><th>สถานะคำสั่งซื้อ</th><th>ทั้งหมด</th><th>ทีมโค้ช</th><th>ผู้แนะนำ</th><th>จัดการ</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     var prows=PO_PROD.map(function(p){
       var pct=Math.round(p.left/p.quota*100);
       var barcol=p.left===0?'var(--bad)':(pct<25?'var(--warn)':'var(--brand)');
