@@ -95,6 +95,23 @@ module.exports = function (app, DATA_DIR) {
     { key: 't3', label: 'เซต 4', price: 32460 }
   ];
   function money(n) { return '฿' + Number(n || 0).toLocaleString('en-US'); }
+  // กฎเดียวกับหน้า Dashboard: ผู้แนะนำที่จริง ๆ เป็น "โค้ช" → นับเป็นโค้ช (ให้ตัวเลข Report ตรงกับ Dashboard)
+  var LL_COACH_ALIAS = { 'ปริญ จารุกุลวนิช': 'โค้ชซิง', 'ณรนา ภัทรธรจิรโภคิน': 'โค้ชต๊ะ', 'ชีวาวัชญ์ จรัสนิรัติศัย': 'โค้ชจา', 'Sukanya Thirakomen Kanogart': 'โค้ชนุ่น' };
+  function llAliasCoach(name) {
+    var s = String(name || '').replace(/\s+/g, ' ').trim(); if (!s || s === '-') return '';
+    if (LL_COACH_ALIAS[s]) return LL_COACH_ALIAS[s];
+    var first = s.split(' ')[0];
+    for (var k in LL_COACH_ALIAS) { if (first && first === k.split(' ')[0]) return LL_COACH_ALIAS[k]; }
+    for (var kk in LL_COACH_ALIAS) { if (s === LL_COACH_ALIAS[kk]) return LL_COACH_ALIAS[kk]; }
+    return '';
+  }
+  // คืนค่า coach/referrer ที่ผ่านกฎแล้ว: ถ้า referrer เป็นชื่อโค้ช → ย้ายไปเป็น coach, ล้าง referrer
+  function llEffCR(r) {
+    var coach = String(r.coach || '').trim(), ref = String(r.referrer || '').trim();
+    var refCoach = llAliasCoach(ref);
+    if (refCoach) return { coach: (coach || refCoach), referrer: '' };
+    return { coach: coach, referrer: (ref === '-' ? '' : ref) };
+  }
   // รวมสถิติจากใบสมัครที่ "ยืนยันแล้ว" — นับเงินที่เก็บได้จริง (ผ่อน = งวดที่จ่าย × ต่อเดือน)
   function buildReportData() {
     var regs = readR().filter(function (r) { return r.status === 'confirmed'; });
@@ -114,8 +131,10 @@ module.exports = function (app, DATA_DIR) {
         val = (tt && tt.price) || r.fee || 0;
       } else { key = 'base'; val = r.fee || EVENT.fee; }
       d.setCount[key]++; d.setAmt[key] += val; d.totalPaid += val;
-      var cn = String(r.coach || '').trim(); if (cn) { d.coach[cn] = d.coach[cn] || { c: 0, v: 0 }; d.coach[cn].c++; d.coach[cn].v += val; }
-      var rf = String(r.referrer || '').trim(); if (rf && rf !== '-') { d.ref[rf] = d.ref[rf] || { c: 0, v: 0 }; d.ref[rf].c++; d.ref[rf].v += val; }
+      // กฎเดียวกับ Dashboard: มีผู้แนะนำ (คนธรรมดา) → ยอดเข้าผู้แนะนำ · ไม่มีผู้แนะนำ → ยอดเข้าโค้ช (ไม่นับซ้ำทั้งสองฝั่ง)
+      var eff = llEffCR(r);
+      if (eff.referrer) { d.ref[eff.referrer] = d.ref[eff.referrer] || { c: 0, v: 0 }; d.ref[eff.referrer].c++; d.ref[eff.referrer].v += val; }
+      else if (eff.coach) { d.coach[eff.coach] = d.coach[eff.coach] || { c: 0, v: 0 }; d.coach[eff.coach].c++; d.coach[eff.coach].v += val; }
     });
     d.coachRank = Object.keys(d.coach).map(function (k) { return { name: k, c: d.coach[k].c, v: d.coach[k].v }; }).sort(function (a, b) { return b.v - a.v; }).slice(0, 5);
     d.refRank = Object.keys(d.ref).map(function (k) { return { name: k, c: d.ref[k].c, v: d.ref[k].v }; }).sort(function (a, b) { return b.c - a.c; }).slice(0, 5);
