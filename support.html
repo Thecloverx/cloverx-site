@@ -24,7 +24,7 @@
   /* embed mode: ฝังแดชบอร์ดในหน้าอื่น (ซ่อน sidebar/topbar) */
   .embed .side,.embed .topbar{display:none!important}
   .embed .app{grid-template-columns:1fr!important}
-  .embed .content{padding-top:12px}
+  .embed .content{padding:0}
 
   /* SIDEBAR */
   .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
@@ -215,6 +215,10 @@
   .mstat::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
   .mstat-on{background:#E7F7EE;color:#15A34A}
   .mstat-off{background:#FDECEC;color:#E5484D}
+  .mstat-refund{background:#FEF3E2;color:#D97706}
+  .mdaterange{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;font-size:.84rem;color:var(--ink)}
+  .mdaterange .mdr-ic{color:var(--muted);flex:none}
+  .mdaterange input{border:0;background:none;font-family:inherit;font-size:.82rem;color:var(--ink);outline:none;padding:0;min-width:112px}
   .mrowmenu{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.15rem;padding:0 6px;border-radius:6px;line-height:1}
   .mrowmenu:hover{background:var(--soft);color:var(--ink)}
   .mpager{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
@@ -817,7 +821,7 @@
   }
 
   // ----- Member (redesign — การ์ด KPI + ตาราง + แผงรายละเอียด) -----
-  var MEM_FILT={q:'',seg:'all',status:'all',date:'all',from:'',to:'',gender:'all',start:'all'};
+  var MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};
   var MEM_PAGE=1, MEM_PS=10, MEM_SEL=null, MEM_MODE='now', MEM_TAB='info';
   function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
   function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ทั่วไป',cls:'mseg-base'};}
@@ -832,31 +836,25 @@
   function memberView(mode){
     MEM_MODE=mode; MEM_SEL=null; MEM_TAB='info';
     return ''
-    + '<div class="memhead"><div><h1>Member</h1><p class="sub">จัดการข้อมูลสมาชิกและข้อมูลลูกค้า</p></div>'
+    + '<div class="memhead"><div><h1>Lean Lab · Member</h1><p class="sub">รายชื่อสมาชิกที่ชำระเงินแล้ว</p></div>'
     +   '<div class="memhead-act">'
     +     '<button class="btn ghost" onclick="memImportOpen()">⬆ นำเข้าข้อมูล</button>'
+    +     '<button class="btn ghost" onclick="llExportMembers(MEM_MODE)">⬇ ส่งออกข้อมูล</button>'
     +     '<button class="btn pri" onclick="memAddOpen()">+ เพิ่มสมาชิก</button>'
-    +     '<button class="mkebab" onclick="memHeadMenu(event)" aria-label="เมนู">⋮</button>'
-    +     '<div id="memHMenu" class="mhmenu" style="display:none"><button onclick="memHeadClose();llExportMembers(MEM_MODE)">⬇ ส่งออก CSV (ตามตัวกรอง)</button><button onclick="memHeadClose();memberLoad(MEM_MODE)">⟳ รีเฟรชข้อมูล</button></div>'
     +   '</div></div>'
     + '<div class="mkpis" id="memKpis"></div>'
     + '<div class="mgrid">'
     +   '<div class="mcard">'
     +     '<div class="mfilters">'
-    +       '<div class="mfsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="memSearch" placeholder="ค้นหาชื่อ, เบอร์โทร, อีเมล, รหัสสมาชิก"></div>'
-    +       '<select id="memSeg" class="mfsel"><option value="all">ทุกแพ็กเกจ</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ทั่วไป</option></select>'
-    +       '<select id="memStatus" class="mfsel"><option value="all">ทุกสถานะ</option><option value="active">ใช้งานอยู่</option><option value="inactive">ไม่ใช้งาน</option></select>'
-    +       '<button type="button" class="mfbtn" id="memAdvToggle">▾ ตัวกรอง<span id="memAdvCount" class="badge" style="display:none"></span></button>'
-    +     '</div>'
-    +     '<div class="madv" id="memAdv" style="display:none">'
-    +       '<label>ช่วงวันที่เข้าร่วม<select id="mAdvDate"><option value="all">ทั้งหมด</option><option value="today">วันนี้</option><option value="7d">สัปดาห์นี้</option><option value="30d">เดือนนี้</option><option value="custom">กำหนดเอง</option></select></label>'
-    +       '<div id="mAdvRange" style="display:none;gap:6px;align-items:center"><input type="date" id="mAdvFrom"><span style="color:var(--muted)">–</span><input type="date" id="mAdvTo"></div>'
-    +       '<label>เพศ<select id="mAdvGender"><option value="all">ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></label>'
-    +       '<label>วันเริ่มโครงการ<select id="mAdvStart"><option value="all">ทั้งหมด</option><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></label>'
-    +       '<button type="button" class="btn ghost" id="mAdvClear" style="padding:8px 14px;font-size:.82rem">ล้างตัวกรอง</button>'
+    +       '<div class="mfsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="memSearch" placeholder="ชื่อ, รหัสสมาชิก หรือเบอร์โทรศัพท์"></div>'
+    +       '<select id="memGender" class="mfsel"><option value="all">เพศ · ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select>'
+    +       '<select id="memAge" class="mfsel"><option value="all">ช่วงอายุ · ทั้งหมด</option><option value="18-29">18–29 ปี</option><option value="30-39">30–39 ปี</option><option value="40-49">40–49 ปี</option><option value="50-">50 ปีขึ้นไป</option></select>'
+    +       '<div class="mdaterange" title="วันที่เริ่ม"><span class="mdr-ic">📅</span><input type="date" id="memFrom" aria-label="ตั้งแต่วันที่"><span style="color:var(--muted)">–</span><input type="date" id="memTo" aria-label="ถึงวันที่"></div>'
+    +       '<select id="memSeg" class="mfsel"><option value="all">แพ็คเกจ · ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ทั่วไป</option></select>'
+    +       '<button type="button" class="btn ghost" id="memClear" style="padding:9px 16px;font-size:.84rem">ล้างข้อมูล</button>'
     +     '</div>'
     +     '<div class="mlistmeta"><span id="memCount" class="mcount">–</span><div class="mlistmeta-right"><select id="memPS" class="mfsel sm"><option value="10">10 / หน้า</option><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="memPager" class="mpager"></div></div></div>'
-    +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th class="ck"><input type="checkbox" id="memAll"></th><th>ชื่อ-นามสกุล</th><th>รหัสสมาชิก</th><th>แพ็กเกจ</th><th>เบอร์โทร</th><th>สถานะ</th><th class="num">ยอดซื้อรวม</th><th>เข้าร่วมล่าสุด</th><th></th></tr></thead><tbody id="memBody"><tr><td colspan="9" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
+    +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th>วันที่เริ่ม</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th><th>เพศ</th><th>อายุ</th><th>แพ็คเกจ</th><th>ช่องทางการชำระ</th><th class="num">ยอดชำระ</th><th></th></tr></thead><tbody id="memBody"><tr><td colspan="9" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
     +   '</div>'
     +   '<div class="mcard mdetail" id="memDetail"><div class="mdetail-empty">เลือกสมาชิกเพื่อดูรายละเอียด</div></div>'
     + '</div>'
@@ -865,19 +863,18 @@
   function memFilterList(list){
     var f=MEM_FILT;
     function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
-    var t0=dayStart(new Date()),DAY=86400000,lo=null,hi=null;
-    if(f.date==='today'){lo=t0;hi=t0+DAY;}
-    else if(f.date==='7d'){lo=t0-6*DAY;hi=t0+DAY;}
-    else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
-    else if(f.date==='custom'){if(f.from)lo=dayStart(f.from);if(f.to)hi=dayStart(f.to)+DAY;}
+    var lo=f.from?dayStart(f.from):null, hi=f.to?dayStart(f.to)+86400000:null;
     var q=(f.q||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
     return (list||[]).filter(function(r){
-      if(lo!=null||hi!=null){var t=new Date(r.reviewedAt||r.createdAt||0).getTime();if(lo!=null&&t<lo)return false;if(hi!=null&&t>=hi)return false;}
-      if(f.seg&&f.seg!=='all'&&memPkgOf(r)!==f.seg)return false;
-      if(f.status==='active'&&r.status!=='confirmed')return false;
-      if(f.status==='inactive'&&r.status==='confirmed')return false;
+      var t=new Date(r.reviewedAt||r.createdAt||0).getTime();
+      if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false;
       if(f.gender&&f.gender!=='all'&&String(r.gender||'')!==f.gender)return false;
-      if(f.start&&f.start!=='all'&&String(r.startChoice||'')!==f.start)return false;
+      if(f.seg&&f.seg!=='all'&&memPkgOf(r)!==f.seg)return false;
+      if(f.age&&f.age!=='all'){var a=Number(r.age)||0;
+        if(f.age==='18-29'&&!(a>=18&&a<=29))return false;
+        if(f.age==='30-39'&&!(a>=30&&a<=39))return false;
+        if(f.age==='40-49'&&!(a>=40&&a<=49))return false;
+        if(f.age==='50-'&&!(a>=50))return false;}
       if(q){var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')).toLowerCase();var okT=hay.indexOf(q)>=0;var okP=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0);if(!okT&&!okP)return false;}
       return true;
     });
@@ -887,46 +884,45 @@
   function memHeadClose(){var m=document.getElementById('memHMenu');if(m)m.style.display='none';}
   document.addEventListener('click',function(e){if(!e.target.closest('.memhead-act'))memHeadClose();});
   function memberInit(mode){
-    MEM_FILT={q:'',seg:'all',status:'all',date:'all',from:'',to:'',gender:'all',start:'all'};
+    MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};
     MEM_PAGE=1; MEM_SEL=null; MEM_TAB='info';
     var s=document.getElementById('memSearch'),tmr;
     if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){MEM_PAGE=1;memRender();},260);};
+    var mg=document.getElementById('memGender');if(mg)mg.onchange=function(){MEM_FILT.gender=mg.value;MEM_PAGE=1;memRender();};
+    var ma=document.getElementById('memAge');if(ma)ma.onchange=function(){MEM_FILT.age=ma.value;MEM_PAGE=1;memRender();};
     var sg=document.getElementById('memSeg');if(sg)sg.onchange=function(){MEM_FILT.seg=sg.value;MEM_PAGE=1;memRender();};
-    var st=document.getElementById('memStatus');if(st)st.onchange=function(){MEM_FILT.status=st.value;MEM_PAGE=1;memRender();};
-    var ps=document.getElementById('memPS');if(ps)ps.onchange=function(){MEM_PS=parseInt(ps.value,10)||20;MEM_PAGE=1;memRender();};
-    var at=document.getElementById('memAdvToggle'),ap=document.getElementById('memAdv');
-    if(at&&ap)at.onclick=function(){ap.style.display=(ap.style.display==='none')?'flex':'none';};
-    var md=document.getElementById('mAdvDate');if(md)md.onchange=function(){MEM_FILT.date=md.value;var rg=document.getElementById('mAdvRange');if(rg)rg.style.display=(md.value==='custom')?'flex':'none';memAdvCount();MEM_PAGE=1;memRender();};
-    var mg=document.getElementById('mAdvGender');if(mg)mg.onchange=function(){MEM_FILT.gender=mg.value;memAdvCount();MEM_PAGE=1;memRender();};
-    var mss=document.getElementById('mAdvStart');if(mss)mss.onchange=function(){MEM_FILT.start=mss.value;memAdvCount();MEM_PAGE=1;memRender();};
-    var mf=document.getElementById('mAdvFrom'),mt2=document.getElementById('mAdvTo');
-    if(mf)mf.onchange=function(){MEM_FILT.from=mf.value;MEM_PAGE=1;memRender();};
-    if(mt2)mt2.onchange=function(){MEM_FILT.to=mt2.value;MEM_PAGE=1;memRender();};
-    var mc=document.getElementById('mAdvClear');if(mc)mc.onclick=function(){MEM_FILT.date='all';MEM_FILT.from='';MEM_FILT.to='';MEM_FILT.gender='all';MEM_FILT.start='all';if(md)md.value='all';if(mg)mg.value='all';if(mss)mss.value='all';if(mf)mf.value='';if(mt2)mt2.value='';var rg=document.getElementById('mAdvRange');if(rg)rg.style.display='none';memAdvCount();MEM_PAGE=1;memRender();};
+    var ff=document.getElementById('memFrom'),ft=document.getElementById('memTo');
+    if(ff)ff.onchange=function(){MEM_FILT.from=ff.value;MEM_PAGE=1;memRender();};
+    if(ft)ft.onchange=function(){MEM_FILT.to=ft.value;MEM_PAGE=1;memRender();};
+    var ps=document.getElementById('memPS');if(ps)ps.onchange=function(){MEM_PS=parseInt(ps.value,10)||10;MEM_PAGE=1;memRender();};
+    var mc=document.getElementById('memClear');if(mc)mc.onclick=function(){MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};if(s)s.value='';if(mg)mg.value='all';if(ma)ma.value='all';if(sg)sg.value='all';if(ff)ff.value='';if(ft)ft.value='';MEM_PAGE=1;memRender();};
     var sc=document.getElementById('memScrim');if(sc)sc.onclick=memCloseDetail;
-    var ca=document.getElementById('memAll');if(ca)ca.onclick=function(){[].forEach.call(document.querySelectorAll('#memBody input[type=checkbox]'),function(x){x.checked=ca.checked;});};
     memberLoad(mode);
   }
   function memKpiIc(n){var m={
     users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>',
     check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
-    card:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>'};return m[n]||'';}
+    card:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>',
+    refund:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>',
+    cancel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+    male:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5 20 4M15 4h5v5"/></svg>',
+    female:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M9 19h6"/></svg>'};return m[n]||'';}
   function memKpi(bg,fg,ic,lb,v){return '<div class="mkpi"><div class="k-top"><span class="k-ic" style="background:'+bg+';color:'+fg+'">'+memKpiIc(ic)+'</span><span class="k-lb">'+lb+'</span></div><div class="k-v">'+v+'</div></div>';}
   function memRender(){
     var base=window.LL_MEM_ALL||[];
     var kp=document.getElementById('memKpis');
     if(kp){
       var total=base.length;
+      var male=base.filter(function(r){return String(r.gender||'')==='ชาย';}).length;
+      var female=base.filter(function(r){return String(r.gender||'')==='หญิง';}).length;
       var now=new Date(),mStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
       var newM=base.filter(function(r){return new Date(r.reviewedAt||r.createdAt||0).getTime()>=mStart;}).length;
-      var confs=base.filter(function(r){return r.status==='confirmed';});
-      var active=confs.length;
-      var avg=confs.length?Math.round(confs.reduce(function(a,r){return a+memAmount(r);},0)/confs.length):0;
-      kp.innerHTML=memKpi('#EEF0FF','#6366F1','users','ลูกค้าทั้งหมด',total.toLocaleString('en-US'))
-        +memKpi('#E7F7EE','#15A34A','plus','ลูกค้าใหม่ (เดือนนี้)',newM.toLocaleString('en-US'))
-        +memKpi('#E4F6F1','#0E9F86','check','ลูกค้าที่ใช้งานอยู่',active.toLocaleString('en-US'))
-        +memKpi('#E6F0FF','#2563EB','card','ยอดซื้อเฉลี่ย',avg.toLocaleString('en-US')+' บาท');
+      function cnt(n){return n.toLocaleString('en-US')+'<span style="font-size:.8rem;font-weight:600;color:var(--muted);margin-left:5px">คน</span>';}
+      kp.innerHTML=memKpi('#EEF0FF','#4F6DF5','users','สมาชิกทั้งหมด',cnt(total))
+        +memKpi('#E7F7EE','#15A34A','male','ชาย',cnt(male))
+        +memKpi('#FCE9F3','#DB4A94','female','หญิง',cnt(female))
+        +memKpi('#EFEAFB','#7C5CFF','plus','เริ่มโปรแกรมเดือนนี้',cnt(newM));
     }
     var list=memFilterList(base);
     var tb=document.getElementById('memBody'); if(!tb)return;
@@ -939,18 +935,32 @@
     var pg=document.getElementById('memPager'); if(pg)pg.innerHTML=memPagerHtml(MEM_PAGE,pages);
     memMarkSel();
   }
+  function memPayChannel(r){
+    if(r.installment)return 'ผ่อนชำระ '+(r.installment.months||6)+' งวด';
+    if(r.pay==='card')return 'บัตรเครดิต';
+    if(r.pay==='debit')return 'บัตรเดบิต';
+    if(r.pay==='promptpay')return 'PromptPay';
+    if(r.pay==='manual')return 'เพิ่มเอง (Manual)';
+    return 'โอนธนาคาร';
+  }
+  function memPayStatus(r){
+    if(r.status==='confirmed')return {label:'ชำระเงินแล้ว',cls:'mstat-on'};
+    if(r.status==='partially_refunded')return {label:'คืนเงินบางส่วน',cls:'mstat-refund'};
+    if(r.status==='refunded')return {label:'คืนเงิน',cls:'mstat-refund'};
+    if(r.status==='cancelled')return {label:'ยกเลิก',cls:'mstat-off'};
+    return {label:(LL_ST[r.status]||[r.status])[0],cls:'mstat-off'};
+  }
   function memRowHtml(r){
-    var seg=memSeg(r),active=r.status==='confirmed';
     var nw=memIsNew(r)?'<span class="mnew">ใหม่</span>':'';
     return '<tr data-id="'+llEsc(r.id)+'" onclick="memSelect(\''+r.id+'\')"'+(r.id===MEM_SEL?' class="sel"':'')+'>'
-      +'<td class="ck" onclick="event.stopPropagation()"><input type="checkbox"></td>'
-      +'<td><div class="mnamecell">'+memAvatar(r.name,34)+'<span class="mname-t">'+llEsc(r.name||'-')+nw+'</span></div></td>'
-      +'<td style="color:var(--muted);white-space:nowrap">'+llEsc(r.po||'-')+'</td>'
-      +'<td><span class="mseg '+seg.cls+'">'+seg.label+'</span></td>'
-      +'<td style="white-space:nowrap">'+llEsc(r.phone||'-')+'</td>'
-      +'<td><span class="mstat '+(active?'mstat-on':'mstat-off')+'">'+(active?'ใช้งานอยู่':'ไม่ใช้งาน')+'</span></td>'
-      +'<td class="num">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
       +'<td style="color:var(--muted);white-space:nowrap">'+memDate(r.reviewedAt||r.createdAt)+'</td>'
+      +'<td style="color:var(--muted);white-space:nowrap">'+llEsc(r.po||'-')+'</td>'
+      +'<td><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+nw+'</span></div></td>'
+      +'<td style="white-space:nowrap">'+llEsc(r.gender||'-')+'</td>'
+      +'<td style="white-space:nowrap">'+llEsc(r.age||'-')+'</td>'
+      +'<td style="white-space:nowrap">'+llEsc(memSeg(r).label)+'</td>'
+      +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(memPayChannel(r))+'</td>'
+      +'<td class="num">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
       +'<td onclick="event.stopPropagation()"><button class="mrowmenu" onclick="memSelect(\''+r.id+'\')">⋮</button></td>'
       +'</tr>';
   }
@@ -1173,7 +1183,7 @@
       var tb=document.getElementById('memBody'); if(!tb)return;
       if(!j||!j.ok){tb.innerHTML='<tr><td colspan="9" class="mempty" style="color:var(--bad)">โหลดข้อมูลไม่สำเร็จ</td></tr>';return;}
       window.LL_ALL=j.registrations||[];
-      window.LL_MEM_ALL=(j.registrations||[]).filter(function(r){return r.status==='confirmed'||r.status==='cancelled'||r.status==='refunded';});
+      window.LL_MEM_ALL=(j.registrations||[]).filter(function(r){return r.status==='confirmed';});
       MEM_PAGE=1; memRender();
     }).catch(function(){var tb=document.getElementById('memBody');if(tb)tb.innerHTML='<tr><td colspan="9" class="mempty" style="color:var(--bad)">เชื่อมต่อไม่สำเร็จ</td></tr>';});
   }

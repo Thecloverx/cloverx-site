@@ -2127,11 +2127,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   // ฝังหน้าจัดการ Lean Lab (จาก /support) เข้ามาใน Operations — โค้ดจัดการออเดอร์เดิมทำงานเหมือนเดิม (มีปุ่มคืนเงิน/มาร์ก)
   function renderLLEmbed(view,title){
-    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
-      +'<h1 style="margin:0">'+title+'</h1>'
-      +'<a href="/support?v='+view+'" target="_blank" rel="noopener" style="background:#16a34a;border:1px solid #16a34a;border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a>'
-    +'</div>'
-    +'<iframe src="/support?embed=1&v='+view+'" style="width:100%;height:calc(100vh - 165px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
+    gen.innerHTML='<iframe src="/support?embed=1&v='+view+'" style="width:100%;height:calc(100vh - 96px);min-height:640px;border:0;background:transparent"></iframe>';
   }
   function renderPoDash(){
     gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
