@@ -177,7 +177,7 @@
   .mkpi .k-lb{font-size:.8rem;color:var(--muted);font-weight:600;line-height:1.25}
   .mkpi .k-v{font-size:1.5rem;font-weight:800;color:var(--ink);line-height:1}
   .mgrid{display:grid;grid-template-columns:minmax(0,1fr) 374px;gap:16px;align-items:start}
-  .mcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+  .mcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
   .mfilters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
   .mfsearch{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:0 12px}
   .mfsearch svg{width:16px;height:16px;color:var(--muted);flex:none}
@@ -192,7 +192,7 @@
   .mlistmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
   .mcount{font-size:.82rem;color:var(--muted);font-weight:600}
   .mlistmeta-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .mtblwrap{overflow-x:auto}
+  .mtblwrap{overflow-x:auto;min-width:0}
   .memtbl{width:100%;border-collapse:collapse;font-size:.86rem}
   .memtbl thead th{text-align:left;color:var(--muted);font-weight:600;font-size:.74rem;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   .memtbl thead th.num{text-align:right}
@@ -279,6 +279,25 @@
     .panel table tbody td:not(:last-child){border-bottom:1px dashed var(--line)!important;padding-bottom:9px!important;margin-bottom:4px}
     .panel table tbody td .cell-sub{font-size:.8rem}
     .panel table .acts{margin-top:4px}
+  }
+  /* มือถือ: ตาราง Lean Lab (.memtbl) → การ์ดซ้อน อ่านง่าย ไม่ต้องเลื่อนแนวนอน */
+  @media(max-width:640px){
+    .memtbl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    .memtbl,.memtbl tbody{display:block;width:100%}
+    .memtbl tbody tr{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:12px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.05);cursor:pointer}
+    .memtbl tbody tr:hover{background:#fff}
+    .memtbl tbody tr.sel{background:#EAF4FB;border-color:#0077B6}
+    .memtbl tbody td{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:7px 0!important;border:0!important;text-align:right!important;white-space:normal!important;font-size:.9rem;min-width:0}
+    .memtbl tbody td:not(:last-child){border-bottom:1px dashed var(--line)!important}
+    .memtbl tbody td::before{content:attr(data-label);color:var(--muted);font-weight:600;font-size:.78rem;text-align:left;flex:none}
+    .memtbl tbody td.num{font-size:1.05rem;font-weight:800}
+    .memtbl tbody td.mnametd{order:-1;justify-content:flex-start;padding:2px 0 10px!important;border-bottom:1px solid var(--line)!important;margin-bottom:5px}
+    .memtbl tbody td.mnametd::before{display:none}
+    .memtbl tbody td.mnametd .mname-t{white-space:normal;font-size:.98rem}
+    .memtbl tbody td.mactd{justify-content:flex-end;padding-top:10px!important}
+    .memtbl tbody td.mactd::before{display:none}
+    .memtbl tbody td.mempty{justify-content:center;text-align:center!important;padding:26px 0!important}
+    .memtbl tbody td.mempty::before{display:none}
   }
   .linkpill{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:700;padding:4px 10px;border-radius:8px;text-decoration:none;white-space:nowrap;margin:2px 4px 2px 0}
   .linkpill.slip{background:var(--brand-tint);color:var(--brand-ink)}
@@ -1014,14 +1033,14 @@
   function memRowHtml(r){
     var nw=memIsNew(r)?'<span class="mnew">ใหม่</span>':'';
     return '<tr data-id="'+llEsc(r.id)+'" onclick="memSelect(\''+r.id+'\')"'+(r.id===MEM_SEL?' class="sel"':'')+'>'
-      +'<td style="color:var(--muted);white-space:nowrap">'+memDate(r.reviewedAt||r.createdAt)+'</td>'
-      +'<td style="color:var(--muted);white-space:nowrap">'+llEsc(r.po||'-')+'</td>'
-      +'<td><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+nw+'</span></div></td>'
-      +'<td style="white-space:nowrap">'+llEsc(r.gender||'-')+'</td>'
-      +'<td style="white-space:nowrap">'+llEsc(r.age||'-')+'</td>'
-      +'<td style="white-space:nowrap">'+llEsc(memSeg(r).label)+'</td>'
-      +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(memPayChannel(r))+'</td>'
-      +'<td class="num">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
+      +'<td style="color:var(--muted);white-space:nowrap" data-label="วันที่เริ่ม">'+memDate(r.reviewedAt||r.createdAt)+'</td>'
+      +'<td style="color:var(--muted);white-space:nowrap" data-label="รหัสสมาชิก">'+llEsc(r.po||'-')+'</td>'
+      +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+nw+'</span></div></td>'
+      +'<td style="white-space:nowrap" data-label="เพศ">'+llEsc(r.gender||'-')+'</td>'
+      +'<td style="white-space:nowrap" data-label="อายุ">'+llEsc(r.age||'-')+'</td>'
+      +'<td style="white-space:nowrap" data-label="แพ็คเกจ">'+llEsc(memSeg(r).label)+'</td>'
+      +'<td style="white-space:nowrap;color:var(--muted)" data-label="ช่องทางการชำระ">'+llEsc(memPayChannel(r))+'</td>'
+      +'<td class="num" data-label="ยอดชำระ">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
       +'</tr>';
   }
   function memPagerHtml(cur,pages){
@@ -1331,14 +1350,14 @@
   function ordRowHtml(r){
     var ps=memPayStatus(r);
     return '<tr data-id="'+llEsc(r.id)+'" onclick="ordSelect(\''+r.id+'\')"'+(r.id===ORD_SEL?' class="sel"':'')+'>'
-      +'<td style="color:var(--muted);white-space:nowrap">'+memDateTime(r.createdAt)+'</td>'
-      +'<td style="color:var(--muted);white-space:nowrap">'+llEsc(r.po||'-')+'</td>'
-      +'<td><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span></div></td>'
-      +'<td style="white-space:nowrap">'+llEsc(memSeg(r).label)+'</td>'
-      +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(memPayChannel(r))+'</td>'
-      +'<td><span class="mstat '+ps.cls+'">'+ps.label+'</span></td>'
-      +'<td class="num">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
-      +'<td onclick="event.stopPropagation()">'+llMenuHtml(r)+'</td>'
+      +'<td style="color:var(--muted);white-space:nowrap" data-label="วันที่ซื้อ">'+memDateTime(r.createdAt)+'</td>'
+      +'<td style="color:var(--muted);white-space:nowrap" data-label="รหัสสมาชิก">'+llEsc(r.po||'-')+'</td>'
+      +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span></div></td>'
+      +'<td style="white-space:nowrap" data-label="แพ็คเกจ">'+llEsc(memSeg(r).label)+'</td>'
+      +'<td style="white-space:nowrap;color:var(--muted)" data-label="ช่องทางการชำระ">'+llEsc(memPayChannel(r))+'</td>'
+      +'<td data-label="สถานะ"><span class="mstat '+ps.cls+'">'+ps.label+'</span></td>'
+      +'<td class="num" data-label="ยอดชำระ">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
+      +'<td class="mactd" onclick="event.stopPropagation()">'+llMenuHtml(r)+'</td>'
       +'</tr>';
   }
   window.llRenderOrders=function(){

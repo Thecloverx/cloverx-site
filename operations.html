@@ -76,6 +76,17 @@
   .user .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,#3B82F6,#1E40AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex:none}
   .user .info b{font-size:.88rem}.user .info span{display:block;font-size:.74rem;color:var(--muted)}
   @media(max-width:560px){.user .info{display:none}}
+  /* มือถือ: บีบ topbar ให้พอดีจอ ไม่ล้น */
+  @media(max-width:640px){
+    .topbar{padding:0 14px;gap:10px;height:60px}
+    .topbar .right{gap:10px}
+    .crumb{min-width:0;overflow:hidden}
+    .crumb b{font-size:.94rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .topbtn .tlbl{display:none}
+    .topbtn{padding:9px!important;gap:0!important}
+    .bell svg{width:22px;height:22px}
+    .user .av{width:34px;height:34px}
+  }
 
   .content{padding:26px;flex:1}
   .wrapc{max-width:none;margin:0 auto}
@@ -270,7 +281,7 @@
   .pokpi .k-lb{font-size:.8rem;color:var(--muted);font-weight:600;line-height:1.25}
   .pokpi .k-v{font-size:1.5rem;font-weight:800;color:var(--ink);line-height:1}
   .pogrid{display:grid;grid-template-columns:minmax(0,1fr) 374px;gap:16px;align-items:start}
-  .pomcard{background:var(--panel,#fff);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .pomcard{background:var(--panel,#fff);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
   .pomfilters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
   .pomsearch{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:0 12px}
   .pomsearch svg{width:16px;height:16px;color:var(--muted);flex:none}
@@ -299,6 +310,21 @@
     .pomscrim.on{display:block;position:fixed;inset:0;background:rgba(20,30,55,.35);z-index:1290}
   }
   @media(max-width:520px){.pokpis{grid-template-columns:1fr 1fr}.pomemhead h1{font-size:1.3rem}}
+  /* มือถือ: ทุกตารางในหน้า → การ์ดซ้อน อ่านง่าย ไม่ต้องเลื่อนแนวนอน (label มาจาก thead อัตโนมัติ) */
+  @media(max-width:640px){
+    .content div[style*="overflow-x"]{overflow-x:visible!important}
+    .content table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    .content table,.content table>tbody{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important}
+    .content table>tbody>tr{display:flex!important;flex-direction:column;width:100%!important;min-width:0!important;box-sizing:border-box;border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:12px;background:var(--panel,#fff);box-shadow:0 1px 3px rgba(15,23,42,.05)}
+    .content table>tbody>tr:hover{background:var(--panel,#fff)}
+    .content table>tbody>tr>td{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:8px 0!important;border:0!important;border-radius:0!important;text-align:right!important;white-space:normal!important;min-width:0!important;width:auto!important;font-size:.9rem}
+    .content table>tbody>tr>td:not(:last-child){border-bottom:1px dashed var(--line)!important}
+    .content table>tbody>tr>td::before{content:attr(data-label);color:var(--muted);font-weight:600;font-size:.78rem;text-align:left;flex:none;white-space:nowrap}
+    .content table>tbody>tr>td:not([data-label])::before,.content table>tbody>tr>td[data-label=""]::before{display:none}
+    .content table>tbody>tr>td[colspan]{justify-content:center;text-align:center!important}
+    .content table>tbody>tr>td[colspan]::before{display:none}
+    .content table.potbl>colgroup,.content table>colgroup{display:none}
+  }
   .podchips{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
   .podchip{border:1px solid var(--line);background:var(--panel,#fff);color:var(--ink);font-family:inherit;font-weight:600;font-size:.82rem;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s}
   .podchip:hover{border-color:var(--brand)}
@@ -475,8 +501,8 @@
       <button class="burger" onclick="toggleSide()" aria-label="เมนู"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="crumb">ฝ่ายปฏิบัติการ<b id="crumbTitle">Overview</b></div>
       <div class="right">
-        <a href="/center" title="กลับหน้าเลือกแผนก" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-weight:700;font-size:.84rem;text-decoration:none;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to Center</a>
-        <button onclick="staffLogout()" title="ออกจากระบบ" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid rgba(229,72,77,.3);border-radius:10px;background:rgba(229,72,77,.06);color:#e5484d;font-weight:700;font-size:.84rem;cursor:pointer;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</button>
+        <a href="/center" class="topbtn" title="กลับหน้าเลือกแผนก" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-weight:700;font-size:.84rem;text-decoration:none;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span class="tlbl">Back to Center</span></a>
+        <button onclick="staffLogout()" class="topbtn" title="ออกจากระบบ" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid rgba(229,72,77,.3);border-radius:10px;background:rgba(229,72,77,.06);color:#e5484d;font-weight:700;font-size:.84rem;cursor:pointer;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="tlbl">Logout</span></button>
         <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>ค้นหา...</div>
         <div class="bell"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="badge">5</span></div>
         <div class="user"><div class="av">ณ</div><div class="info"><b>ณัฐวุฒิ</b><span>Operations</span></div></div>
@@ -2661,6 +2687,34 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       }).catch(function(){});
     }catch(e){}
   }, 25000);
+
+  // มือถือ: เติม data-label ให้ทุก td จากหัวตาราง (thead) อัตโนมัติ เพื่อให้ CSS แปลงเป็นการ์ดอ่านง่าย
+  (function(){
+    var ct=document.querySelector('.content'); if(!ct||typeof MutationObserver==='undefined')return;
+    var pending=false;
+    function labelTables(){
+      var tables=ct.querySelectorAll('table'); if(!tables.length)return;
+      [].forEach.call(tables,function(t){
+        var ths=t.querySelectorAll(':scope > thead th'); if(!ths.length)return;
+        var labels=[].map.call(ths,function(th){return (th.textContent||'').trim();});
+        var body=t.querySelector(':scope > tbody')||t;
+        [].forEach.call(body.querySelectorAll(':scope > tr'),function(tr){
+          var ci=0;
+          [].forEach.call(tr.children,function(td){
+            if(td.tagName!=='TD')return;
+            var cs=parseInt(td.getAttribute('colspan')||'1',10);
+            if(cs>1){ci+=cs;return;}
+            if(labels[ci]!=null && !td.hasAttribute('data-label')) td.setAttribute('data-label',labels[ci]);
+            ci++;
+          });
+        });
+      });
+    }
+    function schedule(){ if(pending)return; pending=true; requestAnimationFrame(function(){ pending=false; obs.disconnect(); try{labelTables();}catch(e){} obs.observe(ct,{childList:true,subtree:true}); }); }
+    var obs=new MutationObserver(schedule);
+    try{labelTables();}catch(e){}
+    obs.observe(ct,{childList:true,subtree:true});
+  })();
 
   go('podash'); // เปิดหน้า Dashboard เป็นค่าเริ่มต้น
 </script>
