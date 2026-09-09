@@ -304,8 +304,8 @@
   /* modal */
   .lmodal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
   .lmodal.on{display:flex}
-  .lmodal .bk{position:absolute;inset:0;background:rgba(15,23,42,.5)}
-  .lmodal .mc{position:relative;background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;box-shadow:0 30px 70px -20px rgba(15,23,42,.4)}
+  .lmodal .bk{position:absolute;inset:0;background:transparent}
+  .lmodal .mc{position:relative;background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 24px 60px -12px rgba(15,23,42,.28),0 0 0 1px rgba(15,23,42,.06)}
   .lmodal h3{font-size:1.2rem;margin-bottom:6px}
   .lmodal p.sub{color:var(--muted);font-size:.88rem;margin-bottom:16px}
   .lmodal label{display:block;font-size:.82rem;font-weight:700;margin:12px 0 6px;color:var(--ink)}
@@ -862,7 +862,7 @@
     +       '<button type="button" class="btn ghost" id="memClear" style="padding:9px 16px;font-size:.84rem">ล้างข้อมูล</button>'
     +     '</div>'
     +     '<div class="mlistmeta"><span id="memCount" class="mcount">–</span><div class="mlistmeta-right"><select id="memPS" class="mfsel sm"><option value="10">10 / หน้า</option><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="memPager" class="mpager"></div></div></div>'
-    +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th>วันที่เริ่ม</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th><th>เพศ</th><th>อายุ</th><th>แพ็คเกจ</th><th>ช่องทางการชำระ</th><th class="num">ยอดชำระ</th><th></th></tr></thead><tbody id="memBody"><tr><td colspan="9" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
+    +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th>วันที่เริ่ม</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th><th>เพศ</th><th>อายุ</th><th>แพ็คเกจ</th><th>ช่องทางการชำระ</th><th class="num">ยอดชำระ</th></tr></thead><tbody id="memBody"><tr><td colspan="8" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
     +   '</div>'
     +   '<div class="mcard mdetail" id="memDetail"><div class="mdetail-empty">เลือกสมาชิกเพื่อดูรายละเอียด</div></div>'
     + '</div>'
@@ -938,7 +938,7 @@
     if(MEM_PAGE>pages)MEM_PAGE=pages; if(MEM_PAGE<1)MEM_PAGE=1;
     var from=list.length?((MEM_PAGE-1)*PS+1):0,to=Math.min(list.length,MEM_PAGE*PS);
     var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent='แสดง '+from+'-'+to+' จาก '+list.length.toLocaleString('en-US')+' รายการ';
-    if(!list.length){tb.innerHTML='<tr><td colspan="9" class="mempty">'+(base.length?'ไม่พบสมาชิกที่ตรงกับตัวกรอง':'ยังไม่มีสมาชิก')+'</td></tr>';}
+    if(!list.length){tb.innerHTML='<tr><td colspan="8" class="mempty">'+(base.length?'ไม่พบสมาชิกที่ตรงกับตัวกรอง':'ยังไม่มีสมาชิก')+'</td></tr>';}
     else{tb.innerHTML=list.slice((MEM_PAGE-1)*PS,MEM_PAGE*PS).map(memRowHtml).join('');}
     var pg=document.getElementById('memPager'); if(pg)pg.innerHTML=memPagerHtml(MEM_PAGE,pages);
     memMarkSel();
@@ -969,7 +969,6 @@
       +'<td style="white-space:nowrap">'+llEsc(memSeg(r).label)+'</td>'
       +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(memPayChannel(r))+'</td>'
       +'<td class="num">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
-      +'<td onclick="event.stopPropagation()"><button class="mrowmenu" onclick="memSelect(\''+r.id+'\')">⋮</button></td>'
       +'</tr>';
   }
   function memPagerHtml(cur,pages){
