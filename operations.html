@@ -343,8 +343,8 @@
           <div class="group open subgrp" id="g-ll">
             <button class="item ghead subhead" data-toggle="g-ll"><span class="pdot" style="background:#16a34a"></span><span class="lbl">Lean Lab</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
             <div class="children">
-              <button class="item lvl3" onclick="location.href='/support'"><span class="dot"></span><span class="lbl">Member</span></button>
-              <button class="item lvl3" onclick="location.href='/support'"><span class="dot"></span><span class="lbl">Management</span></button>
+              <button class="item lvl3" data-view="llmember"><span class="dot"></span><span class="lbl">Member</span></button>
+              <button class="item lvl3" data-view="llmanage"><span class="dot"></span><span class="lbl">Management</span></button>
             </div>
           </div>
           <button class="item" data-view="channels"><span class="dot"></span><span class="lbl">Channels</span></button>
@@ -2132,6 +2132,14 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       return '<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:.85rem;margin-bottom:5px"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.label+'</span><span class="num" style="color:var(--muted);white-space:nowrap">'+(x.sub||'')+'</span></div>'
         +'<div class="progress"><b style="width:'+pct+'%;background:'+(color||'var(--brand)')+'"></b></div></div>';}).join('');
   }
+  // ฝังหน้าจัดการ Lean Lab (จาก /support) เข้ามาใน Operations — โค้ดจัดการออเดอร์เดิมทำงานเหมือนเดิม (มีปุ่มคืนเงิน/มาร์ก)
+  function renderLLEmbed(view,title){
+    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
+      +'<h1 style="margin:0">'+title+'</h1>'
+      +'<a href="/support?v='+view+'" target="_blank" rel="noopener" style="background:#16a34a;border:1px solid #16a34a;border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a>'
+    +'</div>'
+    +'<iframe src="/support?embed=1&v='+view+'" style="width:100%;height:calc(100vh - 165px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
+  }
   function renderPoDash(){
     gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
@@ -2239,7 +2247,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(isExam)examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab · จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab · Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)

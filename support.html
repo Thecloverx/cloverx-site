@@ -1047,5 +1047,6 @@
   document.querySelectorAll('.nav .item[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-view'));});});
 
   admUnlock();
-  go('lldash');
+  // เปิด view ตามพารามิเตอร์ ?v= (ใช้ตอนฝังใน Operations เช่น ?embed=1&v=llorder) — ปกติเปิด Dashboard
+  (function(){ var _v='lldash'; try{ var q=new URLSearchParams(location.search).get('v'); if(q && /^(lldash|llorder|llreg|llmstart|llmafter)$/.test(q)) _v=q; }catch(e){} go(_v); })();
 </script>
