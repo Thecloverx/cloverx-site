@@ -721,12 +721,12 @@
       + '<div class="panel">'
       +   '<div class="ph"><h3>รายชื่อสมาชิก</h3><span class="pill '+(isNow?'lean':'ok')+'" id="memCount">–</span></div>'
       +   '<div class="ofilt">'
-      +     '<div class="ofchips" id="mofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="7d">สัปดาห์นี้</button><button class="ofc" data-d="30d">เดือนนี้</button><button class="ofc" data-d="custom">กำหนดเอง</button></div>'
-      +     '<div class="ofrange" id="mofRange" style="display:none"><input type="date" id="mofFrom"><span>–</span><input type="date" id="mofTo"></div>'
       +     '<button type="button" class="ofc" id="mfToggle" style="font-weight:700;display:inline-flex;align-items:center;gap:6px">⚙ ตัวกรอง<span id="mfCount" style="display:none;background:#0077B6;color:#fff;border-radius:999px;font-size:.66rem;font-weight:800;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center"></span></button>'
       +     '<input type="search" id="mofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / รหัสไปรษณีย์">'
       +   '</div>'
-      +   '<div id="mfPanel" hidden style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin:2px 0 14px;padding:14px 16px;background:#F1F8FC;border:1px solid #E3EFF6;border-radius:12px">'
+      +   '<div id="mfPanel" style="display:none;gap:14px;flex-wrap:wrap;align-items:flex-end;margin:2px 0 14px;padding:14px 16px;background:#F1F8FC;border:1px solid #E3EFF6;border-radius:12px">'
+      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">ช่วงวันที่ยืนยัน<select id="mfDate" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:150px"><option value="all">ทั้งหมด</option><option value="today">วันนี้</option><option value="7d">สัปดาห์นี้</option><option value="30d">เดือนนี้</option><option value="custom">กำหนดเอง</option></select></label>'
+      +     '<div class="ofrange" id="mofRange" style="display:none"><input type="date" id="mofFrom"><span>–</span><input type="date" id="mofTo"></div>'
       +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">แพ็กเกจ<select id="mfPkg" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:160px"><option value="all">ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ค่าสมัครปกติ</option></select></label>'
       +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">เพศ<select id="mfGender" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:120px"><option value="all">ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></label>'
       +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">วันเริ่มโครงการ<select id="mfStart" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:150px"><option value="all">ทั้งหมด</option><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></label>'
@@ -765,25 +765,19 @@
   function memberInit(mode){
     MEM_FILT={date:'all',from:'',to:'',q:'',pkg:'all',gender:'all',start:'all'};
     var mt=document.getElementById('mfToggle'), mp=document.getElementById('mfPanel');
-    if(mt&&mp)mt.onclick=function(){mp.hidden=!mp.hidden;};
-    function memCountUpd(){var n=0;if(MEM_FILT.pkg!=='all')n++;if(MEM_FILT.gender!=='all')n++;if(MEM_FILT.start!=='all')n++;var c=document.getElementById('mfCount');if(c){c.textContent=n;c.style.display=n?'inline-flex':'none';}}
+    if(mt&&mp)mt.onclick=function(){var open=mp.style.display!=='none';mp.style.display=open?'none':'flex';mt.classList.toggle('on',!open);};
+    function memCountUpd(){var n=0;if(MEM_FILT.date!=='all')n++;if(MEM_FILT.pkg!=='all')n++;if(MEM_FILT.gender!=='all')n++;if(MEM_FILT.start!=='all')n++;var c=document.getElementById('mfCount');if(c){c.textContent=n;c.style.display=n?'inline-flex':'none';}}
     function memApply(){memCountUpd();memberLoad(mode);}
+    var mdt=document.getElementById('mfDate'); if(mdt)mdt.onchange=function(){MEM_FILT.date=mdt.value;var rg=document.getElementById('mofRange');if(rg)rg.style.display=(MEM_FILT.date==='custom')?'flex':'none';memApply();};
     var mpk=document.getElementById('mfPkg'); if(mpk)mpk.onchange=function(){MEM_FILT.pkg=mpk.value;memApply();};
     var mg=document.getElementById('mfGender'); if(mg)mg.onchange=function(){MEM_FILT.gender=mg.value;memApply();};
     var mst=document.getElementById('mfStart'); if(mst)mst.onchange=function(){MEM_FILT.start=mst.value;memApply();};
-    var mcl=document.getElementById('mfClear'); if(mcl)mcl.onclick=function(){MEM_FILT.pkg='all';MEM_FILT.gender='all';MEM_FILT.start='all';if(mpk)mpk.value='all';if(mg)mg.value='all';if(mst)mst.value='all';memApply();};
-    var chips=document.getElementById('mofChips');
-    if(chips){[].forEach.call(chips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
-      [].forEach.call(chips.querySelectorAll('.ofc'),function(x){x.classList.remove('on');}); b.classList.add('on');
-      MEM_FILT.date=b.getAttribute('data-d');
-      var rg=document.getElementById('mofRange'); if(rg)rg.style.display=(MEM_FILT.date==='custom')?'flex':'none';
-      memberLoad(mode);
-    };});}
+    var mcl=document.getElementById('mfClear'); if(mcl)mcl.onclick=function(){MEM_FILT.date='all';MEM_FILT.from='';MEM_FILT.to='';MEM_FILT.pkg='all';MEM_FILT.gender='all';MEM_FILT.start='all';if(mdt)mdt.value='all';if(mpk)mpk.value='all';if(mg)mg.value='all';if(mst)mst.value='all';var rg=document.getElementById('mofRange');if(rg)rg.style.display='none';var ef=document.getElementById('mofFrom'),et=document.getElementById('mofTo');if(ef)ef.value='';if(et)et.value='';memApply();};
     var ff=document.getElementById('mofFrom'), ft=document.getElementById('mofTo');
-    if(ff)ff.onchange=function(){MEM_FILT.from=ff.value;memberLoad(mode);};
-    if(ft)ft.onchange=function(){MEM_FILT.to=ft.value;memberLoad(mode);};
+    if(ff)ff.onchange=function(){MEM_FILT.from=ff.value;memApply();};
+    if(ft)ft.onchange=function(){MEM_FILT.to=ft.value;memApply();};
     var s=document.getElementById('mofSearch'), tmr;
-    if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){memberLoad(mode);},280);};
+    if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){memApply();},280);};
     memberLoad(mode);
   }
   // ---- ส่งออก CSV (เปิดใน Excel ได้ · ใส่ BOM ให้ภาษาไทยไม่เพี้ยน) ----
