@@ -337,6 +337,56 @@
   .ofilt input[type=search]{flex:1;min-width:220px;padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;background:var(--soft,#fff);color:var(--ink);-webkit-appearance:none;appearance:none}
   .ofilt input[type=search]:focus,.ofrange input:focus{outline:none;border-color:var(--brand,#2563EB)}
 
+  /* ===== Lean Lab dashboard v2 — gradient + neon (scoped .lld2, matches dashLoad markup) ===== */
+  .lld2{--dgrad:linear-gradient(135deg,#00B4D8,#0077B6);--dink:#12233B;--dmut:#61708A;--dline:#E7ECF3;--dsh:0 1px 2px rgba(3,4,94,.05),0 8px 22px rgba(3,4,94,.07);--dcard:#fff;--dsoft:#F5F8FC;color:var(--dink)}
+  .lld2 .num{font-variant-numeric:tabular-nums}
+  .lld2 .kstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+  .lld2 .kx{background:var(--dcard);border:1px solid var(--dline);border-radius:16px;padding:15px 16px;box-shadow:var(--dsh);position:relative;overflow:hidden;min-width:0}
+  .lld2 .kx .kxl{font-size:.74rem;color:var(--dmut);font-weight:600;line-height:1.35;display:flex;align-items:center;gap:5px}
+  .lld2 .kx .kxv{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.05}
+  .lld2 .kx .kxs{font-size:.72rem;color:var(--dmut);margin-top:3px;font-weight:500}
+  .lld2 .kx.hi{background:linear-gradient(135deg,#00CFEB 0%,#0091D6 55%,#0069AE 100%);border:none;color:#fff;box-shadow:0 14px 34px -12px rgba(0,175,220,.6),0 1px 2px rgba(3,4,94,.05)}
+  .lld2 .kx.hi .kxl,.lld2 .kx.hi .kxs{color:rgba(255,255,255,.9)}
+  .lld2 .kx.hi .kxv{color:#fff;text-shadow:0 0 20px rgba(255,255,255,.4)}
+  .lld2 .kx.warn .kxv{color:#0077B6}
+  .lld2 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .lld2 .grid5{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-bottom:14px}
+  .lld2 .c{background:var(--dcard);border:1px solid var(--dline);border-radius:18px;padding:17px 18px 18px;box-shadow:var(--dsh);min-width:0}
+  .lld2 .c-h{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .lld2 .c-h .cic{width:30px;height:30px;border-radius:9px;background:var(--dsoft);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+  .lld2 .c-h .ct{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+  .lld2 .c-h .ctag{margin-left:auto;font-size:.7rem;color:var(--dmut);font-weight:600;background:var(--dsoft);padding:3px 9px;border-radius:999px}
+  .lld2 .bd{display:flex;flex-direction:column;gap:12px}
+  .lld2 .bd .row{display:flex;flex-direction:column;gap:6px}
+  .lld2 .bd .row .rt{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.85rem}
+  .lld2 .bd .row .rt .rl{font-weight:600;color:var(--dink);display:flex;align-items:center;gap:7px;min-width:0}
+  .lld2 .bd .row .rt .rl .rk{color:#0077B6;font-weight:800;width:15px;flex:none;text-align:center}
+  .lld2 .bd .row .rt .rl .rsub{color:var(--dmut);font-weight:500;font-size:.78rem}
+  .lld2 .bd .row .rt .rv{white-space:nowrap;font-variant-numeric:tabular-nums;flex:none;text-align:right}
+  .lld2 .bd .row .rt .rv .amt{font-weight:800;color:#0E9F6E}
+  .lld2 .bd .row .rt .rv .cnt{color:var(--dmut);font-weight:600;font-size:.8rem}
+  .lld2 .bd .row .track{height:9px;background:var(--dsoft);border-radius:999px;overflow:hidden}
+  .lld2 .bd .row .track>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2DD4E8,#0077B6);box-shadow:0 0 10px rgba(0,180,216,.42)}
+  .lld2 .bd .row .track>i.g{background:linear-gradient(90deg,#34D399,#0E9F6E);box-shadow:0 0 10px rgba(16,159,110,.4)}
+  .lld2 .bd .row .track>i.p{background:linear-gradient(90deg,#A78BFA,#7C3AED);box-shadow:0 0 10px rgba(124,58,237,.4)}
+  .lld2 .empty{color:var(--dmut);font-size:.83rem;padding:8px 2px;text-align:center}
+  .lld2 .donut{display:flex;align-items:center;gap:18px}
+  .lld2 .donut .ring{width:132px;height:132px;flex:none;position:relative;display:flex;align-items:center;justify-content:center}
+  .lld2 .donut .ring.nb::after{display:none}
+  .lld2 .donut .ring svg{position:absolute;inset:0}
+  .lld2 .donut .mid{position:relative;z-index:1;text-align:center}
+  .lld2 .donut .mid .mv{font-size:1.35rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .lld2 .donut .mid .ml{font-size:.68rem;color:var(--dmut);font-weight:600;margin-top:3px}
+  .lld2 .donut .leg{display:flex;flex-direction:column;gap:9px;min-width:0}
+  .lld2 .donut .leg .lg{display:flex;align-items:center;gap:8px;font-size:.82rem}
+  .lld2 .donut .leg .lg .dot{width:11px;height:11px;border-radius:4px;flex:none}
+  .lld2 .donut .leg .lg .lgn{font-weight:600;color:var(--dink)}
+  .lld2 .donut .leg .lg .lgv{margin-left:auto;color:var(--dmut);font-weight:700;font-variant-numeric:tabular-nums;padding-left:12px}
+  .lld2 .hastip{cursor:help}
+  .lld2 .hastip:hover{background:rgba(0,119,182,.05);border-radius:8px}
+  .lld2 .donut .leg .lg.hastip:hover{background:rgba(0,119,182,.06)}
+  @media(max-width:1100px){.lld2 .kstrip{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:820px){.lld2 .grid2,.lld2 .grid5{grid-template-columns:1fr}.lld2 .kstrip{grid-template-columns:repeat(2,1fr)}.lld2 .donut{flex-direction:column;align-items:stretch}.lld2 .donut .ring{margin:0 auto}}
   /* ===== Lean Lab dashboard — ref/CloverX house style (scoped) ===== */
   .lldash{--dgrad:linear-gradient(135deg,#00B4D8,#0077B6);--dink:#12233B;--dmut:#61708A;--dline:#E7ECF3;--dsh:0 1px 2px rgba(3,4,94,.05),0 8px 22px rgba(3,4,94,.07);--dcard:#fff;--dsoft:#F5F8FC;color:var(--dink)}
   .lldash .dtitle{display:flex;align-items:center;gap:11px;margin:2px 2px 16px}
@@ -532,17 +582,16 @@
 
   // ---------- DASHBOARD (Lean Lab event overview) ----------
   function dashView(){
-    return '<div class="head"><div><h1><span class="pill lean">EVENT</span> Dashboard — Lean Lab</h1>'
-      + '<p>ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
-      + '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><button class="btn pri" id="dashLark">📤 ส่งรายงานเข้า Lark</button><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
-      + '<div class="ofilt">'
-      +   '<div class="ofchips" id="dfChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
-      +   '<div class="ofrange" id="dfRange" style="display:none"><input type="date" id="dfFrom"><span>–</span><input type="date" id="dfTo"></div>'
+    return '<div class="memhead"><div><h1>Dashboard <span class="pill lean" style="vertical-align:middle;margin-left:4px">Lean Lab</span></h1><p class="sub">ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
+      + '<div class="memhead-act"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><button class="btn pri" id="dashLark">📤 ส่งรายงานเข้า Lark</button><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
+      + '<div class="mcard" style="padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:.82rem;color:var(--muted);font-weight:700">ช่วงวันที่</span>'
+      +   '<div class="ofchips" id="dfChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="week">สัปดาห์</button><button class="ofc" data-d="month">เดือน</button><button class="ofc" data-d="custom">กำหนดวัน</button></div>'
+      +   '<div class="mdaterange" id="dfRange" style="display:none"><span class="mdr-ic">📅</span><input type="date" id="dfFrom"><span style="color:var(--muted)">–</span><input type="date" id="dfTo"></div>'
       + '</div>'
-      + '<div id="dashCapture" class="lldash" style="padding:18px;background:#EEF2F8;border-radius:16px">'
-      +   '<div class="dtitle"><div class="dic">📊</div><div><h2>รายงานผล Lean Lab</h2><div class="dsub" id="dashStamp">ภาพรวมสด · อัปเดตล่าสุดเมื่อสักครู่</div></div></div>'
-      +   '<div id="dashBody"><div style="text-align:center;color:var(--dmut);padding:52px 0">กำลังโหลดข้อมูล…</div></div>'
+      + '<div id="dashCapture" style="padding:16px;background:#EEF2F8;border-radius:16px" class="lld2">'
+      +   '<div id="dashBody"><div class="empty" style="padding:52px 0">กำลังโหลดข้อมูล…</div></div>'
       + '</div>'
+      + '<div class="dsub" id="dashStamp" style="text-align:center;color:var(--muted);font-size:.78rem;margin-top:12px"></div>'
       + '<div id="larkMsg" style="margin-top:8px"></div>';
   }
   // แถวแท่งกราฟที่มีข้อความขวาแบบยาว (ใช้กับ ทีมโค้ช/ผู้แนะนำ)
@@ -646,7 +695,7 @@
         var tot=segs.reduce(function(s,x){return s+x.v;},0)||0;
         var R=48, C=2*Math.PI*R, acc=0, arcs='';
         if(tot>0){ segs.forEach(function(x){ if(x.v<=0)return; var frac=x.v/tot, len=frac*C, off=-acc/tot*C;
-          arcs+='<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="'+x.color+'" stroke-width="16" stroke-dasharray="'+len.toFixed(2)+' '+C.toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'"'+(segs.length>1?' stroke-linecap="butt"':'')+'></circle>'; acc+=x.v; }); }
+          arcs+='<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="'+x.color+'" stroke-width="16" stroke-dasharray="'+len.toFixed(2)+' '+C.toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'"'+(segs.length>1?' stroke-linecap="butt"':'')+' style="filter:drop-shadow(0 0 3px '+x.color+'99)"></circle>'; acc+=x.v; }); }
         var svg='<svg width="132" height="132" viewBox="0 0 120 120" style="transform:rotate(-90deg)">'
           + '<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="#E7ECF3" stroke-width="16"></circle>'+arcs+'</svg>';
         var leg=segs.map(function(x){var ta=x.tip?' data-tip="'+x.tip+'" class="lg hastip"':' class="lg"';return '<div'+ta+'><span class="dot" style="background:'+x.color+'"></span><span class="lgn">'+x.n+'</span><span class="lgv">'+x.v+' คน · '+(tot?Math.round(x.v/tot*100):0)+'%</span></div>';}).join('');
@@ -1227,13 +1276,7 @@
   var DASH_FILT={date:'all',from:'',to:''};
   function llDashFilter(regs){
     var f=DASH_FILT;
-    function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
-    var t0=dayStart(new Date()),DAY=86400000,lo=null,hi=null;
-    if(f.date==='today'){lo=t0;hi=t0+DAY;}
-    else if(f.date==='yst'){lo=t0-DAY;hi=t0;}
-    else if(f.date==='7d'){lo=t0-6*DAY;hi=t0+DAY;}
-    else if(f.date==='30d'){lo=t0-29*DAY;hi=t0+DAY;}
-    else if(f.date==='custom'){ if(f.from)lo=dayStart(f.from); if(f.to)hi=dayStart(f.to)+DAY; }
+    var b=llDateBounds(f.date,f.from,f.to),lo=b.lo,hi=b.hi;
     if(lo==null&&hi==null)return regs||[];
     return (regs||[]).filter(function(r){var t=new Date(r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; return true;});
   }
