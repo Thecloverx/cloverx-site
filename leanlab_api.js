@@ -503,7 +503,8 @@ module.exports = function (app, DATA_DIR) {
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null, autoVerified: !!r.autoVerified,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null } : null,
-      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, po: r.po || null
+      slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, po: r.po || null,
+      resumeStep: r.resumeStep || null
     };
   }
   // โปรโมชั่นพิเศษ: นับ "สิทธิ์ที่ใช้แล้ว" เฉพาะผู้ที่เลือกโปรโมชั่น + ยืนยัน/ชำระเงินแล้ว (confirmed)
@@ -687,6 +688,7 @@ module.exports = function (app, DATA_DIR) {
     if (!r) { r = { id: genRid(), memberId: m.id, season: EVENT.season, createdAt: new Date().toISOString() }; l.push(r); }
     r.name = name.slice(0, 80); r.dob = dob; r.age = age; r.gender = gender; r.heightCm = heightCm;
     r.startChoice = choice; r.baseline = baseline; r.fee = EVENT.fee; r.pay = 'bank';
+    r.resumeStep = null; // ลูกค้าเลือกรูปแบบการเริ่มใหม่แล้ว → เคลียร์ธงพากลับหน้าเลือก
     // ทีมโค้ช + ผู้แนะนำ (บังคับกรอกจากหน้าสมัคร)
     var COACHES = ['โค้ชซิง', 'โค้ชนุ่น', 'โค้ชจา', 'โค้ชต๊ะ', 'อื่น ๆ'];
     var coachSel = String(b.coach || '').trim();
@@ -1074,7 +1076,8 @@ module.exports = function (app, DATA_DIR) {
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
   // "ยกเลิก" = ส่งลูกค้ากลับไปหน้าชำระเงิน (ไม่ลบสมาชิกออกจากระบบ)
-  // เคลียร์สลิป/หลักฐาน แล้วตั้งสถานะเป็น awaiting_payment เพื่อให้ลูกค้าชำระใหม่ได้
+  // เคลียร์สลิป/หลักฐาน แล้วส่งลูกค้ากลับไปที่ขั้นตอน "เลือกรูปแบบการเริ่ม" (เริ่ม ณ วันนี้ / เริ่มวันที่ 8)
+  // เพื่อให้ลูกค้าเปลี่ยนวันเริ่มได้ตั้งแต่ตรงนี้ ก่อนชำระเงินใหม่ (ไม่ลบสมาชิกออกจากระบบ)
   app.post('/api/leanlab/admin/registration/:id/cancel', function (req, res) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {};
@@ -1083,7 +1086,8 @@ module.exports = function (app, DATA_DIR) {
     r.status = 'awaiting_payment';
     r.slipUrl = null; r.slip = null;
     r.cancelReason = null; r.cancelledAt = null; r.autoCancelled = false;
-    // เก็บเหตุผลไว้แสดงให้ลูกค้าเห็นบนหน้าชำระเงิน (ถ้าระบุมา)
+    r.resumeStep = 'choose'; // ลูกค้าจะกลับไปที่หน้าเลือกรูปแบบการเริ่มก่อน แล้วค่อยไปชำระเงิน
+    // เก็บเหตุผลไว้แสดงให้ลูกค้าเห็น (ถ้าระบุมา)
     var reason = String(b.reason || '').slice(0, 200);
     r.rejectReason = reason || null;
     r.reviewedAt = new Date().toISOString();
@@ -1114,6 +1118,17 @@ module.exports = function (app, DATA_DIR) {
       else { r.coach = cs.slice(0, 60); r.coachOther = ''; }
     }
     if (typeof b.referrer === 'string') r.referrer = b.referrer.trim().slice(0, 80);
+    // รูปแบบการเริ่ม (เริ่มลด ณ ตอนนี้ / เริ่มวันที่ 8)
+    if (b.startChoice === 'now' || b.startChoice === 'later') r.startChoice = b.startChoice;
+    // ค่าตั้งต้น (Before): น้ำหนัก / ไขมัน% / กล้ามเนื้อ — อัปเดตเฉพาะฟิลด์ที่ส่งมาและเป็นตัวเลขที่ถูกต้อง (ไม่ลบค่าเดิม)
+    if (b.baseline && typeof b.baseline === 'object') {
+      var base = r.baseline || {};
+      var bb = b.baseline;
+      if (bb.weightKg != null && bb.weightKg !== '' && Number(bb.weightKg) > 0) base.weightKg = Number(bb.weightKg);
+      if (bb.fatPct != null && bb.fatPct !== '' && Number(bb.fatPct) >= 0) base.fatPct = Number(bb.fatPct);
+      if (bb.muscleKg != null && bb.muscleKg !== '' && Number(bb.muscleKg) >= 0) base.muscleKg = Number(bb.muscleKg);
+      r.baseline = base;
+    }
     r.updatedAt = new Date().toISOString();
     writeR(l);
     if (r.memberId) { var ml = readM(); var mm = ml.find(function (m) { return m.id === r.memberId; }); if (mm) { mm.name = r.name; if (r.phone) mm.phone = r.phone; if (r.email) mm.email = r.email; writeM(ml); } }

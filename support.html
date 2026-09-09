@@ -1358,7 +1358,7 @@
     if(r.promoProofUrl) items+=mi('','📄','ดูหลักฐานการซื้อ','window.open(\''+r.promoProofUrl+'\',\'_blank\')');
     if(r.slipUrl||r.promoProofUrl) items+=sep;
     if(r.status==='confirmed'){ if(instm) items+=mi('warn','↩','ยกเลิกแผนผ่อน (หยุดตัดบัตร)','llRefund(\''+id+'\')'); else if(card) items+=mi('warn','↩','คืนเงิน','llRefund(\''+id+'\')'); items+=mi('','✅','บันทึกว่าคืนเงิน/ยกเลิกแล้ว (นอกระบบ)','llMarkRefunded(\''+id+'\')')+mi('','🧾','ใบรับเงินมัดจำ','llReceipt(\''+id+'\')'); }
-    if(['awaiting_payment','confirmed','refunded'].indexOf(r.status)<0) items+=mi('warn','↩','ยกเลิก · ส่งกลับหน้าชำระเงิน','llCancel(\''+id+'\')');
+    if(['awaiting_payment','confirmed','refunded'].indexOf(r.status)<0) items+=mi('warn','↩','ยกเลิก · ส่งกลับให้เลือกเริ่มใหม่','llCancel(\''+id+'\')');
     items+=sep+mi('','✏️','แก้ไขข้อมูลลูกค้า','llEdit(\''+id+'\')')+mi('danger','🗑','ลบข้อมูล','llDel(\''+id+'\')');
     return '<div class="menuwrap"><button class="kebab" onclick="llMenu(this)" aria-label="จัดการ">⋮</button><div class="menu">'+items+'</div></div>';
   }
@@ -1385,16 +1385,18 @@
       p.then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llCancel=function(id){
-    llModal('<h3>ยกเลิก · ส่งกลับหน้าชำระเงิน</h3><p class="sub">ลูกค้าจะกลับไปที่หน้าชำระเงินและชำระใหม่ได้ (ไม่ลบสมาชิกออกจากระบบ)</p>'
-      +'<label>เหตุผล (ลูกค้าจะเห็น)</label><select id="cnR"><option>ขอให้ชำระเงินใหม่</option><option>สลิป/หลักฐานไม่ถูกต้อง</option><option>ลูกค้าเปลี่ยนใจ</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
+    llModal('<h3>ยกเลิก · ส่งกลับให้เลือกเริ่มใหม่</h3><p class="sub">ลูกค้าจะกลับไปที่หน้า “เลือกรูปแบบการเริ่ม” (เริ่ม ณ วันนี้ / เริ่มวันที่ 8) เพื่อเลือกใหม่ แล้วค่อยชำระเงิน — ไม่ลบสมาชิกออกจากระบบ</p>'
+      +'<label>เหตุผล (ลูกค้าจะเห็น)</label><select id="cnR"><option>ขอให้เลือกวันเริ่ม/ชำระเงินใหม่</option><option>สลิป/หลักฐานไม่ถูกต้อง</option><option>ลูกค้าเปลี่ยนใจ</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
       +'<div id="cnOW" style="display:none"><label>ระบุเหตุผล</label><input id="cnO"></div>'
-      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="cnG">ยืนยัน · ส่งกลับหน้าชำระเงิน</button></div>');
+      +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="cnG" style="white-space:nowrap">ยืนยันส่งกลับ</button></div>');
     var sel=document.getElementById('cnR');sel.onchange=function(){document.getElementById('cnOW').style.display=sel.value==='__o'?'block':'none';};
     document.getElementById('cnG').onclick=function(){var reason=sel.value==='__o'?(document.getElementById('cnO').value.trim()||'อื่น ๆ'):sel.value;
       llPost(id,'/cancel',{reason:reason}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   function llFindReg(id){if(window.LL_REGS&&LL_REGS[id])return LL_REGS[id];var a=window.LL_ALL||window.LL_MEM_ALL||[];for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i];}return null;}
-  window.llEdit=function(id){var r=llFindReg(id)||{};
+  var LL_LATER_LABEL='8 พ.ย. 2569';
+  try{ fetch('/api/leanlab/config',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(c){if(c&&c.startLaterLabel)LL_LATER_LABEL=c.startLaterLabel;}).catch(function(){}); }catch(e){}
+  window.llEdit=function(id){var r=llFindReg(id)||{};var base=r.baseline||{};
     var COACHES=['โค้ชซิง','โค้ชนุ่น','โค้ชจา','โค้ชต๊ะ'];
     var curC=String(r.coach||''), isStd=COACHES.indexOf(curC)>=0, isOther=(curC&&!isStd);
     var copts='<option value=""'+(!curC?' selected':'')+'>— ยังไม่ระบุ —</option>'
@@ -1404,12 +1406,22 @@
       +'<label>🏋️ ทีมโค้ช</label><select id="edC">'+copts+'</select>'
       +'<div id="edCOW" style="display:'+(isOther?'block':'none')+'"><label>ระบุชื่อโค้ช</label><input id="edCO" value="'+llEsc(isOther?curC:'')+'" placeholder="ชื่อโค้ช"></div>'
       +'<label>🙋 ผู้แนะนำ</label><input id="edR" value="'+llEsc(r.referrer||'')+'" placeholder="ชื่อผู้แนะนำ (ไม่ทราบใส่ -)">'
+      +'<label>🗓️ รูปแบบการเริ่ม</label><select id="edSC"><option value="now"'+(r.startChoice==='now'?' selected':'')+'>เริ่มลด ณ ตอนนี้</option><option value="later"'+(r.startChoice==='later'?' selected':'')+'>เริ่มวันที่ '+llEsc(LL_LATER_LABEL)+'</option></select>'
+      +'<label>📊 ค่าตั้งต้น (Before)</label>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">น้ำหนัก (kg)</span><input id="edBW" type="number" step="0.1" min="0" style="width:100%" value="'+(base.weightKg!=null?base.weightKg:'')+'" placeholder="เช่น 57"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">ไขมัน (%)</span><input id="edBF" type="number" step="0.1" min="0" style="width:100%" value="'+(base.fatPct!=null?base.fatPct:'')+'" placeholder="เช่น 32.7"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">กล้ามเนื้อ (kg)</span><input id="edBM" type="number" step="0.1" min="0" style="width:100%" value="'+(base.muscleKg!=null?base.muscleKg:'')+'" placeholder="เช่น 36.2"></div>'
+      +'</div>'
       +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');
     var cs=document.getElementById('edC');if(cs)cs.onchange=function(){document.getElementById('edCOW').style.display=(cs.value==='อื่น ๆ')?'block':'none';};
     document.getElementById('edG').onclick=function(){
       var coachVal=document.getElementById('edC').value;
       var body={name:document.getElementById('edN').value,phone:document.getElementById('edP').value,email:document.getElementById('edE').value,address:document.getElementById('edA').value,postcode:document.getElementById('edZ').value,coach:coachVal,referrer:document.getElementById('edR').value};
       if(coachVal==='อื่น ๆ')body.coachOther=document.getElementById('edCO').value;
+      var scEl=document.getElementById('edSC');if(scEl)body.startChoice=scEl.value;
+      var bw=document.getElementById('edBW'),bf=document.getElementById('edBF'),bm=document.getElementById('edBM');
+      if(bw||bf||bm){body.baseline={};if(bw&&bw.value!=='')body.baseline.weightKg=bw.value;if(bf&&bf.value!=='')body.baseline.fatPct=bf.value;if(bm&&bm.value!=='')body.baseline.muscleKg=bm.value;}
       llPost(id,'/edit',body).then(function(j){if(j&&j.ok){llCloseModal();
         if(j.registration){var arr=window.LL_MEM_ALL||[];for(var k=0;k<arr.length;k++){if(arr[k].id===id)Object.assign(arr[k],j.registration);}var a2=window.LL_ALL||[];for(var m2=0;m2<a2.length;m2++){if(a2[m2].id===id)Object.assign(a2[m2],j.registration);}if(window.LL_REGS&&LL_REGS[id])Object.assign(LL_REGS[id],j.registration);}
         if(document.getElementById('memBody')){if(typeof memRender==='function')memRender();if(typeof MEM_SEL!=='undefined'&&MEM_SEL===id&&typeof memSelect==='function')memSelect(id);}

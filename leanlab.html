@@ -802,7 +802,7 @@ document.addEventListener('click',function(e){
       var nr=(j&&j.registration)||null; if(!nr){return;}
       if(nr.status!==_pollFrom){
         REG=nr; stopPoll();
-        if(nr.status==='awaiting_payment'){ (nr.promo&&nr.promoPlan)?vPay():vChoosePay(); }  // ทีมงานตรวจผ่าน → เด้งหน้าชำระเงินทันที
+        if(nr.status==='awaiting_payment'){ if(nr.resumeStep==='choose'){hydrateW();vStep2();} else {(nr.promo&&nr.promoPlan)?vPay():vChoosePay();} }  // ทีมงานตรวจผ่าน → เด้งหน้าชำระเงิน (หรือให้เลือกรูปแบบการเริ่มใหม่ถ้าแอดมินส่งกลับมา)
         else if(nr.status==='confirmed'){ vThankYou(); }  // ยืนยันแล้ว → พาไปหน้าขอบคุณเต็มจอ
         else { route(); }
       } else { REG=nr; }
@@ -1411,6 +1411,7 @@ document.addEventListener('click',function(e){
     if(s==='promo_review'){ vStatus(); return; }        // รอตรวจหลักฐาน → หน้ารอเต็มจอ (auto-refresh) — ไม่ต้องเลื่อนหา
     if(s==='promo_rejected'){ vStatus(); return; }      // หลักฐานไม่ผ่าน → หน้าเต็มจอ + ปุ่มแนบใหม่
     if(s==='promo_select'){ vPromoProof(); return; }    // ต้องแนบหลักฐาน → หน้าแนบหลักฐาน
+    if(s==='awaiting_payment' && REG.resumeStep==='choose'){ hydrateW(); vStep2(); return; }  // แอดมินส่งกลับมาให้เลือกรูปแบบการเริ่มใหม่
     route();  // awaiting_payment / อื่น ๆ → หน้าแรก+แผงข้าง (ปุ่มครบ + auto-refresh)
   }
 

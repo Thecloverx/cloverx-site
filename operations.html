@@ -64,6 +64,9 @@
   .burger{display:none;background:none;border:0;cursor:pointer;color:var(--ink)}
   .crumb{font-size:.82rem;color:var(--muted)}
   .crumb b{color:var(--ink);font-weight:700;font-size:1.02rem;display:block}
+  .opcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:.8rem;color:var(--muted);font-weight:500;margin:2px 0 16px}
+  .opcrumb .sep{opacity:.55}
+  .opcrumb .cur{color:var(--ink);font-weight:600}
   .topbar .right{margin-left:auto;display:flex;align-items:center;gap:18px}
   .search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 15px;color:var(--muted);font-size:.86rem;min-width:210px}
   @media(max-width:760px){.search{display:none}}
@@ -383,6 +386,8 @@
     </header>
 
     <div class="content"><div class="wrapc">
+
+      <nav class="opcrumb" id="opCrumb" aria-label="breadcrumb"></nav>
 
       <!-- OVERVIEW -->
       <section class="view active" id="view-overview">
@@ -2229,6 +2234,30 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +kpis+dailyPanel+row1+row2+row3;
   }
 
+  // เส้นทางนำทาง (breadcrumb): Operations › [กลุ่ม] › [เมนู] — บอกต้นทางของหน้าที่กำลังดู
+  function buildCrumb(v){
+    var el=document.getElementById('opCrumb'); if(!el)return;
+    var groupLabel='', pageLabel='';
+    if(v==='overview'){ groupLabel='Overview'; }
+    else {
+      var item=document.querySelector('#nav .item[data-view="'+v+'"]');
+      if(item){
+        var lb=item.querySelector('.lbl'); pageLabel=lb?lb.textContent.trim():'';
+        var g=item.parentElement;
+        while(g && g.id!=='nav'){
+          if(g.classList && g.classList.contains('group')){
+            var head=g.querySelector(':scope > .ghead .lbl');
+            if(head){ groupLabel=head.textContent.trim(); break; }
+          }
+          g=g.parentElement;
+        }
+      } else { var m=META[v]; pageLabel=m?m.t:v; }
+    }
+    var arr=['Operations']; if(groupLabel)arr.push(groupLabel); if(pageLabel)arr.push(pageLabel);
+    var html=''; arr.forEach(function(p,i){ if(i)html+='<span class="sep">›</span>'; html+=(i===arr.length-1?'<span class="cur">'+p+'</span>':'<span>'+p+'</span>'); });
+    el.innerHTML=html;
+  }
+
   function go(v){
     var isOv=(v==='overview');
     var isExam=(v.indexOf('exam-')===0||v.indexOf('reg-')===0);
@@ -2246,6 +2275,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     document.querySelectorAll('#nav .group').forEach(function(g){g.classList.toggle('open',!!(_act&&g.contains(_act)));});
     var m=v==='overview'?{t:'Overview'}:META[v];
     document.getElementById('crumbTitle').textContent=m?m.t:'Overview';
+    buildCrumb(v);
     window.scrollTo(0,0);
     if(window.innerWidth<=900){document.getElementById('side').classList.remove('open');document.getElementById('scrim').classList.remove('show');}
   }
