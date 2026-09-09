@@ -775,11 +775,12 @@
   window.llExportOrders=function(){
     var all=window.LL_ALL||[]; var regs=llFilterList(all);
     if(!regs.length){alert('ไม่มีข้อมูลให้ส่งออก');return;}
-    var header=['เลขคำสั่งซื้อ','ชื่อ-นามสกุล','อีเมล','เบอร์โทร','สถานะ','วิธีชำระเงิน','ยอด (บาท)','โปรโมชั่น','ที่อยู่จัดส่ง','รหัสไปรษณีย์','วันที่สมัคร','วันที่ยืนยัน'];
+    var header=['เลขคำสั่งซื้อ','ชื่อ-นามสกุล','อีเมล','เบอร์โทร','โค้ช','ผู้แนะนำ','สถานะ','วิธีชำระเงิน','แพ็กเกจ','ยอด (บาท)','ที่อยู่จัดส่ง','รหัสไปรษณีย์','วันที่สมัคร','วันที่ยืนยัน'];
     var rows=regs.map(function(r){
       var amt=r.installment?(r.installment.total||44940):((r.promoPlan&&r.promoAmount)?r.promoAmount:(r.fee||0));
       var promo=r.promoPlan==='special'?'Special (ผ่อน)':(r.promo?('Grand Slam'+(r.promoTier?(' '+r.promoTier):'')):'ค่าสมัครปกติ');
-      return [r.po||'',r.name||'',r.email||'',r.phone||'',llStLabel(r.status),llPayLabel2(r),amt,promo,r.address||'',r.postcode||'',(r.createdAt||'').slice(0,16).replace('T',' '),(r.reviewedAt||'').slice(0,16).replace('T',' ')];
+      var cr=llEffCR(r); // ใช้กฎเดียวกับ Dashboard: ผู้แนะนำที่เป็นชื่อโค้ช → นับเป็นโค้ช
+      return [r.po||'',r.name||'',r.email||'',r.phone||'',cr.coach||'',cr.referrer||'',llStLabel(r.status),llPayLabel2(r),promo,amt,r.address||'',r.postcode||'',(r.createdAt||'').slice(0,16).replace('T',' '),(r.reviewedAt||'').slice(0,16).replace('T',' ')];
     });
     llDownloadCSV('leanlab-orders-'+new Date().toISOString().slice(0,10)+'.csv',header,rows);
   };
@@ -787,11 +788,12 @@
     var all=window.LL_ALL||[]; var mem=all.filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
     if(typeof memFilterList==='function')mem=memFilterList(mem);
     if(!mem.length){alert('ไม่มีข้อมูลให้ส่งออก');return;}
-    var header=['ชื่อ-นามสกุล','อีเมล','เบอร์โทร','เพศ','อายุ','ส่วนสูง(ซม.)','แพ็กเกจ','ยอด(บาท)','ที่อยู่จัดส่ง','รหัสไปรษณีย์','ยืนยันเมื่อ'];
+    var header=['ชื่อ-นามสกุล','อีเมล','เบอร์โทร','โค้ช','ผู้แนะนำ','เพศ','อายุ','ส่วนสูง(ซม.)','แพ็กเกจ','ยอด(บาท)','ที่อยู่จัดส่ง','รหัสไปรษณีย์','ยืนยันเมื่อ'];
     var rows=mem.map(function(r){
       var ins=r.installment; var amt=ins?(ins.total||44940):(r.fee||0);
       var pkg=ins?('Special ผ่อน '+(ins.perMonth||7490)+'x'+(ins.months||6)):(r.promoPlan==='full'?('Grand Slam '+(r.promoTier||'')):'ค่าสมัครปกติ');
-      return [r.name||'',r.email||'',r.phone||'',r.gender||'',r.age||'',r.heightCm||'',pkg,amt,r.address||'',r.postcode||'',(r.reviewedAt||r.createdAt||'').slice(0,10)];
+      var cr=llEffCR(r);
+      return [r.name||'',r.email||'',r.phone||'',cr.coach||'',cr.referrer||'',r.gender||'',r.age||'',r.heightCm||'',pkg,amt,r.address||'',r.postcode||'',(r.reviewedAt||r.createdAt||'').slice(0,10)];
     });
     llDownloadCSV('leanlab-'+(mode==='now'?'start':'after')+'-members-'+new Date().toISOString().slice(0,10)+'.csv',header,rows);
   };
