@@ -152,24 +152,10 @@
 
   .view{display:none}.view.active{display:block}
 
-  /* ===== Collapsible icon-rail sidebar (desktop) ===== */
+  /* ===== Sidebar (desktop, always expanded — เต็มความกว้างตลอด) ===== */
   @media(min-width:901px){
-    .app{grid-template-columns:74px 1fr}
-    .side{width:74px;overflow:visible;z-index:45;transition:width .22s cubic-bezier(.4,0,.2,1)}
-    .side.expanded{width:262px;box-shadow:16px 0 44px -20px rgba(15,23,42,.30)}
-    /* collapsed (rail) visuals */
-    .side:not(.expanded) .brand{justify-content:center;padding:16px 0}
-    .side:not(.expanded) .btext{display:none}
-    .side:not(.expanded) .wsbadge{margin:12px auto 6px;padding:8px;justify-content:center}
-    .side:not(.expanded) .wsbadge>div{display:none}
-    .side:not(.expanded) .nav .item{justify-content:center;padding:9px 0;gap:0}
-    .side:not(.expanded) .nav .item .lbl,
-    .side:not(.expanded) .nav .item .caret{display:none}
-    .side:not(.expanded) .nav .children{display:none!important}
-    .side:not(.expanded) .nav .item.active{box-shadow:none;border-radius:9px}
-    /* group icon shows the active state while collapsed */
-    .side:not(.expanded) .nav .group.has-active>.ghead{background:var(--brand-tint);color:var(--brand)}
-    .side:not(.expanded) .nav .group.has-active>.ghead svg.i{color:var(--brand)}
+    .app{grid-template-columns:262px 1fr}
+    .side{width:262px}
     .side .nav{overflow-y:auto;overflow-x:hidden}
   }
 
@@ -338,10 +324,11 @@
         <button class="item ghead" data-toggle="g-sale"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span class="lbl">Sale</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
           <div class="group subgrp" id="g-xh">
-            <button class="item ghead subhead" data-toggle="g-xh"><span class="pdot" style="background:#2E7FE4"></span><span class="lbl">Xircle &amp; HabiX</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            <button class="item ghead subhead" data-toggle="g-xh"><span class="pdot" style="background:#2E7FE4"></span><span class="lbl">Pre-Order</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
             <div class="children">
               <button class="item lvl3" data-view="preorder"><span class="dot"></span><span class="lbl">Order</span></button>
               <button class="item lvl3" data-view="qr"><span class="dot"></span><span class="lbl">Management</span></button>
+              <button class="item lvl3" data-view="stock"><span class="dot"></span><span class="lbl">Stock</span></button>
             </div>
           </div>
           <div class="group subgrp" id="g-ll">
@@ -349,10 +336,9 @@
             <div class="children">
               <button class="item lvl3" data-view="llmember"><span class="dot"></span><span class="lbl">Member</span></button>
               <button class="item lvl3" data-view="llmanage"><span class="dot"></span><span class="lbl">Management</span></button>
+              <button class="item lvl3" data-view="channels"><span class="dot"></span><span class="lbl">Channels</span></button>
             </div>
           </div>
-          <button class="item" data-view="channels"><span class="dot"></span><span class="lbl">Channels</span></button>
-          <button class="item" data-view="stock"><span class="dot"></span><span class="lbl">Stock</span></button>
         </div>
       </div>
 
