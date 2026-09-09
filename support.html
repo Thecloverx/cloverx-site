@@ -152,6 +152,8 @@
   .lltbl tbody td>div:first-child{margin-bottom:1px}
   .lltbl .cell-sub{line-height:1.5;overflow-wrap:break-word}
   .lltbl .nowrap{white-space:nowrap}
+  .cell-sub.metric{white-space:nowrap}
+  .lltbl .cell-sub.metric{font-size:.68rem;letter-spacing:-.1px}
   table .acts .btn{padding:7px 13px;font-size:.8rem;border-radius:9px}
   table .acts .btn.icon{padding:7px 9px}
   /* มือถือ: เปลี่ยนตารางเป็นการ์ดซ้อนกัน อ่านง่าย ไม่ต้องเลื่อนแนวนอน */
@@ -687,7 +689,7 @@
       +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
       +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx) / รหัสไปรษณีย์">'
       +   '</div>'
-      +   '<div style="overflow-x:auto"><table class="lltbl"><colgroup><col style="width:296px"><col style="width:142px"><col style="width:200px"><col style="width:150px"><col style="width:162px"><col style="width:148px"><col style="width:64px"></colgroup><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
+      +   '<div style="overflow-x:auto"><table class="lltbl"><colgroup><col style="width:288px"><col style="width:128px"><col style="width:196px"><col style="width:190px"><col style="width:158px"><col style="width:138px"><col style="width:64px"></colgroup><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       +   '<div id="llPager"></div>'
       + '</div>';
   }
@@ -883,7 +885,7 @@
           : (r.promoPlan==='full'?('Grand Slam · '+(r.promoTier||'')) : 'ค่าสมัครปกติ');
         var amt=ins?(ins.total||44940):(r.fee||0);
         var col4 = mode==='now'
-          ? (r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>')
+          ? (r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub metric">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>')
           : '<span class="pill ok">เริ่ม 8 พ.ย. 69</span>';
         return '<tr>'
           +'<td style="min-width:170px"><div style="font-weight:700">'+llEsc(r.name||'-')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
@@ -959,7 +961,7 @@
         var s=LL_ST[r.status]||[r.status,'pend'];
         var _cr=llEffCR(r); // ผู้แนะนำที่เป็นชื่อโค้ช → แสดงเป็นโค้ช
         var start=r.startChoice==='now'?'เริ่มตอนนี้':'8 พ.ย. 2569';
-        var base=r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>';
+        var base=r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub metric">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>';
         var slip=r.slipUrl?('<a class="linkpill slip" href="'+llEsc(r.slipUrl)+'" target="_blank" rel="noopener">ดูสลิป ↗</a>'):'';
         var proof=r.promoProofUrl?('<a class="linkpill proof" href="'+llEsc(r.promoProofUrl)+'" target="_blank" rel="noopener">📄 หลักฐาน ↗</a>'):'';
         var TIER={t0:'44,940 <span class="nowrap">(ไม่มีประวัติ)</span>',t1:'39,950',t2:'37,450 <span class="nowrap">(RoutineX)</span>',t3:'32,460 <span class="nowrap">(Brand+Scale+RoutineX)</span>'};
