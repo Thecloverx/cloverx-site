@@ -235,6 +235,12 @@
   .pcnav.prev{left:8px}.pcnav.next{right:8px}
   .upl.has{border-style:solid;border-color:var(--lime)}
   .upl img{max-height:180px;border-radius:10px}
+  .bpgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .bp{min-height:118px;padding:10px}
+  .bp .bp-lb{font-size:.76rem;font-weight:600;color:var(--muted);margin-top:2px}
+  .bp img{max-height:none;width:100%;height:96px;object-fit:cover;border-radius:8px}
+  .bp svg{width:24px;height:24px}
+  @media(max-width:430px){.bpgrid{gap:6px}.bp{min-height:100px;padding:7px}.bp .bp-lb{font-size:.7rem}.bp img{height:78px}}
 
   /* review */
   .rev{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:6px 16px}
@@ -992,6 +998,7 @@ document.addEventListener('click',function(e){
       if(W.muscleKg==null||W.muscleKg==='')W.muscleKg=b.muscleKg;
       if(W.waterPct==null||W.waterPct==='')W.waterPct=b.waterPct;
       if(!W.beforePhoto&&b.beforePhotoUrl)W.beforePhoto=b.beforePhotoUrl;
+      if(!W.beforePhotos||!W.beforePhotos.length){if(b.beforePhotoUrls&&b.beforePhotoUrls.length)W.beforePhotos=b.beforePhotoUrls.slice();else if(b.beforePhotoUrl)W.beforePhotos=[b.beforePhotoUrl];}
     }
   }
 
@@ -1058,18 +1065,22 @@ document.addEventListener('click',function(e){
     + '<div class="field" id="fM"><label>กล้ามเนื้อ (กก.) <span class="req">*</span></label><input class="in" id="w_muscle" type="number" inputmode="decimal" placeholder="เช่น 52.1" value="'+esc(W.muscleKg||'')+'"><div class="err">กรอกกล้ามเนื้อ</div></div>'
     + '<div class="field" id="fWa"><label>มวลน้ำในร่างกาย (%) <span class="req">*</span></label><input class="in" id="w_water" type="number" inputmode="decimal" placeholder="เช่น 55" value="'+esc(W.waterPct||'')+'"><div class="err">กรอกมวลน้ำ</div></div>'
     +'</div>'
-    +'<div class="field" id="fPhoto"><label>รูปภาพ Before (ความละเอียดสูง) <span class="req">*</span></label>'
+    +'<div class="field" id="fPhoto"><label>รูปภาพ Before (แนบได้ถึง 3 รูป · ความละเอียดสูง) <span class="req">*</span></label>'
     + '<div class="exguide"><img src="ll_before_ex.jpg" alt="ตัวอย่างรูป Before"><p>ตัวอย่าง: ถ่าย <b>หน้าตรง · ด้านข้าง · ด้านหลัง</b> ยืนตรงเห็นเต็มตัว แสงสว่าง ฉากหลังโล่ง แต่งกายรัดรูป</p></div>'
-    + '<label class="upl'+(W.beforePhoto?' has':'')+'" id="uplBox"><input type="file" id="w_photo" accept="image/*" hidden>'
-    +   (W.beforePhoto?'<img src="'+W.beforePhoto+'" alt="">':'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 4 4 4-6 4 6M3 20h18M3 4h18v16H3z"/></svg><div id="uplTxt">แตะเพื่อแนบรูป Before</div>')
-    + '</label><div class="err">กรุณาแนบรูป Before</div></div>'
+    + '<div class="bpgrid">'+[[0,'หน้าตรง'],[1,'ด้านข้าง'],[2,'ด้านหลัง']].map(function(s){var img=(W.beforePhotos&&W.beforePhotos[s[0]])||'';return '<label class="upl bp'+(img?' has':'')+'" data-bp="'+s[0]+'"><input type="file" accept="image/*" hidden>'+(img?'<img src="'+img+'" alt="">':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 4 4 4-6 4 6M3 20h18M3 4h18v16H3z"/></svg><div class="bp-lb">'+s[1]+'</div>')+'</label>';}).join('')+'</div>'
+    + '<div class="err">กรุณาแนบรูป Before อย่างน้อย 1 รูป</div></div>'
     +'<div class="rowbtns"><button class="btn ghost block" id="s3back">ย้อนกลับ</button><button class="btn lime block" id="s3next">ถัดไป</button></div>'
     +'</div>';
-    $('#uplBox').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var box=$('#uplBox');box.innerHTML='<div>กำลังประมวลผลรูป…</div>';
-      compress(f,1800,0.88).then(function(d){W.beforePhoto=d;box.classList.add('has');box.innerHTML='<img src="'+d+'" alt="">';$('#fPhoto').classList.remove('bad');
-        var inp=document.createElement('input');inp.type='file';inp.id='w_photo';inp.accept='image/*';inp.hidden=true;box.appendChild(inp);
-        box.addEventListener('change',arguments.callee&&function(){},false);
-      }).catch(function(){box.innerHTML='<div>อ่านรูปไม่สำเร็จ ลองใหม่</div>';});
+    app.querySelectorAll('.bp[data-bp]').forEach(function(box){
+      box.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var idx=+box.getAttribute('data-bp');
+        box.innerHTML='<div style="font-size:.78rem">กำลังประมวลผล…</div>';
+        compress(f,1800,0.88).then(function(d){
+          if(!W.beforePhotos)W.beforePhotos=[];W.beforePhotos[idx]=d;
+          W.beforePhoto=(W.beforePhotos.filter(Boolean)[0])||d;
+          box.classList.add('has');box.innerHTML='<img src="'+d+'" alt="">';$('#fPhoto').classList.remove('bad');
+          var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.hidden=true;box.appendChild(inp);
+        }).catch(function(){box.innerHTML='<div style="font-size:.78rem">อ่านรูปไม่สำเร็จ</div>';});
+      });
     });
     $('#s3back').onclick=vStep2;
     $('#s3next').onclick=function(){
@@ -1080,7 +1091,7 @@ document.addEventListener('click',function(e){
       ok=bad($('#fV'),!(Number(W.vFat)>=0&&W.vFat!==''))&&ok;
       ok=bad($('#fM'),!(Number(W.muscleKg)>=0&&W.muscleKg!==''))&&ok;
       ok=bad($('#fWa'),!(Number(W.waterPct)>=0&&W.waterPct!==''))&&ok;
-      ok=bad($('#fPhoto'),!W.beforePhoto)&&ok;
+      ok=bad($('#fPhoto'),!((W.beforePhotos&&W.beforePhotos.some(Boolean))||W.beforePhoto))&&ok;
       if(!ok)return;vConfirm();
     };
   }
@@ -1122,7 +1133,7 @@ document.addEventListener('click',function(e){
   function doSubmitReg(){
     var y=$('#cfPay'); if(y){y.disabled=true;y.textContent='กำลังส่ง…';}
     var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice,coach:W.coach,coachOther:W.coachOther,referrer:W.referrer};
-    if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
+    if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);var _bps=(W.beforePhotos||[]).filter(Boolean);body.beforePhotos=_bps;body.beforePhoto=W.beforePhoto||_bps[0];}
     fetch('/api/leanlab/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
       .then(function(r){return r.json();})
       .then(function(j){

@@ -1009,7 +1009,10 @@
     var ins=r.installment,amt=memAmount(r);
     var h='<div class="msec-t">แพ็กเกจ</div>'+minfoRow('แพ็กเกจ',memSeg(r).label)+minfoRow('ยอดรวม','฿'+Number(amt).toLocaleString('en-US'))+minfoRow('วิธีชำระ',llPayLabel2(r));
     if(ins)h+=minfoRow('ผ่อน','฿'+Number(ins.perMonth||7490).toLocaleString('en-US')+' × '+(ins.months||6)+' งวด')+minfoRow('จ่ายแล้ว',(ins.paidCount||0)+'/'+(ins.months||6)+' งวด')+minfoRow('ตัดทุกวันที่',ins.day||'-');
-    if(r.baseline){var bl=r.baseline;function bV(v){return (v!=null&&v!=='')?llEsc(v):'-';}h+='<div class="msec-t">ค่าตั้งต้น (Before)</div>'+minfoRow('น้ำหนัก',bV(bl.weightKg)+' kg')+minfoRow('ไขมัน',bV(bl.fatPct)+' %')+minfoRow('V-Fat (ไขมันช่องท้อง)',bV(bl.vFat))+minfoRow('กล้ามเนื้อ',bV(bl.muscleKg)+' kg')+minfoRow('มวลน้ำในร่างกาย',bV(bl.waterPct)+' %');}
+    if(r.baseline){var bl=r.baseline;function bV(v){return (v!=null&&v!=='')?llEsc(v):'-';}h+='<div class="msec-t">ค่าตั้งต้น (Before)</div>'+minfoRow('น้ำหนัก',bV(bl.weightKg)+' kg')+minfoRow('ไขมัน',bV(bl.fatPct)+' %')+minfoRow('V-Fat (ไขมันช่องท้อง)',bV(bl.vFat))+minfoRow('กล้ามเนื้อ',bV(bl.muscleKg)+' kg')+minfoRow('มวลน้ำในร่างกาย',bV(bl.waterPct)+' %');
+      var bps=(bl.beforePhotoUrls&&bl.beforePhotoUrls.length)?bl.beforePhotoUrls:(bl.beforePhotoUrl?[bl.beforePhotoUrl]:[]);
+      if(bps.length)h+='<div style="margin-top:10px"><div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:6px">รูป Before ('+bps.length+')</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+bps.map(function(u){return '<a href="'+llEsc(u)+'" target="_blank" rel="noopener"><img src="'+llEsc(u)+'" alt="Before" style="width:74px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';}).join('')+'</div></div>';
+    }
     return h;
   }
   function memTabAct(r){

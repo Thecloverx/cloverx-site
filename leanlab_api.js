@@ -676,11 +676,12 @@ module.exports = function (app, DATA_DIR) {
     if (choice === 'now') {
       var weightKg = Number(b.weightKg), fatPct = Number(b.fatPct), vFat = Number(b.vFat), muscleKg = Number(b.muscleKg), waterPct = Number(b.waterPct);
       if (!(weightKg > 0) || !(fatPct >= 0) || !(vFat >= 0) || !(muscleKg >= 0) || !(waterPct >= 0)) return res.status(400).json({ ok: false, error: 'bad_measurements' });
-      var photoUrl = null;
-      if (typeof b.beforePhoto === 'string' && /^data:image\//.test(b.beforePhoto)) photoUrl = saveImg(b.beforePhoto, 'before-' + m.id);
-      if (!photoUrl) { var _ex = readR().find(function (x) { return x.memberId === m.id && !x.archived; }); if (_ex && _ex.baseline && _ex.baseline.beforePhotoUrl) photoUrl = _ex.baseline.beforePhotoUrl; }  // แก้ไขภายหลัง: เก็บรูปเดิมไว้ถ้าไม่ได้แนบใหม่
-      if (!photoUrl) return res.status(400).json({ ok: false, error: 'bad_photo' });
-      baseline = { weightKg: weightKg, fatPct: fatPct, vFat: vFat, muscleKg: muscleKg, waterPct: waterPct, beforePhotoUrl: photoUrl };
+      var photoUrls = [];
+      if (Array.isArray(b.beforePhotos)) { b.beforePhotos.forEach(function (p, i) { if (photoUrls.length < 3 && typeof p === 'string' && /^data:image\//.test(p)) { var u = saveImg(p, 'before-' + m.id + '-' + i); if (u) photoUrls.push(u); } }); }
+      if (!photoUrls.length && typeof b.beforePhoto === 'string' && /^data:image\//.test(b.beforePhoto)) { var u1 = saveImg(b.beforePhoto, 'before-' + m.id); if (u1) photoUrls.push(u1); }
+      if (!photoUrls.length) { var _ex = readR().find(function (x) { return x.memberId === m.id && !x.archived; }); if (_ex && _ex.baseline) { if (_ex.baseline.beforePhotoUrls && _ex.baseline.beforePhotoUrls.length) photoUrls = _ex.baseline.beforePhotoUrls.slice(); else if (_ex.baseline.beforePhotoUrl) photoUrls = [_ex.baseline.beforePhotoUrl]; } }  // แก้ไขภายหลัง: เก็บรูปเดิมไว้ถ้าไม่ได้แนบใหม่
+      if (!photoUrls.length) return res.status(400).json({ ok: false, error: 'bad_photo' });
+      baseline = { weightKg: weightKg, fatPct: fatPct, vFat: vFat, muscleKg: muscleKg, waterPct: waterPct, beforePhotoUrl: photoUrls[0], beforePhotoUrls: photoUrls };
     }
     var l = readR();
     var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
