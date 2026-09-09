@@ -154,6 +154,15 @@
   .lltbl .nowrap{white-space:nowrap}
   .cell-sub.metric{white-space:nowrap}
   .lltbl .cell-sub.metric{font-size:.68rem;letter-spacing:-.1px}
+  /* ปิดบังข้อมูลติดต่อ + ดวงตา */
+  .contact .c-full{display:none}
+  .contact.on .c-mask{display:none}
+  .contact.on .c-full{display:inline}
+  .contact .c-line{display:flex;align-items:center;gap:6px}
+  .contact .c-txt{margin-top:0}
+  .c-eye{background:none;border:0;padding:1px 2px;margin:0;cursor:pointer;color:var(--muted);line-height:0;display:inline-flex;flex:none;border-radius:5px}
+  .c-eye:hover{color:var(--brand,#2563EB);background:var(--soft,#F1F8FC)}
+  .c-eye svg{width:15px;height:15px;display:block}
   table .acts .btn{padding:7px 13px;font-size:.8rem;border-radius:9px}
   table .acts .btn.icon{padding:7px 9px}
   /* มือถือ: เปลี่ยนตารางเป็นการ์ดซ้อนกัน อ่านง่าย ไม่ต้องเลื่อนแนวนอน */
@@ -888,7 +897,7 @@
           ? (r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub metric">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>')
           : '<span class="pill ok">เริ่ม 8 พ.ย. 69</span>';
         return '<tr>'
-          +'<td style="min-width:170px"><div style="font-weight:700">'+llEsc(r.name||'-')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div></td>'
+          +'<td style="min-width:170px"><div style="font-weight:700">'+llEsc(r.name||'-')+'</div>'+llContact(r)+'</td>'
           +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
           +'<td style="min-width:150px"><div style="font-weight:600">'+pkg+'</div><div class="cell-amt" style="font-size:.88rem;margin-top:2px">฿'+Number(amt).toLocaleString('en-US')+'</div></td>'
           +'<td style="min-width:120px">'+col4+'</td>'
@@ -899,6 +908,23 @@
   }
   var LL_ST={promo_select:['เลือกโปรฯ','pend'],promo_review:['รอตรวจหลักฐาน','pend'],promo_rejected:['หลักฐานไม่ผ่าน','bad'],awaiting_payment:['รอชำระเงิน','pend'],pending_review:['รอตรวจสลิป','pend'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิกแล้ว','bad'],refunded:['คืนเงินแล้ว','bad']};
   function llEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // ---- ปิดบังข้อมูลติดต่อ (PDPA) · กดดวงตาเพื่อดูเต็ม แบบ TikTok Seller ----
+  var LL_EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var LL_EYEOFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7a9.3 9.3 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m2 2 20 20"/></svg>';
+  function llMaskEmail(e){e=String(e||'');if(!e)return '';var at=e.indexOf('@');if(at<1)return e.charAt(0)+'•••';var u=e.slice(0,at),d=e.slice(at);var uu=u.length<=2?u.charAt(0)+'•••':u.slice(0,2)+'•••';return uu+d;}
+  function llMaskPhone(p){var s=String(p||'').replace(/\s/g,'');if(!s)return '';if(s.length<=4)return '•••'+s.slice(-2);return s.slice(0,3)+'••••'+s.slice(-2);}
+  function llMaskAddr(a){a=String(a||'');if(!a)return '';return (a.length<=8?a.slice(0,3):a.slice(0,8))+' •••••';}
+  function llContact(r){
+    var email=r.email||'',phone=r.phone||'',addr=r.address||'',pc=r.postcode||'';
+    var line1=(email||phone)?('<div class="cell-sub">'+llEsc(email)+(phone?((email?' · ':'')+llEsc(phone)):'')+'</div>'):'';
+    if(!addr)return line1;
+    var aF='📦 '+llEsc(addr)+(pc?' '+llEsc(pc):'');
+    var aM='📦 '+llEsc(llMaskAddr(addr));
+    return line1
+      +'<div class="contact"><div class="c-line"><span class="cell-sub c-txt" style="color:var(--muted)"><span class="c-mask">'+aM+'</span><span class="c-full">'+aF+'</span></span>'
+      +'<button type="button" class="c-eye" onclick="llRevealToggle(this)" aria-label="ดู/ซ่อนที่อยู่" title="กดเพื่อดูที่อยู่">'+LL_EYE+'</button></div></div>';
+  }
+  window.llRevealToggle=function(btn){var c=btn.closest('.contact');if(!c)return;var on=c.classList.toggle('on');btn.innerHTML=on?LL_EYEOFF:LL_EYE;btn.setAttribute('title',on?'กดเพื่อซ่อนข้อมูล':'กดเพื่อดูข้อมูลเต็ม');};
   var LL_FILT={date:'all',from:'',to:'',q:'',status:'all'};
   var LL_PAGE=1;  // แบ่งหน้า 10 รายชื่อ/หน้า
   var LL_ST_BUCKET={confirmed:['confirmed'],pending:['awaiting_payment','pending_review','promo_select','promo_review','promo_rejected'],cancelled:['cancelled','rejected'],refunded:['refunded']};
@@ -978,7 +1004,7 @@
           ? ('<div class="cell-amt">฿'+Number(ins.total||44940).toLocaleString('en-US')+'</div><div class="cell-sub" style="color:#2563EB">ผ่อนบัตร '+(ins.paidCount||0)+'/'+(ins.months||6)+' งวด</div>'+(ins.status?'<div class="cell-sub">'+llEsc(ins.status==='completed'?'ครบแล้ว ✓':ins.status==='past_due'?'⚠ ตัดไม่ผ่าน':ins.status==='active'?'กำลังผ่อน':ins.status)+'</div>':'')+(ins.lastFail?'<div class="cell-sub" style="color:var(--bad)">ตัดไม่ผ่าน '+llEsc((ins.lastFail.at||'').slice(0,10))+'</div>':''))
           : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">'+payLabel+'</div>'+attachHtml);
         return '<tr>'
-          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(r.address?'<div class="cell-sub" style="color:var(--muted)">📦 '+llEsc(r.address)+(r.postcode?' '+llEsc(r.postcode):'')+'</div>':'')+(_cr.coach?'<div class="cell-sub" style="color:#0077B6;font-weight:700">🏋️ '+llEsc(_cr.coach)+(_cr.referrer?' · แนะนำ: '+llEsc(_cr.referrer):'')+'</div>':'<div class="cell-sub" style="color:var(--warn);font-weight:700">🏋️ ยังไม่ระบุโค้ช</div>')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
+          +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div>'+llContact(r)+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(_cr.coach?'<div class="cell-sub" style="color:#0077B6;font-weight:700">🏋️ '+llEsc(_cr.coach)+(_cr.referrer?' · แนะนำ: '+llEsc(_cr.referrer):'')+'</div>':'<div class="cell-sub" style="color:var(--warn);font-weight:700">🏋️ ยังไม่ระบุโค้ช</div>')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
           +'<td style="color:var(--muted);line-height:1.6">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
           +'<td><div style="margin-bottom:6px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span></div>'+promoInfo+'</td>'
           +'<td style="min-width:120px">'+base+'</td>'
