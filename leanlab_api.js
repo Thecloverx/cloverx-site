@@ -1120,13 +1120,17 @@ module.exports = function (app, DATA_DIR) {
     if (typeof b.referrer === 'string') r.referrer = b.referrer.trim().slice(0, 80);
     // รูปแบบการเริ่ม (เริ่มลด ณ ตอนนี้ / เริ่มวันที่ 8)
     if (b.startChoice === 'now' || b.startChoice === 'later') r.startChoice = b.startChoice;
-    // ค่าตั้งต้น (Before): น้ำหนัก / ไขมัน% / กล้ามเนื้อ — อัปเดตเฉพาะฟิลด์ที่ส่งมาและเป็นตัวเลขที่ถูกต้อง (ไม่ลบค่าเดิม)
+    // ส่วนสูง (ซม.) — รับค่าที่สมเหตุสมผล 100–250
+    if (b.heightCm != null && b.heightCm !== '') { var hc = Number(b.heightCm); if (hc >= 100 && hc <= 250) r.heightCm = hc; }
+    // ค่าตั้งต้น (Before): น้ำหนัก / ไขมัน% / V-Fat / กล้ามเนื้อ / มวลน้ำ% — อัปเดตเฉพาะฟิลด์ที่ส่งมาและเป็นตัวเลขที่ถูกต้อง (ไม่ลบค่าเดิม)
     if (b.baseline && typeof b.baseline === 'object') {
       var base = r.baseline || {};
       var bb = b.baseline;
       if (bb.weightKg != null && bb.weightKg !== '' && Number(bb.weightKg) > 0) base.weightKg = Number(bb.weightKg);
       if (bb.fatPct != null && bb.fatPct !== '' && Number(bb.fatPct) >= 0) base.fatPct = Number(bb.fatPct);
+      if (bb.vFat != null && bb.vFat !== '' && Number(bb.vFat) >= 0) base.vFat = Number(bb.vFat);
       if (bb.muscleKg != null && bb.muscleKg !== '' && Number(bb.muscleKg) >= 0) base.muscleKg = Number(bb.muscleKg);
+      if (bb.waterPct != null && bb.waterPct !== '' && Number(bb.waterPct) >= 0) base.waterPct = Number(bb.waterPct);
       r.baseline = base;
     }
     r.updatedAt = new Date().toISOString();
