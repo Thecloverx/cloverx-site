@@ -1009,7 +1009,7 @@
     var ins=r.installment,amt=memAmount(r);
     var h='<div class="msec-t">แพ็กเกจ</div>'+minfoRow('แพ็กเกจ',memSeg(r).label)+minfoRow('ยอดรวม','฿'+Number(amt).toLocaleString('en-US'))+minfoRow('วิธีชำระ',llPayLabel2(r));
     if(ins)h+=minfoRow('ผ่อน','฿'+Number(ins.perMonth||7490).toLocaleString('en-US')+' × '+(ins.months||6)+' งวด')+minfoRow('จ่ายแล้ว',(ins.paidCount||0)+'/'+(ins.months||6)+' งวด')+minfoRow('ตัดทุกวันที่',ins.day||'-');
-    if(r.baseline){var bl=r.baseline;function bV(v){return (v!=null&&v!=='')?llEsc(v):'-';}h+='<div class="msec-t">ค่าตั้งต้น (Before)</div>'+minfoRow('น้ำหนัก',bV(bl.weightKg)+' kg')+minfoRow('ไขมัน',bV(bl.fatPct)+' %')+minfoRow('V-Fat (ไขมันช่องท้อง)',bV(bl.vFat))+minfoRow('กล้ามเนื้อ',bV(bl.muscleKg)+' kg')+minfoRow('มวลน้ำในร่างกาย',bV(bl.waterPct)+' %');}
+    if(r.baseline){var bl=r.baseline;function bV(v){return (v!=null&&v!=='')?llEsc(v):'-';}h+='<div class="msec-t">ค่าตั้งต้น (Before)</div>'+minfoRow('น้ำหนัก',bV(bl.weightKg)+' กก.')+minfoRow('ไขมัน',bV(bl.fatPct)+' %')+minfoRow('มวลกล้ามเนื้อ',bV(bl.muscleKg)+' กก.')+minfoRow('มวลไขมัน',bV(bl.fatMassKg)+' กก.')+minfoRow('ไขมันช่องท้อง (V-Fat)',bV(bl.vFat))+minfoRow('น้ำในร่างกาย',bV(bl.waterPct)+' %');}
     return h;
   }
   function memTabAct(r){
@@ -1409,11 +1409,12 @@
       +'<label>📊 ส่วนสูง & ค่าตั้งต้น (Before)</label>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 8px">'
       + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">ส่วนสูง (ซม.)</span><input id="edHt" type="number" step="0.1" min="0" style="width:100%" value="'+(r.heightCm!=null?r.heightCm:'')+'" placeholder="เช่น 170"></div>'
-      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">น้ำหนัก (กก.)</span><input id="edBW" type="number" step="0.1" min="0" style="width:100%" value="'+(base.weightKg!=null?base.weightKg:'')+'" placeholder="เช่น 57"></div>'
-      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">ไขมัน (%)</span><input id="edBF" type="number" step="0.1" min="0" style="width:100%" value="'+(base.fatPct!=null?base.fatPct:'')+'" placeholder="เช่น 32.7"></div>'
-      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">V-Fat</span><input id="edBV" type="number" step="0.1" min="0" style="width:100%" value="'+(base.vFat!=null?base.vFat:'')+'" placeholder="เช่น 8"></div>'
-      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">กล้ามเนื้อ (กก.)</span><input id="edBM" type="number" step="0.1" min="0" style="width:100%" value="'+(base.muscleKg!=null?base.muscleKg:'')+'" placeholder="เช่น 36.2"></div>'
-      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">มวลน้ำ (%)</span><input id="edBWa" type="number" step="0.1" min="0" style="width:100%" value="'+(base.waterPct!=null?base.waterPct:'')+'" placeholder="เช่น 55"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">น้ำหนัก (กก.)</span><input id="edBW" type="number" step="0.1" min="0" style="width:100%" value="'+(base.weightKg!=null?base.weightKg:'')+'" placeholder="เช่น 58.4"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">ไขมัน (%)</span><input id="edBF" type="number" step="0.1" min="0" style="width:100%" value="'+(base.fatPct!=null?base.fatPct:'')+'" placeholder="เช่น 35.4"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">มวลกล้ามเนื้อ (กก.)</span><input id="edBM" type="number" step="0.1" min="0" style="width:100%" value="'+(base.muscleKg!=null?base.muscleKg:'')+'" placeholder="เช่น 5.4"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">มวลไขมัน (กก.)</span><input id="edFm" type="number" step="0.1" min="0" style="width:100%" value="'+(base.fatMassKg!=null?base.fatMassKg:'')+'" placeholder="เช่น 20.7"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">ไขมันช่องท้อง (V-Fat)</span><input id="edBV" type="number" step="0.1" min="0" style="width:100%" value="'+(base.vFat!=null?base.vFat:'')+'" placeholder="เช่น 7"></div>'
+      + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">น้ำในร่างกาย (%)</span><input id="edBWa" type="number" step="0.1" min="0" style="width:100%" value="'+(base.waterPct!=null?base.waterPct:'')+'" placeholder="เช่น 47.5"></div>'
       +'</div>'
       +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');
     var cs=document.getElementById('edC');if(cs)cs.onchange=function(){document.getElementById('edCOW').style.display=(cs.value==='อื่น ๆ')?'block':'none';};
@@ -1423,12 +1424,13 @@
       if(coachVal==='อื่น ๆ')body.coachOther=document.getElementById('edCO').value;
       var scEl=document.getElementById('edSC');if(scEl)body.startChoice=scEl.value;
       var eHt=document.getElementById('edHt');if(eHt&&eHt.value!=='')body.heightCm=eHt.value;
-      var bw=document.getElementById('edBW'),bf=document.getElementById('edBF'),bv=document.getElementById('edBV'),bm=document.getElementById('edBM'),bwa=document.getElementById('edBWa');
+      var bw=document.getElementById('edBW'),bf=document.getElementById('edBF'),bm=document.getElementById('edBM'),bfm=document.getElementById('edFm'),bv=document.getElementById('edBV'),bwa=document.getElementById('edBWa');
       body.baseline={};
       if(bw&&bw.value!=='')body.baseline.weightKg=bw.value;
       if(bf&&bf.value!=='')body.baseline.fatPct=bf.value;
-      if(bv&&bv.value!=='')body.baseline.vFat=bv.value;
       if(bm&&bm.value!=='')body.baseline.muscleKg=bm.value;
+      if(bfm&&bfm.value!=='')body.baseline.fatMassKg=bfm.value;
+      if(bv&&bv.value!=='')body.baseline.vFat=bv.value;
       if(bwa&&bwa.value!=='')body.baseline.waterPct=bwa.value;
       llPost(id,'/edit',body).then(function(j){if(j&&j.ok){llCloseModal();
         if(j.registration){var arr=window.LL_MEM_ALL||[];for(var k=0;k<arr.length;k++){if(arr[k].id===id)Object.assign(arr[k],j.registration);}var a2=window.LL_ALL||[];for(var m2=0;m2<a2.length;m2++){if(a2[m2].id===id)Object.assign(a2[m2],j.registration);}if(window.LL_REGS&&LL_REGS[id])Object.assign(LL_REGS[id],j.registration);}

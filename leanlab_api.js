@@ -674,13 +674,14 @@ module.exports = function (app, DATA_DIR) {
     if (!choice) return res.status(400).json({ ok: false, error: 'bad_choice' });
     var baseline = null;
     if (choice === 'now') {
-      var weightKg = Number(b.weightKg), fatPct = Number(b.fatPct), vFat = Number(b.vFat), muscleKg = Number(b.muscleKg), waterPct = Number(b.waterPct);
+      var weightKg = Number(b.weightKg), fatPct = Number(b.fatPct), vFat = Number(b.vFat), muscleKg = Number(b.muscleKg), waterPct = Number(b.waterPct), fatMassKg = Number(b.fatMassKg);
       if (!(weightKg > 0) || !(fatPct >= 0) || !(vFat >= 0) || !(muscleKg >= 0) || !(waterPct >= 0)) return res.status(400).json({ ok: false, error: 'bad_measurements' });
       var photoUrl = null;
       if (typeof b.beforePhoto === 'string' && /^data:image\//.test(b.beforePhoto)) photoUrl = saveImg(b.beforePhoto, 'before-' + m.id);
       if (!photoUrl) { var _ex = readR().find(function (x) { return x.memberId === m.id && !x.archived; }); if (_ex && _ex.baseline && _ex.baseline.beforePhotoUrl) photoUrl = _ex.baseline.beforePhotoUrl; }  // แก้ไขภายหลัง: เก็บรูปเดิมไว้ถ้าไม่ได้แนบใหม่
       if (!photoUrl) return res.status(400).json({ ok: false, error: 'bad_photo' });
       baseline = { weightKg: weightKg, fatPct: fatPct, vFat: vFat, muscleKg: muscleKg, waterPct: waterPct, beforePhotoUrl: photoUrl };
+      if (fatMassKg >= 0 && b.fatMassKg !== '' && b.fatMassKg != null) baseline.fatMassKg = fatMassKg;
     }
     var l = readR();
     var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
@@ -1128,8 +1129,9 @@ module.exports = function (app, DATA_DIR) {
       var bb = b.baseline;
       if (bb.weightKg != null && bb.weightKg !== '' && Number(bb.weightKg) > 0) base.weightKg = Number(bb.weightKg);
       if (bb.fatPct != null && bb.fatPct !== '' && Number(bb.fatPct) >= 0) base.fatPct = Number(bb.fatPct);
-      if (bb.vFat != null && bb.vFat !== '' && Number(bb.vFat) >= 0) base.vFat = Number(bb.vFat);
       if (bb.muscleKg != null && bb.muscleKg !== '' && Number(bb.muscleKg) >= 0) base.muscleKg = Number(bb.muscleKg);
+      if (bb.fatMassKg != null && bb.fatMassKg !== '' && Number(bb.fatMassKg) >= 0) base.fatMassKg = Number(bb.fatMassKg);
+      if (bb.vFat != null && bb.vFat !== '' && Number(bb.vFat) >= 0) base.vFat = Number(bb.vFat);
       if (bb.waterPct != null && bb.waterPct !== '' && Number(bb.waterPct) >= 0) base.waterPct = Number(bb.waterPct);
       r.baseline = base;
     }

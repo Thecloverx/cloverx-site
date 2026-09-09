@@ -1052,11 +1052,12 @@ document.addEventListener('click',function(e){
     app.innerHTML='<div class="card">'+stepper(3)
     +'<h2 class="tt">ค่าตั้งต้น (Before)</h2><p class="sub">กรอกค่าจากเครื่องวัด และแนบรูปถ่าย Before ความละเอียดสูง</p>'
     +'<div class="grid2">'
-    + '<div class="field" id="fW"><label>น้ำหนัก (กก.) <span class="req">*</span></label><input class="in" id="w_weight" type="number" inputmode="decimal" placeholder="เช่น 78.5" value="'+esc(W.weightKg||'')+'"><div class="err">กรอกน้ำหนัก</div></div>'
-    + '<div class="field" id="fFat"><label>ไขมัน (%) <span class="req">*</span></label><input class="in" id="w_fat" type="number" inputmode="decimal" placeholder="เช่น 28.4" value="'+esc(W.fatPct||'')+'"><div class="err">กรอกไขมัน</div></div>'
-    + '<div class="field" id="fV"><label>V Fat (ไขมันในช่องท้อง) <span class="req">*</span></label><input class="in" id="w_vfat" type="number" inputmode="decimal" placeholder="เช่น 9" value="'+esc(W.vFat||'')+'"><div class="err">กรอก V Fat</div></div>'
-    + '<div class="field" id="fM"><label>กล้ามเนื้อ (กก.) <span class="req">*</span></label><input class="in" id="w_muscle" type="number" inputmode="decimal" placeholder="เช่น 52.1" value="'+esc(W.muscleKg||'')+'"><div class="err">กรอกกล้ามเนื้อ</div></div>'
-    + '<div class="field" id="fWa"><label>มวลน้ำในร่างกาย (%) <span class="req">*</span></label><input class="in" id="w_water" type="number" inputmode="decimal" placeholder="เช่น 55" value="'+esc(W.waterPct||'')+'"><div class="err">กรอกมวลน้ำ</div></div>'
+    + '<div class="field" id="fW"><label>น้ำหนัก (กก.) <span class="req">*</span></label><input class="in" id="w_weight" type="number" inputmode="decimal" placeholder="เช่น 58.4" value="'+esc(W.weightKg||'')+'"><div class="err">กรอกน้ำหนัก</div></div>'
+    + '<div class="field" id="fFat"><label>ไขมัน (%) <span class="req">*</span></label><input class="in" id="w_fat" type="number" inputmode="decimal" placeholder="เช่น 35.4" value="'+esc(W.fatPct||'')+'"><div class="err">กรอกไขมัน</div></div>'
+    + '<div class="field" id="fM"><label>มวลกล้ามเนื้อ (กก.) <span class="req">*</span></label><input class="in" id="w_muscle" type="number" inputmode="decimal" placeholder="เช่น 5.4" value="'+esc(W.muscleKg||'')+'"><div class="err">กรอกมวลกล้ามเนื้อ</div></div>'
+    + '<div class="field" id="fFm"><label>มวลไขมัน (กก.) <span class="req">*</span></label><input class="in" id="w_fatmass" type="number" inputmode="decimal" placeholder="เช่น 20.7" value="'+esc(W.fatMassKg||'')+'"><div class="err">กรอกมวลไขมัน</div></div>'
+    + '<div class="field" id="fV"><label>ไขมันช่องท้อง (V-Fat) <span class="req">*</span></label><input class="in" id="w_vfat" type="number" inputmode="decimal" placeholder="เช่น 7" value="'+esc(W.vFat||'')+'"><div class="err">กรอกไขมันช่องท้อง</div></div>'
+    + '<div class="field" id="fWa"><label>น้ำในร่างกาย (%) <span class="req">*</span></label><input class="in" id="w_water" type="number" inputmode="decimal" placeholder="เช่น 47.5" value="'+esc(W.waterPct||'')+'"><div class="err">กรอกน้ำในร่างกาย</div></div>'
     +'</div>'
     +'<div class="field" id="fPhoto"><label>รูปภาพ Before (ความละเอียดสูง) <span class="req">*</span></label>'
     + '<div class="exguide"><img src="ll_before_ex.jpg" alt="ตัวอย่างรูป Before"><p>ตัวอย่าง: ถ่าย <b>หน้าตรง · ด้านข้าง · ด้านหลัง</b> ยืนตรงเห็นเต็มตัว แสงสว่าง ฉากหลังโล่ง แต่งกายรัดรูป</p></div>'
@@ -1073,12 +1074,13 @@ document.addEventListener('click',function(e){
     });
     $('#s3back').onclick=vStep2;
     $('#s3next').onclick=function(){
-      W.weightKg=$('#w_weight').value;W.fatPct=$('#w_fat').value;W.vFat=$('#w_vfat').value;W.muscleKg=$('#w_muscle').value;W.waterPct=$('#w_water').value;
+      W.weightKg=$('#w_weight').value;W.fatPct=$('#w_fat').value;W.muscleKg=$('#w_muscle').value;W.fatMassKg=$('#w_fatmass').value;W.vFat=$('#w_vfat').value;W.waterPct=$('#w_water').value;
       var ok=true;
       ok=bad($('#fW'),!(Number(W.weightKg)>0))&&ok;
       ok=bad($('#fFat'),!(Number(W.fatPct)>=0&&W.fatPct!==''))&&ok;
-      ok=bad($('#fV'),!(Number(W.vFat)>=0&&W.vFat!==''))&&ok;
       ok=bad($('#fM'),!(Number(W.muscleKg)>=0&&W.muscleKg!==''))&&ok;
+      ok=bad($('#fFm'),!(Number(W.fatMassKg)>=0&&W.fatMassKg!==''))&&ok;
+      ok=bad($('#fV'),!(Number(W.vFat)>=0&&W.vFat!==''))&&ok;
       ok=bad($('#fWa'),!(Number(W.waterPct)>=0&&W.waterPct!==''))&&ok;
       ok=bad($('#fPhoto'),!W.beforePhoto)&&ok;
       if(!ok)return;vConfirm();
@@ -1094,9 +1096,10 @@ document.addEventListener('click',function(e){
     if(W.startChoice==='now'){
       rows+='<div class="r"><span>น้ำหนัก</span><b>'+esc(W.weightKg)+' กก.</b></div>'
         +'<div class="r"><span>ไขมัน</span><b>'+esc(W.fatPct)+' %</b></div>'
-        +'<div class="r"><span>V Fat</span><b>'+esc(W.vFat)+'</b></div>'
-        +'<div class="r"><span>กล้ามเนื้อ</span><b>'+esc(W.muscleKg)+' กก.</b></div>'
-        +'<div class="r"><span>มวลน้ำ</span><b>'+esc(W.waterPct)+' %</b></div>'
+        +'<div class="r"><span>มวลกล้ามเนื้อ</span><b>'+esc(W.muscleKg)+' กก.</b></div>'
+        +'<div class="r"><span>มวลไขมัน</span><b>'+esc(W.fatMassKg)+' กก.</b></div>'
+        +'<div class="r"><span>ไขมันช่องท้อง (V-Fat)</span><b>'+esc(W.vFat)+'</b></div>'
+        +'<div class="r"><span>น้ำในร่างกาย</span><b>'+esc(W.waterPct)+' %</b></div>'
         +'<div class="r"><span>รูป Before</span><b>แนบแล้ว ✓</b></div>';
     }
     rows+='<div class="r"><span>ค่าสมัคร</span><b style="color:var(--muted)">-</b></div>';
@@ -1122,7 +1125,7 @@ document.addEventListener('click',function(e){
   function doSubmitReg(){
     var y=$('#cfPay'); if(y){y.disabled=true;y.textContent='กำลังส่ง…';}
     var body={name:W.name,phone:W.phone,dob:W.dob,gender:W.gender,heightCm:Number(W.heightCm),startChoice:W.startChoice,coach:W.coach,coachOther:W.coachOther,referrer:W.referrer};
-    if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.vFat=Number(W.vFat);body.muscleKg=Number(W.muscleKg);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
+    if(W.startChoice==='now'){body.weightKg=Number(W.weightKg);body.fatPct=Number(W.fatPct);body.muscleKg=Number(W.muscleKg);body.fatMassKg=Number(W.fatMassKg);body.vFat=Number(W.vFat);body.waterPct=Number(W.waterPct);body.beforePhoto=W.beforePhoto;}
     fetch('/api/leanlab/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
       .then(function(r){return r.json();})
       .then(function(j){
