@@ -330,17 +330,17 @@
       </div>
 
       <!-- Sale -->
-      <div class="group open" id="g-sale">
+      <div class="group" id="g-sale">
         <button class="item ghead" data-toggle="g-sale"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span class="lbl">Sale</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
-          <div class="group open subgrp" id="g-xh">
+          <div class="group subgrp" id="g-xh">
             <button class="item ghead subhead" data-toggle="g-xh"><span class="pdot" style="background:#2E7FE4"></span><span class="lbl">Xircle &amp; HabiX</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
             <div class="children">
               <button class="item lvl3" data-view="preorder"><span class="dot"></span><span class="lbl">Order</span></button>
               <button class="item lvl3" data-view="qr"><span class="dot"></span><span class="lbl">Management</span></button>
             </div>
           </div>
-          <div class="group open subgrp" id="g-ll">
+          <div class="group subgrp" id="g-ll">
             <button class="item ghead subhead" data-toggle="g-ll"><span class="pdot" style="background:#16a34a"></span><span class="lbl">Lean Lab</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
             <div class="children">
               <button class="item lvl3" data-view="llmember"><span class="dot"></span><span class="lbl">Member</span></button>
@@ -353,7 +353,7 @@
       </div>
 
       <!-- Exam -->
-      <div class="group open" id="g-exam">
+      <div class="group" id="g-exam">
         <button class="item ghead" data-toggle="g-exam"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">Exam</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
           <button class="item" data-view="exam-session"><span class="dot"></span><span class="lbl">Session</span></button>
@@ -2252,6 +2252,9 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)
     document.querySelectorAll('#nav .group').forEach(function(g){g.classList.toggle('has-active',!!g.querySelector('.item[data-view].active'));});
+    // accordion: กางเฉพาะกลุ่มที่มีเมนูที่เลือกอยู่ · พับกลุ่มอื่นให้เรียบร้อย
+    var _act=document.querySelector('#nav .item[data-view].active');
+    document.querySelectorAll('#nav .group').forEach(function(g){g.classList.toggle('open',!!(_act&&g.contains(_act)));});
     var m=v==='overview'?{t:'Overview'}:META[v];
     document.getElementById('crumbTitle').textContent=m?m.t:'Overview';
     window.scrollTo(0,0);
