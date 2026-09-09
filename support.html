@@ -798,7 +798,11 @@
       +       '<button type="button" class="btn ghost" id="ofReset" style="padding:9px 16px;font-size:.84rem">รีเซ็ต</button>'
       +     '</div>'
       +     '<div class="mfilters">'
-      +       '<div class="mdaterange" title="วันที่ซื้อ"><span class="mdr-ic">📅</span><input type="date" id="ofFrom" aria-label="ตั้งแต่วันที่"><span style="color:var(--muted)">–</span><input type="date" id="ofTo" aria-label="ถึงวันที่"></div>'
+      +       '<span style="font-size:.82rem;color:var(--muted);font-weight:600;margin-right:2px">ช่วงวันที่</span>'
+      +       llDateChipsHtml(LL_FILT.date,'llMgmtDR')
+      +       '<div class="mdaterange" id="ofCustom" style="display:'+(LL_FILT.date==='custom'?'inline-flex':'none')+'"><span class="mdr-ic">📅</span><input type="date" id="ofFrom" value="'+(LL_FILT.from||'')+'" aria-label="ตั้งแต่วันที่"><span style="color:var(--muted)">–</span><input type="date" id="ofTo" value="'+(LL_FILT.to||'')+'" aria-label="ถึงวันที่"></div>'
+      +     '</div>'
+      +     '<div class="mfilters">'
       +       '<select id="ofPkg" class="mfsel"><option value="all">แพ็คเกจ · ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ค่าสมัคร</option></select>'
       +       '<select id="ofChannel" class="mfsel"><option value="all">ช่องทางการชำระ · ทั้งหมด</option><option value="bank">โอนธนาคาร</option><option value="card">บัตรเครดิต</option><option value="installment">ผ่อนชำระ</option></select>'
       +       '<select id="osSelect" class="mfsel"><option value="all">สถานะการชำระเงิน · ทั้งหมด</option><option value="paid">ชำระเงินแล้ว</option><option value="refunded">คืนเงิน</option><option value="cancelled">ยกเลิก</option><option value="pending">รอชำระเงิน</option></select>'
@@ -823,13 +827,13 @@
     if(ff)ff.onchange=function(){LL_FILT.from=ff.value;LL_PAGE=1;llRenderOrders();};
     if(ft)ft.onchange=function(){LL_FILT.to=ft.value;LL_PAGE=1;llRenderOrders();};
     var ps=document.getElementById('ofPS'); if(ps)ps.onchange=function(){LL_PAGE_SIZE=parseInt(ps.value,10)||10;LL_PAGE=1;llRenderOrders();};
-    var rs=document.getElementById('ofReset'); if(rs)rs.onclick=function(){LL_FILT={date:'all',from:'',to:'',q:'',status:'all',pkg:'all',channel:'all'};if(s)s.value='';if(pk)pk.value='all';if(ch)ch.value='all';if(ss)ss.value='all';if(ff)ff.value='';if(ft)ft.value='';LL_PAGE=1;llRenderOrders();};
+    var rs=document.getElementById('ofReset'); if(rs)rs.onclick=function(){LL_FILT={date:'all',from:'',to:'',q:'',status:'all',pkg:'all',channel:'all'};if(s)s.value='';if(pk)pk.value='all';if(ch)ch.value='all';if(ss)ss.value='all';if(ff)ff.value='';if(ft)ft.value='';var cb=document.getElementById('ofCustom');if(cb)cb.style.display='none';llToggleChips('llMgmtDR','all');LL_PAGE=1;llRenderOrders();};
     var sc=document.getElementById('ordScrim'); if(sc)sc.onclick=ordCloseDetail;
     orderLoad();
   }
 
   // ----- Member (redesign — การ์ด KPI + ตาราง + แผงรายละเอียด) -----
-  var MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};
+  var MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:'',dr:'all'};
   var MEM_PAGE=1, MEM_PS=10, MEM_SEL=null, MEM_MODE='now', MEM_TAB='info';
   function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
   function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ค่าสมัคร',cls:'mseg-base'};}
@@ -857,7 +861,7 @@
     +       '<div class="mfsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="memSearch" placeholder="ชื่อ, รหัสสมาชิก หรือเบอร์โทรศัพท์"></div>'
     +       '<select id="memGender" class="mfsel"><option value="all">เพศ · ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select>'
     +       '<select id="memAge" class="mfsel"><option value="all">ช่วงอายุ · ทั้งหมด</option><option value="18-29">18–29 ปี</option><option value="30-39">30–39 ปี</option><option value="40-49">40–49 ปี</option><option value="50-">50 ปีขึ้นไป</option></select>'
-    +       '<div class="mdaterange" title="วันที่เริ่ม"><span class="mdr-ic">📅</span><input type="date" id="memFrom" aria-label="ตั้งแต่วันที่"><span style="color:var(--muted)">–</span><input type="date" id="memTo" aria-label="ถึงวันที่"></div>'
+    +       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:.8rem;color:var(--muted);font-weight:600">วันที่:</span>'+llDateChipsHtml(MEM_FILT.dr,'memDR')+'<div class="mdaterange" id="memCustom" style="display:'+(MEM_FILT.dr==='custom'?'inline-flex':'none')+'"><span class="mdr-ic">📅</span><input type="date" id="memFrom" value="'+(MEM_FILT.from||'')+'" aria-label="ตั้งแต่วันที่"><span style="color:var(--muted)">–</span><input type="date" id="memTo" value="'+(MEM_FILT.to||'')+'" aria-label="ถึงวันที่"></div></div>'
     +       '<select id="memSeg" class="mfsel"><option value="all">แพ็คเกจ · ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ค่าสมัคร</option></select>'
     +       '<button type="button" class="btn ghost" id="memClear" style="padding:9px 16px;font-size:.84rem">ล้างข้อมูล</button>'
     +     '</div>'
@@ -868,10 +872,10 @@
     + '</div>'
     + '<div class="mdrawer-scrim" id="memScrim"></div>';
   }
+  window.memDR=function(r){MEM_FILT.dr=r;MEM_PAGE=1;var cb=document.getElementById('memCustom');if(cb)cb.style.display=(r==='custom')?'inline-flex':'none';llToggleChips('memDR',r);memRender();};
   function memFilterList(list){
     var f=MEM_FILT;
-    function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
-    var lo=f.from?dayStart(f.from):null, hi=f.to?dayStart(f.to)+86400000:null;
+    var _mb=llDateBounds(f.dr,f.from,f.to), lo=_mb.lo, hi=_mb.hi;
     var q=(f.q||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
     return (list||[]).filter(function(r){
       var t=new Date(r.reviewedAt||r.createdAt||0).getTime();
@@ -892,7 +896,7 @@
   function memHeadClose(){var m=document.getElementById('memHMenu');if(m)m.style.display='none';}
   document.addEventListener('click',function(e){if(!e.target.closest('.memhead-act'))memHeadClose();});
   function memberInit(mode){
-    MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};
+    MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:'',dr:'all'};
     MEM_PAGE=1; MEM_SEL=null; MEM_TAB='info';
     var s=document.getElementById('memSearch'),tmr;
     if(s)s.oninput=function(){MEM_FILT.q=s.value;clearTimeout(tmr);tmr=setTimeout(function(){MEM_PAGE=1;memRender();},260);};
@@ -903,7 +907,7 @@
     if(ff)ff.onchange=function(){MEM_FILT.from=ff.value;MEM_PAGE=1;memRender();};
     if(ft)ft.onchange=function(){MEM_FILT.to=ft.value;MEM_PAGE=1;memRender();};
     var ps=document.getElementById('memPS');if(ps)ps.onchange=function(){MEM_PS=parseInt(ps.value,10)||10;MEM_PAGE=1;memRender();};
-    var mc=document.getElementById('memClear');if(mc)mc.onclick=function(){MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:''};if(s)s.value='';if(mg)mg.value='all';if(ma)ma.value='all';if(sg)sg.value='all';if(ff)ff.value='';if(ft)ft.value='';MEM_PAGE=1;memRender();};
+    var mc=document.getElementById('memClear');if(mc)mc.onclick=function(){MEM_FILT={q:'',gender:'all',age:'all',seg:'all',from:'',to:'',dr:'all'};if(s)s.value='';if(mg)mg.value='all';if(ma)ma.value='all';if(sg)sg.value='all';if(ff)ff.value='';if(ft)ft.value='';var cb=document.getElementById('memCustom');if(cb)cb.style.display='none';llToggleChips('memDR','all');MEM_PAGE=1;memRender();};
     var sc=document.getElementById('memScrim');if(sc)sc.onclick=memCloseDetail;
     memberLoad(mode);
   }
@@ -1239,10 +1243,22 @@
     if(st==='cancelled'||st==='rejected')return 'cancelled';
     return 'pending';
   }
+  // ตัวช่วยช่วงวันที่ (ใช้ร่วมกันทุกฟิลเตอร์): ทั้งหมด/วันนี้/สัปดาห์/เดือน/กำหนดวัน
+  function llDateBounds(range,from,to){
+    function ds(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
+    var now=new Date(), s=new Date(now.getFullYear(),now.getMonth(),now.getDate()), end=s.getTime()+86400000;
+    if(range==='today')return {lo:s.getTime(),hi:end};
+    if(range==='week'){var w=new Date(s);w.setDate(w.getDate()-6);return {lo:w.getTime(),hi:end};}
+    if(range==='month')return {lo:new Date(now.getFullYear(),now.getMonth(),1).getTime(),hi:end};
+    if(range==='custom')return {lo:from?ds(from):null,hi:to?ds(to)+86400000:null};
+    return {lo:null,hi:null};
+  }
+  function llDateChipsHtml(active,fn){var R=[['all','ทั้งหมด'],['today','วันนี้'],['week','สัปดาห์'],['month','เดือน'],['custom','กำหนดวัน']];return '<div class="ofchips">'+R.map(function(r){return '<button type="button" class="ofc'+(active===r[0]?' on':'')+'" onclick="'+fn+'(\''+r[0]+'\')">'+r[1]+'</button>';}).join('')+'</div>';}
+  function llToggleChips(fn,active){[].forEach.call(document.querySelectorAll('.ofc'),function(b){var oc=b.getAttribute('onclick')||'';if(oc.indexOf(fn+'(')>=0)b.classList.toggle('on',oc.indexOf("'"+active+"'")>=0);});}
+  window.llMgmtDR=function(r){LL_FILT.date=r;LL_PAGE=1;var cb=document.getElementById('ofCustom');if(cb)cb.style.display=(r==='custom')?'inline-flex':'none';llToggleChips('llMgmtDR',r);llRenderOrders();};
   function llFilterList(regs){
     var f=LL_FILT;
-    function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
-    var lo=f.from?dayStart(f.from):null, hi=f.to?dayStart(f.to)+86400000:null;
+    var _b=llDateBounds(f.date,f.from,f.to), lo=_b.lo, hi=_b.hi;
     var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
     return (regs||[]).filter(function(r){
       var t=new Date(r.createdAt||0).getTime();

@@ -299,6 +299,10 @@
     .pomscrim.on{display:block;position:fixed;inset:0;background:rgba(20,30,55,.35);z-index:1290}
   }
   @media(max-width:520px){.pokpis{grid-template-columns:1fr 1fr}.pomemhead h1{font-size:1.3rem}}
+  .podchips{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .podchip{border:1px solid var(--line);background:var(--panel,#fff);color:var(--ink);font-family:inherit;font-weight:600;font-size:.82rem;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s}
+  .podchip:hover{border-color:var(--brand)}
+  .podchip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .it-modal{position:fixed;inset:0;z-index:2000;display:none}
   .it-modal.on{display:block}
   .it-back{position:absolute;inset:0;background:rgba(20,30,55,.5)}
@@ -2255,6 +2259,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var pg=document.getElementById('poOrdPager'); if(pg)pg.innerHTML=poOrderPager(PO_PAGE,pages);
   }
   function poClearFilter(){PO_Q='';PO_STATUSF='all';PO_RANGE='all';PO_CFROM='';PO_CTO='';PO_PAGE=1;poDraw();}
+  function poSetDateRange(r){PO_RANGE=r;PO_PAGE=1;var cb=document.getElementById('poCustomBox');if(cb)cb.style.display=(r==='custom')?'inline-flex':'none';[].forEach.call(document.querySelectorAll('.podchip'),function(b){b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+r+"'")>=0);});poRenderOrderRows();}
   function poDetailActions(o){
     var isSettled=(o.status==='paid'||o.status==='confirmed');
     var cardCaptured=(poStripe(o)&&o.stripe&&o.stripe.paymentIntent);
@@ -2335,9 +2340,13 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<div class="pomemhead-act"><button onclick="poRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button><button onclick="poExportExcel()" style="background:var(--brand);border:1px solid var(--brand);border-radius:9px;padding:8px 16px;color:#fff;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">ส่งออก Excel</button></div></div>';
     var listCard='<div class="pomcard"><div class="pomfilters">'
       +'<div class="pomsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="poSearch" value="'+poEsc(PO_Q)+'" oninput="PO_Q=this.value;PO_PAGE=1;poRenderOrderRows()" placeholder="ค้นหาเลขคำสั่งซื้อ ชื่อลูกค้า เบอร์ หรือสินค้า"></div>'
-      +'<div class="pomdate"><span class="ic">📅</span><input type="date" id="poCFrom" value="'+PO_CFROM+'" onchange="PO_RANGE=\'custom\';PO_CFROM=this.value;PO_PAGE=1;poRenderOrderRows()"><span style="color:var(--muted)">–</span><input type="date" id="poCTo" value="'+PO_CTO+'" onchange="PO_RANGE=\'custom\';PO_CTO=this.value;PO_PAGE=1;poRenderOrderRows()"></div>'
       +'<select class="pomsel" onchange="PO_STATUSF=this.value;PO_PAGE=1;poRenderOrderRows()">'+statusOpts+'</select>'
       +'<button class="pomsel" onclick="poClearFilter()" style="color:var(--muted);font-weight:600;cursor:pointer">ล้างข้อมูล</button>'
+      +'</div>'
+      +'<div class="pomfilters">'
+      +'<span style="font-size:.82rem;color:var(--muted);font-weight:600;margin-right:2px">ช่วงวันที่</span>'
+      +'<div class="podchips">'+[['all','ทั้งหมด'],['today','วันนี้'],['week','สัปดาห์'],['month','เดือน'],['custom','กำหนดวัน']].map(function(r){return '<button type="button" class="podchip'+(PO_RANGE===r[0]?' on':'')+'" onclick="poSetDateRange(\''+r[0]+'\')">'+r[1]+'</button>';}).join('')+'</div>'
+      +'<div class="pomdate" id="poCustomBox" style="display:'+(PO_RANGE==='custom'?'inline-flex':'none')+'"><span class="ic">📅</span><input type="date" id="poCFrom" value="'+PO_CFROM+'" onchange="PO_CFROM=this.value;PO_PAGE=1;poRenderOrderRows()"><span style="color:var(--muted)">–</span><input type="date" id="poCTo" value="'+PO_CTO+'" onchange="PO_CTO=this.value;PO_PAGE=1;poRenderOrderRows()"></div>'
       +'</div>'
       +'<div class="pomlistmeta"><span class="pomcount" id="poCount">–</span><div class="pomlistmeta-right"><select class="pomsel" onchange="PO_PS=parseInt(this.value,10)||10;PO_PAGE=1;poRenderOrderRows()">'+psOpts+'</select><div class="popager" id="poOrdPager" style="margin-top:0"></div></div></div>'
       +'<div style="overflow-x:auto"><table class="pordt"><thead><tr><th>วันที่ซื้อ</th><th>เลขที่คำสั่งซื้อ</th><th>ชื่อ-นามสกุล</th><th>รายการสินค้า</th><th>ช่องทางการชำระเงิน</th><th>สถานะการชำระเงิน</th><th class="num">ยอดชำระ</th><th>จัดการ</th></tr></thead><tbody id="poOrdBody"></tbody></table></div></div>';
