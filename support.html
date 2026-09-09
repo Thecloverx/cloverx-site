@@ -145,6 +145,12 @@
   table .cell-amt{font-weight:800;font-size:.95rem;white-space:nowrap;font-variant-numeric:tabular-nums}
   table .cell-sub{font-size:.72rem;color:var(--muted);margin-top:3px}
   table .acts{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  /* order table: คอลัมน์กว้างสมดุล + ตัดบรรทัดเรียบร้อย */
+  .lltbl{table-layout:fixed;min-width:1146px}
+  .lltbl tbody td{vertical-align:top;overflow-wrap:break-word}
+  .lltbl tbody td>div:first-child{margin-bottom:1px}
+  .lltbl .cell-sub{line-height:1.5;overflow-wrap:break-word}
+  .lltbl .nowrap{white-space:nowrap}
   table .acts .btn{padding:7px 13px;font-size:.8rem;border-radius:9px}
   table .acts .btn.icon{padding:7px 9px}
   /* มือถือ: เปลี่ยนตารางเป็นการ์ดซ้อนกัน อ่านง่าย ไม่ต้องเลื่อนแนวนอน */
@@ -681,7 +687,7 @@
       +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
       +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx) / รหัสไปรษณีย์">'
       +   '</div>'
-      +   '<div style="overflow-x:auto"><table><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
+      +   '<div style="overflow-x:auto"><table class="lltbl"><colgroup><col style="width:300px"><col style="width:118px"><col style="width:196px"><col style="width:150px"><col style="width:166px"><col style="width:150px"><col style="width:66px"></colgroup><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       +   '<div id="llPager"></div>'
       + '</div>';
   }
@@ -715,15 +721,23 @@
       + '<div class="panel">'
       +   '<div class="ph"><h3>รายชื่อสมาชิก</h3><span class="pill '+(isNow?'lean':'ok')+'" id="memCount">–</span></div>'
       +   '<div class="ofilt">'
-      +     '<div class="ofchips" id="mofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="yst">เมื่อวาน</button><button class="ofc" data-d="7d">สัปดาห์</button><button class="ofc" data-d="30d">เดือน</button><button class="ofc" data-d="custom">กำหนดวันที่</button></div>'
+      +     '<div class="ofchips" id="mofChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="7d">สัปดาห์นี้</button><button class="ofc" data-d="30d">เดือนนี้</button><button class="ofc" data-d="custom">กำหนดเอง</button></div>'
       +     '<div class="ofrange" id="mofRange" style="display:none"><input type="date" id="mofFrom"><span>–</span><input type="date" id="mofTo"></div>'
+      +     '<button type="button" class="ofc" id="mfToggle" style="font-weight:700;display:inline-flex;align-items:center;gap:6px">⚙ ตัวกรอง<span id="mfCount" style="display:none;background:#0077B6;color:#fff;border-radius:999px;font-size:.66rem;font-weight:800;min-width:17px;height:17px;padding:0 4px;align-items:center;justify-content:center"></span></button>'
       +     '<input type="search" id="mofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / รหัสไปรษณีย์">'
+      +   '</div>'
+      +   '<div id="mfPanel" hidden style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin:2px 0 14px;padding:14px 16px;background:#F1F8FC;border:1px solid #E3EFF6;border-radius:12px">'
+      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">แพ็กเกจ<select id="mfPkg" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:160px"><option value="all">ทั้งหมด</option><option value="grand">Grand Slam</option><option value="special">Special (ผ่อน)</option><option value="base">ค่าสมัครปกติ</option></select></label>'
+      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">เพศ<select id="mfGender" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:120px"><option value="all">ทั้งหมด</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></label>'
+      +     '<label style="font-size:.76rem;font-weight:700;color:#12233B;display:flex;flex-direction:column;gap:5px">วันเริ่มโครงการ<select id="mfStart" style="border:1px solid #D5E6F2;background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.85rem;color:#12233B;min-width:150px"><option value="all">ทั้งหมด</option><option value="now">เริ่มตอนนี้</option><option value="later">8 พ.ย. 2569</option></select></label>'
+      +     '<button type="button" class="btn ghost" id="mfClear" style="padding:8px 14px;font-size:.82rem">ล้างตัวกรอง</button>'
       +   '</div>'
       +   '<div style="overflow-x:auto"><table><thead><tr><th>สมาชิก</th><th>ข้อมูล</th><th>แพ็กเกจ/ยอด</th><th>'+(isNow?'ค่าตั้งต้น (Before)':'สถานะเริ่ม')+'</th><th>ยืนยันเมื่อ</th></tr></thead><tbody id="memBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       + '</div>';
   }
   // ตัวกรองสมาชิก (วันที่ยืนยัน + ค้นหา) — ใช้แบบเดียวกับหน้า Order
-  var MEM_FILT={date:'all',from:'',to:'',q:''};
+  var MEM_FILT={date:'all',from:'',to:'',q:'',pkg:'all',gender:'all',start:'all'};
+  function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
   function memFilterList(regs){
     var f=MEM_FILT;
     function dayStart(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
@@ -736,6 +750,9 @@
     var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
     return (regs||[]).filter(function(r){
       if(lo!=null||hi!=null){ var t=new Date(r.reviewedAt||r.createdAt||0).getTime(); if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false; }
+      if(f.pkg&&f.pkg!=='all'&&memPkgOf(r)!==f.pkg)return false;
+      if(f.gender&&f.gender!=='all'&&String(r.gender||'')!==f.gender)return false;
+      if(f.start&&f.start!=='all'&&String(r.startChoice||'')!==f.start)return false;
       if(q){
         var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')).toLowerCase();
         var okText=hay.indexOf(q)>=0;
@@ -746,7 +763,15 @@
     });
   }
   function memberInit(mode){
-    MEM_FILT={date:'all',from:'',to:'',q:''};
+    MEM_FILT={date:'all',from:'',to:'',q:'',pkg:'all',gender:'all',start:'all'};
+    var mt=document.getElementById('mfToggle'), mp=document.getElementById('mfPanel');
+    if(mt&&mp)mt.onclick=function(){mp.hidden=!mp.hidden;};
+    function memCountUpd(){var n=0;if(MEM_FILT.pkg!=='all')n++;if(MEM_FILT.gender!=='all')n++;if(MEM_FILT.start!=='all')n++;var c=document.getElementById('mfCount');if(c){c.textContent=n;c.style.display=n?'inline-flex':'none';}}
+    function memApply(){memCountUpd();memberLoad(mode);}
+    var mpk=document.getElementById('mfPkg'); if(mpk)mpk.onchange=function(){MEM_FILT.pkg=mpk.value;memApply();};
+    var mg=document.getElementById('mfGender'); if(mg)mg.onchange=function(){MEM_FILT.gender=mg.value;memApply();};
+    var mst=document.getElementById('mfStart'); if(mst)mst.onchange=function(){MEM_FILT.start=mst.value;memApply();};
+    var mcl=document.getElementById('mfClear'); if(mcl)mcl.onclick=function(){MEM_FILT.pkg='all';MEM_FILT.gender='all';MEM_FILT.start='all';if(mpk)mpk.value='all';if(mg)mg.value='all';if(mst)mst.value='all';memApply();};
     var chips=document.getElementById('mofChips');
     if(chips){[].forEach.call(chips.querySelectorAll('.ofc'),function(b){b.onclick=function(){
       [].forEach.call(chips.querySelectorAll('.ofc'),function(x){x.classList.remove('on');}); b.classList.add('on');
@@ -943,13 +968,13 @@
         var base=r.baseline?('<a class="linkpill before" href="'+llEsc(r.baseline.beforePhotoUrl)+'" target="_blank" rel="noopener">ดู Before ↗</a><div class="cell-sub">'+llEsc(r.baseline.weightKg)+'kg · '+llEsc(r.baseline.fatPct)+'% · กล้าม '+llEsc(r.baseline.muscleKg)+'kg</div>'):'<span style="color:var(--muted)">—</span>';
         var slip=r.slipUrl?('<a class="linkpill slip" href="'+llEsc(r.slipUrl)+'" target="_blank" rel="noopener">ดูสลิป ↗</a>'):'';
         var proof=r.promoProofUrl?('<a class="linkpill proof" href="'+llEsc(r.promoProofUrl)+'" target="_blank" rel="noopener">📄 หลักฐาน ↗</a>'):'';
-        var TIER={t0:'44,940 (ไม่มีประวัติ)',t1:'39,950',t2:'37,450 (RoutineX)',t3:'32,460 (Brand+Scale+RoutineX)'};
+        var TIER={t0:'44,940 <span class="nowrap">(ไม่มีประวัติ)</span>',t1:'39,950',t2:'37,450 <span class="nowrap">(RoutineX)</span>',t3:'32,460 <span class="nowrap">(Brand+Scale+RoutineX)</span>'};
         var ins=r.installment||null;
         var promoInfo;
         if(r.promoPlan==='special'&&ins){
           promoInfo='<div class="cell-sub" style="color:#2563EB">Special · ผ่อน '+Number(ins.perMonth||7490).toLocaleString('en-US')+'×'+(ins.months||6)+' · ตัดทุกวันที่ '+(ins.day||'-')+'</div>';
         } else {
-          promoInfo=r.promo?('<div class="cell-sub" style="color:var(--warn)">Grand Slam'+(r.promoTier?(' · '+llEsc(TIER[r.promoTier]||r.promoTier)):'')+'</div>'+(r.autoVerified?'<div class="cell-sub" style="color:var(--good,#16A34A);font-weight:700">✓ ตรวจสิทธิ์อัตโนมัติ (พรีออเดอร์)</div>':'')):'';
+          promoInfo=r.promo?('<div class="cell-sub" style="color:var(--warn)">Grand Slam'+(r.promoTier?(' · '+(TIER[r.promoTier]||llEsc(r.promoTier))):'')+'</div>'+(r.autoVerified?'<div class="cell-sub" style="color:var(--good,#16A34A);font-weight:700">✓ ตรวจสิทธิ์อัตโนมัติ <span class="nowrap">(พรีออเดอร์)</span></div>':'')):'';
         }
         var payLabel = r.pay==='card' ? '💳 ชำระผ่านบัตร' : r.pay==='installment' ? 'ผ่อนบัตร' : 'โอนธนาคาร';
         var attachHtml = (slip||proof) ? ('<div style="margin-top:6px;display:flex;flex-wrap:wrap">'+slip+proof+'</div>') : (r.pay==='card' ? '' : '<div class="cell-sub" style="color:var(--muted)">ยังไม่แนบ</div>');
