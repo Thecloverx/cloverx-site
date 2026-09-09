@@ -146,7 +146,7 @@
   table .cell-sub{font-size:.72rem;color:var(--muted);margin-top:3px}
   table .acts{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
   /* order table: คอลัมน์กว้างสมดุล + ตัดบรรทัดเรียบร้อย */
-  .lltbl{table-layout:fixed;min-width:1146px}
+  .lltbl{table-layout:fixed;min-width:1162px}
   .lltbl tbody td{vertical-align:top;overflow-wrap:break-word}
   .lltbl tbody td>div:first-child{margin-bottom:1px}
   .lltbl .cell-sub{line-height:1.5;overflow-wrap:break-word}
@@ -687,7 +687,7 @@
       +     '<div class="ofrange" id="ofRange" style="display:none"><input type="date" id="ofFrom"><span>–</span><input type="date" id="ofTo"></div>'
       +     '<input type="search" id="ofSearch" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์ / อีเมล / เลขคำสั่งซื้อ (LL-xxxxx) / รหัสไปรษณีย์">'
       +   '</div>'
-      +   '<div style="overflow-x:auto"><table class="lltbl"><colgroup><col style="width:300px"><col style="width:118px"><col style="width:196px"><col style="width:150px"><col style="width:166px"><col style="width:150px"><col style="width:66px"></colgroup><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
+      +   '<div style="overflow-x:auto"><table class="lltbl"><colgroup><col style="width:296px"><col style="width:142px"><col style="width:200px"><col style="width:150px"><col style="width:162px"><col style="width:148px"><col style="width:64px"></colgroup><thead><tr><th>ลูกค้า</th><th>ข้อมูล</th><th>รูปแบบเริ่ม / Option</th><th>ค่าตั้งต้น</th><th>ชำระเงิน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 0">กำลังโหลด…</td></tr></tbody></table></div>'
       +   '<div id="llPager"></div>'
       + '</div>';
   }
@@ -983,8 +983,8 @@
           : ('<div class="cell-amt">฿'+Number(r.fee||0).toLocaleString('en-US')+'</div><div class="cell-sub">'+payLabel+'</div>'+attachHtml);
         return '<tr>'
           +'<td style="min-width:180px"><div style="font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+llEsc(r.name||'-')+(r.promo?'<span class="pill pend" style="font-size:.64rem;padding:2px 8px">🎁 โปรโมชั่น</span>':'')+'</div><div class="cell-sub">'+llEsc(r.email||'')+(r.phone?' · '+llEsc(r.phone):'')+'</div>'+(r.po?'<div class="cell-sub" style="color:var(--brand,#2563EB);font-weight:700">'+llEsc(r.po)+'</div>':'')+(r.address?'<div class="cell-sub" style="color:var(--muted)">📦 '+llEsc(r.address)+(r.postcode?' '+llEsc(r.postcode):'')+'</div>':'')+(_cr.coach?'<div class="cell-sub" style="color:#0077B6;font-weight:700">🏋️ '+llEsc(_cr.coach)+(_cr.referrer?' · แนะนำ: '+llEsc(_cr.referrer):'')+'</div>':'<div class="cell-sub" style="color:var(--warn);font-weight:700">🏋️ ยังไม่ระบุโค้ช</div>')+'<div class="cell-sub" style="color:var(--muted)">สมัคร: '+llEsc((r.createdAt||"").slice(0,16).replace("T"," "))+'</div></td>'
-          +'<td style="white-space:nowrap;color:var(--muted)">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
-          +'<td style="min-width:150px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span>'+promoInfo+'</td>'
+          +'<td style="color:var(--muted);line-height:1.6">'+llEsc(r.gender||'-')+' · '+llEsc(r.age||'-')+' ปี · '+llEsc(r.heightCm||'-')+' ซม.</td>'
+          +'<td><div style="margin-bottom:6px"><span class="pill '+(r.startChoice==='now'?'lean':'ok')+'">'+start+'</span></div>'+promoInfo+'</td>'
           +'<td style="min-width:120px">'+base+'</td>'
           +'<td style="min-width:130px">'+payCell+'</td>'
           +'<td><span class="pill '+s[1]+'">'+s[0]+'</span>'+(r.cancelReason?'<div class="cell-sub" style="color:var(--bad)">'+llEsc(r.cancelReason)+'</div>':'')+(r.rejectReason?'<div class="cell-sub" style="color:var(--bad)">'+llEsc(r.rejectReason)+'</div>':'')+(r.refund?'<div class="cell-sub" style="color:var(--warn)">'+(r.refund.mode==='installment_cancel'?('ยกเลิกผ่อน · เก็บ ฿'+Number(r.refund.paidKept||0).toLocaleString('en-US')+' ('+(r.refund.paidCount||0)+' งวด)'):('คืนเงิน ฿'+Number(r.refund.amount||0).toLocaleString('en-US')+' ('+(r.refund.mode==='partial'?'บางส่วน':'เต็มจำนวน')+')'))+'</div>':'')+'</td>'
