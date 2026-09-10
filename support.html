@@ -1409,9 +1409,9 @@
     var acts='';
     if(r.status==='confirmed'){
       acts+='<button class="btn ghost" style="flex:1;color:#D97706;border-color:#F5D9A8" onclick="llRefund(\''+r.id+'\')">↩ คืนเงิน</button>';
-      acts+='<button class="btn ghost" style="flex:1;color:#E5484D;border-color:#F5C0C0" onclick="llMarkRefunded(\''+r.id+'\')">✕ ยกเลิก</button>';
+      acts+='<button class="btn ghost" style="flex:1;color:#E5484D;border-color:#F5C0C0" onclick="llCancelChoose(\''+r.id+'\')">✕ ยกเลิก</button>';
     } else if(['awaiting_payment','refunded'].indexOf(r.status)<0){
-      acts+='<button class="btn ghost" style="flex:1;color:#E5484D;border-color:#F5C0C0" onclick="llCancel(\''+r.id+'\')">✕ ยกเลิก</button>';
+      acts+='<button class="btn ghost" style="flex:1;color:#E5484D;border-color:#F5C0C0" onclick="llCancelChoose(\''+r.id+'\')">✕ ยกเลิก</button>';
     }
     return '<button class="mdet-x" onclick="ordCloseDetail()" aria-label="ปิด">✕</button>'
       +'<div class="mdet-name" style="font-size:1.05rem;margin-bottom:14px;padding-right:26px">รายละเอียดรายการซื้อ</div>'
@@ -1464,6 +1464,17 @@
       var p=isPromo?llPost(id,'/promo-verify',{result:'rejected',reason:reason}):llPost(id,'',{status:'rejected',reason:reason});
       p.then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else alert('ทำรายการไม่สำเร็จ');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
+  // ยกเลิก — เลือก 2 แบบ: ส่งกลับให้เลือกเริ่มใหม่ (เก็บสมาชิก) หรือ ลบบัญชีถาวร
+  window.llCancelChoose=function(id){
+    llModal('<h3>ยกเลิกรายการนี้</h3><p class="sub">เลือกวิธีการยกเลิก</p>'
+      +'<button type="button" onclick="llCancel(\''+id+'\')" style="display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--soft,#F5F8FC);cursor:pointer;font-family:inherit;margin-bottom:11px">'
+      +  '<div style="font-weight:800;color:var(--ink);font-size:.95rem">↩ ยกเลิกการทำรายการ · ส่งกลับให้เลือกเริ่มใหม่</div>'
+      +  '<div style="font-size:.82rem;color:var(--muted);margin-top:4px;line-height:1.5">ลูกค้ากลับไปหน้า “เลือกรูปแบบการเริ่ม” (เริ่ม ณ วันนี้ / เริ่มวันที่ '+llEsc(LL_LATER_LABEL)+') แล้วชำระเงินใหม่ · <b>ไม่ลบสมาชิก</b></div></button>'
+      +'<button type="button" onclick="llDel(\''+id+'\')" style="display:block;width:100%;text-align:left;border:1px solid #F5C0C0;border-radius:12px;padding:14px 16px;background:#FDECEC;cursor:pointer;font-family:inherit">'
+      +  '<div style="font-weight:800;color:#E5484D;font-size:.95rem">🗑 ยกเลิกการสมัครสมาชิก · ลบบัญชีลูกค้า (ถาวร)</div>'
+      +  '<div style="font-size:.82rem;color:#B4525A;margin-top:4px;line-height:1.5">ลบใบสมัคร + บัญชีสมาชิกออกจากระบบถาวร · <b>กู้คืนไม่ได้</b></div></button>'
+      +'<div class="mrow"><button class="btn ghost" style="width:100%" onclick="llCloseModal()">ปิด</button></div>');
+  };
   window.llCancel=function(id){
     llModal('<h3>ยกเลิก · ส่งกลับให้เลือกเริ่มใหม่</h3><p class="sub">ลูกค้าจะกลับไปที่หน้า “เลือกรูปแบบการเริ่ม” (เริ่ม ณ วันนี้ / เริ่มวันที่ 8) เพื่อเลือกใหม่ แล้วค่อยชำระเงิน — ไม่ลบสมาชิกออกจากระบบ</p>'
       +'<label>เหตุผล (ลูกค้าจะเห็น)</label><select id="cnR"><option>ขอให้เลือกวันเริ่ม/ชำระเงินใหม่</option><option>สลิป/หลักฐานไม่ถูกต้อง</option><option>ลูกค้าเปลี่ยนใจ</option><option value="__o">อื่น ๆ (ระบุ)</option></select>'
@@ -1496,7 +1507,18 @@
       + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">กล้ามเนื้อ (kg)</span><input id="edBM" type="number" step="0.1" min="0" style="width:100%" value="'+(base.muscleKg!=null?base.muscleKg:'')+'" placeholder="เช่น 36.2"></div>'
       + '<div><span style="display:block;font-size:.72rem;color:#64748B;margin:0 0 4px">มวลน้ำ (%)</span><input id="edBWa" type="number" step="0.1" min="0" style="width:100%" value="'+(base.waterPct!=null?base.waterPct:'')+'" placeholder="เช่น 55"></div>'
       +'</div>'
+      +'<label style="margin-top:14px">📷 รูป Before (สูงสุด 3 รูป)</label>'
+      +'<div id="edBpWrap" style="display:flex;gap:8px"></div>'
+      +'<div style="font-size:.74rem;color:#94A3B8;margin-top:5px">แตะที่ช่องเพื่อเพิ่ม/เปลี่ยนรูป · กด ✕ เพื่อลบรูป</div>'
       +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="edG">บันทึก</button></div>');
+    // --- ตัวแก้ไขรูป Before (เพิ่ม/เปลี่ยน/ลบ ได้สูงสุด 3) ---
+    var edPhotos=(base.beforePhotoUrls&&base.beforePhotoUrls.length)?base.beforePhotoUrls.slice(0,3):(base.beforePhotoUrl?[base.beforePhotoUrl]:[]);
+    var EDBPLAB=['หน้าตรง','ด้านข้าง','ด้านหลัง'];
+    function edDownscale(file,cb){var rd=new FileReader();rd.onload=function(){var im=new Image();im.onload=function(){var mx=1400,w=im.width,h=im.height;if(w>mx||h>mx){if(w>=h){h=Math.round(h*mx/w);w=mx;}else{w=Math.round(w*mx/h);h=mx;}}var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);try{cb(cv.toDataURL('image/jpeg',0.85));}catch(e){cb(null);}};im.onerror=function(){cb(null);};im.src=rd.result;};rd.onerror=function(){cb(null);};rd.readAsDataURL(file);}
+    function edRenderBp(){var wrap=document.getElementById('edBpWrap');if(!wrap)return;var html='';for(var i=0;i<3;i++){var v=edPhotos[i];html+='<div style="flex:1;min-width:0"><div style="font-size:.72rem;color:#64748B;margin:0 0 4px">'+EDBPLAB[i]+'</div>'+'<div class="edbp-box" data-i="'+i+'" style="position:relative;border:1.5px dashed var(--line);border-radius:10px;height:92px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;background:var(--soft,#F5F8FC)">'+(v?('<img src="'+llEsc(v)+'" style="width:100%;height:100%;object-fit:cover"><button type="button" class="edbp-x" data-i="'+i+'" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(20,20,30,.72);color:#fff;cursor:pointer;font-size:.78rem;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>'):('<span style="color:#94A3B8;font-size:.8rem;font-weight:600">+ เพิ่มรูป</span>'))+'</div></div>';}wrap.innerHTML=html;
+      [].forEach.call(wrap.querySelectorAll('.edbp-box'),function(box){box.onclick=function(){var i=+box.getAttribute('data-i');var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;edDownscale(f,function(du){if(du){edPhotos[i]=du;edRenderBp();}else alert('อ่านรูปไม่สำเร็จ');});};inp.click();};});
+      [].forEach.call(wrap.querySelectorAll('.edbp-x'),function(x){x.onclick=function(e){e.stopPropagation();var i=+x.getAttribute('data-i');edPhotos[i]=null;edRenderBp();};});}
+    edRenderBp();
     var cs=document.getElementById('edC');if(cs)cs.onchange=function(){document.getElementById('edCOW').style.display=(cs.value==='อื่น ๆ')?'block':'none';};
     document.getElementById('edG').onclick=function(){
       var coachVal=document.getElementById('edC').value;
@@ -1511,6 +1533,7 @@
       if(bv&&bv.value!=='')body.baseline.vFat=bv.value;
       if(bm&&bm.value!=='')body.baseline.muscleKg=bm.value;
       if(bwa&&bwa.value!=='')body.baseline.waterPct=bwa.value;
+      body.beforePhotos=edPhotos.filter(function(p){return typeof p==='string'&&p;});
       llPost(id,'/edit',body).then(function(j){if(j&&j.ok){llCloseModal();
         if(j.registration){var arr=window.LL_MEM_ALL||[];for(var k=0;k<arr.length;k++){if(arr[k].id===id)Object.assign(arr[k],j.registration);}var a2=window.LL_ALL||[];for(var m2=0;m2<a2.length;m2++){if(a2[m2].id===id)Object.assign(a2[m2],j.registration);}if(window.LL_REGS&&LL_REGS[id])Object.assign(LL_REGS[id],j.registration);}
         if(document.getElementById('memBody')){if(typeof memRender==='function')memRender();if(typeof MEM_SEL!=='undefined'&&MEM_SEL===id&&typeof memSelect==='function')memSelect(id);}
@@ -1527,8 +1550,21 @@
         llPost(id,'/refund',{mode:'cancel'}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent='ยืนยันยกเลิกแผนผ่อน';alert(j&&j.error==='no_subscription'?'ไม่พบข้อมูล subscription ของแผนผ่อนนี้':j&&j.error==='stripe_error'?'ยกเลิกกับ Stripe ไม่สำเร็จ ลองใหม่':'ยกเลิกไม่สำเร็จ');}}).catch(function(){b.disabled=false;b.textContent='ยืนยันยกเลิกแผนผ่อน';alert('เชื่อมต่อไม่สำเร็จ');});};
       return;
     }
-    // ชำระครั้งเดียว (บัตร): คืนเต็ม/บางส่วน
     var max=(r.promoAmount||r.fee||0);
+    var isStripeCard=!!(r.stripe&&r.stripe.paymentIntent);
+    // ชำระผ่านโอนธนาคาร (ไม่ผ่าน Stripe): โอนคืนเองแล้วบันทึกไว้
+    if(!isStripeCard){
+      var payLb=memPayChannel(r);
+      llModal('<h3>คืนเงิน ('+llEsc(payLb)+')</h3><p class="sub">รายการนี้ชำระผ่าน <b>'+llEsc(payLb)+'</b> — โอนเงินคืนให้ลูกค้าเอง แล้วบันทึกการคืนไว้ที่นี่ (ระบบไม่ได้เชื่อมต่อกับธนาคารโดยตรง)</p>'
+        +'<label>จำนวนเงินที่คืน (บาท)</label><input id="bkA" type="number" min="0" max="'+max+'" value="'+max+'">'
+        +'<label style="margin-top:8px">หมายเหตุ / อ้างอิงการโอนคืน (ไม่บังคับ)</label><input id="bkN" type="text" placeholder="เช่น โอนคืน 10 ก.ย. · KBank ***1234">'
+        +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ยกเลิก</button><button class="btn pri" id="bkG">ยืนยันคืนเงิน</button></div>');
+      document.getElementById('bkG').onclick=function(){var b=this;b.disabled=true;b.textContent='กำลังบันทึก…';
+        var body={mode:'bank'};var a=Number(document.getElementById('bkA').value);if(a>0)body.amount=a;var n=document.getElementById('bkN').value;if(n)body.note=n;
+        llPost(id,'/refund',body).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent='ยืนยันคืนเงิน';alert('บันทึกไม่สำเร็จ ลองใหม่');}}).catch(function(){b.disabled=false;b.textContent='ยืนยันคืนเงิน';alert('เชื่อมต่อไม่สำเร็จ');});};
+      return;
+    }
+    // ชำระครั้งเดียว (บัตร): คืนเต็ม/บางส่วนผ่าน Stripe
     llModal('<h3>คืนเงิน (บัตรเครดิต)</h3><p class="sub">คืนผ่าน Stripe เข้าบัตรใบเดิมของลูกค้า</p>'
       +'<label>รูปแบบ</label><select id="rfM"><option value="full">เต็มจำนวน (฿'+Number(max).toLocaleString("en-US")+')</option><option value="partial">บางส่วน</option></select>'
       +'<div id="rfAW" style="display:none"><label>จำนวนเงิน (บาท) · สูงสุด ฿'+Number(max).toLocaleString("en-US")+'</label><input id="rfA" type="number" min="1" max="'+max+'" placeholder="เช่น 1000"></div>'
@@ -1554,7 +1590,7 @@
   window.llDel=function(id){
     if(!confirm('ยืนยันการลบข้อมูลนี้ถาวร? เมื่อกดยืนยัน ข้อมูลจะหายไป (รวมบัญชีสมาชิก)'))return;
     fetch('/api/leanlab/admin/registration/'+encodeURIComponent(id)+'/delete'+admQ(),{method:'POST',headers:admHdr({'Content-Type':'application/json'}),credentials:'same-origin',body:JSON.stringify({withMember:true})})
-      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok)orderLoad();else alert('ลบไม่สำเร็จ');})
+      .then(function(r){return r.json();}).then(function(j){if(j&&j.ok){llCloseModal();if(typeof orderLoad==='function')orderLoad();if(document.getElementById('memBody')&&typeof memRender==='function')memRender();}else alert('ลบไม่สำเร็จ');})
       .catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});
   };
   window.llVerify=function(id,result){

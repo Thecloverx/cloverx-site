@@ -1139,6 +1139,19 @@ module.exports = function (app, DATA_DIR, opts) {
       if (bb.waterPct != null && bb.waterPct !== '' && Number(bb.waterPct) >= 0) base.waterPct = Number(bb.waterPct);
       r.baseline = base;
     }
+    // รูป Before (สูงสุด 3): ทีมงานแก้ไข/เพิ่ม/ลบได้ — ส่ง beforePhotos เป็นลิสต์ที่ต้องการ (data URL = รูปใหม่, URL เดิม = คงไว้), ลิสต์ว่าง = ลบทั้งหมด
+    if (Array.isArray(b.beforePhotos)) {
+      var pid = r.memberId || r.id, newUrls = [];
+      b.beforePhotos.forEach(function (p, i) {
+        if (newUrls.length >= 3 || typeof p !== 'string') return;
+        if (/^data:image\//.test(p)) { var u = saveImg(p, 'before-' + pid + '-' + i); if (u) newUrls.push(u); }
+        else if (/^\/api\/leanlab\/file\//.test(p)) { newUrls.push(p); }   // รูปเดิมที่คงไว้
+      });
+      var base2 = r.baseline || {};
+      base2.beforePhotoUrls = newUrls;
+      base2.beforePhotoUrl = newUrls[0] || null;
+      r.baseline = base2;
+    }
     r.updatedAt = new Date().toISOString();
     writeR(l);
     if (r.memberId) { var ml = readM(); var mm = ml.find(function (m) { return m.id === r.memberId; }); if (mm) { mm.name = r.name; if (r.phone) mm.phone = r.phone; if (r.email) mm.email = r.email; writeM(ml); } }
@@ -1189,13 +1202,14 @@ module.exports = function (app, DATA_DIR, opts) {
 
     // ---- บันทึกว่าคืนเงิน/ยกเลิกแล้ว (ทำนอกระบบ) — ไม่แตะ Stripe เลย ----
     // ใช้เมื่อ staff คืนเงิน/ยกเลิกไปเองแล้วนอกระบบ (เช่นใน Stripe Dashboard) แค่ต้องการมาร์กสถานะให้ตรง
-    if (b.mode === 'manual') {
+    if (b.mode === 'manual' || b.mode === 'bank') {
       if (r.installment) { r.installment.status = 'cancelled'; r.installment.cancelledAt = new Date().toISOString(); }
       r.status = 'refunded';
       var mamt = Number(b.amount);
-      r.refund = { mode: 'manual_external', amount: (mamt > 0 ? mamt : 0), note: (typeof b.note === 'string' ? b.note.slice(0, 200) : 'ทำนอกระบบโดยทีมงาน'), at: new Date().toISOString() };
+      var isBank = (b.mode === 'bank');
+      r.refund = { mode: (isBank ? 'bank_transfer' : 'manual_external'), amount: (mamt > 0 ? mamt : 0), note: (typeof b.note === 'string' ? b.note.slice(0, 200) : (isBank ? 'คืนเงินผ่านโอนธนาคารโดยทีมงาน' : 'ทำนอกระบบโดยทีมงาน')), at: new Date().toISOString() };
       writeR(l);
-      console.log('[lean-lab] ' + req.params.id + ' marked refunded/cancelled MANUALLY (no Stripe) by admin');
+      console.log('[lean-lab] ' + req.params.id + ' marked refunded (' + (isBank ? 'BANK TRANSFER' : 'manual/no Stripe') + ') by admin');
       return done(r);
     }
 
