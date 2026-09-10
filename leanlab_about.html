@@ -6,204 +6,199 @@
 <title>Lean Lab X — About</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Sacramento&display=swap">
 <style>
   :root{
-    --bg:#050A12; --bg2:#03080F; --panel:#0B1420; --panel2:#0F1C2C; --line:#1E2C3D;
-    --ink:#EEF4FC; --mut:#8FA3BC;
-    --lime:#C8F56A; --cyan:#19C6FF; --blue:#1E5AFF; --green:#7CFC00; --gold:#F5C451;
-    --mut2:#6E819B;
-    --maxw:1120px;
-    --grad:linear-gradient(120deg,#19C6FF,#1E5AFF);
-    --font:"Anuphan",system-ui,-apple-system,"Segoe UI",sans-serif;
-    --disp:"Manrope","Anuphan",system-ui,sans-serif;
+    --sky1:#2E9BE8; --sky2:#1E86DD; --sky3:#8CC7F2;
+    --blue:#0F72D6; --blue-d:#0A5CB8; --band1:#1E86DD; --band2:#1362BE;
+    --ink:#173A5E; --ink2:#2B4B6F; --mut:#5E7591; --line:#E4EEF7;
+    --bg:#EEF6FE; --card:#FFFFFF; --gold:#F5B301; --good:#1FA463;
+    --maxw:1180px;
+    --font:"Anuphan","Poppins",system-ui,sans-serif;
+    --disp:"Poppins","Anuphan",system-ui,sans-serif;
+    --script:"Sacramento",cursive;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{
-    font-family:var(--font); color:var(--ink); background:var(--bg);
-    -webkit-font-smoothing:antialiased; line-height:1.6; overflow-x:hidden;
-  }
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden}
   a{color:inherit;text-decoration:none}
   img{max-width:100%}
   .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:24px}
   .eng{font-family:var(--disp)}
   .num{font-family:var(--disp);font-variant-numeric:tabular-nums}
-  .x{color:var(--cyan);text-shadow:0 0 22px rgba(25,198,255,.7),0 0 4px rgba(25,198,255,.5)}
-  .sec{padding-block:clamp(56px,9vw,104px)}
-  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:700;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
-  .eyebrow::before{content:"";width:22px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--cyan),transparent)}
-  h1,h2,h3{text-wrap:balance;letter-spacing:-.02em;line-height:1.08}
-  .h2{font-family:var(--disp);font-weight:800;font-size:clamp(1.7rem,3.6vw,2.6rem)}
-  .lead{color:var(--mut);font-size:1.05rem;max-width:60ch}
-  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:.95rem;border-radius:12px;padding:14px 24px;cursor:pointer;border:1px solid transparent;transition:transform .15s ease,box-shadow .15s ease,background .15s}
-  .btn-cta{background:var(--lime);color:#08131f;box-shadow:0 10px 30px -8px rgba(200,245,106,.5)}
-  .btn-cta:hover{transform:translateY(-2px);box-shadow:0 16px 38px -8px rgba(200,245,106,.62)}
-  .btn-ghost{background:rgba(255,255,255,.03);border-color:var(--line);color:var(--ink)}
-  .btn-ghost:hover{border-color:var(--cyan);color:#fff}
+  h1,h2,h3{letter-spacing:-.02em;line-height:1.1;text-wrap:balance}
+  .sec{padding-block:clamp(52px,7vw,88px)}
+  .sec-title{font-family:var(--disp);font-weight:800;color:var(--blue);font-size:clamp(1.4rem,3vw,2rem);letter-spacing:.01em}
+  .sec-title.on-blue{color:#fff}
+  .lead{color:var(--mut);font-size:1.02rem;max-width:60ch}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:.95rem;border-radius:12px;padding:14px 26px;cursor:pointer;border:1.5px solid transparent;transition:transform .15s,box-shadow .15s,background .15s}
+  .btn-primary{background:var(--blue);color:#fff;box-shadow:0 12px 26px -10px rgba(15,114,214,.6)}
+  .btn-primary:hover{transform:translateY(-2px);background:var(--blue-d)}
+  .btn-white{background:#fff;color:var(--blue);box-shadow:0 12px 28px -12px rgba(10,50,100,.4)}
+  .btn-white:hover{transform:translateY(-2px)}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.7);color:#fff}
+  .btn-outline:hover{background:rgba(255,255,255,.14)}
 
   /* NAV */
-  header.nav{position:sticky;top:0;z-index:50;background:rgba(5,10,18,.72);backdrop-filter:blur(14px);border-bottom:1px solid rgba(30,44,61,.7)}
-  .nav-in{display:flex;align-items:center;gap:24px;height:68px}
-  .brand{font-family:var(--disp);font-weight:800;font-size:1.15rem;letter-spacing:.01em;display:flex;align-items:center;gap:9px}
-  .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;box-shadow:0 0 18px rgba(25,198,255,.5)}
-  .nav-links{display:flex;gap:26px;margin-left:auto;font-size:.92rem;color:var(--mut);font-weight:500}
-  .nav-links a{position:relative;padding:4px 0;transition:color .15s}
-  .nav-links a:hover{color:var(--ink)}
-  .nav-links a.active{color:var(--ink)}
-  .nav-links a.active::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;border-radius:2px;background:var(--grad)}
+  header.nav{position:absolute;top:0;left:0;right:0;z-index:40}
+  .nav-in{display:flex;align-items:center;gap:26px;height:74px}
+  .brand{display:flex;align-items:center;gap:10px;color:#fff}
+  .brand .pl{width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+  .brand b{font-family:var(--disp);font-weight:800;font-size:1.18rem;letter-spacing:.02em;line-height:1}
+  .brand small{display:block;font-family:var(--disp);font-size:.56rem;letter-spacing:.22em;opacity:.85;font-weight:600;margin-top:2px}
+  .nav-links{display:flex;gap:26px;margin-left:auto;font-size:.94rem;color:rgba(255,255,255,.9);font-weight:500}
+  .nav-links a{position:relative;padding:5px 0}
+  .nav-links a:hover{color:#fff}
+  .nav-links a.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#fff;border-radius:2px}
   .nav-cta{display:flex;gap:10px;align-items:center}
-  .navtoggle{display:none;background:none;border:1px solid var(--line);border-radius:9px;width:42px;height:42px;color:var(--ink);cursor:pointer;font-size:1.2rem}
+  .sign{display:inline-flex;align-items:center;gap:8px;border:1.5px solid rgba(255,255,255,.75);color:#fff;border-radius:999px;padding:9px 18px;font-family:var(--disp);font-weight:600;font-size:.9rem}
+  .sign:hover{background:rgba(255,255,255,.14)}
+  .navtoggle{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:9px;width:42px;height:42px;color:#fff;cursor:pointer;font-size:1.2rem}
 
   /* HERO */
-  .hero{position:relative;overflow:hidden;isolation:isolate}
-  .hero .aurora{position:absolute;inset:-20% -10% auto;height:120%;z-index:-1;pointer-events:none;
-    background:
-      radial-gradient(680px 420px at 78% 8%,rgba(25,198,255,.20),transparent 62%),
-      radial-gradient(560px 420px at 12% 30%,rgba(30,90,228,.18),transparent 60%),
-      radial-gradient(520px 380px at 60% 70%,rgba(200,245,106,.08),transparent 60%);
-    animation:drift 16s ease-in-out infinite alternate}
-  @keyframes drift{from{transform:translate3d(-2%,0,0) scale(1)}to{transform:translate3d(3%,1.5%,0) scale(1.06)}}
-  .hero .grid-bg{position:absolute;inset:0;z-index:-1;opacity:.35;pointer-events:none;
-    background-image:linear-gradient(rgba(25,198,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(25,198,255,.06) 1px,transparent 1px);
-    background-size:54px 54px;mask-image:radial-gradient(120% 80% at 50% 0,#000 40%,transparent 78%)}
-  .hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding-block:clamp(48px,7vw,92px)}
-  .badge{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(180deg,#12203a,#0a1526);border:1.5px solid var(--gold);color:#FDE9B8;font-weight:700;font-size:.86rem;padding:9px 18px;border-radius:999px;box-shadow:0 0 0 3px rgba(245,196,81,.08),0 0 26px -4px rgba(245,196,81,.4)}
-  h1.hero-h{font-family:var(--disp);font-weight:800;font-size:clamp(2.9rem,7vw,4.9rem);letter-spacing:-.03em;margin:22px 0 6px}
-  .hero-sub{font-size:clamp(1.15rem,2.4vw,1.55rem);font-weight:700;color:var(--ink);letter-spacing:-.01em}
-  .hero p.lead{margin-top:16px}
-  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-  .hero-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
-  .hstat{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:12px 18px;min-width:104px}
-  .hstat b{display:block;font-family:var(--disp);font-weight:800;font-size:1.5rem;color:#fff;line-height:1}
-  .hstat span{font-size:.76rem;color:var(--mut);font-weight:500}
+  .hero{position:relative;isolation:isolate;background:linear-gradient(180deg,var(--sky2) 0%,var(--sky1) 42%,#6FB6EE 78%,#AFD8F5 100%);overflow:hidden;padding-top:74px}
+  .hero .clouds{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  .hero .cloud{position:absolute;background:radial-gradient(closest-side,rgba(255,255,255,.95),rgba(255,255,255,.75) 60%,transparent);border-radius:50%;filter:blur(2px);opacity:.9}
+  .hero .cl1{width:320px;height:120px;top:16%;left:-40px;animation:cl 30s linear infinite}
+  .hero .cl2{width:220px;height:90px;top:44%;right:8%;animation:cl 42s linear infinite}
+  .hero .cl3{width:280px;height:110px;bottom:20%;left:12%;opacity:.7;animation:cl 52s linear infinite}
+  @keyframes cl{from{transform:translateX(-30px)}50%{transform:translateX(40px)}to{transform:translateX(-30px)}}
+  .hero-in{display:grid;grid-template-columns:1.02fr .98fr;gap:32px;align-items:center;padding-block:clamp(30px,5vw,58px) clamp(120px,15vw,170px)}
+  .hero-copy .quota{display:inline-flex;align-items:center;gap:8px;background:rgba(9,30,55,.6);border:1.5px solid var(--gold);color:#FDE9B8;font-weight:700;font-size:.84rem;padding:8px 16px;border-radius:999px;box-shadow:0 0 22px -4px rgba(245,196,81,.5);backdrop-filter:blur(4px)}
+  h1.hero-h{font-family:var(--disp);font-weight:800;color:#fff;font-size:clamp(2.6rem,6.4vw,4.5rem);letter-spacing:-.02em;margin:18px 0 2px;text-shadow:0 4px 30px rgba(10,40,80,.25)}
+  h1.hero-h .x{color:#EAF6FF}
+  .hero-script{font-family:var(--script);font-size:clamp(1.8rem,4vw,2.7rem);color:#EAF6FF;line-height:1;margin:2px 0 10px;text-shadow:0 2px 16px rgba(10,40,80,.3)}
+  .hero-copy p.lead{color:rgba(255,255,255,.92);max-width:46ch}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
 
-  /* hero visual */
-  .visual{position:relative;aspect-ratio:1/1;max-width:460px;margin-inline:auto;width:100%}
-  .visual .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(25,198,255,.18)}
-  .visual .ring.r2{inset:12%;border-color:rgba(30,90,228,.16)}
-  .visual .ring.r3{inset:24%;border-color:rgba(200,245,106,.14)}
-  .visual .core{position:absolute;inset:30%;border-radius:26px;background:linear-gradient(150deg,rgba(25,198,255,.16),rgba(30,90,228,.08));border:1px solid rgba(25,198,255,.35);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px -30px rgba(25,198,255,.6),inset 0 0 40px rgba(25,198,255,.12);backdrop-filter:blur(4px)}
-  .visual .core .xbig{font-family:var(--disp);font-weight:800;font-size:clamp(3.5rem,12vw,7rem);color:#fff;text-shadow:0 0 40px rgba(25,198,255,.85)}
-  .visual .chip{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 13px;font-size:.78rem;font-weight:600;box-shadow:0 12px 30px -12px rgba(0,0,0,.7);display:flex;align-items:center;gap:7px}
-  .visual .chip i{width:8px;height:8px;border-radius:50%;flex:none}
-  .visual .c1{top:6%;left:-4%;animation:float 6s ease-in-out infinite}
-  .visual .c2{bottom:12%;right:-6%;animation:float 6s ease-in-out infinite .8s}
-  .visual .c3{bottom:-2%;left:16%;animation:float 6s ease-in-out infinite 1.6s}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-  .visual .path{position:absolute;inset:0;z-index:-1}
+  /* hero origami visual */
+  .visual{position:relative;height:100%;min-height:320px}
+  .visual svg{display:block}
+  .plane{position:absolute;top:8%;right:2%;width:min(64%,340px);filter:drop-shadow(0 22px 30px rgba(20,60,110,.35));animation:floaty 6s ease-in-out infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(-1.5deg)}}
+  .dpath{position:absolute;inset:0;z-index:-1}
+  .peaks{position:absolute;left:0;right:0;bottom:0;z-index:-1}
 
-  /* FEATURE STRIP */
-  .feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-  .feat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 20px;transition:transform .15s,border-color .15s}
-  .feat:hover{transform:translateY(-3px);border-color:rgba(25,198,255,.4)}
-  .feat .ic{width:44px;height:44px;border-radius:12px;background:rgba(25,198,255,.1);border:1px solid rgba(25,198,255,.28);display:flex;align-items:center;justify-content:center;color:var(--cyan);margin-bottom:14px}
-  .feat h3{font-size:1.02rem;font-weight:700;margin-bottom:5px}
-  .feat p{font-size:.86rem;color:var(--mut)}
+  /* low-poly mountains at hero bottom (full width) */
+  .hero .range{position:absolute;left:0;right:0;bottom:-1px;z-index:-1;line-height:0}
+  .hero .range svg{width:100%;height:auto;display:block}
 
-  /* generic section head */
-  .sec-head{max-width:70ch}
-  .sec-head .h2{margin:12px 0 10px}
+  /* INFO CARD (overlaps hero) */
+  .infocard{max-width:var(--maxw);margin:-90px auto 0;position:relative;z-index:10;background:#fff;border-radius:20px;box-shadow:0 30px 70px -30px rgba(15,60,120,.4),0 2px 0 rgba(255,255,255,.6);padding:10px}
+  .infocard .row{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:6px;align-items:stretch}
+  .icell{padding:16px 20px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--line)}
+  .icell:nth-child(4){border-right:0}
+  .icell .k{font-size:.76rem;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:6px}
+  .icell .v{font-family:var(--disp);font-weight:800;font-size:1.35rem;color:var(--ink);margin-top:3px;line-height:1}
+  .icell .v small{font-size:.78rem;color:var(--mut);font-weight:600}
+  .isearch{padding:12px}
+  .isearch .btn{height:100%;width:100%;justify-content:center}
+  @media(max-width:820px){.infocard .row{grid-template-columns:1fr 1fr}.icell{border-right:0;border-bottom:1px solid var(--line)}.isearch .btn{width:100%}}
+
+  /* FEATURES */
+  .feats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .feat{display:flex;gap:14px;align-items:flex-start}
+  .feat .ic{width:56px;height:56px;flex:none;border-radius:16px;background:linear-gradient(160deg,#eaf4fe,#d7ebfc);display:flex;align-items:center;justify-content:center;color:var(--blue);box-shadow:0 10px 22px -12px rgba(15,114,214,.5)}
+  .feat h3{font-family:var(--disp);font-weight:700;font-size:1rem;color:var(--ink)}
+  .feat p{font-size:.85rem;color:var(--mut);margin-top:3px}
+
+  /* section head row */
+  .head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+  .viewall{display:inline-flex;align-items:center;gap:8px;color:var(--blue);font-weight:600;font-size:.9rem}
+  .viewall .arw{width:30px;height:30px;border-radius:50%;background:#eaf4fe;display:flex;align-items:center;justify-content:center}
 
   /* ABOUT split */
-  .about{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center}
+  .about{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;background:#fff;border-radius:24px;padding:clamp(24px,4vw,44px);box-shadow:0 24px 60px -34px rgba(15,60,120,.3)}
   .about .body p{color:var(--mut);margin-top:14px}
   .about .body p strong{color:var(--ink);font-weight:700}
-  .quote-card{background:linear-gradient(160deg,rgba(25,198,255,.08),rgba(30,90,228,.04));border:1px solid rgba(25,198,255,.25);border-radius:20px;padding:28px;position:relative;overflow:hidden}
-  .quote-card::before{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(25,198,255,.25),transparent 70%)}
-  .quote-card .big{font-family:var(--disp);font-weight:800;font-size:2rem;color:#fff;line-height:1.15;position:relative}
-  .quote-card .sm{color:var(--mut);margin-top:12px;position:relative;font-size:.95rem}
+  .about .art{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
 
-  /* JOURNEY */
-  .journey{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-  .onsite{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;position:relative;overflow:hidden;transition:transform .15s,border-color .15s}
-  .onsite:hover{transform:translateY(-4px);border-color:rgba(200,245,106,.35)}
-  .onsite .tag{font-family:var(--disp);font-weight:700;font-size:.72rem;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
-  .onsite .no{font-family:var(--disp);font-weight:800;font-size:2.6rem;line-height:1;background:linear-gradient(180deg,#fff,#5e79a0);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 12px}
-  .onsite h3{font-size:1.12rem;font-weight:800;margin-bottom:7px}
-  .onsite h3 .x{font-size:1.12rem}
-  .onsite p{font-size:.86rem;color:var(--mut)}
-  .onsite .bar{height:3px;border-radius:3px;margin-top:16px;background:linear-gradient(90deg,var(--cyan),var(--blue))}
-  .onsite:nth-child(2) .bar{background:linear-gradient(90deg,var(--blue),#7C3AED)}
-  .onsite:nth-child(3) .bar{background:linear-gradient(90deg,#7C3AED,var(--lime))}
-  .onsite:nth-child(4) .bar{background:linear-gradient(90deg,var(--lime),var(--green))}
+  /* JOURNEY cards (popular-packages style) */
+  .jgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .jcard{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 18px 44px -26px rgba(15,60,120,.34);transition:transform .16s,box-shadow .16s}
+  .jcard:hover{transform:translateY(-6px);box-shadow:0 28px 56px -26px rgba(15,60,120,.44)}
+  .jcap{height:120px;position:relative;display:flex;align-items:flex-end;padding:14px;color:#fff}
+  .jcap .jn{font-family:var(--disp);font-weight:800;font-size:2.4rem;opacity:.9;line-height:1}
+  .jcap .jt{position:absolute;top:12px;left:14px;font-family:var(--disp);font-weight:700;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+  .jcard:nth-child(1) .jcap{background:linear-gradient(150deg,#37a0ea,#1e7fd8)}
+  .jcard:nth-child(2) .jcap{background:linear-gradient(150deg,#4f8ff0,#2f6fe0)}
+  .jcard:nth-child(3) .jcap{background:linear-gradient(150deg,#6a7bf0,#4a56d8)}
+  .jcard:nth-child(4) .jcap{background:linear-gradient(150deg,#22b0c8,#1287c8)}
+  .jbody{padding:16px 18px 20px}
+  .jbody h3{font-family:var(--disp);font-weight:800;font-size:1.02rem;color:var(--ink)}
+  .jbody h3 .x{color:var(--blue)}
+  .jbody p{font-size:.85rem;color:var(--mut);margin-top:6px}
 
   /* PILLARS */
-  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .pillar{display:flex;gap:13px;align-items:flex-start;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .pillar .pic{width:38px;height:38px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(200,245,106,.1);border:1px solid rgba(200,245,106,.3);color:var(--lime)}
-  .pillar h3{font-size:.98rem;font-weight:700;margin-bottom:3px}
-  .pillar p{font-size:.82rem;color:var(--mut)}
+  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px}
+  .pil{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;gap:12px;align-items:flex-start}
+  .pil .pic{width:38px;height:38px;flex:none;border-radius:11px;background:#eaf4fe;color:var(--blue);display:flex;align-items:center;justify-content:center}
+  .pil h3{font-family:var(--disp);font-weight:700;font-size:.96rem;color:var(--ink)}
+  .pil p{font-size:.8rem;color:var(--mut);margin-top:2px}
 
-  /* RESULTS */
-  .results-band{background:linear-gradient(180deg,#081221,#050b16);border-block:1px solid var(--line)}
-  .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:30px}
-  .metric{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 16px;text-align:center}
-  .metric .ic{width:40px;height:40px;border-radius:11px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:rgba(25,198,255,.1);border:1px solid rgba(25,198,255,.28);color:var(--cyan)}
-  .metric h3{font-size:.92rem;font-weight:700}
-  .metric .ba{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;font-family:var(--disp);font-size:.78rem;color:var(--mut);font-weight:600}
-  .metric .ba .arw{color:var(--lime)}
-  .note-inline{font-size:.82rem;color:var(--mut2);margin-top:16px}
-
-  /* PACKAGES */
-  .pkgs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
-  .pkg{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:26px 24px;display:flex;flex-direction:column;position:relative}
-  .pkg.feat-pkg{border-color:rgba(25,198,255,.5);background:linear-gradient(180deg,rgba(25,198,255,.07),var(--panel));box-shadow:0 24px 60px -30px rgba(25,198,255,.5)}
-  .pkg .flag{position:absolute;top:-12px;left:24px;background:var(--grad);color:#fff;font-family:var(--disp);font-weight:700;font-size:.72rem;letter-spacing:.06em;padding:5px 13px;border-radius:999px;text-transform:uppercase}
-  .pkg .pk-name{font-family:var(--disp);font-weight:800;font-size:1.2rem}
-  .pkg .pk-desc{font-size:.84rem;color:var(--mut);margin-top:4px;min-height:38px}
-  .pkg .price{font-family:var(--disp);font-weight:800;font-size:2.3rem;color:#fff;margin:16px 0 2px;letter-spacing:-.02em}
-  .pkg .price small{font-size:.9rem;color:var(--mut);font-weight:600}
-  .pkg .per{font-size:.78rem;color:var(--mut)}
-  .pkg ul{list-style:none;margin:18px 0;display:flex;flex-direction:column;gap:10px}
-  .pkg li{display:flex;gap:9px;font-size:.88rem;color:#cdd9e8}
-  .pkg li svg{flex:none;color:var(--green);margin-top:3px}
-  .pkg .btn{width:100%;justify-content:center;margin-top:auto}
+  /* PRICING (blue band) */
+  .pricing{position:relative;background:linear-gradient(150deg,var(--band1),var(--band2));overflow:hidden}
+  .pricing .plane-bg{position:absolute;left:-40px;top:40%;width:180px;opacity:.9;filter:drop-shadow(0 18px 24px rgba(0,0,0,.2))}
+  .pricing .plane-bg2{position:absolute;right:-30px;bottom:6%;width:150px;opacity:.7;transform:rotate(12deg)}
+  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:stretch;position:relative;z-index:1}
+  .pcard{background:#fff;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;position:relative;box-shadow:0 26px 60px -30px rgba(0,20,50,.5)}
+  .pcard.pop{transform:translateY(-10px);box-shadow:0 40px 70px -30px rgba(0,20,50,.6)}
+  .pcard .flag{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);background:var(--blue);color:#fff;font-family:var(--disp);font-weight:700;font-size:.72rem;letter-spacing:.04em;padding:5px 16px;border-radius:999px;white-space:nowrap}
+  .pcard .pk{font-family:var(--disp);font-weight:800;font-size:1.15rem;color:var(--ink);text-align:center}
+  .pcard .pd{font-size:.82rem;color:var(--mut);text-align:center;margin-top:4px;min-height:34px}
+  .pcard .pp{font-family:var(--disp);font-weight:800;font-size:2.2rem;color:var(--blue);text-align:center;margin-top:12px;line-height:1}
+  .pcard .pp small{font-size:.85rem;color:var(--mut);font-weight:600}
+  .pcard .per{font-size:.76rem;color:var(--mut);text-align:center;margin-top:3px}
+  .pcard ul{list-style:none;margin:18px 0;display:flex;flex-direction:column;gap:11px}
+  .pcard li{display:flex;gap:9px;font-size:.86rem;color:var(--ink2)}
+  .pcard li svg{flex:none;color:var(--good);margin-top:3px}
+  .pcard .btn{width:100%;justify-content:center;margin-top:auto}
+  .pcard .btn.sel{background:#fff;color:var(--blue);border-color:#cfe3f7}
+  .pcard.pop .btn.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
 
   /* STEPS */
-  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:s}
-  .step{position:relative;padding:22px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:16px}
-  .step .n{counter-increment:s;font-family:var(--disp);font-weight:800;font-size:1rem;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--grad);color:#fff;box-shadow:0 0 20px -4px rgba(25,198,255,.6);margin-bottom:14px}
-  .step .n::before{content:counter(s)}
-  .step h3{font-size:1rem;font-weight:700;margin-bottom:5px}
-  .step p{font-size:.85rem;color:var(--mut)}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+  .step{text-align:center;position:relative}
+  .step .sic{width:74px;height:74px;margin:0 auto 14px;border-radius:20px;background:linear-gradient(160deg,#eaf4fe,#d3e8fb);display:flex;align-items:center;justify-content:center;color:var(--blue);box-shadow:0 14px 30px -14px rgba(15,114,214,.5)}
+  .step h3{font-family:var(--disp);font-weight:700;font-size:1rem;color:var(--ink)}
+  .step h3 b{color:var(--blue);margin-right:5px}
+  .step p{font-size:.83rem;color:var(--mut);margin-top:5px;max-width:22ch;margin-inline:auto}
 
-  /* STATS + QUOTE band */
-  .impact{background:linear-gradient(120deg,#0a1729,#0b1420);border:1px solid var(--line);border-radius:24px;padding:clamp(28px,4vw,44px);display:grid;grid-template-columns:1.15fr 1fr;gap:36px;align-items:center;position:relative;overflow:hidden}
-  .impact::before{content:"";position:absolute;left:-60px;bottom:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(200,245,106,.14),transparent 70%)}
-  .impact-stats{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-  .istat b{font-family:var(--disp);font-weight:800;font-size:2.3rem;color:#fff;display:block;line-height:1}
-  .istat b .u{color:var(--cyan)}
-  .istat span{font-size:.85rem;color:var(--mut)}
-  .review{border-left:2px solid rgba(25,198,255,.4);padding-left:20px}
-  .review .q{font-size:1.05rem;color:#e8f0fb;font-weight:500}
-  .review .ph{display:inline-block;margin-top:14px;font-size:.78rem;color:var(--mut2);background:rgba(255,255,255,.04);border:1px dashed var(--line);border-radius:8px;padding:6px 11px}
+  /* IMPACT band */
+  .impact{background:linear-gradient(150deg,var(--band1),var(--band2));border-radius:26px;padding:clamp(28px,4vw,44px);display:grid;grid-template-columns:1.2fr 1fr;gap:34px;align-items:center;position:relative;overflow:hidden}
+  .impact .istats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .istat{text-align:center;color:#fff}
+  .istat .ii{width:44px;height:44px;margin:0 auto 8px;border-radius:12px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}
+  .istat b{font-family:var(--disp);font-weight:800;font-size:1.7rem;display:block;line-height:1}
+  .istat span{font-size:.78rem;opacity:.85}
+  .review{color:#fff;border-left:2px solid rgba(255,255,255,.5);padding-left:20px}
+  .review .q{font-size:1.02rem;line-height:1.55}
+  .review .ph{display:inline-block;margin-top:12px;font-size:.76rem;background:rgba(255,255,255,.14);border:1px dashed rgba(255,255,255,.5);border-radius:8px;padding:6px 11px}
 
-  /* FINAL CTA */
-  .final{text-align:center;position:relative;overflow:hidden;border-radius:26px;background:linear-gradient(150deg,rgba(25,198,255,.14),rgba(30,90,228,.06));border:1px solid rgba(25,198,255,.3);padding:clamp(40px,6vw,72px) 24px}
-  .final .aur{position:absolute;inset:0;z-index:0;background:radial-gradient(420px 240px at 50% 0,rgba(200,245,106,.14),transparent 62%);pointer-events:none}
-  .final > *{position:relative;z-index:1}
-  .final h2{font-family:var(--disp);font-weight:800;font-size:clamp(1.8rem,4vw,2.8rem)}
-  .final p{color:var(--mut);margin:12px auto 26px;max-width:52ch}
+  /* FINAL */
+  .final{text-align:center;background:#fff;border-radius:26px;padding:clamp(38px,6vw,64px) 24px;box-shadow:0 26px 60px -34px rgba(15,60,120,.34);position:relative;overflow:hidden}
+  .final h2{font-family:var(--disp);font-weight:800;font-size:clamp(1.7rem,4vw,2.6rem);color:var(--ink)}
+  .final h2 .x{color:var(--blue)}
+  .final p{color:var(--mut);margin:12px auto 24px;max-width:52ch}
 
-  footer{border-top:1px solid var(--line);margin-top:8px}
-  .foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-block:30px;color:var(--mut);font-size:.86rem}
-  .foot-in .brand{color:var(--ink)}
-  .foot-links{display:flex;gap:20px;flex-wrap:wrap}
-  .foot-links a:hover{color:var(--ink)}
+  footer{background:#0e2c4d;color:#cfe0f0}
+  .foot-in{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-block:34px}
+  .foot-in .brand{color:#fff}
+  .foot-in .brand small{opacity:.7}
+  .foot-links{display:flex;gap:22px;flex-wrap:wrap;font-size:.9rem}
+  .foot-links a:hover{color:#fff}
 
-  /* responsive */
   @media(max-width:920px){
     .hero-in,.about,.impact{grid-template-columns:1fr}
-    .visual{order:-1;max-width:340px}
-    .feats,.journey,.metrics,.pkgs,.steps,.pillars,.impact-stats{grid-template-columns:1fr 1fr}
-    .nav-links{display:none}
-    .navtoggle{display:inline-flex}
+    .visual{order:-1;min-height:240px;max-width:360px;margin-inline:auto;width:100%}
+    .feats,.jgrid,.pgrid,.steps,.pillars,.impact .istats{grid-template-columns:1fr 1fr}
+    .nav-links{display:none}.navtoggle{display:inline-flex}
+    .pcard.pop{transform:none}
   }
   @media(max-width:560px){
-    .feats,.journey,.metrics,.pkgs,.steps,.pillars{grid-template-columns:1fr}
-    .hero-stats{gap:10px}
-    .nav-cta .btn-ghost{display:none}
+    .feats,.jgrid,.pgrid,.steps,.pillars{grid-template-columns:1fr}
+    .impact .istats{grid-template-columns:1fr 1fr}
+    .sign{display:none}
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
@@ -213,17 +208,18 @@
 <!-- NAV -->
 <header class="nav">
   <div class="wrap nav-in">
-    <a class="brand" href="#top">LEAN LAB <span class="x">X</span></a>
+    <a class="brand" href="/leanlab">
+      <span class="pl"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M2 21l20-9L2 3v7l14 2-14 2z"/></svg></span>
+      <span><b>LEAN LAB X</b><small>TRANSFORM YOUR BODY</small></span>
+    </a>
     <nav class="nav-links">
-      <a href="https://leanlab.cloverxth.com/leanlab">หน้าหลัก</a>
-      <a href="#about" class="active">เกี่ยวกับเรา</a>
-      <a href="#journey">The Journey</a>
+      <a href="/leanlab">หน้าหลัก</a>
+      <a href="#top">เกี่ยวกับเรา</a>
       <a href="#results">ผลลัพธ์</a>
       <a href="#packages">แพ็คเกจ</a>
     </nav>
     <div class="nav-cta">
-      <a class="btn btn-ghost" href="#packages">ดูแพ็คเกจ</a>
-      <a class="btn btn-cta" href="https://leanlab.cloverxth.com/leanlab">สมัครเข้าร่วม</a>
+      <a class="sign" href="https://leanlab.cloverxth.com/leanlab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>สมัคร / เข้าสู่ระบบ</a>
     </div>
     <button class="navtoggle" aria-label="เมนู" onclick="document.querySelector('.nav-links').style.display='flex'">☰</button>
   </div>
@@ -231,223 +227,143 @@
 
 <!-- HERO -->
 <section class="hero" id="top">
-  <div class="aurora"></div>
-  <div class="grid-bg"></div>
+  <div class="clouds"><div class="cloud cl1"></div><div class="cloud cl2"></div><div class="cloud cl3"></div></div>
   <div class="wrap hero-in">
     <div class="hero-copy">
-      <span class="badge">🎁 จำกัดสิทธิ์เพียง 100 สิทธิ์เท่านั้น</span>
+      <span class="quota">🎁 รับโปรโมชั่น Grand Slam</span>
       <h1 class="hero-h">LEAN LAB <span class="x">X</span></h1>
-      <div class="hero-sub">แล็บเปลี่ยนร่าง ที่วัดผลได้จริง ใน 1 ซีซั่น</div>
-      <p class="lead">ไม่ใช่แค่คอร์สลดน้ำหนัก — แต่คือโปรแกรมทรานส์ฟอร์มร่างกายแบบมีโค้ชดูแลใกล้ชิด วัดผล 5 ตัวชี้วัด และเดินทางไปด้วยกันตลอด 4 Onsite พร้อมคอมมูนิตี้ที่ผลักดันคุณให้ถึงเป้า</p>
+      <div class="hero-script">Know. Build. Transform.</div>
+      <p class="lead">แล็บเปลี่ยนร่างที่วัดผลได้จริง ใน 1 ซีซั่น — มีทีมโค้ชดูแลใกล้ชิด วัดผล 5 ตัวชี้วัด และเดินทางไปด้วยกันตลอด 4 Onsite</p>
       <div class="hero-cta">
-        <a class="btn btn-cta" href="https://leanlab.cloverxth.com/leanlab">สมัครเข้าร่วมโครงการ →</a>
-        <a class="btn btn-ghost" href="#journey">ดู The Journey</a>
-      </div>
-      <div class="hero-stats">
-        <div class="hstat"><b class="num">100</b><span>สิทธิ์ Season 1</span></div>
-        <div class="hstat"><b class="num">4</b><span>Onsite Journey</span></div>
-        <div class="hstat"><b class="num">5</b><span>ตัวชี้วัดร่างกาย</span></div>
+        <a class="btn btn-white" href="https://leanlab.cloverxth.com/leanlab">สมัครเข้าร่วมโครงการ
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></a>
       </div>
     </div>
     <div class="visual">
-      <svg class="path" viewBox="0 0 400 400" fill="none" aria-hidden="true">
-        <path d="M20 300 Q160 340 360 90" stroke="rgba(25,198,255,.4)" stroke-width="2" stroke-dasharray="5 9" stroke-linecap="round"/>
-        <circle cx="360" cy="90" r="4" fill="#19C6FF"/>
+      <svg class="dpath" viewBox="0 0 400 360" fill="none" aria-hidden="true">
+        <path d="M30 300 Q150 340 250 150 T360 60" stroke="rgba(255,255,255,.85)" stroke-width="2.5" stroke-dasharray="4 10" stroke-linecap="round"/>
+        <circle cx="34" cy="300" r="7" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.5"/>
       </svg>
-      <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
-      <div class="core"><span class="xbig">X</span></div>
-      <div class="chip c1"><i style="background:#7CFC00"></i>ไขมัน −8.2%</div>
-      <div class="chip c2"><i style="background:#19C6FF"></i>กล้ามเนื้อ +2.4kg</div>
-      <div class="chip c3"><i style="background:#C8F56A"></i>Before → After</div>
+      <!-- origami paper plane -->
+      <svg class="plane" viewBox="0 0 300 220" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="pw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dbeafd"/></linearGradient>
+          <linearGradient id="pw2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfe3fb"/><stop offset="1" stop-color="#a9cdf3"/></linearGradient>
+        </defs>
+        <path d="M20 120 L280 20 L150 210 L120 150 Z" fill="url(#pw)"/>
+        <path d="M150 210 L120 150 L200 118 Z" fill="url(#pw2)"/>
+        <path d="M20 120 L120 150 L200 118 L280 20 Z" fill="#eef6ff" opacity=".65"/>
+        <path d="M120 150 L280 20 L200 118 Z" fill="url(#pw2)" opacity=".85"/>
+      </svg>
     </div>
+  </div>
+  <!-- low-poly mountain range -->
+  <div class="range">
+    <svg viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true">
+      <polygon points="0,220 0,150 180,90 320,150 300,220" fill="#eaf4fd"/>
+      <polygon points="260,220 430,70 560,140 620,220" fill="#dcecfb"/>
+      <polygon points="540,220 760,50 900,130 980,220" fill="#f2f9ff"/>
+      <polygon points="900,220 1080,80 1220,150 1440,110 1440,220" fill="#e3f0fc"/>
+      <polygon points="1120,220 1280,95 1440,160 1440,220" fill="#d3e7f9"/>
+      <polygon points="0,220 1440,220 1440,185 0,185" fill="#ffffff" opacity=".65"/>
+    </svg>
   </div>
 </section>
 
-<!-- FEATURE STRIP -->
-<section class="sec" style="padding-top:clamp(24px,4vw,44px)">
+<!-- INFO CARD -->
+<div class="wrap"><div class="infocard">
+  <div class="row">
+    <div class="icell"><span class="k">🎟️ Season 1</span><span class="v num">100 <small>สิทธิ์</small></span></div>
+    <div class="icell"><span class="k">📍 Onsite Journey</span><span class="v num">4 <small>ครั้ง</small></span></div>
+    <div class="icell"><span class="k">📊 วัดผลร่างกาย</span><span class="v num">5 <small>ตัวชี้วัด</small></span></div>
+    <div class="icell"><span class="k">🏋️ ทีมโค้ช</span><span class="v">ดูแลใกล้ชิด</span></div>
+    <div class="isearch"><a class="btn btn-primary" href="https://leanlab.cloverxth.com/leanlab">สมัครเลย</a></div>
+  </div>
+</div></div>
+
+<!-- PRICING -->
+<section class="sec pricing" id="packages">
+  <svg class="plane-bg" viewBox="0 0 300 220" fill="none" aria-hidden="true"><path d="M20 120 L280 20 L150 210 L120 150 Z" fill="#ffffff" opacity=".9"/><path d="M150 210 L120 150 L200 118 Z" fill="#cfe3fb"/></svg>
   <div class="wrap">
-    <div class="feats">
-      <div class="feat">
-        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <h3>ทีมโค้ชมืออาชีพ</h3>
-        <p>ดูแลใกล้ชิดตลอดซีซั่น ปรับแผนให้เหมาะกับร่างกายคุณจริง ๆ</p>
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="sec-title on-blue">แพ็คเกจ</div>
+      <p style="color:rgba(255,255,255,.9);margin-top:8px;font-size:1.02rem">เลือกแพ็คเกจที่ใช่ — เริ่มต้นด้วยค่าสมัคร หรือจัดเต็มแบบ Grand Slam</p>
+    </div>
+    <div class="pgrid">
+      <div class="pcard">
+        <div class="pk">ค่าสมัคร</div>
+        <div class="pd">เริ่มต้นเข้าร่วมโครงการ เหมาะกับผู้เริ่มต้น</div>
+        <div class="pp">฿3,900</div><div class="per">ต่อคน</div>
+        <ul><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เข้าร่วม 4 Onsite Journey</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>วัดผล 5 ตัวชี้วัดร่างกาย</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เข้าคอมมูนิตี้ผู้เข้าร่วม</li></ul>
+        <a class="btn sel" href="https://leanlab.cloverxth.com/leanlab">เลือกแพ็คเกจ</a>
       </div>
-      <div class="feat">
-        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
-        <h3>วัดผลจริง 5 ตัวชี้วัด</h3>
-        <p>น้ำหนัก ไขมัน กล้ามเนื้อ V-Fat มวลน้ำ — เทียบ Before → After ทุกคน</p>
+      <div class="pcard">
+        <div class="pk">ผ่อนสบาย</div>
+        <div class="pd">แบ่งจ่ายเป็นงวด เริ่มดูแลตัวเองได้เลย</div>
+        <div class="pp">฿7,490<small> ×6</small></div><div class="per">ตัดผ่านบัตรอัตโนมัติ</div>
+        <ul><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>แบ่งจ่าย 6 งวด สบายกระเป๋า</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ได้สิทธิ์เต็มเหมือนจ่ายเต็ม</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เริ่ม Onsite ได้ทันที</li></ul>
+        <a class="btn sel" href="https://leanlab.cloverxth.com/leanlab">เลือกผ่อนชำระ</a>
       </div>
-      <div class="feat">
-        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
-        <h3>คอมมูนิตี้ผลักดัน</h3>
-        <p>เดินทางไปพร้อมเพื่อนร่วมซีซั่น มีแรงฮึด ไม่ล้มเลิกกลางทาง</p>
+      <div class="pcard pop">
+        <span class="flag">แนะนำ</span>
+        <div class="pk">Grand Slam</div>
+        <div class="pd">จัดเต็มทั้งซีซั่น ดูแลครบ คุ้มที่สุด</div>
+        <div class="pp">฿32,460<small> เริ่มต้น</small></div><div class="per">ต่อคน · เซตเริ่มต้น</div>
+        <ul><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ครบทุกอย่างในค่าสมัคร</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>โปรแกรมดูแลเข้มข้นตลอดซีซั่น</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>สิทธิ์ลุ้นรางวัลผู้เปลี่ยนแปลงยอดเยี่ยม</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ดูแลใกล้ชิดเป็นพิเศษ</li></ul>
+        <a class="btn sel" href="https://leanlab.cloverxth.com/leanlab">สมัคร Grand Slam</a>
       </div>
-      <div class="feat">
-        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 8 9 8 9m10 0h1.5a2.5 2.5 0 0 0 0-5C17 4 16 9 16 9M12 3v6m-6 0h12v3H6zm1 3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9"/></svg></div>
-        <h3>โอกาส &amp; รางวัล</h3>
-        <p>ผู้เปลี่ยนแปลงได้ดีที่สุดมีรางวัลและโอกาสต่อยอดรออยู่</p>
+      <div class="pcard">
+        <div class="pk">Grand Slam · เต็มรูปแบบ</div>
+        <div class="pd">เซตใหญ่ที่สุด สำหรับผลลัพธ์สูงสุด</div>
+        <div class="pp">฿44,940</div><div class="per">ต่อคน · เต็มรูปแบบ</div>
+        <ul><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ครบทุกอย่างในแพ็คเกจ Grand Slam</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เซตใหญ่ที่สุด · การดูแลเต็มรูปแบบ</li><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เหมาะกับผู้ที่อยากได้ผลลัพธ์สูงสุด</li></ul>
+        <a class="btn sel" href="https://leanlab.cloverxth.com/leanlab">สมัครแพ็คเกจนี้</a>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ABOUT -->
-<section class="sec" id="about">
-  <div class="wrap about">
-    <div class="body">
-      <span class="eyebrow">เกี่ยวกับเรา</span>
-      <h2 class="h2">Lean Lab คือ “แล็บ” ไม่ใช่คอร์สทั่วไป</h2>
-      <p>เราเชื่อว่าการเปลี่ยนร่างที่ยั่งยืน เกิดจาก <strong>ความรู้ที่ถูกต้อง + การวัดผลที่จับต้องได้ + คนที่เดินไปด้วยกัน</strong> ไม่ใช่การอดหรือหักโหมชั่วคราว</p>
-      <p>ตลอด 1 ซีซั่น คุณจะได้เรียนรู้ร่างกายตัวเอง ผ่าน 4 Onsite และการวัด 5 ตัวชี้วัด ไปพร้อมทีมโค้ชและเพื่อนร่วมทาง จนได้ผลลัพธ์ที่ <strong>เห็นเป็นตัวเลข</strong> ไม่ใช่แค่ความรู้สึก</p>
-      <p>Season 1 เปิดรับ <strong>จำกัดเพียง 100 สิทธิ์</strong> เพื่อให้ทุกคนได้รับการดูแลอย่างเต็มที่</p>
-    </div>
-    <div class="quote-card">
-      <div class="big">“รู้จักร่างของคุณ<br>แล้วปลดล็อก X ของคุณ”</div>
-      <div class="sm">ปรัชญาของ Lean Lab — เริ่มจากรู้จักตัวเอง (Know Your X) แล้วค่อย ๆ สร้าง เปลี่ยน และปลดล็อกศักยภาพที่ซ่อนอยู่</div>
-    </div>
-  </div>
-</section>
-
-<!-- JOURNEY -->
-<section class="sec" id="journey" style="background:linear-gradient(180deg,transparent,rgba(11,20,32,.5),transparent)">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">The Journey · Onsite Journey 4</span>
-      <h2 class="h2">4 Onsite ที่จะเปลี่ยนคุณทีละก้าว</h2>
-      <p class="lead">แต่ละ Onsite คือหมุดหมายของการเดินทาง — จากรู้จักร่างกาย สู่การปลดล็อกเวอร์ชันที่ดีที่สุดของคุณ</p>
-    </div>
-    <div class="journey" style="margin-top:34px">
-      <div class="onsite">
-        <div class="tag">Onsite 1</div><div class="no">01</div>
-        <h3>KNOW YOUR <span class="x">X</span></h3>
-        <p>วัดค่าตั้งต้น 5 ตัวชี้วัด รู้จักร่างกายตัวเอง และตั้งเป้าที่เป็นไปได้จริง</p>
-        <div class="bar"></div>
-      </div>
-      <div class="onsite">
-        <div class="tag">Onsite 2</div><div class="no">02</div>
-        <h3>BUILD</h3>
-        <p>วางรากฐานพฤติกรรม โภชนาการ และการเคลื่อนไหว ให้กลายเป็นนิสัยใหม่</p>
-        <div class="bar"></div>
-      </div>
-      <div class="onsite">
-        <div class="tag">Onsite 3</div><div class="no">03</div>
-        <h3>TRANSFORM</h3>
-        <p>เร่งการเปลี่ยนแปลง ปรับแผนตามผลจริง เห็นตัวเลขขยับชัดเจน</p>
-        <div class="bar"></div>
-      </div>
-      <div class="onsite">
-        <div class="tag">Onsite 4</div><div class="no">04</div>
-        <h3>UNLOCK YOUR <span class="x">X</span></h3>
-        <p>สรุปผล Before → After ฉลองความสำเร็จ และวางแผนรักษาผลระยะยาว</p>
-        <div class="bar"></div>
-      </div>
-    </div>
-    <!-- 4 PILLARS -->
-    <div class="pillars" style="margin-top:18px">
-      <div class="pillar"><div class="pic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div><h3>Knowledge</h3><p>ความรู้ที่ใช้ได้จริง ติดตัวไปตลอดชีวิต</p></div></div>
-      <div class="pillar"><div class="pic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div><div><h3>Connection</h3><p>คอมมูนิตี้และเครือข่ายคนสุขภาพดี</p></div></div>
-      <div class="pillar"><div class="pic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></div><div><h3>Opportunity</h3><p>โอกาส รางวัล และการต่อยอดหลังจบ</p></div></div>
-      <div class="pillar"><div class="pic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></div><div><h3>Healthier You</h3><p>เวอร์ชันที่แข็งแรงและมั่นใจกว่าเดิม</p></div></div>
-    </div>
+    <p style="text-align:center;color:rgba(255,255,255,.8);font-size:.82rem;margin-top:22px">ราคาและเงื่อนไขอ้างอิงตามโครงสร้างจริงของ Lean Lab Season 1</p>
   </div>
 </section>
 
 <!-- RESULTS -->
-<section class="sec results-band" id="results">
+<section class="sec" id="results" style="background:#fff">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">ผลลัพธ์ที่วัดได้</span>
-      <h2 class="h2">ทุกคนวัด 5 ตัวชี้วัด — เทียบ Before → After</h2>
-      <p class="lead">เราไม่วัดกันที่ความรู้สึก แต่วัดที่ตัวเลขจริงของร่างกายคุณ ตั้งแต่วันแรกจนจบซีซั่น</p>
+    <div style="text-align:center;max-width:64ch;margin-inline:auto">
+      <div class="sec-title">ผลลัพธ์ที่วัดได้</div>
+      <p class="lead" style="margin:8px auto 0">ทุกคนวัด 5 ตัวชี้วัด เทียบ Before → After ตั้งแต่วันแรกจนจบซีซั่น — วัดกันที่ตัวเลขจริง ไม่ใช่ความรู้สึก</p>
     </div>
-    <div class="metrics">
-      <div class="metric"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11l1.5 13h-14z"/><path d="M9 6.5a3 3 0 0 1 6 0"/></svg></div><h3>น้ำหนัก</h3><div class="ba">Before <span class="arw">→</span> After</div></div>
-      <div class="metric"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s6 5.5 6 11a6 6 0 0 1-12 0c0-5.5 6-11 6-11z"/></svg></div><h3>ไขมัน %</h3><div class="ba">Before <span class="arw">→</span> After</div></div>
-      <div class="metric"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5 4 9m2.5-2.5L9 4m11 5-2.5 2.5M20 9l-2.5-2.5M7 17l10-10"/><path d="M2 12l3 3m14-6-3-3"/></svg></div><h3>กล้ามเนื้อ</h3><div class="ba">Before <span class="arw">→</span> After</div></div>
-      <div class="metric"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="5"/><path d="M3 12c0 4 4 7 9 7s9-3 9-7"/></svg></div><h3>V-Fat</h3><div class="ba">Before <span class="arw">→</span> After</div></div>
-      <div class="metric"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.7S6 9 6 14a6 6 0 0 0 12 0c0-5-6-11.3-6-11.3z"/></svg></div><h3>มวลน้ำ %</h3><div class="ba">Before <span class="arw">→</span> After</div></div>
+    <div class="feats" style="grid-template-columns:repeat(5,1fr);margin-top:34px;text-align:center">
+      <div class="feat" style="flex-direction:column;align-items:center"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11l1.5 13h-14z"/><path d="M9 6.5a3 3 0 0 1 6 0"/></svg></div><div><h3>น้ำหนัก</h3><p>Before → After</p></div></div>
+      <div class="feat" style="flex-direction:column;align-items:center"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s6 5.5 6 11a6 6 0 0 1-12 0c0-5.5 6-11 6-11z"/></svg></div><div><h3>ไขมัน %</h3><p>Before → After</p></div></div>
+      <div class="feat" style="flex-direction:column;align-items:center"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5 4 9l3 3-3 3 2.5 2.5M17.5 6.5 20 9l-3 3 3 3-2.5 2.5M8 16 16 8"/></svg></div><div><h3>กล้ามเนื้อ</h3><p>Before → After</p></div></div>
+      <div class="feat" style="flex-direction:column;align-items:center"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="5"/><path d="M3 12c0 4 4 7 9 7s9-3 9-7"/></svg></div><div><h3>V-Fat</h3><p>Before → After</p></div></div>
+      <div class="feat" style="flex-direction:column;align-items:center"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.7S6 9 6 14a6 6 0 0 0 12 0c0-5-6-11.3-6-11.3z"/></svg></div><div><h3>มวลน้ำ %</h3><p>Before → After</p></div></div>
     </div>
-    <p class="note-inline">* ค่าตัวเลขที่แสดงในหน้านี้เป็นภาพประกอบกรอบการวัดผล — สถิติจริงของ Season 1 จะอัปเดตหลังจบโครงการ</p>
-  </div>
-</section>
-
-<!-- PACKAGES -->
-<section class="sec" id="packages">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">แพ็คเกจ</span>
-      <h2 class="h2">เลือกแพ็คเกจที่ใช่สำหรับคุณ</h2>
-      <p class="lead">เริ่มต้นด้วยค่าสมัคร หรือจัดเต็มแบบ Grand Slam พร้อมตัวเลือกผ่อนสบาย ๆ</p>
-    </div>
-    <div class="pkgs" style="margin-top:34px">
-      <div class="pkg">
-        <div class="pk-name">ค่าสมัคร</div>
-        <div class="pk-desc">เริ่มต้นเข้าร่วมโครงการ เหมาะสำหรับผู้เริ่มต้น</div>
-        <div class="price">฿3,900</div>
-        <div class="per">ต่อคน</div>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เข้าร่วม 4 Onsite Journey</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>วัดผล 5 ตัวชี้วัดร่างกาย</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เข้าคอมมูนิตี้ผู้เข้าร่วม</li>
-        </ul>
-        <a class="btn btn-ghost" href="https://leanlab.cloverxth.com/leanlab">เลือกแพ็คเกจนี้</a>
-      </div>
-      <div class="pkg feat-pkg">
-        <span class="flag">แนะนำ</span>
-        <div class="pk-name">Grand Slam</div>
-        <div class="pk-desc">จัดเต็มทั้งซีซั่น ดูแลครบ คุ้มที่สุด</div>
-        <div class="price">฿32,460<small> เริ่มต้น</small></div>
-        <div class="per">ต่อคน · มีหลายเซตให้เลือก</div>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ครบทุกอย่างในค่าสมัคร</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>โปรแกรมดูแลเข้มข้นตลอดซีซั่น</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>สิทธิ์ลุ้นรางวัลผู้เปลี่ยนแปลงยอดเยี่ยม</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ดูแลใกล้ชิดเป็นพิเศษจากทีมโค้ช</li>
-        </ul>
-        <a class="btn btn-cta" href="https://leanlab.cloverxth.com/leanlab">สมัคร Grand Slam</a>
-      </div>
-      <div class="pkg">
-        <div class="pk-name">ผ่อนสบาย</div>
-        <div class="pk-desc">จ่ายเป็นงวด เริ่มดูแลตัวเองได้เลย</div>
-        <div class="price">฿7,490<small> × 6 งวด</small></div>
-        <div class="per">ตัดผ่านบัตรอัตโนมัติ</div>
-        <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>แบ่งจ่าย 6 งวด สบายกระเป๋า</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>ได้สิทธิ์เต็มเหมือนจ่ายเต็ม</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>เริ่ม Onsite ได้ทันที</li>
-        </ul>
-        <a class="btn btn-ghost" href="https://leanlab.cloverxth.com/leanlab">เลือกผ่อนชำระ</a>
-      </div>
-    </div>
-    <p class="note-inline">ราคาและเงื่อนไขแพ็คเกจอ้างอิงตามโครงสร้างจริงของ Lean Lab Season 1 · ดูรายละเอียดทั้งหมดที่หน้าสมัคร</p>
+    <p style="text-align:center;color:var(--mut);font-size:.82rem;margin-top:18px">* ค่าตัวเลขในหน้านี้เป็นภาพประกอบกรอบการวัดผล — สถิติจริงของ Season 1 จะอัปเดตหลังจบโครงการ</p>
   </div>
 </section>
 
 <!-- HOW TO JOIN -->
-<section class="sec" style="background:linear-gradient(180deg,transparent,rgba(11,20,32,.5),transparent)">
+<section class="sec">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">วิธีสมัคร</span>
-      <h2 class="h2">เริ่มต้นง่าย ๆ ใน 4 ขั้นตอน</h2>
-    </div>
-    <div class="steps" style="margin-top:32px">
-      <div class="step"><div class="n"></div><h3>เลือกแพ็คเกจ</h3><p>เลือกแบบที่เหมาะกับคุณ — ค่าสมัคร, Grand Slam หรือผ่อน</p></div>
-      <div class="step"><div class="n"></div><h3>สมัคร &amp; ชำระเงิน</h3><p>กรอกข้อมูล เลือกวันเริ่ม และชำระผ่านช่องทางที่สะดวก</p></div>
-      <div class="step"><div class="n"></div><h3>เริ่ม Onsite</h3><p>วัดค่าตั้งต้น เจอทีมโค้ช และเริ่มการเดินทางของคุณ</p></div>
-      <div class="step"><div class="n"></div><h3>รับผลลัพธ์</h3><p>เห็นการเปลี่ยนแปลงเป็นตัวเลข Before → After ที่จับต้องได้</p></div>
+    <div style="text-align:center;margin-bottom:36px"><div class="sec-title">วิธีสมัคร</div><p class="lead" style="margin:8px auto 0">เริ่มต้นง่าย ๆ ใน 4 ขั้นตอน</p></div>
+    <div class="steps">
+      <div class="step"><div class="sic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3><b>1.</b>เลือกแพ็คเกจ</h3><p>เลือกแบบที่เหมาะกับคุณ</p></div>
+      <div class="step"><div class="sic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg></div><h3><b>2.</b>สมัคร &amp; ชำระเงิน</h3><p>กรอกข้อมูล เลือกวันเริ่ม ชำระเงิน</p></div>
+      <div class="step"><div class="sic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8 13 13.5l-3-3L6 14.5"/></svg></div><h3><b>3.</b>เริ่ม Onsite</h3><p>วัดค่าตั้งต้น เจอทีมโค้ช</p></div>
+      <div class="step"><div class="sic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8m-4-4v4M7 4h10v5a5 5 0 0 1-10 0zM7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></div><h3><b>4.</b>รับผลลัพธ์</h3><p>เห็นการเปลี่ยนแปลงเป็นตัวเลข</p></div>
     </div>
   </div>
 </section>
 
 <!-- IMPACT + REVIEW -->
-<section class="sec" style="padding-block:clamp(20px,3vw,40px)">
+<section class="sec" style="padding-top:0">
   <div class="wrap">
     <div class="impact">
-      <div class="impact-stats">
-        <div class="istat"><b class="num">100 <span class="u">สิทธิ์</span></b><span>เปิดรับ Season 1</span></div>
-        <div class="istat"><b class="num">4</b><span>Onsite Journey</span></div>
-        <div class="istat"><b class="num">5</b><span>ตัวชี้วัดร่างกาย</span></div>
-        <div class="istat"><b class="num">100<span class="u">%</span></b><span>ดูแลโดยทีมโค้ช</span></div>
+      <div class="istats">
+        <div class="istat"><div class="ii"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div><b class="num">100</b><span>สิทธิ์ Season 1</span></div>
+        <div class="istat"><div class="ii"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><b class="num">4</b><span>Onsite Journey</span></div>
+        <div class="istat"><div class="ii"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div><b class="num">5</b><span>ตัวชี้วัดร่างกาย</span></div>
+        <div class="istat"><div class="ii"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><b class="num">100%</b><span>ดูแลโดยทีมโค้ช</span></div>
       </div>
       <div class="review">
         <div class="q">“โปรแกรมที่ทำให้เรารู้จักร่างกายตัวเองจริง ๆ ไม่ใช่แค่ลดน้ำหนัก แต่เปลี่ยนวิธีคิดทั้งชีวิต”</div>
@@ -457,28 +373,21 @@
   </div>
 </section>
 
-<!-- FINAL CTA -->
+<!-- FINAL -->
 <section class="sec" style="padding-top:0">
-  <div class="wrap">
-    <div class="final">
-      <div class="aur"></div>
-      <span class="eyebrow" style="justify-content:center">🎁 จำกัดเพียง 100 สิทธิ์</span>
-      <h2>พร้อมปลดล็อก <span class="x">X</span> ของคุณหรือยัง?</h2>
-      <p>Season 1 เปิดรับจำนวนจำกัด เพื่อการดูแลที่เต็มที่ที่สุด — จองสิทธิ์ของคุณวันนี้ก่อนเต็ม</p>
-      <a class="btn btn-cta" href="https://leanlab.cloverxth.com/leanlab" style="font-size:1.05rem;padding:16px 32px">สมัครเข้าร่วมโครงการ →</a>
-    </div>
-  </div>
+  <div class="wrap"><div class="final">
+    <div class="sec-title" style="justify-content:center">🎁 จำกัดเพียง 100 สิทธิ์</div>
+    <h2 style="margin-top:10px">พร้อมปลดล็อก <span class="x">X</span> ของคุณหรือยัง?</h2>
+    <p>Season 1 เปิดรับจำนวนจำกัด เพื่อการดูแลที่เต็มที่ที่สุด — จองสิทธิ์ของคุณวันนี้ก่อนเต็ม</p>
+    <a class="btn btn-primary" href="https://leanlab.cloverxth.com/leanlab" style="font-size:1.05rem;padding:16px 34px">สมัครเข้าร่วมโครงการ →</a>
+  </div></div>
 </section>
 
 <footer>
   <div class="wrap foot-in">
-    <div>
-      <div class="brand">LEAN LAB <span class="x">X</span></div>
-      <div style="margin-top:6px;max-width:34ch">แล็บเปลี่ยนร่างที่วัดผลได้จริง โดย CloverX</div>
-    </div>
+    <div class="brand"><b class="eng" style="font-weight:800;font-size:1.1rem">LEAN LAB X</b><br><small>แล็บเปลี่ยนร่างที่วัดผลได้จริง โดย CloverX</small></div>
     <div class="foot-links">
-      <a href="#about">เกี่ยวกับเรา</a>
-      <a href="#journey">The Journey</a>
+      <a href="#top">เกี่ยวกับเรา</a>
       <a href="#results">ผลลัพธ์</a>
       <a href="#packages">แพ็คเกจ</a>
       <a href="https://leanlab.cloverxth.com/leanlab">สมัคร</a>
