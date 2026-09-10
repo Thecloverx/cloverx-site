@@ -12,7 +12,10 @@ const path = require('path');
 const https = require('https');
 const crypto = require('crypto');
 
-module.exports = function (app, DATA_DIR) {
+module.exports = function (app, DATA_DIR, opts) {
+  opts = opts || {};
+  // ตรวจ session พนักงานที่ล็อกอินแล้ว (จาก server.js) — ใช้แทน Admin Key
+  const isStaff = (typeof opts.currentStaff === 'function') ? opts.currentStaff : function () { return null; };
   const DIR = path.join(DATA_DIR, 'leanlab');
   const MEMBERS = path.join(DIR, 'members.json');
   const REGS = path.join(DIR, 'registrations.json');
@@ -942,6 +945,8 @@ module.exports = function (app, DATA_DIR) {
   var LL_ADMIN_KEY = process.env.LEANLAB_ADMIN_KEY || '@dev1234';
   if (!process.env.LEANLAB_ADMIN_KEY) console.warn('[lean-lab] ⚠ LEANLAB_ADMIN_KEY not set — using weak default. Set a strong key in Railway env.');
   function adminGuard(req, res) {
+    // พนักงานที่ล็อกอินแล้ว (staff session) → ผ่านได้เลย ไม่ต้องใส่ Admin Key ซ้ำ
+    try { if (isStaff(req)) return true; } catch (e) {}
     var ip = clientIp(req), f = _adminFail[ip];
     // ถูกล็อกอยู่ (ใส่รหัสผิดหลายครั้ง)
     if (f && f.until > Date.now()) { res.status(429).json({ ok: false, error: 'locked', message: 'ใส่รหัสผิดหลายครั้ง ถูกล็อกชั่วคราว กรุณารอสักครู่' }); return false; }

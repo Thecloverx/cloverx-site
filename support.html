@@ -544,9 +544,9 @@
   // ---- Admin key (ล็อกหลังบ้าน) ----
   var ADM_KEY=(function(){try{return sessionStorage.getItem('llAdminKey')||'';}catch(e){return '';}})();
   function admQ(){return '';}
-  function admHdr(base){ base=base||{}; base['x-admin-key']=ADM_KEY; return base; }
-  function admUnlock(force){ if(ADM_KEY&&!force)return; var k=prompt('ใส่รหัสแอดมิน (Admin Key) เพื่อจัดการข้อมูล Lean Lab'); if(k!=null){ADM_KEY=k.trim();try{sessionStorage.setItem('llAdminKey',ADM_KEY);}catch(e){}} }
-  function admForbidden(j){ if(j&&j.error==='forbidden'){ ADM_KEY='';try{sessionStorage.removeItem('llAdminKey');}catch(e){} alert('รหัสแอดมินไม่ถูกต้อง หรือยังไม่ได้ใส่'); admUnlock(true); return true; } return false; }
+  function admHdr(base){ base=base||{}; if(ADM_KEY)base['x-admin-key']=ADM_KEY; return base; }
+  function admUnlock(force){ /* เลิกใช้ Admin Key แล้ว — ใช้การล็อกอินพนักงานแทน */ }
+  function admForbidden(j){ if(j&&j.error==='forbidden'){ var w; try{w=window.top||window;}catch(e){w=window;} alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'); try{w.location.href='/login';}catch(e){location.href='/login';} return true; } return false; }
   // ปุ่มเมนู: มือถือ = เปิด/ปิดลิ้นชัก · เดสก์ท็อป = ปักหมุดกางเมนูค้าง (จำค่าไว้)
   function toggleSide(){
     var side=document.getElementById('side');
