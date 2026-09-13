@@ -221,7 +221,16 @@ try { require('./xvisor_api')(app, DATA); } catch (e) { console.error('[x-visor]
 try { require('./leanlab_api')(app, DATA, { currentStaff: function (req) { return currentStaff(req); } }); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
 
 function read() { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) { return []; } }
-function write(d) { fs.writeFileSync(DB, JSON.stringify(d, null, 2)); }
+function write(d) {
+  var tmp = DB + '.tmp';
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(d, null, 2));
+    fs.renameSync(tmp, DB);
+  } catch (e) {
+    try { fs.unlinkSync(tmp); } catch (_e) {}
+    throw e;
+  }
+}
 
 // ================= AUTO-EMAIL RECEIPT (ฟรี ผ่าน Resend/Brevo) =================
 // เปิดใช้งานเมื่อกำหนด ENV ใน Railway: EMAIL_API_KEY (จำเป็น), EMAIL_PROVIDER=resend|brevo (ค่าเริ่มต้น resend),
@@ -467,7 +476,12 @@ app.post('/api/orders', (req, res) => {
     writeSettings({ stock: _ns });
   }
   list.unshift(rec);
-  write(list);
+  try {
+    write(list);
+  } catch (e) {
+    console.error('[orders] SAVE FAILED for ' + rec.id + ':', e && e.code, e && e.message);
+    return res.status(507).json({ ok: false, error: 'save_failed', message: 'ระบบบันทึกคำสั่งซื้อไม่สำเร็จชั่วคราว กรุณาลองใหม่อีกครั้ง (ยังไม่ต้องโอนเงินจนกว่าจะได้เลขคำสั่งซื้อ) หากยังไม่ได้โปรดติดต่อทีมงาน' });
+  }
 
   // โอนเงิน: ตรวจสลิปอัตโนมัติผ่าน EasySlip (ถ้าตั้งค่า EASYSLIP_API_KEY) แล้ว auto-confirm เมื่อยอด+บัญชีตรง
   if (rec.pay === 'bank' && easyslipConfigured() && typeof o.slip === 'string') {
