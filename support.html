@@ -442,6 +442,12 @@
   .lldash .bd .row .track>i.g{background:linear-gradient(135deg,#34D399,#0E9F6E)}
   .lldash .bd .row .track>i.p{background:linear-gradient(135deg,#A78BFA,#7C3AED)}
   .lldash .empty{color:var(--dmut);font-size:.83rem;padding:8px 2px;text-align:center}
+  .lldash .pgr{display:flex;gap:6px;justify-content:center;align-items:center;margin-top:13px;flex-wrap:wrap}
+  .lldash .pgr .pgnav{color:var(--dmut);font-size:.72rem;font-weight:600;margin-right:2px}
+  .lldash .pgr .pgbtn{min-width:29px;height:29px;padding:0 8px;border:1px solid var(--dline);background:var(--dcard);color:var(--dmut);font-family:inherit;font-size:.82rem;font-weight:700;border-radius:8px;cursor:pointer;transition:.15s;font-variant-numeric:tabular-nums}
+  .lldash .pgr .pgbtn:hover{border-color:#0077B6;color:#0077B6}
+  .lldash .pgr .pgbtn.on{background:linear-gradient(135deg,#00B4D8,#0077B6);color:#fff;border-color:transparent;box-shadow:0 4px 11px -3px rgba(0,140,200,.6)}
+  .lldash .pgr .pgbtn:disabled{opacity:.4;cursor:default}
   .lldash .donut{display:flex;align-items:center;gap:18px}
   .lldash .donut .ring{width:132px;height:132px;flex:none;position:relative;display:flex;align-items:center;justify-content:center}
   .lldash .donut .ring.nb::after{display:none}
@@ -692,8 +698,9 @@
       function _mkList(bk){ bk.m=Object.keys(bk.ppl).map(function(k){var p=bk.ppl[k];return p.name+(p.n>1?' (x'+p.n+')':'');}); }
       Object.keys(coachMap).forEach(function(k){_mkList(coachMap[k]);});
       Object.keys(refMap).forEach(function(k){_mkList(refMap[k]);});
-      var coachRank=Object.keys(coachMap).map(function(k){return {name:k,c:coachMap[k].c,v:coachMap[k].v,m:coachMap[k].m};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
-      var refRank=Object.keys(refMap).map(function(k){return {name:k,c:refMap[k].c,v:refMap[k].v,m:refMap[k].m};}).sort(function(a,b){return b.c-a.c;}).slice(0,5);
+      var coachRank=Object.keys(coachMap).map(function(k){return {name:k,c:coachMap[k].c,v:coachMap[k].v,m:coachMap[k].m};}).sort(function(a,b){return b.v-a.v;});
+      var refRank=Object.keys(refMap).map(function(k){return {name:k,c:refMap[k].c,v:refMap[k].v,m:refMap[k].m};}).sort(function(a,b){return b.c-a.c;});
+      var DASH_PGSZ=5, DASH_PG={coach:0,ref:0}; // หน้าละ 5 · สถานะหน้าปัจจุบันของแต่ละการ์ด
       var mCoachV=Math.max(1,(coachRank[0]||{}).v||0), mRefC=Math.max(1,(refRank[0]||{}).c||0);
       var pctT=Math.min(100,Math.round(total/TARGET*100));
       var mPay=Math.max(std,full.t0,full.t1,full.t2,full.t3,special,1);
@@ -708,6 +715,28 @@
         var ta=tip?' data-tip="'+tip+'" class="row hastip"':' class="row"';
         return '<div'+ta+'><div class="rt"><div class="rl">'+(rk?'<span class="rk">'+rk+'</span>':'')+'<span>'+rl+'</span>'+(rsub?'<span class="rsub">'+rsub+'</span>':'')+'</div><div class="rv">'+rv+'</div></div>'
           + '<div class="track"><i'+(cls?' class="'+cls+'"':'')+' style="width:'+Math.max(3,Math.min(100,pct))+'%"></i></div></div>';
+      }
+      // แถบเลขหน้า (1 2 3 …) — โชว์เฉพาะเมื่อมีเกินหน้าละ 5
+      function pager(kind,pg,pages){
+        if(pages<=1) return '';
+        var b='<button class="pgbtn" data-k="'+kind+'" data-i="'+(pg-1)+'"'+(pg<=0?' disabled':'')+'>‹</button>';
+        for(var i=0;i<pages;i++){ b+='<button class="pgbtn'+(i===pg?' on':'')+'" data-k="'+kind+'" data-i="'+i+'">'+(i+1)+'</button>'; }
+        b+='<button class="pgbtn" data-k="'+kind+'" data-i="'+(pg+1)+'"'+(pg>=pages-1?' disabled':'')+'>›</button>';
+        return '<div class="pgr"><span class="pgnav">หน้า</span>'+b+'</div>';
+      }
+      // เรนเดอร์เนื้อในการ์ดอันดับ (โค้ช/ผู้แนะนำ) ตามหน้าปัจจุบัน
+      function rankHTML(kind){
+        var full=(kind==='coach')?coachRank:refRank;
+        var pages=Math.max(1,Math.ceil(full.length/DASH_PGSZ));
+        var pg=Math.min(Math.max(0,DASH_PG[kind]||0),pages-1); DASH_PG[kind]=pg;
+        var start=pg*DASH_PGSZ, slice=full.slice(start,start+DASH_PGSZ);
+        if(!full.length) return '<div class="empty">ยังไม่มีข้อมูล'+(kind==='coach'?'ทีมโค้ช':'ผู้แนะนำ')+'</div>';
+        var rows=slice.map(function(x,i){ var rk=start+i+1;
+          return (kind==='coach')
+            ? brow(esc(x.name),'<span class="amt">฿'+x.v.toLocaleString('en-US')+'</span> <span class="cnt">· '+x.c+' คน</span>',x.v/mCoachV*100,'',rk,null,tipOf(x.m))
+            : brow(esc(x.name),'<span class="cnt">'+x.c+' คน</span>',x.c/mRefC*100,'p',rk,null,tipOf(x.m));
+        }).join('');
+        return rows+pager(kind,pg,pages);
       }
       // โดนัท (SVG arcs — html2canvas จับภาพได้ชัวร์กว่า conic-gradient) + legend
       function donut(segs,cv,cl){
@@ -743,11 +772,11 @@
         +   '</div>'
         + '</div>'
         + '<div class="grid2">'
-        +   '<div class="c"><div class="c-h"><span class="cic">🏋️</span><span class="ct">ทีมโค้ช</span><span class="ctag">Top 5 · รายได้ยืนยันแล้ว</span></div><div class="bd">'
-        +     (coachRank.length? coachRank.map(function(x,i){return brow(esc(x.name),'<span class="amt">฿'+x.v.toLocaleString('en-US')+'</span> <span class="cnt">· '+x.c+' คน</span>',x.v/mCoachV*100,'',i+1,null,tipOf(x.m));}).join('') : '<div class="empty">ยังไม่มีข้อมูลทีมโค้ช</div>')
+        +   '<div class="c"><div class="c-h"><span class="cic">🏋️</span><span class="ct">ทีมโค้ช</span><span class="ctag">'+(coachRank.length?'ทั้งหมด '+coachRank.length+' · รายได้ยืนยันแล้ว':'รายได้ยืนยันแล้ว')+'</span></div><div class="bd" id="coachRankBody">'
+        +     rankHTML('coach')
         +   '</div></div>'
-        +   '<div class="c"><div class="c-h"><span class="cic">🙋</span><span class="ct">ผู้แนะนำ</span><span class="ctag">Top 5 · จำนวนคน</span></div><div class="bd">'
-        +     (refRank.length? refRank.map(function(x,i){return brow(esc(x.name),'<span class="cnt">'+x.c+' คน</span>',x.c/mRefC*100,'p',i+1,null,tipOf(x.m));}).join('') : '<div class="empty">ยังไม่มีข้อมูลผู้แนะนำ</div>')
+        +   '<div class="c"><div class="c-h"><span class="cic">🙋</span><span class="ct">ผู้แนะนำ</span><span class="ctag">'+(refRank.length?'ทั้งหมด '+refRank.length+' คน':'จำนวนคน')+'</span></div><div class="bd" id="refRankBody">'
+        +     rankHTML('ref')
         +   '</div></div>'
         + '</div>'
         + '<div class="grid2">'
@@ -762,6 +791,13 @@
         +   '</div></div>'
         + '</div>';
       var stmp=document.getElementById('dashStamp'); if(stmp){var dn2=new Date();stmp.textContent='ภาพรวมสด · อัปเดต '+dn2.toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' น.';}
+      // กดเลขหน้าในการ์ดอันดับ (โค้ช/ผู้แนะนำ) → เปลี่ยนหน้าโดยไม่ต้องโหลดใหม่
+      var bindTips=null; // ตัวผูก tooltip รายชื่อ (กำหนดค่าในบล็อก popover ด้านล่าง) เพื่อผูกให้แถวที่เพิ่งเรนเดอร์ใหม่
+      body.onclick=function(e){ var btn=e.target.closest('.pgbtn'); if(!btn||btn.disabled)return;
+        var k=btn.getAttribute('data-k'); DASH_PG[k]=parseInt(btn.getAttribute('data-i'),10)||0;
+        var box=document.getElementById(k==='coach'?'coachRankBody':'refRankBody');
+        if(box){ box.innerHTML=rankHTML(k); if(bindTips)bindTips(box); }
+      };
       // Popover รายชื่อลูกค้า: ชี้ (คอม) หรือแตะ (มือถือ) → เห็นรายชื่อ + เบอร์ แบ่งหน้า 10 รายชื่อ/หน้า
       (function(){
         var cap=document.getElementById('dashCapture'); if(!cap)return;
@@ -800,12 +836,14 @@
           if(e.target.closest('.ttx')){hide();return;}
           var b=e.target.closest('.ttpb'); if(b){ state.page=+b.getAttribute('data-pg'); render(); if(state.anchor)position(state.anchor); }
         });
-        var els=cap.querySelectorAll('.hastip[data-tip]');
-        [].forEach.call(els,function(el){
-          el.addEventListener('mouseenter',function(){cancelHide();open(el);});
-          el.addEventListener('mouseleave',scheduleHide);
-          el.addEventListener('click',function(e){ e.stopPropagation(); cancelHide(); open(el); });
-        });
+        function bind(root){ var els=(root||cap).querySelectorAll('.hastip[data-tip]');
+          [].forEach.call(els,function(el){ if(el._tipBound)return; el._tipBound=1;
+            el.addEventListener('mouseenter',function(){cancelHide();open(el);});
+            el.addEventListener('mouseleave',scheduleHide);
+            el.addEventListener('click',function(e){ e.stopPropagation(); cancelHide(); open(el); });
+          });
+        }
+        bind(cap); bindTips=bind; // เปิดให้ pager เรียกผูก tooltip ให้แถวที่เรนเดอร์ใหม่หลังเปลี่ยนหน้า
         document.addEventListener('click',function(e){ if(tp.style.display==='block' && !tp.contains(e.target) && !e.target.closest('.hastip')) hide(); });
       })();
       // ปุ่มส่งรายงานเข้า Lark (เรนเดอร์ภาพแดชบอร์ดแนบไปด้วย)
