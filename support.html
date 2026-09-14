@@ -389,6 +389,7 @@
   .lld2 .bd .row .track>i.g{background:linear-gradient(90deg,#34D399,#0E9F6E);box-shadow:0 0 10px rgba(16,159,110,.4)}
   .lld2 .bd .row .track>i.p{background:linear-gradient(90deg,#A78BFA,#7C3AED);box-shadow:0 0 10px rgba(124,58,237,.4)}
   .lld2 .empty{color:var(--dmut);font-size:.83rem;padding:8px 2px;text-align:center}
+  .lld2 .rowfill{visibility:hidden}
   .lld2 .pgr{display:flex;gap:5px;justify-content:center;align-items:center;margin-top:15px;padding-top:14px;border-top:1px solid var(--dline)}
   .lld2 .pgr .pgbtn{min-width:32px;height:32px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--dline);background:var(--dcard);color:var(--dmut);font-family:inherit;font-size:.84rem;font-weight:700;border-radius:9px;cursor:pointer;transition:.15s;font-variant-numeric:tabular-nums;line-height:1}
   .lld2 .pgr .pgbtn:hover:not(:disabled){border-color:#00B4D8;color:#0077B6;background:var(--dsoft)}
@@ -738,6 +739,11 @@
             ? brow(esc(x.name),'<span class="amt">฿'+x.v.toLocaleString('en-US')+'</span> <span class="cnt">· '+x.c+' คน</span>',x.v/mCoachV*100,'',rk,null,tipOf(x.m))
             : brow(esc(x.name),'<span class="cnt">'+x.c+' คน</span>',x.c/mRefC*100,'p',rk,null,tipOf(x.m));
         }).join('');
+        // เติมแถวเปล่า (ล่องหน) ให้ทุกหน้าสูงเท่ากัน — กล่องจะได้ไม่ขยับตอนกดเปลี่ยนหน้า
+        if(pages>1 && slice.length<DASH_PGSZ){
+          var filler='<div class="row rowfill" aria-hidden="true"><div class="rt"><div class="rl"><span class="rk">0</span><span>เติมแถว</span></div><div class="rv"><span class="cnt">0 คน</span></div></div><div class="track"><i style="width:0"></i></div></div>';
+          rows += new Array(DASH_PGSZ-slice.length+1).join(filler);
+        }
         return rows+pager(kind,pg,pages);
       }
       // โดนัท (SVG arcs — html2canvas จับภาพได้ชัวร์กว่า conic-gradient) + legend
