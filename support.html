@@ -389,6 +389,13 @@
   .lld2 .bd .row .track>i.g{background:linear-gradient(90deg,#34D399,#0E9F6E);box-shadow:0 0 10px rgba(16,159,110,.4)}
   .lld2 .bd .row .track>i.p{background:linear-gradient(90deg,#A78BFA,#7C3AED);box-shadow:0 0 10px rgba(124,58,237,.4)}
   .lld2 .empty{color:var(--dmut);font-size:.83rem;padding:8px 2px;text-align:center}
+  .lld2 .pgr{display:flex;gap:5px;justify-content:center;align-items:center;margin-top:15px;padding-top:14px;border-top:1px solid var(--dline)}
+  .lld2 .pgr .pgbtn{min-width:32px;height:32px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--dline);background:var(--dcard);color:var(--dmut);font-family:inherit;font-size:.84rem;font-weight:700;border-radius:9px;cursor:pointer;transition:.15s;font-variant-numeric:tabular-nums;line-height:1}
+  .lld2 .pgr .pgbtn:hover:not(:disabled){border-color:#00B4D8;color:#0077B6;background:var(--dsoft)}
+  .lld2 .pgr .pgbtn.on{background:var(--dgrad);color:#fff;border-color:transparent;box-shadow:0 4px 12px -3px rgba(0,140,200,.55)}
+  .lld2 .pgr .pgbtn.nav{color:#9AA7BC;padding:0 5px}
+  .lld2 .pgr .pgbtn:disabled{opacity:.35;cursor:default}
+  .lld2 .pgr .pgbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;display:block}
   .lld2 .donut{display:flex;align-items:center;gap:18px}
   .lld2 .donut .ring{width:132px;height:132px;flex:none;position:relative;display:flex;align-items:center;justify-content:center}
   .lld2 .donut .ring.nb::after{display:none}
@@ -442,12 +449,6 @@
   .lldash .bd .row .track>i.g{background:linear-gradient(135deg,#34D399,#0E9F6E)}
   .lldash .bd .row .track>i.p{background:linear-gradient(135deg,#A78BFA,#7C3AED)}
   .lldash .empty{color:var(--dmut);font-size:.83rem;padding:8px 2px;text-align:center}
-  .lldash .pgr{display:flex;gap:6px;justify-content:center;align-items:center;margin-top:13px;flex-wrap:wrap}
-  .lldash .pgr .pgnav{color:var(--dmut);font-size:.72rem;font-weight:600;margin-right:2px}
-  .lldash .pgr .pgbtn{min-width:29px;height:29px;padding:0 8px;border:1px solid var(--dline);background:var(--dcard);color:var(--dmut);font-family:inherit;font-size:.82rem;font-weight:700;border-radius:8px;cursor:pointer;transition:.15s;font-variant-numeric:tabular-nums}
-  .lldash .pgr .pgbtn:hover{border-color:#0077B6;color:#0077B6}
-  .lldash .pgr .pgbtn.on{background:linear-gradient(135deg,#00B4D8,#0077B6);color:#fff;border-color:transparent;box-shadow:0 4px 11px -3px rgba(0,140,200,.6)}
-  .lldash .pgr .pgbtn:disabled{opacity:.4;cursor:default}
   .lldash .donut{display:flex;align-items:center;gap:18px}
   .lldash .donut .ring{width:132px;height:132px;flex:none;position:relative;display:flex;align-items:center;justify-content:center}
   .lldash .donut .ring.nb::after{display:none}
@@ -719,10 +720,11 @@
       // แถบเลขหน้า (1 2 3 …) — โชว์เฉพาะเมื่อมีเกินหน้าละ 5
       function pager(kind,pg,pages){
         if(pages<=1) return '';
-        var b='<button class="pgbtn" data-k="'+kind+'" data-i="'+(pg-1)+'"'+(pg<=0?' disabled':'')+'>‹</button>';
+        var prev='<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>', next='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+        var b='<button class="pgbtn nav" data-k="'+kind+'" data-i="'+(pg-1)+'"'+(pg<=0?' disabled':'')+' aria-label="ก่อนหน้า">'+prev+'</button>';
         for(var i=0;i<pages;i++){ b+='<button class="pgbtn'+(i===pg?' on':'')+'" data-k="'+kind+'" data-i="'+i+'">'+(i+1)+'</button>'; }
-        b+='<button class="pgbtn" data-k="'+kind+'" data-i="'+(pg+1)+'"'+(pg>=pages-1?' disabled':'')+'>›</button>';
-        return '<div class="pgr"><span class="pgnav">หน้า</span>'+b+'</div>';
+        b+='<button class="pgbtn nav" data-k="'+kind+'" data-i="'+(pg+1)+'"'+(pg>=pages-1?' disabled':'')+' aria-label="ถัดไป">'+next+'</button>';
+        return '<div class="pgr">'+b+'</div>';
       }
       // เรนเดอร์เนื้อในการ์ดอันดับ (โค้ช/ผู้แนะนำ) ตามหน้าปัจจุบัน
       function rankHTML(kind){
