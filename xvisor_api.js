@@ -301,6 +301,32 @@ module.exports = function (app, DATA) {
   }
   const pubResults = (s) => s.results.map(r => ({ part: r.part, score: r.score, status: r.status, attempts: r.attempts }));
 
+  // live progress ของผู้ที่กำลังสอบ (in_progress) — คำนวณจากคำตอบที่ส่งมาแล้วเทียบกับเฉลยฝั่งเซิร์ฟเวอร์
+  // ส่งออกเฉพาะ "จำนวน" (ตอบแล้ว/ถูก/ผิด ต่อพาร์ท + รวม + พาร์ท/ข้อปัจจุบัน) ไม่ส่งเฉลยหรือความถูก-ผิดรายข้อ
+  function xvLiveProgress(s) {
+    const activeP = (s.phase === 'remedial') ? (s.remedialQueue || []) : PARTS;
+    const perPart = []; let totalAnswered = 0, totalCorrect = 0, inScopeTotal = 0;
+    PARTS.forEach(p => {
+      const inScope = activeP.indexOf(p) >= 0;
+      const paper = s.paper && s.paper[p];
+      let ans = 0, cor = 0;
+      if (inScope) {
+        for (let q = 0; q < QPP; q++) {
+          const a = s.answers ? s.answers[p + '-' + q] : undefined;
+          if (a !== undefined && a !== null) { ans++; totalAnswered++; if (paper && paper[q] && a === paper[q].c) { cor++; totalCorrect++; } }
+        }
+        inScopeTotal += QPP;
+      }
+      perPart.push({ part: p, answered: ans, correct: cor, inScope: inScope });
+    });
+    const scope = perPart.filter(x => x.inScope);
+    const partsDone = scope.filter(x => x.answered >= QPP).length;
+    let curPart = null, curQ = null;
+    for (const x of scope) { if (x.answered < QPP) { curPart = x.part; curQ = x.answered + 1; break; } }
+    if (curPart === null && scope.length) { curPart = scope[scope.length - 1].part; curQ = QPP; }
+    return { perPart, totalAnswered, totalCorrect, totalWrong: totalAnswered - totalCorrect, totalQ: inScopeTotal, partsDone, partsTotal: scope.length, curPart, curQ };
+  }
+
   /* ---- server-side time enforcement (กันโกงเวลา: ไม่เชื่อค่าเวลาจากฝั่งลูกค้า) ---- */
   const XV_GRACE_MS = 10000; // เผื่อความหน่วงเครือข่าย 10 วินาที ก่อนตัดเวลาจริง
   function xvDeadline(s) { return s.deadlineAt || ((s.startedAt || Date.now()) + TOTAL * 1000); }
@@ -543,7 +569,8 @@ module.exports = function (app, DATA) {
         flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0) + (s.proctor.paste || 0) + (s.proctor.cut || 0) + (s.proctor.fullscreen_exit || 0)) : 0,
         proctorPhotos: s.proctorPhotos || [], camPhotos: (s.proctorPhotos || []).length,
         proctorDecision: s.proctorDecision || null,
-        scoreEdited: !!s.scoreEdited, scoreEditedBy: s.scoreEditedBy || null, scoreEditReason: s.scoreEditReason || null
+        scoreEdited: !!s.scoreEdited, scoreEditedBy: s.scoreEditedBy || null, scoreEditReason: s.scoreEditReason || null,
+        live: s.status === 'in_progress' ? xvLiveProgress(s) : null, pausedAt: s.pausedAt || null
       }))
     });
   });

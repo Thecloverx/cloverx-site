@@ -696,6 +696,15 @@
   // premium part-score pills P1..P5 (— for parts not graded yet)
   function xvPartPills(s){var by={};(s.results||[]).forEach(function(r){by[r.part]=r;});var cells='';for(var p=1;p<=PARTS_N;p++){var r=by[p];if(!r)cells+='<span class="xps miss">—</span>';else cells+='<span class="xps'+(r.score<PASS_PART?' bad':'')+'">'+r.score+'</span>';if(p<PARTS_N)cells+='<span class="xdiv">|</span>';}return '<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap">'+cells+'</div>';}
   function xvMaxTotal(){return PARTS_N*QPP;} // 100
+  // live pills: จำนวนข้อที่ตอบต่อพาร์ท ระหว่างกำลังสอบ (พาร์ทปัจจุบันมีขอบไฮไลต์)
+  function xvLivePills(lv){if(!lv||!lv.perPart)return '';var cells='';lv.perPart.forEach(function(pp){var isCur=pp.part===lv.curPart;var full=pp.answered>=QPP;var some=pp.answered>0;
+    cells+='<span title="พาร์ท '+pp.part+' · ตอบ '+pp.answered+'/'+QPP+'" style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;border-radius:6px;font-size:.72rem;font-weight:800;'+(isCur?'box-shadow:0 0 0 2px #0A67D8;':'')+'background:'+(full?'#E5F6EF':(some?'#EAF2FF':'#F0F3F8'))+';color:'+(full?'#0E9F6E':(some?'#0A67D8':'#9AA6B8'))+'">'+pp.answered+'</span>';});
+    return '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">'+cells+'</div>';}
+  // live progress cell (in_progress): พาร์ท/ข้อปัจจุบัน · เสร็จกี่พาร์ท · ตอบ/ถูก/ผิด
+  function xvLiveCell(s){var lv=s.live;if(!lv)return '<div style="min-width:230px">'+xvPartPills(s)+'</div>';
+    return '<div style="min-width:250px">'+xvLivePills(lv)
+      +'<div style="font-size:.76rem;color:var(--muted);margin-top:4px">กำลังทำ <b style="color:var(--ink)">พาร์ท '+lv.curPart+'</b> · ข้อ '+lv.curQ+'/'+QPP+' · เสร็จ <b style="color:var(--ink)">'+lv.partsDone+'/'+lv.partsTotal+'</b> พาร์ท</div>'
+      +'<div style="font-size:.76rem;color:var(--muted)">ตอบแล้ว <b style="color:var(--ink)">'+lv.totalAnswered+'</b>/'+lv.totalQ+' · <span style="color:var(--good);font-weight:700">ถูก '+lv.totalCorrect+'</span> · <span style="color:var(--bad);font-weight:700">ผิด '+lv.totalWrong+'</span></div></div>';}
   function fmtHMS(sec){sec=Math.max(0,sec|0);var h=(sec/3600)|0,m=((sec%3600)/60)|0,s=sec%60;var p=function(n){return(n<10?'0':'')+n;};return p(h)+':'+p(m)+':'+p(s);}
   // progress: how many parts have a recorded result vs 5, and answered-in-current
   function xvProgress(s){
@@ -1464,10 +1473,11 @@
       var st=onsite?xvOnsiteStat(s):(XV_ST[s.status]||{cl:'wait',t:s.status});
       var maxAtt=(s.results||[]).reduce(function(m,r){return Math.max(m,r.attempts||1);},1);
       var attTxt=(maxAtt<=1)?'สอบรอบแรก':('สอบซ่อม '+(maxAtt-1)+'/'+REMEDIAL_MAX);
-      var pausedTag=(s.candidate.mode==='onsite'&&s.pauseUsed)?' <span class="pill wait" title="หยุดเวลา">⏸ '+s.pauseUsed+'/'+PAUSE_MAX+'</span>':'';
-      var prog='<div style="min-width:250px">'+xvPartPills(s)+'<span class="xatt">'+attTxt+'</span>'+pausedTag+'</div>';
+      var pausedNow=(s.status==='in_progress'&&s.paused);
+      var pausedTag=pausedNow?' <span class="pill wait" title="ผู้สอบหยุดเวลาอยู่">⏸ หยุดเวลาอยู่'+(s.pauseUsed?(' ('+s.pauseUsed+'/'+PAUSE_MAX+')'):'')+'</span>':((s.candidate.mode==='onsite'&&s.pauseUsed)?' <span class="pill" style="background:#EEF1F6;color:#6B7793" title="เคยหยุดเวลา">⏸ '+s.pauseUsed+'/'+PAUSE_MAX+'</span>':'');
+      var prog=(s.status==='in_progress')?(xvLiveCell(s)+'<div style="margin-top:3px"><span class="xatt">'+attTxt+'</span>'+pausedTag+'</div>'):('<div style="min-width:230px">'+xvPartPills(s)+'<span class="xatt">'+attTxt+'</span>'+pausedTag+'</div>');
       var scoreCell=(s.status==='in_progress')?'—':('<b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span>');
-      var remain=(s.status==='in_progress')?fmtHMS(s.remaining):'—';
+      var remain=(s.status==='in_progress')?('<span class="xv-ltimer" data-end="'+(Date.now()+(s.remaining||0)*1000)+'"'+(pausedNow?' data-paused="1"':'')+'>'+fmtHMS(s.remaining)+'</span>'+(pausedNow?'<div style="color:var(--warn);font-size:.72rem;font-weight:700">หยุดชั่วคราว</div>':'')):'—';
       var rtag=s.roundNo?'<div style="color:var(--muted);font-size:.74rem;font-weight:600">รอบครั้งที่ '+s.roundNo+'</div>':'';
       // On-Site is physically proctored — no tab-switch/screenshot decisioning. Suppress the proctor decision UI there.
       var pf=s.proctor||{}, flags=onsite?0:(s.flags||0), susp=onsite?false:xvSusp(s);
@@ -2724,6 +2734,33 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       }).catch(function(){});
     }catch(e){}
   }, 25000);
+
+  // ---- Exam Tracker: นาฬิกานับถอยหลังสด (ทุกวินาที) — ไม่ต้อง F5 ----
+  setInterval(function(){
+    try{
+      var els=document.querySelectorAll('.xv-ltimer'); if(!els.length)return;
+      var now=Date.now();
+      els.forEach(function(el){
+        if(el.getAttribute('data-paused')==='1')return; // หยุดเวลาอยู่ → ไม่นับ
+        var end=parseInt(el.getAttribute('data-end')||'0',10);
+        var sec=Math.max(0,Math.round((end-now)/1000));
+        el.textContent=(sec<=0)?'หมดเวลา':fmtHMS(sec);
+        if(sec<=0)el.style.color='var(--bad)';
+        else if(sec<=300)el.style.color='var(--warn)';
+      });
+    }catch(e){}
+  }, 1000);
+
+  // ---- Exam Tracker: รีเฟรชข้อมูลสด ทุก 8 วินาที (เห็นความคืบหน้า/หยุดเวลา แบบเรียลไทม์ ไม่ต้อง F5) ----
+  setInterval(function(){
+    try{
+      if(EXAM_VIEW!=='exam-tracker')return;
+      if(!EXAM_LIVE)return;
+      var sh=document.getElementById('xvSheet'); if(sh&&sh.style.display!=='none')return; // เปิด modal อยู่ → ไม่รีเฟรช
+      var ae=document.activeElement; if(ae&&ae.id==='trkSearch')return; // กำลังพิมพ์ค้นหา → ไม่รีเฟรช
+      xvFetch(function(){ if(EXAM_VIEW==='exam-tracker')renderExamTracker(); });
+    }catch(e){}
+  }, 8000);
 
   // มือถือ: เติม data-label ให้ทุก td จากหัวตาราง (thead) อัตโนมัติ เพื่อให้ CSS แปลงเป็นการ์ดอ่านง่าย
   (function(){
