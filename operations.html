@@ -1359,6 +1359,42 @@
     },true);
   }
   window.xvDelSession=xvDelSession;
+  // ---- แก้ไขคะแนนผู้สอบ (กรณีระบบคำนวณผิด) — ต้องมี Admin Key + บังคับกรอกเหตุผล → บันทึก audit ----
+  function xvScoreEdit(id){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อแก้คะแนนจริง','bad');return;}
+    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
+    var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;}); if(!s){xvToast('ไม่พบผู้สอบ','bad');return;}
+    var by={}; (s.results||[]).forEach(function(r){by[r.part]=r;});
+    var rows='';
+    for(var p=1;p<=PARTS_N;p++){ var r=by[p]||{}; var sc=(r.score!=null?r.score:'');
+      rows+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">'
+        +'<div style="width:78px;font-weight:700;color:var(--ink)">พาร์ท '+p+'</div>'
+        +'<input type="number" min="0" max="'+QPP+'" value="'+sc+'" id="se_'+p+'" style="width:92px;border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;font-family:inherit;font-size:1rem;text-align:center;color:var(--ink)">'
+        +'<span style="color:var(--muted)">/ '+QPP+'</span>'
+        +'<span style="color:var(--muted);font-size:.8rem;margin-left:auto">ผ่านเมื่อ ≥ '+PASS_PART+'</span>'
+        +'</div>';
+    }
+    xvSheet('<h3 style="font-size:1.12rem">แก้ไขคะแนน · '+xvName(s)+' <span style="color:var(--muted);font-weight:600;font-size:.9rem">('+(s.code||'')+')</span></h3>'
+      +'<p style="color:var(--muted);font-size:.84rem;margin:5px 0 16px;line-height:1.5">ใช้เฉพาะกรณีระบบคำนวณคะแนนผิด — เมื่อบันทึก ระบบจะคำนวณผ่าน/ไม่ผ่านของแต่ละพาร์ทและสถานะรวมใหม่อัตโนมัติ และเก็บประวัติการแก้ไข (ก่อน→หลัง + เหตุผล) ไว้ตรวจสอบย้อนหลัง</p>'
+      +rows
+      +'<div><label style="'+lblCss()+'">เหตุผลการแก้ไข (บันทึกไว้ในระบบ) <span style="color:var(--bad)">*</span></label><input id="se_reason" placeholder="เช่น ระบบตรวจพาร์ท 3 ผิด ตรวจกระดาษแล้วได้ 18/20" style="'+fieldCss()+'"></div>'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="seSave" style="'+btnPri()+'">บันทึกคะแนน</button></div>');
+    document.getElementById('seSave').onclick=function(){
+      var reason=((document.getElementById('se_reason')||{}).value||'').trim();
+      if(!reason){xvToast('กรุณากรอกเหตุผลการแก้ไข','bad');var rf=document.getElementById('se_reason');if(rf)rf.focus();return;}
+      var scores=[];
+      for(var p=1;p<=PARTS_N;p++){ var el=document.getElementById('se_'+p); var v=el?el.value:''; if(v!==''&&v!=null){ var n=parseInt(v,10); if(!(n>=0&&n<=QPP)){xvToast('พาร์ท '+p+': คะแนนต้องอยู่ระหว่าง 0–'+QPP,'bad');return;} scores.push({part:p,score:n}); } }
+      if(!scores.length){xvToast('กรุณากรอกคะแนนอย่างน้อย 1 พาร์ท','bad');return;}
+      var btn=this; btn.disabled=true; btn.textContent='กำลังบันทึก…';
+      fetch('/api/xv/admin/session/'+id+'/score-edit'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,scores:scores,reason:reason})})
+        .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
+          if(o.j&&o.j.ok){xvSheetClose();xvToast('บันทึกคะแนนใหม่แล้ว · รวม '+o.j.total+'/'+(PARTS_N*QPP),'ok');examRefresh();}
+          else if(o.s===403){btn.disabled=false;btn.textContent='บันทึกคะแนน';xvToast('รหัสแอดมินไม่ถูกต้อง หรือยังไม่ได้ใส่','bad');}
+          else {btn.disabled=false;btn.textContent='บันทึกคะแนน';xvToast('บันทึกไม่สำเร็จ: '+((o.j&&o.j.error)||''),'bad');}
+        }).catch(function(){btn.disabled=false;btn.textContent='บันทึกคะแนน';xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    };
+  }
+  window.xvScoreEdit=xvScoreEdit;
   // ---- ดูภาพเว็บแคม proctoring ของผู้สอบ ----
   function xvShowPhotos(id){
     var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;});
@@ -1514,13 +1550,14 @@
       rows=list.map(function(s){
         var st=xvOnsiteStat(s), sys=xvSysResult(s);
         return '<tr><td class="num">'+(s.code||'—')+'</td>'
-          +'<td><b>'+xvName(s)+'</b><div style="color:var(--muted);font-size:.76rem">ที่ศูนย์สอบ'+((s.candidate||{}).phone?(' · '+s.candidate.phone):'')+'</div></td>'
+          +'<td><b>'+xvName(s)+'</b>'+(s.scoreEdited?' <span class="pill" style="background:#FDF3E1;color:#B7791F;font-size:.64rem" title="'+String(s.scoreEditReason||'').replace(/"/g,'&quot;')+'">✎ แก้ไขโดยจนท.</span>':'')+'<div style="color:var(--muted);font-size:.76rem">ที่ศูนย์สอบ'+((s.candidate||{}).phone?(' · '+s.candidate.phone):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
           +'<td><span class="xatt">'+xvAttLabel(s)+'</span>'+(s.roundNo?'<div style="color:var(--muted);font-size:.72rem">รอบครั้งที่ '+s.roundNo+'</div>':'')+'</td>'
           +'<td class="num">'+xvTimeUsed(s)+'</td>'
-          +'<td><span class="pill '+sys.cl+'">'+sys.t+'</span></td></tr>';
+          +'<td><span class="pill '+sys.cl+'">'+sys.t+'</span>'
+          +' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--brand);font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button></td></tr>';
       }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ศูนย์สอบ</td></tr>';
       head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะการทำข้อสอบ</th><th>รอบการสอบ</th><th>เวลาที่ใช้</th><th>ผลจากเกณฑ์ระบบ</th></tr>';
       var subC=list.filter(function(s){return s.status==='submitted';}).length;
@@ -1548,11 +1585,11 @@
           action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
         }
         var delNm2=xvName(s).replace(/["'\\]/g,'');
-        return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b><div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
+        return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+(s.scoreEdited?' <span class="pill" style="background:#FDF3E1;color:#B7791F;font-size:.64rem" title="'+String(s.scoreEditReason||'').replace(/"/g,'&quot;')+'">✎ แก้ไขโดยจนท.</span>':'')+'<div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
-          +'<td>'+action+((s.camPhotos>0)?' <button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-left:6px">📷 '+s.camPhotos+'</button>':'')+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
+          +'<td>'+action+' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--brand);font-size:.78rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+((s.camPhotos>0)?' <button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-left:6px">📷 '+s.camPhotos+'</button>':'')+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
       }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ตรวจเสร็จ</td></tr>';
       head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th></tr>';
       var tot2=Math.max(1,list.length);var vf=list.filter(function(s){return s.status==='verified';}).length;var ef=list.filter(function(s){return s.status==='ended_failed';}).length;

@@ -542,7 +542,8 @@ module.exports = function (app, DATA) {
         proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0, paste: s.proctor.paste || 0, cut: s.proctor.cut || 0, fullscreen_exit: s.proctor.fullscreen_exit || 0 } : null,
         flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0) + (s.proctor.paste || 0) + (s.proctor.cut || 0) + (s.proctor.fullscreen_exit || 0)) : 0,
         proctorPhotos: s.proctorPhotos || [], camPhotos: (s.proctorPhotos || []).length,
-        proctorDecision: s.proctorDecision || null
+        proctorDecision: s.proctorDecision || null,
+        scoreEdited: !!s.scoreEdited, scoreEditedBy: s.scoreEditedBy || null, scoreEditReason: s.scoreEditReason || null
       }))
     });
   });
@@ -571,6 +572,49 @@ module.exports = function (app, DATA) {
     if (s.status !== 'awaiting_verify') return res.status(400).json({ ok: false, error: 'not_awaiting' });
     s.staffVerified = true; s.status = 'verified'; s.verifiedAt = Date.now(); writeS(all);
     res.json({ ok: true });
+  });
+
+  // staff correction: แก้ไขคะแนนรายพาร์ทของผู้สอบ (กรณีระบบคำนวณผิด/ต้องปรับด้วยมือ)
+  // ต้องมี ADMIN_KEY (ผ่าน middleware ด้านบน) + บังคับกรอกเหตุผล → บันทึกลง audit log (ใคร/เมื่อไหร่/ก่อน→หลัง/เหตุผล)
+  app.post('/api/xv/admin/session/:id/score-edit', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (s.status === 'in_progress') return res.status(400).json({ ok: false, error: 'in_progress' }); // แก้ได้เฉพาะรายการที่จบแล้ว
+    const b = req.body || {};
+    const edits = Array.isArray(b.scores) ? b.scores : null; // [{part, score}]
+    const reason = String(b.reason || '').trim().slice(0, 200);
+    const actor = String(b.actor || '').trim().slice(0, 60) || 'staff';
+    if (!edits || !edits.length) return res.status(400).json({ ok: false, error: 'no_scores' });
+    if (!reason) return res.status(400).json({ ok: false, error: 'reason_required' });
+    if (!Array.isArray(s.results)) s.results = [];
+    const snap = () => ({ total: s.results.reduce((a, r) => a + (r.score || 0), 0), status: s.status, parts: s.results.map(r => ({ part: r.part, score: r.score, status: r.status })) });
+    const before = snap();
+    let applied = 0;
+    edits.forEach(e => {
+      const p = parseInt(e.part, 10), sc = parseInt(e.score, 10);
+      if (!(p >= 1 && p <= PARTS.length)) return;
+      if (!(sc >= 0 && sc <= QPP)) return;
+      let r = s.results.find(x => x.part === p);
+      if (!r) { r = { part: p, attempts: 1 }; s.results.push(r); }
+      r.score = sc; r.status = sc >= PASS ? 'passed' : 'failed';
+      applied++;
+    });
+    if (!applied) return res.status(400).json({ ok: false, error: 'bad_scores' });
+    s.results.sort((a, b) => a.part - b.part);
+    // คำนวณสถานะรวมใหม่ (ตามตรรกะ score() แต่ไม่เพิ่มจำนวนครั้งสอบ/ไม่ยุ่งกับนาฬิกา)
+    const failed = s.results.filter(r => r.status === 'failed');
+    const exhausted = failed.filter(r => (r.attempts || 1) >= MAXATT);
+    if (exhausted.length) s.status = 'ended_failed';
+    else if (failed.length === 0) {
+      if (s.candidate && s.candidate.mode === 'onsite') { s.status = 'submitted'; s.staffVerified = true; if (!s.verifiedAt) s.verifiedAt = Date.now(); }
+      else if (before.status === 'verified') { s.status = 'verified'; }   // ออนไลน์ที่ปล่อยผลแล้ว → คงสถานะผ่าน
+      else { s.status = 'awaiting_verify'; }
+    } else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); }
+    s.scoreEdited = true; s.scoreEditedAt = Date.now(); s.scoreEditedBy = actor; s.scoreEditReason = reason;
+    const after = snap();
+    writeS(all);
+    logAudit('score_edit', 'session', s.id, s.code || '', before, after, reason, actor);
+    res.json({ ok: true, status: s.status, results: pubResults(s), total: after.total });
   });
 
   // ลบ session (สำหรับลบรายการทดสอบ/รายการผิดพลาด — ต้องใช้รหัสแอดมิน ผ่าน middleware ด้านบน)
