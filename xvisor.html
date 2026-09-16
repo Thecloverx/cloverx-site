@@ -281,6 +281,11 @@ input{font-family:inherit}
 .remq .rqm{flex:1}.remq .rqm b{font-size:15px;display:block}.remq .rqm span{font-size:12.5px;color:var(--text-secondary)}
 .remq .rqr{text-align:right}.remq .rqr .u{display:inline-block;background:var(--grad-primary);color:#fff;font-weight:700;font-size:12px;padding:4px 12px;border-radius:var(--radius-pill)}
 .remq.lock .rqr .u{background:#c3cede}.remq .rqr small{display:block;color:var(--text-secondary);margin-top:4px;font-size:11.5px}
+.remq.sel{cursor:pointer;transition:border-color .15s,box-shadow .15s,opacity .15s,background .15s}
+.remq.sel:not(.on){opacity:.5}
+.remq.sel:not(.on) .rqn{background:#D7DFEA;color:#8a99ad}
+.remq.sel:not(.on) .rqr .u{background:#c3cede}
+.remq.sel.on{border-color:transparent;background:linear-gradient(135deg,rgba(39,200,255,0.08),rgba(20,120,255,0.08));box-shadow:var(--glow-primary)}
 .rules{padding:var(--space-5);display:flex;gap:var(--space-4)}
 .rules .shield{width:44px;height:44px;color:var(--primary-500);flex:none}.rules .shield svg{width:44px;height:44px}
 .rules ul{margin:0;padding-left:18px;color:var(--text-secondary);font-size:13.5px;line-height:1.9}
@@ -631,10 +636,10 @@ function startTimer(){clearInterval(examTimer);examTimer=setInterval(()=>{const 
 /* ---------- pause (onsite) ---------- */
 function openPause(){const ss=S.session;if(ss.pauseUsed>=PAUSE_MAX){toast('ใช้สิทธิ์หยุดเวลาครบแล้ว');return;}ss.paused=true;
  if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:true,remaining:ss.remaining}).catch(()=>{});
- scrim(`<div class="modal"><h3>หยุดเวลาชั่วคราว</h3><div class="ringwrap pause-orb">${ringSVG(100,{size:184})}<div class="rc"><b class="num" id="pv">10:00</b><span>นาที</span></div></div>
-   <div class="mnote">${I.info}<span>หยุดเวลาได้สูงสุด ${PAUSE_MAX} ครั้ง · ครั้งละ 10 นาที · ระบบจะนับต่อเมื่อครบเวลาหรือกดทำต่อ</span></div>
+ scrim(`<div class="modal"><h3>หยุดเวลาชั่วคราว</h3><div class="ringwrap pause-orb">${ringSVG(100,{size:184})}<div class="rc"><b class="num" id="pv">05:00</b><span>นาที</span></div></div>
+   <div class="mnote">${I.info}<span>หยุดเวลาได้สูงสุด ${PAUSE_MAX} ครั้ง · ครั้งละ 5 นาที · ระบบจะนับต่อเมื่อครบเวลาหรือกดทำต่อ</span></div>
    <div class="mbtns"><button class="btn btn-primary block" id="resume">ทำข้อสอบต่อเลย</button></div></div>`);
- let left=600;const iv=setInterval(()=>{left--;const m=(left/60|0),s=left%60;const pv=document.getElementById('pv');if(pv)pv.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(left<=0){clearInterval(iv);end();}},1000);
+ let left=300;const iv=setInterval(()=>{left--;const m=(left/60|0),s=left%60;const pv=document.getElementById('pv');if(pv)pv.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(left<=0){clearInterval(iv);end();}},1000);
  function end(){ss.pauseUsed++;ss.paused=false;if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:false,pauseUsed:ss.pauseUsed,remaining:ss.remaining}).catch(()=>{});closeScrim();renderExam();toast('กลับเข้าห้องสอบแล้ว');}
  document.getElementById('resume').onclick=()=>{clearInterval(iv);end();};
 }
@@ -698,7 +703,7 @@ function renderChecking(){scoreActive();
 }
 
 /* ---------- 06/08 results ---------- */
-function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRem?S.remedialQueue.slice():[1,2,3,4,5];
+function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRem?((S.remedialAttempted&&S.remedialAttempted.length?S.remedialAttempted:S.remedialQueue)||[]).slice():[1,2,3,4,5];
  const passed=S.results.filter(r=>r.status==='passed').length,failed=S.results.filter(r=>r.status==='failed').length;
  const allPass=S.results.every(r=>r.status==='passed');
  app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-5)">
@@ -718,22 +723,29 @@ function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRe
 }
 
 /* ---------- 07 remedial prep ---------- */
-function renderRemedialPrep(){const q=S.remedialQueue;
+function renderRemedialPrep(){const q=S.remedialQueue.slice();
+ const sel=new Set(q); let agreed=false;
+ const refreshBegin=()=>{const b=$('#begin');if(b){b.disabled=!(agreed&&sel.size>0);b.innerHTML=`เริ่มสอบซ่อม${sel.size?' '+sel.size+' พาร์ท':''} ${I.next}`;}};
  app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-5)">
    <h1 class="hero-h">เตรียมสอบซ่อม</h1>
    <div class="rem-grid"><div class="card orbwrap"><div class="ringwrap orb">${ringSVG(100,{size:200})}<div class="rc"><b class="num">120:00</b><span>นาที</span></div></div>
        <div class="hero-sub">เวลาเริ่มนับทันทีเมื่อกด<br>เริ่มสอบซ่อม</div></div>
      <div style="display:flex;flex-direction:column;gap:var(--space-3)">
-       <div class="field-title" style="text-align:center">ลำดับการสอบซ่อม (เรียงพาร์ทอัตโนมัติ)</div>
-       ${q.map((p,ix)=>{const r=S.results[p-1];return `<div class="remq ${ix===0?'act':'lock'}"><span class="rqn">${ix===0?p:I.lock}</span><span class="rqm"><b>พาร์ต ${p}</b><span>คะแนนเดิม ${r.score}/${QPP}</span></span><span class="rqr"><span class="u">สอบซ่อมครั้งที่ ${r.attempts} จาก ${REMEDIAL_MAX}</span><small>${ix===0?'กำลังดำเนินการ':'รอพาร์ทก่อนหน้า'}</small></span></div>`;}).join('')}
-       <div class="card rules"><span class="shield">${I.shield}</span><ul><li>ระบบเรียงพาร์ทจากน้อยไปมากอัตโนมัติ เลือกหรือข้ามไม่ได้</li><li>สอบซ่อมได้สูงสุด ${REMEDIAL_MAX} ครั้งต่อพาร์ท</li><li>หากใช้สิทธิ์ครบแล้วยังไม่ผ่าน ระบบจะยุติการสอบทันที</li><li>หมดเวลา 120 นาทีก่อนส่ง ถือว่าไม่ผ่าน</li></ul></div></div></div>
+       <div class="field-title" style="text-align:center">เลือกพาร์ทที่จะสอบซ่อม — แตะเพื่อเลือก/ยกเลิก (เฉพาะพาร์ทที่ไม่ผ่าน)</div>
+       ${q.map(p=>{const r=S.results[p-1];const left=REMEDIAL_MAX-((r.attempts||1)-1);return `<div class="remq sel on" data-p="${p}"><span class="rqn">${p}</span><span class="rqm"><b>พาร์ต ${p}</b><span>คะแนนเดิม ${r.score}/${QPP}</span></span><span class="rqr"><span class="u">สอบซ่อมได้อีก ${left} ครั้ง</span><small class="selstat">จะสอบซ่อม</small></span></div>`;}).join('')}
+       <div class="card rules"><span class="shield">${I.shield}</span><ul><li>เลือกได้เองว่าจะซ่อมพาร์ทไหน — พาร์ทที่ยังไม่เลือก กลับมาซ่อมทีหลังได้</li><li>ในรอบนี้ระบบให้ทำเรียงพาร์ทจากน้อยไปมาก</li><li>สอบซ่อมได้สูงสุด ${REMEDIAL_MAX} ครั้งต่อพาร์ท — ครบแล้วยังไม่ผ่าน ระบบจะยุติการสอบ</li><li>หมดเวลา 120 นาทีก่อนส่ง ถือว่าไม่ผ่านทุกกรณี ต้องรอสอบรอบใหม่</li></ul></div></div></div>
    <div class="rfoot"><label class="consent" id="agree" style="margin:0;max-width:none;flex:1"><span class="box">${I.check}</span><span><b>ฉันเข้าใจกติกาการสอบซ่อมแล้ว</b></span></label>
-     <button class="btn btn-primary lg" id="begin" disabled>เริ่มสอบซ่อม พาร์ท ${q[0]} ${I.next}</button></div></div>`;
- let ok=false;$('#agree').onclick=()=>{ok=!ok;$('#agree').classList.toggle('on',ok);$('#begin').disabled=!ok;};
- $('#begin').onclick=async()=>{
-   if(S.api&&S.api.on){try{const res=await apiPost('/api/xv/remedial/start',{sessionId:S.api.id,token:S.api.token});
-     if(res&&res.ok){res.parts.forEach(pp=>S.paper[pp]=res.paper[pp]);S.remedialQueue.forEach(p=>{for(let i=0;i<QPP;i++)delete S.answers[key(p,i)];});S._review=null;S.session=freshSessionAPI('remedial',res.durationSec);S.phase='active_exam';render();startTimer();return;}}catch(e){}}
-   S.remedialQueue.forEach(p=>{for(let i=0;i<QPP;i++)delete S.answers[key(p,i)];});S.session=freshSession('remedial');S.phase='active_exam';render();startTimer();};
+     <button class="btn btn-primary lg" id="begin" disabled>เริ่มสอบซ่อม ${I.next}</button></div></div>`;
+ $$('.remq.sel').forEach(el=>{el.onclick=()=>{const p=+el.dataset.p;const st=el.querySelector('.selstat');
+   if(sel.has(p)){sel.delete(p);el.classList.remove('on');if(st)st.textContent='ข้ามไว้ก่อน';}
+   else{sel.add(p);el.classList.add('on');if(st)st.textContent='จะสอบซ่อม';}refreshBegin();};});
+ $('#agree').onclick=()=>{agreed=!agreed;$('#agree').classList.toggle('on',agreed);refreshBegin();};
+ refreshBegin();
+ $('#begin').onclick=async()=>{const parts=Array.from(sel).sort((a,b)=>a-b);if(!parts.length||!agreed)return;
+   S.remedialAttempted=parts.slice();
+   if(S.api&&S.api.on){try{const res=await apiPost('/api/xv/remedial/start',{sessionId:S.api.id,token:S.api.token,parts:parts});
+     if(res&&res.ok){res.parts.forEach(pp=>S.paper[pp]=res.paper[pp]);S.remedialQueue=res.parts.slice();res.parts.forEach(p=>{for(let i=0;i<QPP;i++)delete S.answers[key(p,i)];});S._review=null;S.session=freshSessionAPI('remedial',res.durationSec);S.phase='active_exam';render();startTimer();return;}}catch(e){}}
+   S.remedialQueue=parts.slice();parts.forEach(p=>{for(let i=0;i<QPP;i++)delete S.answers[key(p,i)];});S.session=freshSession('remedial');S.phase='active_exam';render();startTimer();};
 }
 
 /* ---------- 09 attempts completed ---------- */

@@ -142,7 +142,9 @@ module.exports = function (app, DATA) {
     id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt,
     mode: r.mode || 'online', fee: r.fee != null ? r.fee : 500, capacity: parseInt(r.capacity, 10) || 0,
     waitlist: !!r.waitlist, venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || '',
-    setId: r.setId || '', setName: (function () { if (!r.setId) return ''; const s = (readColl('qsets') || []).find(x => x.id === r.setId); return s ? s.name : ''; })()
+    setId: r.setId || '', setName: (function () { if (!r.setId) return ''; const s = (readColl('qsets') || []).find(x => x.id === r.setId); return s ? s.name : ''; })(),
+    examOpenedAt: r.examOpenedAt || null, examDeadlineAt: r.examDeadlineAt || null,
+    examRemaining: (r.status === 'open' && r.examDeadlineAt) ? Math.max(0, Math.ceil((r.examDeadlineAt - Date.now()) / 1000)) : null
   }, roundSeats(r));
   // save a data-url image to disk, return its public path (or '' if none/invalid)
   const saveRegImage = (dataUrl, tag) => {
@@ -273,9 +275,11 @@ module.exports = function (app, DATA) {
   // strip correct index for the client
   function clientPaper(paper, parts) { const out = {}; parts.forEach(p => { out[p] = (paper[p] || []).map(x => ({ q: x.q, o: x.o })); }); return out; }
   function findS(all, id, token) { return all.find(x => x.id === id && x.token === token); }
-  function activeParts(s) { return s.phase === 'remedial' ? (s.remedialQueue || []) : PARTS.slice(); }
+  // ตอนสอบซ่อม: ใช้ "พาร์ตที่กำลังซ่อมรอบนี้" (remedialActive) ถ้ามี — ผู้สอบ/ทีมงานเลือกซ่อมเฉพาะบางพาร์ตได้ · ไม่มี = ซ่อมทุกพาร์ตที่ค้าง
+  function activeParts(s) { return s.phase === 'remedial' ? ((s.remedialActive && s.remedialActive.length) ? s.remedialActive.slice() : (s.remedialQueue || [])) : PARTS.slice(); }
 
-  function score(s) {
+  // expired=true เมื่อถูกตัดเพราะหมดเวลา 120 นาที → ถ้ายังมีพาร์ทไม่ผ่าน ให้ "ตก" ทันที (ไม่ได้สิทธิ์สอบซ่อมต่อ ต้องรอสอบรอบใหม่)
+  function score(s, expired) {
     const parts = activeParts(s);
     parts.forEach(p => {
       let sc = 0; const wrong = [];
@@ -295,7 +299,8 @@ module.exports = function (app, DATA) {
       if (s.candidate && s.candidate.mode === 'onsite') { s.status = 'submitted'; s.staffVerified = true; s.verifiedAt = Date.now(); }
       else s.status = 'awaiting_verify';
     }
-    else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); }
+    else if (expired) { s.status = 'ended_failed'; s.timedOut = true; s.remedialQueue = []; s.remedialActive = null; } // หมดเวลา + ยังมีพาร์ทไม่ผ่าน = ตกทุกกรณี
+    else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); s.remedialActive = null; }
     s.paused = false;
     s.submittedAt = Date.now();
   }
@@ -340,7 +345,7 @@ module.exports = function (app, DATA) {
     else if (!paused && s.paused) { if (s.pausedAt) s.deadlineAt = xvDeadline(s) + (now - s.pausedAt); s.paused = false; s.pausedAt = null; }
   }
   // ตัดข้อสอบอัตโนมัติเมื่อหมดเวลา (แม้ลูกค้าจะเปิดค้างไว้/ไม่กดส่ง)
-  function xvAutoExpire(s) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s); s.autoExpired = true; return true; } return false; }
+  function xvAutoExpire(s) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s, true); s.autoExpired = true; return true; } return false; }
   const xvDigits = (v) => String(v || '').replace(/\D/g, '');
 
   /* ---------------- candidate endpoints ---------------- */
@@ -379,6 +384,12 @@ module.exports = function (app, DATA) {
     if (!B.bank || Object.keys(B.bank).length < 5) return res.status(400).json({ ok: false, error: 'no_questions' });
     const paper = buildPaper(B, PARTS);
     const now = Date.now();
+    // นาฬิการวมของห้อง (รอบสอบแรก): เวลาผูกกับ "รอบ" — เริ่มนับตั้งแต่ทีมงานกดเปิดสอบ ทุกคนหมดเวลาพร้อมกัน
+    // คนเข้าสอบสายจะเหลือเวลาน้อยกว่า 120 นาที · ถ้ารอบยังไม่ตั้งนาฬิกา (รอบเก่า) fallback = 120 นาทีต่อคน
+    const roomDeadline = (round && round.examDeadlineAt) ? round.examDeadlineAt : null;
+    if (roomDeadline && now > roomDeadline + XV_GRACE_MS) return res.status(403).json({ ok: false, error: 'exam_time_ended' });
+    const deadlineAt = roomDeadline || (now + TOTAL * 1000);
+    const remainSec = Math.max(0, Math.ceil((deadlineAt - now) / 1000));
     const s = {
       id: genId(), token: crypto.randomBytes(12).toString('hex'),
       candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: b.mode === 'onsite' ? 'onsite' : 'online' },
@@ -386,11 +397,11 @@ module.exports = function (app, DATA) {
       setId: B.id || null,
       roundId: round ? round.id : null, roundNo: round ? round.no : null,
       phase: 'first', paper, answers: {}, results: [], status: 'in_progress',
-      startedAt: now, deadlineAt: now + TOTAL * 1000, paused: false, pausedAt: null,
-      remaining: TOTAL, pauseUsed: 0, staffVerified: false, createdAt: now
+      startedAt: now, deadlineAt: deadlineAt, roomClock: !!roomDeadline, paused: false, pausedAt: null,
+      remaining: remainSec, pauseUsed: 0, staffVerified: false, createdAt: now
     };
     all.push(s); writeS(all);
-    res.json({ ok: true, sessionId: s.id, token: s.token, code: s.code, mode: s.candidate.mode, phase: 'first', parts: PARTS, durationSec: TOTAL, paper: clientPaper(paper, PARTS) });
+    res.json({ ok: true, sessionId: s.id, token: s.token, code: s.code, mode: s.candidate.mode, phase: 'first', parts: PARTS, durationSec: remainSec, paper: clientPaper(paper, PARTS) });
   });
 
   app.post('/api/xv/answer', (req, res) => {
@@ -400,7 +411,7 @@ module.exports = function (app, DATA) {
     if (typeof b.paused === 'boolean') xvSyncPause(s, b.paused);
     if (typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
     // บังคับเวลาจากเซิร์ฟเวอร์: หมดเวลาแล้ว → ตัดข้อสอบทันที ไม่รับคำตอบเพิ่ม (ไม่เชื่อค่าเวลาจากลูกค้า)
-    if (xvExpired(s)) { score(s); writeS(all); return res.json({ ok: true, expired: true, status: s.status, remaining: 0 }); }
+    if (xvExpired(s)) { score(s, true); writeS(all); return res.json({ ok: true, expired: true, status: s.status, remaining: 0 }); }
     if (b.part && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) s.answers[b.part + '-' + b.q] = b.choice;
     s.remaining = xvRemaining(s); // เวลาที่เหลือคิดจากเซิร์ฟเวอร์เท่านั้น
     writeS(all); res.json({ ok: true, remaining: s.remaining });
@@ -440,20 +451,27 @@ module.exports = function (app, DATA) {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s) return res.status(404).json({ ok: false });
     // idempotent: ถ้าถูกตัด/ส่งไปแล้ว (เช่นเซิร์ฟเวอร์หมดเวลาก่อน) คืนผลเดิม ไม่ error
-    if (s.status === 'in_progress') { score(s); writeS(all); }
+    if (s.status === 'in_progress') { score(s, xvExpired(s)); writeS(all); }
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
   });
 
   app.post('/api/xv/remedial/start', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'remedial_required') return res.status(400).json({ ok: false });
-    const np = buildPaper(getSet(s.setId), s.remedialQueue);
-    s.remedialQueue.forEach(p => { s.paper[p] = np[p]; for (let q = 0; q < QPP; q++) delete s.answers[p + '-' + q]; });
+    const queue = (s.remedialQueue || []);
+    // ผู้สอบเลือกเองได้ว่าจะซ่อมพาร์ตไหน (เฉพาะพาร์ตที่ไม่ผ่านเท่านั้น) · ไม่ส่ง parts มา = ซ่อมทุกพาร์ตที่ค้าง
+    let sel = Array.isArray(b.parts) ? b.parts.map(Number).filter(p => queue.indexOf(p) >= 0) : queue.slice();
+    sel = Array.from(new Set(sel)).sort((a, b) => a - b);
+    if (!sel.length) sel = queue.slice();
+    if (!sel.length) return res.status(400).json({ ok: false, error: 'no_parts' });
+    const np = buildPaper(getSet(s.setId), sel);
+    sel.forEach(p => { s.paper[p] = np[p]; for (let q = 0; q < QPP; q++) delete s.answers[p + '-' + q]; });
     const now = Date.now();
-    s.phase = 'remedial'; s.status = 'in_progress'; s.remaining = TOTAL;
-    s.startedAt = now; s.deadlineAt = now + TOTAL * 1000; s.paused = false; s.pausedAt = null;
+    // สอบซ่อม = นาฬิกาของใครของมัน เริ่มใหม่ 120 นาทีทันที (ไม่ผูกนาฬิการวมของห้อง)
+    s.phase = 'remedial'; s.remedialActive = sel; s.status = 'in_progress'; s.remaining = TOTAL;
+    s.startedAt = now; s.deadlineAt = now + TOTAL * 1000; s.roomClock = false; s.paused = false; s.pausedAt = null;
     writeS(all);
-    res.json({ ok: true, parts: s.remedialQueue, durationSec: TOTAL, paper: clientPaper(s.paper, s.remedialQueue) });
+    res.json({ ok: true, parts: sel, durationSec: TOTAL, paper: clientPaper(s.paper, sel) });
   });
 
   app.get('/api/xv/session/:id', (req, res) => {
@@ -644,6 +662,30 @@ module.exports = function (app, DATA) {
     res.json({ ok: true, status: s.status, results: pubResults(s), total: after.total });
   });
 
+  // ทีมงานเปิดพาร์ตให้ผู้สอบกลับไปทำใหม่ (กันเคสหลุด Browser / กดส่งคะแนนไม่ได้) — เปิดได้เฉพาะพาร์ตที่ไม่ผ่านและยังไม่หมดสิทธิ์
+  app.post('/api/xv/admin/session/:id/reopen-parts', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const b = req.body || {}; const all = readS(); const s = all.find(x => x.id === req.params.id);
+    if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
+    // พาร์ตที่ "ไม่ผ่าน" (คะแนน < เกณฑ์) และยังไม่หมดสิทธิ์ (ทำมาแล้วน้อยกว่า MAXATT ครั้ง)
+    const failedParts = (s.results || []).filter(r => (r.score || 0) < PASS && (r.attempts || 1) < MAXATT).map(r => r.part).sort((a, b) => a - b);
+    let sel = Array.isArray(b.parts) ? b.parts.map(Number).filter(p => failedParts.indexOf(p) >= 0) : [];
+    sel = Array.from(new Set(sel)).sort((a, b) => a - b);
+    if (!sel.length) return res.status(400).json({ ok: false, error: 'no_valid_parts', failedParts: failedParts });
+    const reason = String(b.reason || '').trim().slice(0, 200);
+    const np = buildPaper(getSet(s.setId), sel);
+    sel.forEach(p => { s.paper[p] = np[p]; for (let q = 0; q < QPP; q++) delete s.answers[p + '-' + q]; });
+    const now = Date.now(); const before = s.status;
+    // เปิดเป็นรอบซ่อมของผู้สอบคนนี้ — นาฬิกาของใครของมัน เริ่มใหม่ 120 นาทีทันที
+    s.phase = 'remedial'; s.remedialActive = sel; s.remedialQueue = failedParts.slice(); s.status = 'in_progress';
+    s.startedAt = now; s.deadlineAt = now + TOTAL * 1000; s.roomClock = false; s.remaining = TOTAL;
+    s.paused = false; s.pausedAt = null; s.autoExpired = false; s.timedOut = false; s.submittedAt = null;
+    s.reopenedBy = String(b.actor || 'staff').slice(0, 60); s.reopenedAt = now; s.reopenParts = sel.slice();
+    writeS(all);
+    logAudit('reopen_parts', 'session', s.id, s.code || '', before, 'in_progress', 'ทีมงานเปิดพาร์ต ' + sel.join(', ') + ' ให้ทำใหม่' + (reason ? (' · ' + reason) : ''), s.reopenedBy);
+    res.json({ ok: true, parts: sel, status: s.status });
+  });
+
   // ลบ session (สำหรับลบรายการทดสอบ/รายการผิดพลาด — ต้องใช้รหัสแอดมิน ผ่าน middleware ด้านบน)
   app.post('/api/xv/admin/session/:id/delete', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
@@ -692,6 +734,8 @@ module.exports = function (app, DATA) {
       regCloseAt: String(b.regCloseAt || '').slice(0, 10),
       createdAt: Date.now()
     };
+    // ถ้าสร้างแบบ "เปิดสอบทันที" → เริ่มนาฬิการวมของห้องเลย
+    if (r.status === 'open') { r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }
     const all = readR(); all.push(r); writeR(all);
     logAudit('round_create', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, 'สร้างรอบ ' + r.date + ' (' + r.mode + ')', 'staff');
     res.json({ ok: true, round: pubRound(r) });
@@ -702,6 +746,7 @@ module.exports = function (app, DATA) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const all = readR(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
     const b = req.body || {};
+    const wasOpen = r.status === 'open';
     if (b.date != null) r.date = String(b.date).slice(0, 10);
     if (b.no != null && b.no !== '') r.no = parseInt(b.no, 10) || r.no;
     if (b.topic != null) r.topic = String(b.topic).slice(0, 80);
@@ -714,8 +759,10 @@ module.exports = function (app, DATA) {
     if (b.venue != null) r.venue = String(b.venue).slice(0, 200);
     if (b.timeslot != null) r.timeslot = String(b.timeslot).slice(0, 60);
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
+    // กดเปิดสอบ (closed → open) = เริ่มนาฬิการวมของห้อง 120 นาที · เปิดซ้ำในหน้าต่างเดิมไม่รีเซ็ต · เปิดใหม่หลังหมดเวลา = เริ่มนับใหม่
+    if (r.status === 'open' && !wasOpen && (!r.examDeadlineAt || Date.now() > r.examDeadlineAt)) { r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }
     writeR(all);
-    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.status === 'open' ? 'เปิดรับสมัคร' : (b.status === 'closed' ? 'ปิดรับสมัคร' : 'แก้ไขข้อมูลรอบ')), 'staff');
+    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.status === 'open' ? 'เปิดสอบ (เริ่มจับเวลา)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
     res.json({ ok: true, round: pubRound(r) });
   });
 

@@ -934,7 +934,11 @@
       var open=r.status==='open';
       var onsite=(r.mode||'online')==='onsite';
       var modeChip='<span class="pill '+(onsite?'wait':'new')+'" style="font-size:.66rem">'+(onsite?'On-Site':'Online')+'</span>';
-      var badge=open?'<span class="pill ok">เปิดสอบอยู่</span>':'<span class="pill wait">ปิดอยู่</span>';
+      var badge;
+      if(open){
+        var roomClock=r.examDeadlineAt?('<div style="font-size:.7rem;color:var(--muted);font-weight:700;margin-top:5px;text-align:right;white-space:nowrap">⏱ เวลาสอบเหลือ <span class="xv-ltimer" data-end="'+r.examDeadlineAt+'" style="font-weight:800;color:var(--ink)">'+fmtHMS(r.examRemaining||0)+'</span></div>'):'';
+        badge='<div style="text-align:right">'+'<span class="pill ok">เปิดสอบอยู่</span>'+roomClock+'</div>';
+      } else badge='<span class="pill wait">ปิดอยู่</span>';
       var feeTxt=(r.fee!=null?r.fee:500);
       var venue=onsite?(r.venue||'ศูนย์สอบ'):'สอบออนไลน์';
       var s=setOf(r); var sTot=s?s.total:0; var sReady=s?s.ready:false; var setName=(r.setName||(s&&s.name))||'ชุดเริ่มต้น';
@@ -1404,6 +1408,47 @@
     };
   }
   window.xvScoreEdit=xvScoreEdit;
+  // ---- ทีมงานเปิดพาร์ตให้ผู้สอบกลับไปทำใหม่ (กันเคสหลุด Browser / กดส่งคะแนนไม่ได้) ----
+  function xvReopenEligible(s){
+    if(!s||!Array.isArray(s.results)||s.status==='in_progress')return [];
+    return s.results.filter(function(r){return (r.score||0)<PASS_PART && (r.attempts||1)<MAXATT;}).map(function(r){return r.part;}).sort(function(a,b){return a-b;});
+  }
+  function xvReopenBtn(s){
+    if(!xvReopenEligible(s).length)return '';
+    return ' <button onclick="xvReopenParts(\''+s.id+'\')" title="เปิดพาร์ตที่ไม่ผ่านให้ผู้สอบกลับไปทำใหม่ (กันเคสหลุด/กดส่งคะแนนไม่ได้)" style="border:1px solid #B45309;background:#FFF7ED;border-radius:8px;padding:5px 9px;cursor:pointer;color:#B45309;font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">↻ เปิดพาร์ตให้ทำใหม่</button>';
+  }
+  function xvReopenParts(id){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อเปิดพาร์ตจริง','bad');return;}
+    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
+    var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;}); if(!s){xvToast('ไม่พบผู้สอบ','bad');return;}
+    var elig=xvReopenEligible(s);
+    if(!elig.length){xvToast('ผู้สอบคนนี้ไม่มีพาร์ตที่เปิดให้ทำใหม่ได้ (ผ่านครบ หรือใช้สิทธิ์ครบแล้ว)','bad');return;}
+    var by={};(s.results||[]).forEach(function(r){by[r.part]=r;});
+    var rows=elig.map(function(p){var r=by[p]||{};var left=REMEDIAL_MAX-((r.attempts||1)-1);
+      return '<label style="display:flex;align-items:center;gap:12px;margin-bottom:9px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer">'
+        +'<input type="checkbox" class="rop_ck" value="'+p+'" checked style="width:18px;height:18px;flex:none">'
+        +'<div style="flex:1"><b style="color:var(--ink)">พาร์ท '+p+'</b> <span style="color:var(--muted);font-size:.82rem">คะแนนเดิม '+(r.score!=null?r.score:0)+'/'+QPP+'</span></div>'
+        +'<span style="color:var(--muted);font-size:.78rem">เปิดได้อีก '+left+' ครั้ง</span></label>';
+    }).join('');
+    xvSheet('<h3 style="font-size:1.12rem">เปิดพาร์ตให้ทำใหม่ · '+xvName(s)+' <span style="color:var(--muted);font-weight:600;font-size:.9rem">('+(s.code||'')+')</span></h3>'
+      +'<p style="color:var(--muted);font-size:.84rem;margin:5px 0 14px;line-height:1.5">ใช้กรณีผู้สอบหลุดจาก Browser หรือกดส่งคะแนนไม่ได้ — ติ๊กเลือกพาร์ท<b>ที่ไม่ผ่าน</b>ที่ต้องการเปิดให้กลับไปทำใหม่ ระบบจะสุ่มข้อสอบชุดใหม่ของพาร์ทนั้น และเริ่มจับเวลา 120 นาทีใหม่ให้ผู้สอบคนนี้ทันที (นาฬิกาของใครของมัน)</p>'
+      +rows
+      +'<div><label style="'+lblCss()+'">เหตุผล/บันทึก (ไม่บังคับ)</label><input id="rop_reason" placeholder="เช่น เน็ตหลุดตอนพาร์ท 3 กดส่งไม่ได้" style="'+fieldCss()+'"></div>'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="ropGo" style="'+btnPri()+'">เปิดพาร์ตให้ทำใหม่</button></div>');
+    document.getElementById('ropGo').onclick=function(){
+      var parts=[].slice.call(document.querySelectorAll('.rop_ck')).filter(function(c){return c.checked;}).map(function(c){return parseInt(c.value,10);});
+      if(!parts.length){xvToast('เลือกอย่างน้อย 1 พาร์ท','bad');return;}
+      var reason=((document.getElementById('rop_reason')||{}).value||'').trim();
+      var btn=this;btn.disabled=true;btn.textContent='กำลังเปิด…';
+      fetch('/api/xv/admin/session/'+id+'/reopen-parts'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,parts:parts,reason:reason})})
+        .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
+          if(o.j&&o.j.ok){xvSheetClose();xvToast('เปิดพาร์ท '+parts.join(', ')+' ให้ทำใหม่แล้ว · ผู้สอบเข้าทำต่อได้ทันที','ok');examRefresh();}
+          else if(o.s===403){btn.disabled=false;btn.textContent='เปิดพาร์ตให้ทำใหม่';xvToast('รหัสแอดมินไม่ถูกต้อง','bad');}
+          else {btn.disabled=false;btn.textContent='เปิดพาร์ตให้ทำใหม่';xvToast('เปิดไม่สำเร็จ: '+((o.j&&o.j.error)||'')+((o.j&&o.j.failedParts)?(' (พาร์ตที่เปิดได้: '+o.j.failedParts.join(', ')+')'):''),'bad');}
+        }).catch(function(){btn.disabled=false;btn.textContent='เปิดพาร์ตให้ทำใหม่';xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    };
+  }
+  window.xvReopenParts=xvReopenParts;
   // ---- ดูภาพเว็บแคม proctoring ของผู้สอบ ----
   function xvShowPhotos(id){
     var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;});
@@ -1615,7 +1660,7 @@
           +'<td><span class="xatt">'+xvAttLabel(s)+'</span>'+(s.roundNo?'<div style="color:var(--muted);font-size:.72rem">รอบครั้งที่ '+s.roundNo+'</div>':'')+'</td>'
           +'<td class="num">'+xvTimeUsed(s)+'</td>'
           +'<td><span class="pill '+sys.cl+'">'+sys.t+'</span>'
-          +' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--brand);font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button></td></tr>';
+          +' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--brand);font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+xvReopenBtn(s)+'</td></tr>';
       }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ศูนย์สอบ</td></tr>';
       head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะการทำข้อสอบ</th><th>รอบการสอบ</th><th>เวลาที่ใช้</th><th>ผลจากเกณฑ์ระบบ</th></tr>';
       var subC=list.filter(function(s){return s.status==='submitted';}).length;
@@ -1647,7 +1692,7 @@
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
-          +'<td>'+action+' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--brand);font-size:.78rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+((s.camPhotos>0)?' <button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-left:6px">📷 '+s.camPhotos+'</button>':'')+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
+          +'<td>'+action+' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--brand);font-size:.78rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+xvReopenBtn(s)+((s.camPhotos>0)?' <button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-left:6px">📷 '+s.camPhotos+'</button>':'')+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
       }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ตรวจเสร็จ</td></tr>';
       head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th></tr>';
       var tot2=Math.max(1,list.length);var vf=list.filter(function(s){return s.status==='verified';}).length;var ef=list.filter(function(s){return s.status==='ended_failed';}).length;
