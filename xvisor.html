@@ -369,7 +369,7 @@ input{font-family:inherit}
   .app{padding:var(--space-3);gap:var(--space-3);padding-bottom:calc(150px + env(safe-area-inset-bottom))}
   .appbar{flex-wrap:wrap;gap:var(--space-3);padding:var(--space-3) var(--space-4)}
   .appbar .title,.appbar .divider,.appbar .info{display:none}.appbar .status{order:2}.timer{order:3;margin-left:auto}
-  .layout{grid-template-columns:1fr;gap:var(--space-3)}.side{gap:var(--space-3)}
+  .layout{grid-template-columns:1fr;gap:var(--space-3);animation:none;transform:none}.side{gap:var(--space-3)}
   .qcard{min-height:0;padding:var(--space-4)}.qtext{font-size:17px}
   .tabs{display:flex;gap:var(--space-2);overflow-x:auto;padding:var(--space-1);scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
   .tab{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:74px;padding:10px var(--space-3);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border);cursor:pointer}
@@ -540,8 +540,9 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
    ${onsiteRound?'':`<div class="consent ${c.cameraConsent?'on':''}" id="consent" style="${c.mode==='online'?'':'display:none'}"><span class="box">${I.check}</span><span><b>ยินยอมเปิดกล้องตลอดการสอบ</b><span>ห้ามปิดกล้องจนกว่าจะสอบเสร็จและทีมงานยืนยันผล</span></span></div>`}
    <div class="reg-foot"><button class="btn btn-ghost" id="back">${I.prev} กลับ</button><button class="btn btn-primary lg" id="start" disabled>ยืนยันและเริ่มทำข้อสอบ <span class="chip">${I.check}</span></button></div>
  </div>`;
- const upd=()=>{c.firstName=$('#fn').value.trim();c.lastName=$('#ln').value.trim();c.phone=$('#ph').value.trim();
-   $('#start').disabled=!(c.firstName&&c.lastName&&c.phone&&(c.mode==='onsite'||c.cameraConsent)&&roundOpen());};
+ const upd=()=>{const fnE=$('#fn'),lnE=$('#ln'),phE=$('#ph'),stE=$('#start');if(!fnE||!lnE||!phE||!stE)return; // ออกจากหน้ากรอกข้อมูลแล้ว (เริ่มสอบ) → ไม่ต้องทำต่อ
+   c.firstName=fnE.value.trim();c.lastName=lnE.value.trim();c.phone=phE.value.trim();
+   stE.disabled=!(c.firstName&&c.lastName&&c.phone&&(c.mode==='onsite'||c.cameraConsent)&&roundOpen());};
  ['#fn','#ln','#ph'].forEach(s=>$(s).addEventListener('input',upd));
  // ค้นรายชื่อที่ทีมนำเข้าไว้ → กรอกเบอร์แล้วชื่อขึ้นเอง (เป็นตัวช่วยกรอกเฉย ๆ ไม่บล็อกใคร)
  (function(){
@@ -549,10 +550,11 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
    function showFound(n,extra){ box.style.display='block'; box.className='rosterhit ok';
      box.innerHTML='<span class="rk">✓</span><span class="rt"><b>พบในรายชื่อผู้ลงทะเบียน</b>'+(extra?'<span class="rs">'+extra+'</span>':'')+'</span>'; }
    function clearBox(){ box.style.display='none'; box.innerHTML=''; }
-   function lookup(){ var ph=($('#ph').value||'').replace(/\D/g,''); if(ph.length<6){clearBox();return;} if(ph===last)return; last=ph;
+   function lookup(){ var phEl=$('#ph'); if(!phEl||!$('#rosterHit'))return; // หน้ากรอกข้อมูลถูกแทนที่แล้ว (เริ่มสอบ) → หยุด
+     var ph=(phEl.value||'').replace(/\D/g,''); if(ph.length<6){clearBox();return;} if(ph===last)return; last=ph;
      apiGet('/api/xv/roster/lookup?phone='+encodeURIComponent(ph)).then(function(r){
+       var fnEl=$('#fn'), lnEl=$('#ln'); if(!fnEl||!lnEl||!$('#rosterHit'))return; // เริ่มสอบไปแล้วระหว่างรอผลค้นหา → ไม่แตะ DOM ที่หายไป
        if(!r||!r.found){ if(filled){filled=false;} clearBox(); return; }
-       var fnEl=$('#fn'), lnEl=$('#ln');
        // เติมชื่อให้อัตโนมัติเฉพาะเมื่อช่องยังว่าง หรือเป็นค่าที่เราเติมไว้ก่อนหน้า (ไม่ทับที่ผู้ใช้พิมพ์เอง)
        if(!fnEl.value.trim() && !lnEl.value.trim()){ var parts=String(r.name||'').trim().split(/\s+/); fnEl.value=parts.shift()||''; lnEl.value=parts.join(' '); filled=true; upd(); }
        showFound(r.name, [r.round,r.coach].filter(Boolean).join(' · '));
