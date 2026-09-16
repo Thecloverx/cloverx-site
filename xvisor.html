@@ -366,7 +366,7 @@ input{font-family:inherit}
 
 @media (max-width:1080px){.layout{grid-template-columns:minmax(0,1fr) 300px}.rail{display:none}.tabs{display:flex}.reg-grid{grid-template-columns:1fr}.rem-grid{grid-template-columns:1fr}.rsplit{grid-template-columns:1fr}}
 @media (max-width:760px){
-  .app{padding:var(--space-3);gap:var(--space-3);padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+  .app{padding:var(--space-3);gap:var(--space-3);padding-bottom:calc(198px + env(safe-area-inset-bottom))}
   .appbar{flex-wrap:wrap;gap:var(--space-3);padding:var(--space-3) var(--space-4)}
   .appbar .title,.appbar .divider,.appbar .info{display:none}.appbar .status{order:2}.timer{order:3;margin-left:auto}
   .layout{grid-template-columns:1fr;gap:var(--space-3);animation:none;transform:none}.side{gap:var(--space-3)}
@@ -383,8 +383,12 @@ input{font-family:inherit}
   .mprogress .fill::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);transform:translateX(-140%);animation:barShine 1.9s var(--ease) infinite}
   @keyframes barShine{0%{transform:translateX(-140%)}55%,100%{transform:translateX(300%)}}
   .mprogress .mpct,.mprogress .mtime{font-family:var(--num);font-weight:800;color:var(--primary-600);font-size:15px}
-  .answer-grid{grid-template-columns:repeat(10,1fr)}.cell{aspect-ratio:auto;min-height:38px;border-radius:9px}
+  .answer-grid{grid-template-columns:repeat(10,1fr);gap:6px}.cell{aspect-ratio:auto;min-height:32px;border-radius:9px;font-size:13px}
   .progress-card{display:none}
+  /* กระดานคำตอบ (เลข 1–20) ปักไว้เหนือแถบปุ่มล่าง — เห็นตลอด กดข้ามข้อได้ทันที ไม่ต้องเลื่อนหา */
+  .side .sheet-card{position:fixed;left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom));z-index:39;margin:0;border-radius:16px 16px 0 0;padding:8px 14px 10px;background:var(--surface);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--border);box-shadow:0 -10px 26px -18px rgba(7,60,140,.45)}
+  .side .sheet-card .slabel{display:none}
+  .side .sheet-card .legend{margin:0 0 7px;justify-content:center;gap:14px}
   .navrow.exam{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:var(--space-3) var(--space-4);padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom));background:var(--surface);backdrop-filter:blur(18px);border-top:1px solid var(--border);margin:0}
   .navrow.exam .btn{padding:13px var(--space-3);font-size:14px}
   .navrow.exam .spacer{display:none}
@@ -495,6 +499,8 @@ function render(){
  if(r)r();
  // ซิงก์ลายน้ำ + เว็บแคม proctoring ตามสถานะการสอบ
  try{ xvWatermark(); if(S.phase==='active_exam'){ if(window.XVCam)XVCam.start(); } else { if(window.XVCam)XVCam.stop(); } }catch(e){}
+ // ยกปุ่มแจ้งบั๊กขึ้นเหนือกระดานคำตอบตอนอยู่ในหน้าสอบ (กันทับเลขข้อ) · หน้าอื่นอยู่ตำแหน่งปกติ
+ try{var _fb=document.getElementById('fbFab');if(_fb)_fb.style.bottom='calc('+(S.phase==='active_exam'?'166px':'88px')+' + env(safe-area-inset-bottom))';}catch(e){}
 }
 function appbar(extra){const c=S.candidate;
  return `<header class="appbar card"><span class="brand">X-VISOR</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span>
@@ -620,13 +626,10 @@ function loadQuestion(anim){const ss=S.session,p=ss.currentPart,q=ss.currentQ,id
  $('#qbody').innerHTML=`<div class="qmeta">พาร์ต <b>${p}</b><span class="sep"></span>ข้อ <b class="num">${q+1}</b> จาก <span class="num">${QPP}</span></div>
    <h1 class="qtext">${qt}</h1><div class="options">${av.map((t,i)=>`<button class="option ${sel===i?'selected':''}" data-i="${i}"><span class="ol">${OPTL[i]}</span><span class="otx">${t}</span><span class="ock">${I.checkc}</span></button>`).join('')}</div>`;
  if(anim){const b=$('#qbody');b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}
- $('.options').onclick=e=>{const o=e.target.closest('.option');if(!o)return;const ci=+o.dataset.i;const wasNew=(sel==null);S.answers[key(p,q)]=ci;
+ $('.options').onclick=e=>{const o=e.target.closest('.option');if(!o)return;const ci=+o.dataset.i;S.answers[key(p,q)]=ci;
    $$('.option').forEach(x=>x.classList.toggle('selected',x===o));markAnswered(q);setProgress(pctActive());syncParts();
-   if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:p,q,choice:ci,remaining:S.session.remaining}).catch(()=>{});
-   // ตอบข้อใหม่แล้วเลื่อนไปข้อถัดไปที่ยังไม่ได้ตอบให้อัตโนมัติ (ลื่นไหล ไม่ต้องกดปุ่มเอง) · ตอบครบพาร์ทแล้วอยู่นิ่ง รอกด "พาร์ตถัดไป"
-   if(wasNew){setTimeout(()=>{const ss2=S.session;if(!ss2||ss2.currentPart!==p||ss2.currentQ!==q)return;
-     let nq=-1;if(q<QPP-1&&S.answers[key(p,q+1)]==null)nq=q+1;else{for(let i=0;i<QPP;i++){if(S.answers[key(p,i)]==null){nq=i;break;}}}
-     if(nq>=0&&nq!==q){ss2.currentQ=nq;loadQuestion(true);syncGrid();}},340);}};
+   if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:p,q,choice:ci,remaining:S.session.remaining}).catch(()=>{});};
+   // เลือกช้อยแล้วอยู่กับที่ (ดู/เปลี่ยนคำตอบได้) · กด › เพื่อไปข้อถัดไปเมื่อพร้อม
 }
 function markAnswered(q){const c=app.querySelector('.cell[data-q="'+q+'"]');if(c){const was=c.classList.contains('answered');c.classList.add('answered');if(!was){c.classList.add('justAns');setTimeout(()=>c.classList.remove('justAns'),360);}}}
 function syncGrid(){$$('.cell').forEach(c=>{const q=+c.dataset.q;c.classList.toggle('answered',S.answers[key(S.session.currentPart,q)]!=null);c.classList.toggle('current',q===S.session.currentQ);});}
