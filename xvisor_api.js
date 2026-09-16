@@ -16,6 +16,7 @@ module.exports = function (app, DATA) {
   const AUDITF = path.join(XV, 'audit.json'); // append-only admin action log
   const QSETF = path.join(XV, 'qsets.json'); // named question sets (each round picks one)
   const ROSTERF = path.join(XV, 'roster.json'); // imported "paid registrants" roster (exam-entry autofill)
+  const FEEDBACKF = path.join(XV, 'feedback.json'); // bug reports / feedback from testers (public submit, no login)
   const ROSTER_SEED = path.join(__dirname, 'xvisor_roster_seed.json'); // bundled initial roster (works with no admin key)
   const REGUP = path.join(XV, 'reguploads'); // slip / id-card images
   if (!fs.existsSync(REGUP)) { try { fs.mkdirSync(REGUP, { recursive: true }); } catch (e) {} }
@@ -34,10 +35,10 @@ module.exports = function (app, DATA) {
      The JSON file is ALWAYS written too (a durable backup + the fallback source read
      before Postgres finishes hydrating), so switching to or from Postgres never loses
      data. Each collection (sessions/rounds/registrations) is one JSONB blob row. */
-  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF, qsets: QSETF, roster: ROSTERF };
-  const COLLS = ['sessions', 'rounds', 'registrations', 'audit', 'qsets', 'roster'];
+  const fileOf = { sessions: SF, rounds: RF, registrations: REGF, audit: AUDITF, qsets: QSETF, roster: ROSTERF, feedback: FEEDBACKF };
+  const COLLS = ['sessions', 'rounds', 'registrations', 'audit', 'qsets', 'roster', 'feedback'];
   const USE_PG = !!process.env.DATABASE_URL;
-  const mem = { sessions: [], rounds: [], registrations: [], audit: [], qsets: [], roster: [] };
+  const mem = { sessions: [], rounds: [], registrations: [], audit: [], qsets: [], roster: [], feedback: [] };
   let pool = null, pgReady = false;
   const persistQ = {};
   const pgPersist = (coll) => {
@@ -481,6 +482,42 @@ module.exports = function (app, DATA) {
     if (xvAutoExpire(s)) writeS(all);
     const parts = activeParts(s);
     res.json({ ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, answers: s.answers, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: s.staffVerified, paper: clientPaper(s.paper, parts) });
+  });
+
+  /* -------- feedback / bug reports (สาธารณะ: ผู้เทสต์แจ้งปัญหาได้โดยไม่ต้องล็อกอิน) -------- */
+  app.post('/api/xv/feedback', (req, res) => {
+    const b = req.body || {}; const text = String(b.text || '').trim().slice(0, 3000);
+    if (!text) return res.status(400).json({ ok: false, error: 'empty' });
+    const c = (b.context && typeof b.context === 'object') ? b.context : {};
+    const fb = {
+      id: genId(), text,
+      screen: String(c.screen || '').slice(0, 60), part: (c.part != null ? c.part : null), q: (c.q != null ? c.q : null),
+      code: String(c.code || '').slice(0, 24), name: String(c.name || '').slice(0, 80), phone: String(c.phone || '').slice(0, 30),
+      roundNo: (c.roundNo != null ? c.roundNo : null), mode: String(c.mode || '').slice(0, 12),
+      ua: String(c.ua || '').slice(0, 320), vw: (c.vw != null ? c.vw : null), vh: (c.vh != null ? c.vh : null),
+      url: String(c.url || '').slice(0, 320), kind: (b.kind === 'idea' ? 'idea' : 'bug'),
+      status: 'open', createdAt: Date.now()
+    };
+    const all = readColl('feedback'); all.unshift(fb); writeColl('feedback', all.slice(0, 3000));
+    res.json({ ok: true, id: fb.id });
+  });
+  app.get('/api/xv/admin/feedback', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readColl('feedback');
+    res.json({ ok: true, feedback: all, openCount: all.filter(f => f.status === 'open').length });
+  });
+  app.post('/api/xv/admin/feedback/:id/toggle', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readColl('feedback'); const f = all.find(x => x.id === req.params.id);
+    if (!f) return res.status(404).json({ ok: false });
+    f.status = (f.status === 'open') ? 'resolved' : 'open'; writeColl('feedback', all);
+    res.json({ ok: true, status: f.status });
+  });
+  app.post('/api/xv/admin/feedback/:id/delete', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const all = readColl('feedback'); const i = all.findIndex(x => x.id === req.params.id);
+    if (i < 0) return res.status(404).json({ ok: false });
+    all.splice(i, 1); writeColl('feedback', all); res.json({ ok: true });
   });
 
   // wrong-question review — only after staff verification

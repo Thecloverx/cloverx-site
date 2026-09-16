@@ -948,7 +948,39 @@ function xvWatermark(){
   if(!wm){wm=document.createElement('div');wm.id='xvWM';document.body.appendChild(wm);}
   wm.style.cssText='position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.05;background-image:url('+uri+');background-repeat:repeat';
 }
-initState();render();resolveRound();
+/* ---------- ปุ่มแจ้งปัญหา/บั๊ก (ผู้เทสต์กดแจ้งได้จากทุกหน้า — แนบข้อมูลหน้าจออัตโนมัติ) ---------- */
+function fbContext(){try{return {screen:(typeof S!=='undefined'&&S&&S.phase)||'',
+  part:(S&&S.session&&S.session.currentPart)||null, q:(S&&S.session&&S.session.currentQ!=null)?(S.session.currentQ+1):null,
+  code:(S&&S.candidate&&S.candidate.id)||(S&&S.api&&S.api.code)||'',
+  name:(S&&S.candidate)?(((S.candidate.firstName||'')+' '+(S.candidate.lastName||'')).trim()):'',
+  phone:(S&&S.candidate&&S.candidate.phone)||'', roundNo:(S&&S.round&&S.round.no)||null, mode:(S&&S.candidate&&S.candidate.mode)||'',
+  ua:navigator.userAgent, vw:window.innerWidth, vh:window.innerHeight, url:location.href};}catch(e){return {ua:navigator.userAgent,url:location.href};}}
+function mountFeedback(){
+  if(document.getElementById('fbFab'))return;
+  var fab=document.createElement('button');fab.id='fbFab';fab.type='button';fab.setAttribute('aria-label','แจ้งปัญหา');fab.textContent='🐞';
+  fab.style.cssText='position:fixed;right:14px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:60;width:46px;height:46px;border-radius:50%;border:1px solid rgba(45,136,255,.35);background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 24px -10px rgba(7,60,140,.5);font-size:21px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .15s';
+  fab.onmouseenter=function(){fab.style.transform='scale(1.08)';};fab.onmouseleave=function(){fab.style.transform='scale(1)';};
+  document.body.appendChild(fab);
+  var ov=document.createElement('div');ov.id='fbOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(9,42,100,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center';
+  ov.innerHTML='<div style="background:#fff;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -18px 50px -20px rgba(0,0,0,.4)">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><span style="font-size:20px">🐞</span><h3 style="margin:0;font-size:1.1rem;color:#092A64">แจ้งปัญหา / ข้อเสนอแนะ</h3></div>'
+    +'<p style="color:#526987;font-size:.85rem;margin:4px 0 12px;line-height:1.5">เจอบั๊กหรืออะไรแปลก ๆ ตรงไหน พิมพ์บอกได้เลย ระบบจะแนบข้อมูลหน้าจอที่คุณอยู่ให้ทีมงานอัตโนมัติ</p>'
+    +'<textarea id="fbText" rows="4" placeholder="เช่น กดปุ่มถัดไปแล้วไม่ไปไหน / ตัวหนังสือล้นจอ / ปุ่มกดไม่ติด ..." style="width:100%;border:1.5px solid #d9e6f7;border-radius:12px;padding:12px;font-family:inherit;font-size:.95rem;color:#092A64;resize:vertical;box-sizing:border-box"></textarea>'
+    +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px"><button id="fbCancel" type="button" style="border:1px solid #d9e6f7;background:#fff;border-radius:11px;padding:11px 16px;font-family:inherit;font-weight:700;color:#526987;cursor:pointer">ยกเลิก</button>'
+    +'<button id="fbSend" type="button" style="border:0;border-radius:11px;padding:11px 20px;font-family:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,#27C8FF,#075BFF);cursor:pointer">ส่งรายงาน</button></div></div>';
+  document.body.appendChild(ov);
+  function close(){ov.style.display='none';}
+  fab.onclick=function(){document.getElementById('fbText').value='';ov.style.display='flex';setTimeout(function(){var t=document.getElementById('fbText');if(t)t.focus();},60);};
+  ov.addEventListener('click',function(e){if(e.target===ov)close();});
+  document.getElementById('fbCancel').onclick=close;
+  document.getElementById('fbSend').onclick=function(){
+    var txt=(document.getElementById('fbText').value||'').trim();if(!txt){toast('พิมพ์รายละเอียดปัญหาก่อนนะ');return;}
+    var btn=this;btn.disabled=true;btn.textContent='กำลังส่ง…';
+    apiPost('/api/xv/feedback',{text:txt,context:fbContext(),kind:'bug'}).then(function(){close();btn.disabled=false;btn.textContent='ส่งรายงาน';toast('ส่งรายงานแล้ว ขอบคุณมาก 🙏');}).catch(function(){btn.disabled=false;btn.textContent='ส่งรายงาน';toast('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง');});
+  };
+}
+initState();render();resolveRound();mountFeedback();
 </script>
 </body>
 </html>

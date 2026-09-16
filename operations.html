@@ -2872,6 +2872,41 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     obs.observe(ct,{childList:true,subtree:true});
   })();
 
+  /* ---------- รายงานปัญหา/บั๊กจากผู้เทสต์ (ผู้เทสต์กด "แจ้งปัญหา" ในหน้าสอบ → มาโผล่ที่นี่) ---------- */
+  function xvFbScreen(s){var m={registration:'หน้ากรอกข้อมูล',active_exam:'กำลังทำข้อสอบ',checking:'กำลังตรวจคำตอบ',first_result:'ผลสอบครั้งแรก',remedial_prep:'เตรียมสอบซ่อม',remedial_result:'ผลสอบซ่อม',attempts_completed:'จอไม่ผ่าน/จบ',waiting_verification:'รอยืนยันผล',all_passed:'ผ่านครบ',wrong_review:'ดูข้อที่ผิด',final_report:'ใบสรุปผล'};return m[s]||s||'-';}
+  function xvFbTime(t){if(!t)return'';var d=new Date(t);return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+  function xvFeedback(){
+    fetch('/api/xv/admin/feedback'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){
+      var list=(j&&j.feedback)||[];
+      var rows=list.length?list.map(function(f){
+        var dev=(f.vw&&f.vh)?(f.vw+'×'+f.vh):'';var who=[f.name,f.code,f.mode].filter(Boolean).join(' · ');
+        var meta=[xvFbScreen(f.screen)+(f.part?(' · พาร์ท '+f.part+(f.q?(' ข้อ '+f.q):'')):''),who,dev].filter(Boolean).join(' · ');
+        var done=f.status==='resolved';
+        return '<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;'+(done?'opacity:.55;background:#F7FAFC':'background:#fff')+'">'
+          +'<div style="white-space:pre-wrap;color:var(--ink);font-size:.92rem;line-height:1.5">'+String(f.text||'').replace(/</g,'&lt;')+'</div>'
+          +'<div style="color:var(--muted);font-size:.73rem;margin-top:7px">'+meta+' · '+xvFbTime(f.createdAt)+'</div>'
+          +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">'
+          +'<button onclick="xvFbToggle(\''+f.id+'\')" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 11px;font-family:inherit;font-weight:700;font-size:.76rem;color:'+(done?'var(--muted)':'var(--good)')+';cursor:pointer">'+(done?'↩ เปิดใหม่':'✓ แก้แล้ว')+'</button>'
+          +'<button onclick="xvFbDelete(\''+f.id+'\')" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-family:inherit;font-size:.85rem;color:var(--bad);cursor:pointer">🗑</button></div></div>';
+      }).join(''):'<div style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีรายงานจากผู้เทสต์ · แชร์ลิงก์สอบให้ทีมช่วยกดเทสต์ได้เลย</div>';
+      xvSheet('<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><span style="font-size:20px">🐞</span><h3 style="margin:0;font-size:1.12rem">รายงานจากผู้เทสต์ <span style="color:var(--muted);font-weight:600;font-size:.9rem">('+list.length+')</span></h3></div>'
+        +'<p style="color:var(--muted);font-size:.82rem;margin:4px 0 14px">คนที่ช่วยเทสต์กด "แจ้งปัญหา" ในหน้าสอบ รายงานจะมาที่นี่พร้อมข้อมูลหน้าจอ/เครื่องอัตโนมัติ</p>'
+        +'<div style="max-height:60vh;overflow:auto;margin:0 -4px;padding:0 4px">'+rows+'</div>'
+        +'<div style="display:flex;justify-content:flex-end;margin-top:14px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ปิด</button></div>');
+    }).catch(function(){xvToast('โหลดรายงานไม่สำเร็จ','bad');});
+  }
+  function xvFbToggle(id){fetch('/api/xv/admin/feedback/'+id+'/toggle'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(){xvFeedback();xvFbBadge();}).catch(function(){});}
+  function xvFbDelete(id){fetch('/api/xv/admin/feedback/'+id+'/delete'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(){xvFeedback();xvFbBadge();}).catch(function(){});}
+  window.xvFeedback=xvFeedback;window.xvFbToggle=xvFbToggle;window.xvFbDelete=xvFbDelete;
+  function xvFbBadge(){fetch('/api/xv/admin/feedback'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){var n=(j&&j.openCount)||0;var b=document.getElementById('fbAdmBadge');if(b){b.textContent=n;b.style.display=n>0?'inline-flex':'none';}}).catch(function(){});}
+  function mountAdminFeedback(){
+    if(document.getElementById('fbAdmFab'))return;
+    var fab=document.createElement('button');fab.id='fbAdmFab';fab.type='button';fab.title='รายงานจากผู้เทสต์';fab.onclick=xvFeedback;
+    fab.style.cssText='position:fixed;right:20px;bottom:20px;z-index:9980;height:48px;padding:0 16px;border-radius:26px;border:1px solid rgba(45,136,255,.35);background:#fff;box-shadow:0 12px 30px -12px rgba(7,60,140,.5);font-family:inherit;font-weight:800;font-size:.85rem;color:var(--brand);cursor:pointer;display:flex;align-items:center;gap:8px';
+    fab.innerHTML='🐞 รายงานผู้เทสต์ <span id="fbAdmBadge" style="display:none;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#E5484D;color:#fff;font-size:.72rem;font-weight:800"></span>';
+    document.body.appendChild(fab);xvFbBadge();setInterval(xvFbBadge,20000);
+  }
+
   // เปิดหน้าเริ่มต้น: ปกติ = Dashboard · ถ้าเข้าผ่าน /exam หรือ ?v=<view> → เปิดหน้านั้นเลย (ทางเข้าลัด)
   (function(){ var v='podash';
     try{
@@ -2880,5 +2915,6 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       if(q && document.querySelector('#nav .item[data-view="'+q+'"]')) v=q;
     }catch(e){}
     go(v);
+    try{mountAdminFeedback();}catch(e){}
   })();
 </script>
