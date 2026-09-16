@@ -370,6 +370,8 @@ input{font-family:inherit}
   .tab{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:74px;padding:10px var(--space-3);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border);cursor:pointer}
   .tab b{font-family:var(--num);font-weight:800;font-size:15px;color:var(--text-secondary)}.tab span{font-size:11px;color:var(--text-secondary)}
   .tab.active{background:var(--grad-primary);border-color:transparent;box-shadow:var(--glow-primary)}.tab.active b,.tab.active span{color:#fff}
+  .tab.done:not(.active){border-color:rgba(20,166,109,.45);background:rgba(20,166,109,.07)}.tab.done:not(.active) b,.tab.done:not(.active) span{color:var(--success)}
+  .tab.locked:not(.active){opacity:.45}
   .mprogress{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4)}
   .mprogress .track{flex:1;height:8px;border-radius:var(--radius-pill);background:#E1ECFC;overflow:hidden}
   .mprogress .fill{position:relative;overflow:hidden;height:100%;border-radius:var(--radius-pill);transition:width .6s var(--ease);background:linear-gradient(90deg,var(--cyan-400),var(--primary-500));box-shadow:0 0 10px rgba(39,200,255,.6)}
@@ -427,6 +429,10 @@ async function resolveRound(){
 function freshSession(phase){buildPaper(phase==='remedial'?S.remedialQueue:[1,2,3,4,5]);return {phase,remaining:TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
 function activeParts(){return S.session&&S.session.phase==='remedial'?S.remedialQueue.slice():[1,2,3,4,5];}
 function partAnswered(p){let n=0;for(let q=0;q<QPP;q++)if(S.answers[key(p,q)]!=null)n++;return n;}
+function partComplete(p){return partAnswered(p)>=QPP;}
+// index (ใน activeParts) ของพาร์ทที่ "เปิดให้ทำได้" ไกลสุด — พาร์ทก่อนหน้าที่ครบแล้วเข้าไปแก้ได้ พาร์ทถัดจากนี้ล็อก
+function unlockIdx(){const ap=activeParts();let i=0;while(i<ap.length-1&&partComplete(ap[i]))i++;return i;}
+function firstMissingQ(p){for(let q=0;q<QPP;q++)if(S.answers[key(p,q)]==null)return q;return -1;}
 function activeTotal(){return activeParts().length*QPP;}
 function answeredActive(){let n=0;activeParts().forEach(p=>n+=partAnswered(p));return n;}
 function pctActive(){return Math.round(answeredActive()/activeTotal()*100);}
@@ -570,10 +576,10 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
 /* ---------- 02 exam ---------- */
 let examTimer=null;
 function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',isRem=ss.phase==='remedial',ap=activeParts();
- const curIdx=ap.indexOf(ss.currentPart),pct=pctActive();
- let parts='';ap.forEach((p,ix)=>{const cls=p===ss.currentPart?'active':(ix<curIdx?'done':'locked');
-   parts+=`<button class="part ${cls}" data-part="${p}"><span class="pn num">${p}</span><span class="pinfo"><b>พาร์ต ${p}</b><span class="pc num">${partAnswered(p)} / ${QPP}</span></span></button>`;});
- let tabs='';ap.forEach((p,ix)=>tabs+=`<button class="tab ${p===ss.currentPart?'active':''}" data-part="${p}"><b class="num">${p}</b><span>พาร์ต</span></button>`);
+ const curIdx=ap.indexOf(ss.currentPart),pct=pctActive(),uIdx=unlockIdx();
+ let parts='';ap.forEach((p,ix)=>{const done=partComplete(p),lk=ix>uIdx;const cls=p===ss.currentPart?'active':(done?'done':(lk?'locked':''));
+   parts+=`<button class="part ${cls}" data-part="${p}"><span class="pn num">${(done&&p!==ss.currentPart)?'✓':p}</span><span class="pinfo"><b>พาร์ต ${p}</b><span class="pc num">${partAnswered(p)} / ${QPP}${lk?' · 🔒':(done?' · ครบ':'')}</span></span></button>`;});
+ let tabs='';ap.forEach((p,ix)=>{const done=partComplete(p),lk=ix>uIdx;tabs+=`<button class="tab ${p===ss.currentPart?'active':''} ${done?'done':''} ${lk?'locked':''}" data-part="${p}"><b class="num">${p}</b><span>${done?'✓ ':(lk?'🔒 ':'')}พาร์ต</span></button>`;});
  let cells='';for(let i=0;i<QPP;i++){const a=S.answers[key(ss.currentPart,i)]!=null;cells+=`<button class="cell ${a?'answered':''} ${i===ss.currentQ?'current':''}" data-q="${i}">${i+1}</button>`;}
  app.innerHTML=`
  ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn btn-danger-ghost" id="pauseBtn" style="margin-left:var(--space-2);padding:9px 14px;font-size:13px">${I.pause} หยุดเวลา · เหลือ ${PAUSE_MAX-ss.pauseUsed}</button>`:''}`)}
@@ -584,7 +590,7 @@ function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',
    <section class="center"><div class="qcard card"><div class="qbody" id="qbody"></div></div>
      <div class="navrow exam"><button class="btn btn-ghost" id="prev">${I.prev}<span class="txt-full"> ย้อนกลับ</span></button><span class="spacer"></span>
        <button class="btn btn-ghost" id="next"><span class="txt-full">ข้อถัดไป </span>${I.next}</button>
-       <button class="btn btn-primary" id="submit"><span class="txt-full">${isRem?'ส่งข้อสอบซ่อม':'ยืนยันและส่งข้อสอบ'}</span><span class="chip">${I.check}</span></button></div></section>
+       <button class="btn btn-primary" id="mainbtn">${(curIdx===ap.length-1)?`<span class="txt-full">${isRem?'ส่งข้อสอบซ่อม':'ยืนยันการส่งคะแนน'}</span><span class="chip">${I.check}</span>`:`<span class="txt-full">พาร์ตถัดไป </span>${I.next}`}</button></div></section>
    <aside class="side"><div class="progress-card card"><div class="slabel">${I.chart} ความคืบหน้า</div>
        <div class="ringwrap">${ringSVG(pct)}<div class="rc"><b class="pctv num">${pct}%</b><span class="num"><span class="ansc">${answeredActive()}</span> / ${activeTotal()}</span></div></div>
        <div class="timeleft"><span class="tl-l">เวลาคงเหลือ</span><span class="tl-v tv num">${fmt(ss.remaining)}</span></div></div>
@@ -592,10 +598,10 @@ function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',
        <div class="legend"><i><span class="ld" style="background:var(--primary-600)"></span>ตอบแล้ว</i><i><span class="ld" style="border:2px solid var(--primary-500);background:#fff"></span>กำลังทำ</i><i><span class="ld" style="background:#E4EAF3"></span>ยังไม่ตอบ</i></div>
        <div class="answer-grid" id="grid">${cells}</div></div></aside></div>`;
  loadQuestion(false);S.session.shownPct=0;setProgress(pct);
- $$('[data-part]').forEach(b=>b.onclick=()=>{const p=+b.dataset.part;if(b.classList.contains('locked')){toast('ต้องทำพาร์ทตามลำดับ');return;}ss.currentPart=p;ss.currentQ=0;renderExam();});
+ $$('[data-part]').forEach(b=>b.onclick=()=>{const p=+b.dataset.part;if(b.classList.contains('locked')){toast('ต้องทำพาร์ทก่อนหน้าให้ครบก่อน จึงจะเปิดพาร์ทนี้ได้');return;}ss.currentPart=p;ss.currentQ=0;renderExam();});
  $('#prev').onclick=()=>{if(ss.currentQ>0){ss.currentQ--;loadQuestion(true);syncGrid();}else toast('ข้อแรกของพาร์ทนี้แล้ว');};
  $('#next').onclick=()=>{if(ss.currentQ<QPP-1){ss.currentQ++;loadQuestion(true);syncGrid();}else toast('ข้อสุดท้ายของพาร์ทนี้แล้ว');};
- $('#submit').onclick=openSubmit;
+ $('#mainbtn').onclick=mainAction;
  $('#grid').onclick=e=>{const cc=e.target.closest('.cell');if(cc){ss.currentQ=+cc.dataset.q;loadQuestion(true);syncGrid();}};
  const pb=$('#pauseBtn');if(pb)pb.onclick=openPause;
 }
@@ -633,23 +639,33 @@ function openPause(){const ss=S.session;if(ss.pauseUsed>=PAUSE_MAX){toast('ใ�
  document.getElementById('resume').onclick=()=>{clearInterval(iv);end();};
 }
 
-/* ---------- submit confirm ---------- */
+/* ---------- part flow + submit confirm ---------- */
+// ปุ่มหลัก: ทำทีละพาร์ท — ต้องทำพาร์ทปัจจุบันให้ครบก่อน จึงจะไปพาร์ทถัดไป/ยืนยันส่งได้
+function mainAction(){const ss=S.session,ap=activeParts(),cIdx=ap.indexOf(ss.currentPart),isLast=cIdx===ap.length-1;
+ const miss=QPP-partAnswered(ss.currentPart);
+ if(miss>0){const q=firstMissingQ(ss.currentPart);if(q>=0){ss.currentQ=q;loadQuestion(true);syncGrid();}
+   toast('ยังทำพาร์ท '+ss.currentPart+' ไม่ครบ · เหลืออีก '+miss+' ข้อ — ทำให้ครบก่อนจึงจะไปต่อได้');return;}
+ if(!isLast){ss.currentPart=ap[cIdx+1];ss.currentQ=0;renderExam();toast('เปิดพาร์ท '+ss.currentPart+' แล้ว');return;}
+ openSubmit();
+}
 function openSubmit(){const ap=activeParts();
  const miss=ap.map(p=>({p,n:QPP-partAnswered(p)})).filter(x=>x.n>0);
  const totalMiss=miss.reduce((a,x)=>a+x.n,0);
- const head=totalMiss?`<div class="mic warn">${I.info}</div>`:`<div class="mic ok">${I.checkc}</div>`;
- const title=totalMiss?'ยังทำข้อสอบไม่ครบ':'ยืนยันการส่งข้อสอบ';
- const sub=totalMiss?`เหลืออีก <b style="color:var(--warning)">${totalMiss}</b> ข้อที่ยังไม่ได้ทำ กรุณาตรวจสอบก่อนส่ง`:'ตอบครบทุกข้อแล้ว — เมื่อส่งแล้วจะแก้ไขไม่ได้';
- const list=totalMiss
-   ? '<div class="misslist">'+miss.map(x=>`<div class="checkrow"><span class="ci2" style="color:var(--warning)">${I.info}</span><span>พาร์ต <b>${x.p}</b> · เหลือ <b style="color:var(--warning)">${x.n}</b> ข้อที่ยังไม่ได้ทำ</span></div>`).join('')+'</div>'
-   : `<div class="misslist"><div class="checkrow" style="justify-content:center"><span class="ci2" style="color:var(--success)">${I.checkc}</span>ตอบครบทั้ง ${activeTotal()} ข้อแล้ว</div></div>`;
- const btns=totalMiss
-   ? `<button class="btn btn-ghost" id="cxl" style="flex:1.2">${I.prev} กลับไปทำต่อจนครบ</button><button class="btn btn-primary" id="ok" style="flex:1">ยืนยันการส่งคะแนน</button>`
-   : `<button class="btn btn-ghost" id="cxl" style="flex:1">ตรวจอีกครั้ง</button><button class="btn btn-primary" id="ok" style="flex:1">ยืนยันการส่งคะแนน <span class="chip">${I.check}</span></button>`;
- scrim(`<div class="modal"><div class="mstack">${head}<div class="mhead"><h3>${title}</h3><p class="msub">${sub}</p></div>${list}<div class="mbtns">${btns}</div></div></div>`);
- document.getElementById('cxl').onclick=()=>{closeScrim();
-   if(totalMiss){const fp=miss[0].p;for(let q=0;q<QPP;q++){if(S.answers[key(fp,q)]==null){S.session.currentPart=fp;S.session.currentQ=q;break;}}renderExam();toast('พาไปยังข้อที่ยังไม่ได้ทำ · พาร์ต '+fp);}};
- document.getElementById('ok').onclick=()=>{closeScrim();doSubmit();};
+ if(totalMiss){ // ทำไม่ครบ = ส่งคะแนนไม่ได้ทุกกรณี — มีแค่ปุ่มกลับไปทำต่อ
+   scrim(`<div class="modal"><div class="mstack"><div class="mic warn">${I.info}</div><div class="mhead"><h3>ยังทำข้อสอบไม่ครบ</h3><p class="msub">เหลืออีก <b style="color:var(--warning)">${totalMiss}</b> ข้อที่ยังไม่ได้ทำ — ต้องทำให้ครบทุกพาร์ทก่อนจึงจะส่งคะแนนได้</p></div><div class="misslist">${miss.map(x=>`<div class="checkrow"><span class="ci2" style="color:var(--warning)">${I.info}</span><span>พาร์ต <b>${x.p}</b> · เหลือ <b style="color:var(--warning)">${x.n}</b> ข้อที่ยังไม่ได้ทำ</span></div>`).join('')}</div><div class="mbtns"><button class="btn btn-primary block" id="cxl">${I.prev} กลับไปทำต่อจนครบ</button></div></div></div>`);
+   document.getElementById('cxl').onclick=()=>{closeScrim();const fp=miss[0].p;const q=firstMissingQ(fp);S.session.currentPart=fp;S.session.currentQ=q<0?0:q;renderExam();toast('พาไปยังข้อที่ยังไม่ได้ทำ · พาร์ต '+fp);};
+   return;
+ }
+ // ครบทุกข้อ → ยืนยันชั้นที่ 1
+ scrim(`<div class="modal"><div class="mstack"><div class="mic ok">${I.checkc}</div><div class="mhead"><h3>ยืนยันการส่งข้อสอบ</h3><p class="msub">ตอบครบทั้ง ${activeTotal()} ข้อแล้ว — เมื่อส่งแล้วจะแก้ไขไม่ได้</p></div><div class="misslist"><div class="checkrow" style="justify-content:center"><span class="ci2" style="color:var(--success)">${I.checkc}</span>ตอบครบทุกพาร์ทเรียบร้อย</div></div><div class="mbtns"><button class="btn btn-ghost" id="cxl" style="flex:1">ตรวจอีกครั้ง</button><button class="btn btn-primary" id="ok" style="flex:1">ยืนยันการส่งคะแนน</button></div></div></div>`);
+ document.getElementById('cxl').onclick=closeScrim;
+ document.getElementById('ok').onclick=confirmSubmit2;
+}
+// ยืนยันชั้นที่ 2 (กันพลาด) — ต้องกดยืนยันซ้ำอีกครั้งจึงจะส่งจริง
+function confirmSubmit2(){
+ scrim(`<div class="modal"><div class="mstack"><div class="mic warn">${I.info}</div><div class="mhead"><h3>ยืนยันอีกครั้ง</h3><p class="msub">กดยืนยันเพื่อ<b> ส่งคะแนน </b>— หลังส่งแล้วจะกลับมาแก้ไขคำตอบไม่ได้อีก แน่ใจแล้วใช่ไหม?</p></div><div class="mbtns"><button class="btn btn-ghost" id="c2cxl" style="flex:1">ยังไม่ส่ง</button><button class="btn btn-primary" id="c2ok" style="flex:1">ยืนยันส่งคะแนน <span class="chip">${I.check}</span></button></div></div></div>`);
+ document.getElementById('c2cxl').onclick=closeScrim;
+ document.getElementById('c2ok').onclick=()=>{closeScrim();doSubmit();};
 }
 function doSubmit(){clearInterval(examTimer);
  if(S.api&&S.api.on){apiPost('/api/xv/submit',{sessionId:S.api.id,token:S.api.token}).then(res=>{
