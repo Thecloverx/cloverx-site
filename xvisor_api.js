@@ -451,7 +451,7 @@ module.exports = function (app, DATA) {
   app.get('/api/xv/round/:code', (req, res) => {
     const r = findRByCode(req.params.code);
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open' } });
+    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open', mode: r.mode || 'online', venue: r.venue || '', timeslot: r.timeslot || '' } });
   });
 
   /* ---------------- roster: imported "paid registrants" for exam-entry autofill ----------------

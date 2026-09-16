@@ -182,6 +182,10 @@ input{font-family:inherit}
 .step.on{color:var(--primary-700)}.step.on .sn{background:var(--grad-primary);color:#fff;border-color:transparent;box-shadow:var(--glow-primary)}
 .step .dash{width:40px;height:2px;background:var(--border);border-radius:2px}
 .reg-grid{display:grid;grid-template-columns:1fr 1.05fr .95fr;gap:var(--space-5);align-items:stretch}
+.reg-grid.reg-solo{grid-template-columns:1fr;max-width:480px}
+.onsite-note{background:var(--surface-2,#F3F7FC);border:1px solid var(--border,#E1E9F2);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-top:var(--space-3)}
+.onsite-note b{display:block;font-size:14px}
+.onsite-note small{color:var(--text-secondary,#5E7288);font-size:13px}
 .field-title{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--space-3)}
 .rosterhit{display:flex;align-items:center;gap:9px;border-radius:var(--radius-control);padding:9px 12px;margin:-2px 0 var(--space-3);font-size:13px;animation:rhin .2s ease}
 .rosterhit.ok{background:#ECFDF5;border:1px solid #A7F3D0;color:#047857}
@@ -416,7 +420,7 @@ async function resolveRound(){
   let code=null; try{code=new URLSearchParams(location.search).get('round');}catch(e){}
   if(!code)return;
   try{const r=await fetch('/api/xv/round/'+encodeURIComponent(code));const j=await r.json();
-    if(j&&j.ok){S.round=j.round;} else {S.round={code,notFound:true};}
+    if(j&&j.ok){S.round=j.round; if(j.round&&(j.round.mode==='onsite'||j.round.mode==='online')){S.candidate.mode=j.round.mode;}} else {S.round={code,notFound:true};}
   }catch(e){S.round={code,offline:true};}
   if(S.phase==='registration')render();
 }
@@ -488,6 +492,7 @@ function appbar(extra){const c=S.candidate;
 const _THMON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 function thDate(iso){if(!iso)return '';const d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;return d.getDate()+' '+_THMON[d.getMonth()]+' '+(d.getFullYear()+543);}
 function roundOpen(){return !(S.round&&(S.round.notFound||S.round.offline||S.round.open===false));}
+function roundOnsite(){return !!(S.round&&S.round.mode==='onsite');}
 function roundBanner(){const r=S.round;if(!r)return '';
   if(r.notFound)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-weight:700;font-size:14px">ไม่พบรอบสอบนี้ — โปรดตรวจสอบลิงก์กับผู้จัดสอบอีกครั้ง</div>`;
   const closed=r.open===false;
@@ -495,7 +500,7 @@ function roundBanner(){const r=S.round;if(!r)return '';
   if(closed)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">รอบนี้ยังไม่เปิดสอบ / ปิดรับแล้ว — โปรดรอผู้จัดสอบเปิดรอบ</div></div>`;
   return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">เปิดรับสมัคร — กรอกข้อมูลแล้วเริ่มสอบได้เลย</div></div>`;
 }
-function renderRegistration(){const c=S.candidate;
+function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite();if(onsiteRound)c.mode='onsite';
  app.innerHTML=`
  <header class="appbar card"><span class="brand">X-VISOR</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span><span class="spacer"></span>
    <span class="status"><span class="dot"></span>พร้อมเริ่มสอบ</span></header>
@@ -506,21 +511,22 @@ function renderRegistration(){const c=S.candidate;
      <div class="step"><span class="sn">3</span>เริ่มสอบ</div></div>
    <h1 class="hero-h">เข้าสู่ระบบเพื่อเริ่มการสอบ</h1><div class="hero-sub">กรุณากรอกข้อมูลผู้เข้าสอบให้ครบถ้วน</div>
    ${roundBanner()}
-   <div class="reg-grid" style="margin-top:var(--space-5)">
+   <div class="reg-grid${onsiteRound?' reg-solo':''}" style="margin-top:var(--space-5)">
      <div><div class="field-title">ข้อมูลผู้สอบ</div>
        <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>ชื่อ</label><input id="fn" placeholder="กรอกชื่อ" value="${c.firstName}"></span></div>
        <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>นามสกุล</label><input id="ln" placeholder="กรอกนามสกุล" value="${c.lastName}"></span></div>
        <div class="frow"><span class="fi">${I.phone}</span><span class="fc"><label>เบอร์โทรศัพท์</label><input id="ph" placeholder="08X-XXX-XXXX" value="${c.phone}"></span></div>
-       <div id="rosterHit" class="rosterhit" style="display:none"></div></div>
-     <div style="display:flex;flex-direction:column"><div class="field-title">รูปแบบการสอบ</div>
+       <div id="rosterHit" class="rosterhit" style="display:none"></div>
+       ${onsiteRound?`<div class="onsite-note"><span class="mi" style="font-size:22px">${I.bldg}</span><span><b>สอบที่ศูนย์ (On-Site)</b><small>คุมสอบโดยทีมงานหน้างาน — ไม่ต้องเปิดกล้อง</small></span></div>`:''}</div>
+     ${onsiteRound?'':`<div style="display:flex;flex-direction:column"><div class="field-title">รูปแบบการสอบ</div>
        <div class="modes">
          <div class="mode ${c.mode==='online'?'on':''}" data-mode="online"><span class="mi">${I.monitor}</span><div class="mt">Online</div><div class="ms">สอบผ่านระบบออนไลน์</div><span class="rc2">${I.check}</span></div>
          <div class="mode ${c.mode==='onsite'?'on':''}" data-mode="onsite"><span class="mi">${I.bldg}</span><div class="mt">Onsite</div><div class="ms">สอบที่ศูนย์สอบ</div><span class="rc2">${I.check}</span></div></div></div>
      <div style="display:flex;flex-direction:column"><div class="field-title">การอนุญาตใช้กล้อง</div>
        <div class="campanel" id="camPanel"><span class="cnr tl"></span><span class="cnr tr"></span><span class="cnr bl"></span><span class="cnr br"></span><span class="camic">${I.cam}</span></div>
-       <div class="camready" id="camReady">${c.mode==='online'?'กล้องพร้อมใช้งาน':'สำหรับ Online เท่านั้น'}</div></div>
+       <div class="camready" id="camReady">${c.mode==='online'?'กล้องพร้อมใช้งาน':'สำหรับ Online เท่านั้น'}</div></div>`}
    </div>
-   <div class="consent ${c.cameraConsent?'on':''}" id="consent" style="${c.mode==='online'?'':'display:none'}"><span class="box">${I.check}</span><span><b>ยินยอมเปิดกล้องตลอดการสอบ</b><span>ห้ามปิดกล้องจนกว่าจะสอบเสร็จและทีมงานยืนยันผล</span></span></div>
+   ${onsiteRound?'':`<div class="consent ${c.cameraConsent?'on':''}" id="consent" style="${c.mode==='online'?'':'display:none'}"><span class="box">${I.check}</span><span><b>ยินยอมเปิดกล้องตลอดการสอบ</b><span>ห้ามปิดกล้องจนกว่าจะสอบเสร็จและทีมงานยืนยันผล</span></span></div>`}
    <div class="reg-foot"><button class="btn btn-ghost" id="back">${I.prev} กลับ</button><button class="btn btn-primary lg" id="start" disabled>ยืนยันและเริ่มทำข้อสอบ <span class="chip">${I.check}</span></button></div>
  </div>`;
  const upd=()=>{c.firstName=$('#fn').value.trim();c.lastName=$('#ln').value.trim();c.phone=$('#ph').value.trim();
@@ -546,7 +552,7 @@ function renderRegistration(){const c=S.candidate;
  })();
  $$('.mode').forEach(m=>m.onclick=()=>{c.mode=m.dataset.mode;$$('.mode').forEach(x=>x.classList.toggle('on',x===m));
    const on=c.mode==='online';$('#consent').style.display=on?'':'none';$('#camReady').textContent=on?'กล้องพร้อมใช้งาน':'สำหรับ Online เท่านั้น';$('#camReady').style.color=on?'var(--success)':'var(--text-secondary)';$('#camPanel').style.opacity=on?1:.5;upd();});
- $('#consent').onclick=()=>{c.cameraConsent=!c.cameraConsent;$('#consent').classList.toggle('on',c.cameraConsent);upd();};
+ {const _cs=$('#consent');if(_cs)_cs.onclick=()=>{c.cameraConsent=!c.cameraConsent;_cs.classList.toggle('on',c.cameraConsent);upd();};}
  $('#back').onclick=()=>toast('อยู่ที่ขั้นตอนแรกแล้ว');
  $('#start').onclick=async()=>{if(!roundOpen()){toast('รอบนี้ยังไม่เปิดสอบ');return;}const btn=$('#start');btn.disabled=true;btn.style.opacity=.7;
    try{const res=await apiPost('/api/xv/start',{firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode,roundId:S.round&&S.round.id,roundCode:S.round&&S.round.code});
