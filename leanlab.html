@@ -873,7 +873,21 @@ document.addEventListener('click',function(e){
     } else if(st==='confirmed'){
       p.innerHTML=thankHTML(); wireThank();
     } else {
-      p.innerHTML='<div class="card"><h2 class="tt">Lean Lab</h2><p class="sub">สถานะการสมัคร: '+esc(st||'-')+'</p></div>';
+      // terminal/ไม่รู้จัก (cancelled, expired, rejected, no_show, refunded, …) — ห้ามเป็นทางตัน
+      // ให้ลูกค้าสมัครใหม่และเลือกวันเริ่มใหม่ได้เลย (ไม่ต้องออกจากระบบแล้วล็อกอินใหม่)
+      var TMAP={
+        cancelled:['การสมัครถูกยกเลิก','การสมัครรอบนี้ถูกยกเลิก (หมดเวลาชำระเงิน หรือทีมงานยกเลิก) — สมัครใหม่และเลือกวันเริ่มได้เลย'],
+        expired:['หมดเวลาชำระเงิน','เลยกำหนดเวลาชำระเงินแล้ว — สมัครใหม่และเลือกวันเริ่มได้เลย'],
+        rejected:['การสมัครไม่ผ่านการตรวจสอบ','สมัครใหม่อีกครั้งและเลือกวันเริ่มได้เลย'],
+        no_show:['ไม่ได้เข้าร่วมรอบก่อน','สมัครใหม่และเลือกวันเริ่มได้เลย'],
+        refunded:['คืนเงินเรียบร้อยแล้ว','หากต้องการเข้าร่วมอีกครั้ง สมัครใหม่และเลือกวันเริ่มได้เลย']
+      };
+      var tm=TMAP[st]||['การสมัครสิ้นสุดแล้ว','คุณสามารถสมัครใหม่และเลือกวันเริ่มได้เลย'];
+      p.innerHTML='<div class="card"><div class="stbig"><div class="ic" style="background:rgba(255,107,107,.12);color:var(--danger)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div><h2>'+esc(tm[0])+'</h2><p>'+esc(tm[1])+'</p></div>'
+        +'<button class="btn lime block lg" id="ctaRestart" style="margin-top:18px">สมัครใหม่ / เลือกวันเริ่มใหม่</button>'
+        +'<button class="btn ghost block" id="ctaLogout2" style="margin-top:10px">ออกจากระบบ</button></div>';
+      $('#ctaRestart').onclick=function(){ hydrateW(); vStep1(); };
+      $('#ctaLogout2').onclick=logout;
     }
   }
 
