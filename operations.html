@@ -2535,7 +2535,6 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
         +'<select id="dashPick" onchange="pickDash(this.value)" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-family:inherit;font-weight:700;color:var(--brand);font-size:.9rem;cursor:pointer">'
           +'<option value="xh">Xircle &amp; HabiX</option>'
           +'<option value="ll">Lean Lab</option>'
-          +'<option value="exam">Exam (X-VISOR)</option>'
         +'</select>'
       +'</div>'
     +'</div>'
@@ -2550,17 +2549,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     } else if(v==='ll'){
       b.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><a href="/support" target="_blank" rel="noopener" style="background:#16a34a;border:1px solid #16a34a;border-radius:10px;padding:9px 15px;color:#fff;font-weight:700;font-size:.84rem;text-decoration:none">เปิดเต็มจอ ↗</a></div>'
         +'<iframe id="dashFrame" src="/support?embed=1" style="width:100%;height:calc(100vh - 165px);min-height:640px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)"></iframe>';
-    } else if(v==='exam'){
-      b.innerHTML=dashLinkCard('#7c5cff','แดชบอร์ด Exam (X-VISOR)','รอบสอบ · ผู้เข้าสอบ · อัตราผ่าน · ผลสอบ',"ไปที่ Exam ▸ Session →","go('exam-session')");
     }
-  }
-  function dashLinkCard(c,title,desc,btn,act){
-    return '<div style="border:1px solid var(--line);border-radius:16px;background:#fff;min-height:520px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;box-shadow:0 1px 3px rgba(16,27,45,.05)"><div>'
-      +'<div style="width:60px;height:60px;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:'+c+'18;color:'+c+'"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>'
-      +'<div style="font-size:1.15rem;font-weight:800;color:var(--ink)">'+title+'</div>'
-      +'<div style="color:var(--muted);font-size:.9rem;margin-top:8px">'+desc+'</div>'
-      +'<button onclick="'+act+'" style="margin-top:18px;background:'+c+';color:#fff;border:0;border-radius:11px;padding:11px 20px;font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer">'+btn+'</button>'
-      +'</div></div>';
   }
   function pdDraw(orders){
     var PAID=['confirmed','paid'];
