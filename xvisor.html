@@ -386,7 +386,10 @@ input{font-family:inherit}
   .answer-grid{grid-template-columns:repeat(10,1fr)}.cell{aspect-ratio:auto;min-height:38px;border-radius:9px}
   .progress-card{display:none}
   .navrow.exam{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:var(--space-3) var(--space-4);padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom));background:var(--surface);backdrop-filter:blur(18px);border-top:1px solid var(--border);margin:0}
-  .navrow.exam .btn{flex:1;padding:13px var(--space-3);font-size:14px}.navrow.exam .btn .txt-full{display:none}
+  .navrow.exam .btn{padding:13px var(--space-3);font-size:14px}
+  .navrow.exam .spacer{display:none}
+  .navrow.exam .qnav{flex:0 0 auto;min-width:54px;justify-content:center}.navrow.exam .qnav .txt-full{display:none}
+  .navrow.exam #mainbtn{margin-left:auto;flex:0 1 auto;min-width:0;white-space:nowrap}
   .pgrid{grid-template-columns:1fr 1fr}.cert-meta,.cert-bottom{grid-template-columns:1fr}.reg-foot{flex-direction:column-reverse}.reg-foot .btn{width:100%}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.05ms!important}}
@@ -595,9 +598,9 @@ function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',
  <div class="layout">
    <aside class="rail card"><div><div class="rail-title">${isRem?'ลำดับสอบซ่อม':'เส้นทางการสอบ'}</div><div class="rail-sub num">EXAM JOURNEY</div></div>${parts}</aside>
    <section class="center"><div class="qcard card"><div class="qbody" id="qbody"></div></div>
-     <div class="navrow exam"><button class="btn btn-ghost" id="prev">${I.prev}<span class="txt-full"> ย้อนกลับ</span></button><span class="spacer"></span>
-       <button class="btn btn-ghost" id="next"><span class="txt-full">ข้อถัดไป </span>${I.next}</button>
-       <button class="btn btn-primary" id="mainbtn">${(curIdx===ap.length-1)?`<span class="txt-full">${isRem?'ส่งข้อสอบซ่อม':'ยืนยันการส่งคะแนน'}</span><span class="chip">${I.check}</span>`:`<span class="txt-full">พาร์ตถัดไป </span>${I.next}`}</button></div></section>
+     <div class="navrow exam"><button class="btn btn-ghost qnav" id="prev" aria-label="ข้อก่อนหน้า">${I.prev}<span class="txt-full"> ย้อนกลับ</span></button>
+       <button class="btn btn-ghost qnav" id="next" aria-label="ข้อถัดไป"><span class="txt-full">ข้อถัดไป </span>${I.next}</button><span class="spacer"></span>
+       <button class="btn btn-primary" id="mainbtn">${(curIdx===ap.length-1)?`<span class="mainlbl">${isRem?'ส่งข้อสอบซ่อม':'ยืนยันการส่งคะแนน'}</span><span class="chip">${I.check}</span>`:`<span class="mainlbl">พาร์ตถัดไป </span>${I.next}`}</button></div></section>
    <aside class="side"><div class="progress-card card"><div class="slabel">${I.chart} ความคืบหน้า</div>
        <div class="ringwrap">${ringSVG(pct)}<div class="rc"><b class="pctv num">${pct}%</b><span class="num"><span class="ansc">${answeredActive()}</span> / ${activeTotal()}</span></div></div>
        <div class="timeleft"><span class="tl-l">เวลาคงเหลือ</span><span class="tl-v tv num">${fmt(ss.remaining)}</span></div></div>
@@ -617,9 +620,13 @@ function loadQuestion(anim){const ss=S.session,p=ss.currentPart,q=ss.currentQ,id
  $('#qbody').innerHTML=`<div class="qmeta">พาร์ต <b>${p}</b><span class="sep"></span>ข้อ <b class="num">${q+1}</b> จาก <span class="num">${QPP}</span></div>
    <h1 class="qtext">${qt}</h1><div class="options">${av.map((t,i)=>`<button class="option ${sel===i?'selected':''}" data-i="${i}"><span class="ol">${OPTL[i]}</span><span class="otx">${t}</span><span class="ock">${I.checkc}</span></button>`).join('')}</div>`;
  if(anim){const b=$('#qbody');b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}
- $('.options').onclick=e=>{const o=e.target.closest('.option');if(!o)return;const ci=+o.dataset.i;S.answers[key(p,q)]=ci;
+ $('.options').onclick=e=>{const o=e.target.closest('.option');if(!o)return;const ci=+o.dataset.i;const wasNew=(sel==null);S.answers[key(p,q)]=ci;
    $$('.option').forEach(x=>x.classList.toggle('selected',x===o));markAnswered(q);setProgress(pctActive());syncParts();
-   if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:p,q,choice:ci,remaining:S.session.remaining}).catch(()=>{});};
+   if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:p,q,choice:ci,remaining:S.session.remaining}).catch(()=>{});
+   // ตอบข้อใหม่แล้วเลื่อนไปข้อถัดไปที่ยังไม่ได้ตอบให้อัตโนมัติ (ลื่นไหล ไม่ต้องกดปุ่มเอง) · ตอบครบพาร์ทแล้วอยู่นิ่ง รอกด "พาร์ตถัดไป"
+   if(wasNew){setTimeout(()=>{const ss2=S.session;if(!ss2||ss2.currentPart!==p||ss2.currentQ!==q)return;
+     let nq=-1;if(q<QPP-1&&S.answers[key(p,q+1)]==null)nq=q+1;else{for(let i=0;i<QPP;i++){if(S.answers[key(p,i)]==null){nq=i;break;}}}
+     if(nq>=0&&nq!==q){ss2.currentQ=nq;loadQuestion(true);syncGrid();}},340);}};
 }
 function markAnswered(q){const c=app.querySelector('.cell[data-q="'+q+'"]');if(c){const was=c.classList.contains('answered');c.classList.add('answered');if(!was){c.classList.add('justAns');setTimeout(()=>c.classList.remove('justAns'),360);}}}
 function syncGrid(){$$('.cell').forEach(c=>{const q=+c.dataset.q;c.classList.toggle('answered',S.answers[key(S.session.currentPart,q)]!=null);c.classList.toggle('current',q===S.session.currentQ);});}
@@ -684,6 +691,8 @@ function doSubmit(){clearInterval(examTimer);
 function scoreActive(){if(S.api&&S.api.on)return;const ap=activeParts();ap.forEach(p=>{let sc=0;const wrong=[];for(let q=0;q<QPP;q++){const ok=S.answers[key(p,q)]===S.paper[p][q].c;if(ok)sc++;else wrong.push(q+1);}
    const r=S.results[p-1];r.score=sc;if(S.session.phase==='remedial')r.attempts++;r.status=sc>=PASS?'passed':'failed';r.wrongIds=wrong;});}
 function afterScore(){const failed=S.results.filter(r=>r.status==='failed');
+ // เซิร์ฟเวอร์ตัดจบการสอบแล้ว (หมดเวลา 120 นาที = ตก แม้สิทธิ์ซ่อมยังไม่ครบ) → ไปจอ "ไม่ผ่าน" เสมอ ไม่เสนอสอบซ่อม
+ if(S.api&&S.api.on&&S.serverStatus==='ended_failed'){S.phase='attempts_completed';return;}
  const exhausted=failed.filter(r=>r.attempts>=MAXATT);
  if(exhausted.length){S.phase='attempts_completed';return;}
  if(failed.length===0){
@@ -752,9 +761,9 @@ function renderRemedialPrep(){const q=S.remedialQueue.slice();
 
 /* ---------- 09 attempts completed ---------- */
 function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
-   <h2>คุณใช้สิทธิ์สอบซ่อมครบแล้ว</h2><p>บางพาร์ทสอบครบ ${MAXATT} ครั้ง (รอบแรก + สอบซ่อม ${REMEDIAL_MAX} ครั้ง) แล้วยังไม่ผ่าน ระบบจึงยุติการสอบรอบนี้<br>อย่าเพิ่งเสียใจไป! คุณสามารถสมัครสอบใหม่ได้ในรอบถัดไป</p>
-   <div style="margin-top:var(--space-5)"><button class="btn btn-primary lg" id="home">สมัครสอบใหม่รอบหน้า</button></div></div>`;
- $('#home').onclick=()=>{initState();render();};
+   <h2>ไม่ผ่านการรับรองในรอบนี้</h2><p>การสอบรอบนี้สิ้นสุดลงแล้ว — ยังทำไม่ผ่านเกณฑ์ (หมดเวลา 120 นาที หรือใช้สิทธิ์สอบซ่อมครบ ${REMEDIAL_MAX} ครั้ง/พาร์ท)<br><br>อย่าเพิ่งเสียใจไป! หากต้องการสอบใหม่ กรุณา<b>สมัครและรอสอบในรอบถัดไป</b> — ทีมงานจะแจ้งลิงก์/QR ของรอบใหม่ให้ (สอบซ้ำในรอบเดิมไม่ได้)</p>
+   <div style="margin-top:var(--space-5)"><button class="btn btn-ghost lg" id="home">รับทราบ · ปิดหน้าจอ</button></div></div>`;
+ $('#home').onclick=()=>{app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ X-VISOR · แล้วพบกันใหม่ในรอบถัดไป 🍀</p></div>`;};
 }
 
 /* ---------- 10 waiting ---------- */
