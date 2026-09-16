@@ -577,7 +577,7 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
      if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
        if(res.resumed){S.answers=res.answers||{};if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
        else{S.session=freshSessionAPI('first',res.durationSec);}
-       S.phase='active_exam';try{xvEnterFS();}catch(e){}render();startTimer();return;}
+       S.phase='active_exam';try{saveResume();}catch(e){}try{xvEnterFS();}catch(e){}render();startTimer();return;}
    }catch(e){/* offline → demo mode */}
    S.api={on:false};S.session=freshSession('first');S.phase='active_exam';render();startTimer();};
  upd();
@@ -730,7 +730,7 @@ function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRe
    <div class="rfoot"><span class="note">${I.info} ${allPass?'ผ่านครบทั้ง 5 พาร์ท':'สอบซ่อมเฉพาะพาร์ท '+S.remedialQueue.join(', ')}</span><span class="spacer" style="flex:1"></span>
      ${allPass?`<button class="btn btn-primary lg" id="toVerify">ดำเนินการต่อ ${I.next}</button>`:`<button class="btn btn-ghost" id="exit">ออกจากระบบ</button><button class="btn btn-primary lg" id="toRem">เตรียมสอบซ่อม ${I.next}</button>`}</div></div>`;
  if(allPass){$('#toVerify').onclick=()=>{const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';if(onsite){S.staffVerified=true;S.phase='all_passed';}else{S.phase='waiting_verification';}render();};}
- else{$('#toRem').onclick=()=>{S.phase='remedial_prep';render();};$('#exit').onclick=()=>{initState();render();};}
+ else{$('#toRem').onclick=()=>{S.phase='remedial_prep';render();};$('#exit').onclick=()=>{clearResume();initState();render();};}
 }
 
 /* ---------- 07 remedial prep ---------- */
@@ -763,7 +763,7 @@ function renderRemedialPrep(){const q=S.remedialQueue.slice();
 function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
    <h2>ไม่ผ่านการรับรองในรอบนี้</h2><p>การสอบรอบนี้สิ้นสุดลงแล้ว — ยังทำไม่ผ่านเกณฑ์ (หมดเวลา 120 นาที หรือใช้สิทธิ์สอบซ่อมครบ ${REMEDIAL_MAX} ครั้ง/พาร์ท)<br><br>อย่าเพิ่งเสียใจไป! หากต้องการสอบใหม่ กรุณา<b>สมัครและรอสอบในรอบถัดไป</b> — ทีมงานจะแจ้งลิงก์/QR ของรอบใหม่ให้ (สอบซ้ำในรอบเดิมไม่ได้)</p>
    <div style="margin-top:var(--space-5)"><button class="btn btn-ghost lg" id="home">รับทราบ · ปิดหน้าจอ</button></div></div>`;
- $('#home').onclick=()=>{app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ X-VISOR · แล้วพบกันใหม่ในรอบถัดไป 🍀</p></div>`;};
+ $('#home').onclick=()=>{clearResume();app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ X-VISOR · แล้วพบกันใหม่ในรอบถัดไป 🍀</p></div>`;};
 }
 
 /* ---------- 10 waiting ---------- */
@@ -818,7 +818,7 @@ function renderFinal(){const total=S.results.reduce((a,r)=>a+r.score,0);
        <div style="display:flex;align-items:center;gap:var(--space-3)"><span class="trophy">${I.trophy}</span><span><span style="font-size:12px;color:var(--text-secondary)">ผลการสอบโดยรวม</span><br><b style="font-size:18px">ผ่านครบทั้ง 5 พาร์ท</b></span></div>
        <div class="qr"><span style="font-size:11px;color:var(--text-secondary)">การยืนยันผล</span>${qrSVG()}</div></div></div>
    <div class="rfoot"><button class="btn btn-primary lg" id="dl">${I.dl} ดาวน์โหลดใบคะแนน</button><button class="btn btn-ghost" id="again">เริ่มรอบใหม่</button></div></div>`;
- $('#dl').onclick=()=>toast('กำลังจัดเตรียมใบรับรอง (PDF) — ระบบจะเปิดให้ดาวน์โหลดเร็ว ๆ นี้');$('#again').onclick=()=>{initState();render();};
+ $('#dl').onclick=()=>toast('กำลังจัดเตรียมใบรับรอง (PDF) — ระบบจะเปิดให้ดาวน์โหลดเร็ว ๆ นี้');$('#again').onclick=()=>{clearResume();initState();render();};
 }
 function qrSVG(){let r='';for(let y=0;y<7;y++)for(let x=0;x<7;x++){if((x*3+y*5+x*y)%3===0)r+=`<rect x="${x*8}" y="${y*8}" width="8" height="8" fill="var(--primary-700)"/>`;}
  return `<svg width="56" height="56" viewBox="0 0 56 56" style="border-radius:8px;background:#fff;padding:3px">${r}</svg>`;}
@@ -943,10 +943,10 @@ function xvWatermark(){
   var name=((S.candidate.firstName||'')+' '+(S.candidate.lastName||'')).trim();
   var code=S.candidate.id||(S.api&&S.api.code)||'';
   var txt=(name+'  '+code).trim().replace(/[<>&]/g,'');
-  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="10" y="110" transform="rotate(-24 180 100)" font-family="sans-serif" font-size="16" fill="#ffffff">'+txt+'</text></svg>';
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="340" height="190"><text x="8" y="105" transform="rotate(-24 170 95)" font-family="sans-serif" font-weight="700" font-size="17" fill="#0A2A64">'+txt+'</text></svg>';
   var uri='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
   if(!wm){wm=document.createElement('div');wm.id='xvWM';document.body.appendChild(wm);}
-  wm.style.cssText='position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.05;background-image:url('+uri+');background-repeat:repeat';
+  wm.style.cssText='position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.08;background-image:url('+uri+');background-repeat:repeat';
 }
 /* ---------- ปุ่มแจ้งปัญหา/บั๊ก (ผู้เทสต์กดแจ้งได้จากทุกหน้า — แนบข้อมูลหน้าจออัตโนมัติ) ---------- */
 function fbContext(){try{return {screen:(typeof S!=='undefined'&&S&&S.phase)||'',
@@ -980,7 +980,29 @@ function mountFeedback(){
     apiPost('/api/xv/feedback',{text:txt,context:fbContext(),kind:'bug'}).then(function(){close();btn.disabled=false;btn.textContent='ส่งรายงาน';toast('ส่งรายงานแล้ว ขอบคุณมาก 🙏');}).catch(function(){btn.disabled=false;btn.textContent='ส่งรายงาน';toast('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง');});
   };
 }
-initState();render();resolveRound();mountFeedback();
+/* ---------- กลับเข้าสอบอัตโนมัติหลังรีเฟรช/เผลอปิดแท็บ (จำ session ไว้ในเครื่องผู้สอบ · ล้างเมื่อออก) ---------- */
+function saveResume(){try{var c=S.candidate||{};sessionStorage.setItem('xvResume',JSON.stringify({id:S.api&&S.api.id,token:S.api&&S.api.token,code:S.api&&S.api.code,firstName:c.firstName||'',lastName:c.lastName||'',phone:c.phone||'',mode:c.mode||''}));}catch(e){}}
+function clearResume(){try{sessionStorage.removeItem('xvResume');}catch(e){}}
+async function tryResume(){
+  var raw;try{raw=sessionStorage.getItem('xvResume');}catch(e){}
+  if(!raw)return false;var d;try{d=JSON.parse(raw);}catch(e){clearResume();return false;}
+  if(!d||!d.id||!d.token)return false;
+  try{
+    var res=await apiGet('/api/xv/session/'+d.id+'?token='+encodeURIComponent(d.token));
+    if(!res||!res.ok||res.status!=='in_progress'){clearResume();return false;}
+    S.api={on:true,id:d.id,token:d.token,code:d.code};
+    S.candidate={firstName:d.firstName||'',lastName:d.lastName||'',phone:d.phone||'',mode:d.mode||res.mode||'onsite',id:d.code||''};
+    S.paper={};(res.parts||[]).forEach(function(pp){S.paper[pp]=res.paper[pp];});
+    S.answers=res.answers||{};S.remedialQueue=res.remedialQueue||[];
+    var ph=res.phase||'first';if(ph==='remedial')S.remedialActive=(res.parts||[]).slice();
+    S.session=freshSessionAPI(ph,res.remaining!=null?res.remaining:TOTAL);
+    try{var ap=activeParts(),cp=ap[0];for(var i=0;i<ap.length;i++){cp=ap[i];if(!partComplete(ap[i]))break;}S.session.currentPart=cp;var fq=firstMissingQ(cp);S.session.currentQ=fq<0?0:fq;}catch(e){}
+    S.phase='active_exam';render();startTimer();toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');
+    return true;
+  }catch(e){return false;}
+}
+initState();mountFeedback();
+tryResume().then(function(ok){if(!ok){render();resolveRound();}}).catch(function(){render();resolveRound();});
 </script>
 </body>
 </html>
