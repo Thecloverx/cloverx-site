@@ -1275,7 +1275,7 @@ document.addEventListener('click',function(e){
   }
 
   // ---------- ที่อยู่รับสินค้า (เก็บก่อนชำระเงิน) — Shopee-style geo picker ----------
-  var LLgeoData=null, LLgeoSel=null;
+  var LLgeoData=null, LLgeoSel=null, LL_PROVS=null;
   function addrFieldsHTML(){
     if(!LLgeoSel && REG && REG.geo && REG.geo.length===4) LLgeoSel=REG.geo.slice();
     var geoTxt = LLgeoSel ? (LLgeoSel[2]+' · '+LLgeoSel[1]+' · '+LLgeoSel[0]+' · '+LLgeoSel[3]) : '';
@@ -1293,11 +1293,21 @@ document.addEventListener('click',function(e){
     return {ok:ok,address:full,postcode:post,addrDetail:d,geo:LLgeoSel};
   }
   function LLloadGeo(cb){ if(LLgeoData){cb();return;} var list=$('#llGeoList'); if(list)list.innerHTML='<div class="geo-hint">กำลังโหลดข้อมูลที่อยู่…</div>'; fetch('/thai-geo.json').then(function(r){return r.json();}).then(function(d){LLgeoData=d;cb();}).catch(function(){if(list)list.innerHTML='<div class="geo-hint">โหลดข้อมูลไม่สำเร็จ ลองใหม่</div>';}); }
-  function LLrenderGeo(q){ var list=$('#llGeoList'); if(!list)return; if(!LLgeoData){LLloadGeo(function(){LLrenderGeo(q);});return;} q=(q||'').toString().toLowerCase().trim(); if(!q){list.innerHTML='<div class="geo-hint">พิมพ์เพื่อค้นหา ตำบล อำเภอ จังหวัด หรือรหัสไปรษณีย์</div>';return;} var res=[]; for(var i=0;i<LLgeoData.length&&res.length<40;i++){var e=LLgeoData[i]; if((''+e[0]).toLowerCase().indexOf(q)>=0||(''+e[1]).toLowerCase().indexOf(q)>=0||(''+e[2]).toLowerCase().indexOf(q)>=0||(''+e[3]).indexOf(q)>=0)res.push(i);} if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+esc(q)+'”</div>';return;} list.innerHTML=res.map(function(i){var e=LLgeoData[i];return '<div class="geo-row" onclick="LLpickGeo('+i+')"><b>'+esc(e[0])+' » '+esc(e[1])+'</b><small>'+esc(e[2])+' '+esc(e[3])+'</small></div>';}).join(''); }
-  function LLopenGeo(){ var sh=$('#llGeoSheet'); if(sh)sh.classList.add('on'); var s=$('#llGeoSearch'); LLloadGeo(function(){LLrenderGeo(s?s.value:'');}); setTimeout(function(){if(s)s.focus();},60); }
+  var LL_browse=null;
+  function LLprovs(){ if(LL_PROVS)return LL_PROVS; var seen={},arr=[]; for(var i=0;i<LLgeoData.length;i++){var p=LLgeoData[i][2]; if(p&&!seen[p]){seen[p]=1;arr.push(p);}} arr.sort(function(a,b){return (''+a).localeCompare(''+b,'th');}); LL_PROVS=arr; return arr; }
+  function LLgeoRow(i){ var e=LLgeoData[i]; return '<div class="geo-row" onclick="LLpickGeo('+i+')"><b>'+esc(e[0])+' » '+esc(e[1])+'</b><small>'+esc(e[2])+' '+esc(e[3])+'</small></div>'; }
+  function LLpickProvince(p){ LL_browse=p; var s=$('#llGeoSearch'); if(s)s.value=''; LLrenderGeo(''); }
+  function LLbrowseAll(){ LL_browse=null; var s=$('#llGeoSearch'); if(s){s.value='';try{s.focus();}catch(e){}} LLrenderGeo(''); }
+  function LLrenderGeo(q){ var list=$('#llGeoList'); if(!list)return; if(!LLgeoData){LLloadGeo(function(){LLrenderGeo(q);});return;} q=(q||'').toString().toLowerCase().trim();
+    if(q){ LL_browse=null; var res=[]; for(var i=0;i<LLgeoData.length&&res.length<60;i++){var e=LLgeoData[i]; if((''+e[0]).toLowerCase().indexOf(q)>=0||(''+e[1]).toLowerCase().indexOf(q)>=0||(''+e[2]).toLowerCase().indexOf(q)>=0||(''+e[3]).indexOf(q)>=0)res.push(i);} if(!res.length){list.innerHTML='<div class="geo-hint">ไม่พบที่อยู่ที่ตรงกับ “'+esc(q)+'” — ลองพิมพ์ชื่อตำบล/อำเภอ หรือรหัสไปรษณีย์ 5 หลัก</div>';return;} list.innerHTML=res.map(LLgeoRow).join(''); return; }
+    if(LL_browse){ var rows=[]; for(var j=0;j<LLgeoData.length&&rows.length<400;j++){ if(LLgeoData[j][2]===LL_browse)rows.push(j); } list.innerHTML='<div onclick="LLbrowseAll()" style="cursor:pointer;padding:9px 6px;font-weight:800;font-size:.9rem;color:#c8f56a">‹ เลือกจังหวัดอื่น</div><div class="geo-hint" style="text-align:left;padding:2px 6px 8px">'+esc(LL_browse)+' — แตะเลือกตำบล/แขวง หรือพิมพ์ค้นหา</div>'+rows.map(LLgeoRow).join(''); return; }
+    var provs=LLprovs(); list.innerHTML='<div class="geo-hint" style="text-align:left;padding:10px 6px 8px">แตะเลือกจังหวัด หรือพิมพ์ค้นหา ตำบล / อำเภอ / รหัสไปรษณีย์</div>'+provs.map(function(p){return '<div class="geo-row" onclick="LLpickProvince(&quot;'+esc(p)+'&quot;)"><b>'+esc(p)+'</b></div>';}).join(''); }
+  function LLopenGeo(){ var sh=$('#llGeoSheet'); if(sh)sh.classList.add('on'); var s=$('#llGeoSearch'); if(s)s.value=''; LL_browse=null; LLloadGeo(function(){LLrenderGeo('');}); setTimeout(function(){if(s)s.focus();},60); }
   function LLcloseGeo(){ var sh=$('#llGeoSheet'); if(sh)sh.classList.remove('on'); }
   function LLpickGeo(i){ var e=LLgeoData[i]; LLgeoSel=[e[0],e[1],e[2],String(e[3])]; var t=$('#p_geoTxt'); if(t){t.textContent=e[2]+' · '+e[1]+' · '+e[0]+' · '+e[3];t.style.color='';} var fg=$('#fGeo'); if(fg)fg.classList.remove('bad'); LLcloseGeo(); }
-  window.LLopenGeo=LLopenGeo; window.LLcloseGeo=LLcloseGeo; window.LLpickGeo=LLpickGeo; window.LLrenderGeo=LLrenderGeo;
+  window.LLopenGeo=LLopenGeo; window.LLcloseGeo=LLcloseGeo; window.LLpickGeo=LLpickGeo; window.LLrenderGeo=LLrenderGeo; window.LLpickProvince=LLpickProvince; window.LLbrowseAll=LLbrowseAll;
+  // backup binding: in some in-app browsers (LINE/FB) an inline onclick can be dropped — delegate at document level so the address picker always opens
+  document.addEventListener('click',function(ev){var t=ev.target;var b=t&&t.closest?t.closest('#p_geoBtn'):null;if(b){ev.preventDefault();LLopenGeo();}},true);
   // ---------- PAYMENT ----------
   function vPay(){
     showApp();
