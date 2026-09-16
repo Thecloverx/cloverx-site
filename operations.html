@@ -1430,29 +1430,77 @@
     a.href=url;a.download=filename;document.body.appendChild(a);a.click();
     document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1500);
   }
-  function xvExportResults(){
+  // filtered list (respects current tab / round / pass filter / search)
+  function xvFilteredResults(){
     var all=EXAM_CACHE||[]; var onsite=EXAM_RES_TAB==='onsite';
     var finished=all.filter(function(s){return s.status!=='in_progress'&&(((s.candidate||{}).mode||'online')===EXAM_RES_TAB);});
-    var list=finished.filter(function(s){
+    return finished.filter(function(s){
       if(EXAM_RES_ROUND!=='all'&&String(s.roundNo)!==String(EXAM_RES_ROUND))return false;
       if(!onsite&&EXAM_RES_PASS!=='all'&&_passGroup[EXAM_RES_PASS].indexOf(s.status)<0)return false;
       if(!xvMatch(s,EXAM_RES_Q))return false;
       return true;
     });
-    if(!list.length){xvToast('ไม่มีผลสอบให้ส่งออกในหมวดนี้','bad');return;}
-    var STLBL={awaiting_verify:'รอยืนยัน',verified:'ยืนยันผ่านแล้ว',submitted:'บันทึกคะแนนแล้ว',remedial_required:'ต้องสอบซ่อม',ended_failed:'ไม่ผ่าน',disqualified:'ตัดสิทธิ์'};
-    var header=['เลขที่ผู้สอบ','ชื่อ-นามสกุล','เบอร์โทร','รูปแบบ','รอบครั้งที่','P1','P2','P3','P4','P5','คะแนนรวม','เต็ม','สถานะ','พฤติกรรมเสี่ยง(ครั้ง)','วันที่ส่ง'];
-    var rows=list.map(function(s){
+  }
+  var _STLBL={awaiting_verify:'รอยืนยัน',verified:'ยืนยันผ่านแล้ว',submitted:'บันทึกคะแนนแล้ว',remedial_required:'ต้องสอบซ่อม',ended_failed:'ไม่ผ่าน',disqualified:'ตัดสิทธิ์'};
+  // ผ่านเกณฑ์จริง = ครบ 5 พาร์ท และทุกพาร์ท ≥ 16/20
+  function xvPassedCriteria(s){var r=s.results||[];if(r.length<PARTS_N)return false;return r.every(function(x){return (x.score||0)>=PASS_PART;});}
+  // แถวผลสอบที่จัดเรียงแล้ว (คะแนนรวมมาก→น้อย, เสมอเรียงตามชื่อ) — ใช้ร่วมกันทั้ง CSV และ Excel
+  function xvResultRows(){
+    var list=xvFilteredResults(); if(!list.length)return null;
+    var onsite=EXAM_RES_TAB==='onsite';
+    list=list.slice().sort(function(a,b){
+      var d=xvTotal(b)-xvTotal(a); if(d)return d;
+      var na=(((a.candidate||{}).firstName||'')+' '+((a.candidate||{}).lastName||'')).trim();
+      var nb=(((b.candidate||{}).firstName||'')+' '+((b.candidate||{}).lastName||'')).trim();
+      return na.localeCompare(nb,'th');
+    });
+    return list.map(function(s,i){
       var ps={};(s.results||[]).forEach(function(r){ps[r.part]=r.score;});
       var c=s.candidate||{};
       var sub=s.submittedAt?new Date(s.submittedAt).toISOString().slice(0,16).replace('T',' '):'';
-      return [s.code||'',((c.firstName||'')+' '+(c.lastName||'')).trim(),c.phone||'',(c.mode==='onsite'?'On-Site':'Online'),(s.roundNo!=null?s.roundNo:''),
-        (ps[1]!=null?ps[1]:''),(ps[2]!=null?ps[2]:''),(ps[3]!=null?ps[3]:''),(ps[4]!=null?ps[4]:''),(ps[5]!=null?ps[5]:''),
-        xvTotal(s),xvMaxTotal(),(STLBL[s.status]||s.status),(onsite?0:(s.flags||0)),sub];
+      return {rank:i+1,code:s.code||'',name:((c.firstName||'')+' '+(c.lastName||'')).trim(),
+        total:xvTotal(s),full:xvMaxTotal(),
+        pass:(s.status==='disqualified'?'ตัดสิทธิ์':(xvPassedCriteria(s)?'ผ่านเกณฑ์':'ไม่ผ่านเกณฑ์')),
+        phone:c.phone||'',mode:(c.mode==='onsite'?'On-Site':'Online'),round:(s.roundNo!=null?s.roundNo:''),
+        p1:(ps[1]!=null?ps[1]:''),p2:(ps[2]!=null?ps[2]:''),p3:(ps[3]!=null?ps[3]:''),p4:(ps[4]!=null?ps[4]:''),p5:(ps[5]!=null?ps[5]:''),
+        status:(_STLBL[s.status]||s.status),flags:(onsite?0:(s.flags||0)),sub:sub};
     });
-    xvDownloadCSV('xvisor-results-'+EXAM_RES_TAB+'-'+new Date().toISOString().slice(0,10)+'.csv',header,rows);
+  }
+  function xvExportResults(){ // CSV (มี BOM เปิดใน Excel ไทยไม่เพี้ยน)
+    var rows=xvResultRows();
+    if(!rows){xvToast('ไม่มีผลสอบให้ส่งออกในหมวดนี้','bad');return;}
+    var header=['อันดับ','คะแนนรวม','เต็ม','ผลเกณฑ์','เลขที่ผู้สอบ','ชื่อ-นามสกุล','เบอร์โทร','รูปแบบ','รอบครั้งที่','P1','P2','P3','P4','P5','สถานะระบบ','พฤติกรรมเสี่ยง(ครั้ง)','วันที่ส่ง'];
+    var body=rows.map(function(r){return [r.rank,r.total,r.full,r.pass,r.code,r.name,r.phone,r.mode,r.round,r.p1,r.p2,r.p3,r.p4,r.p5,r.status,r.flags,r.sub];});
+    xvDownloadCSV('xvisor-results-'+EXAM_RES_TAB+'-'+new Date().toISOString().slice(0,10)+'.csv',header,body);
   }
   window.xvExportResults=xvExportResults;
+  function xvExportExcel(){ // ไฟล์ .xlsx จริง (โหลด SheetJS ครั้งแรกที่ใช้)
+    var rows=xvResultRows();
+    if(!rows){xvToast('ไม่มีผลสอบให้ส่งออกในหมวดนี้','bad');return;}
+    function build(){
+      try{
+        var data=rows.map(function(r){return {
+          'อันดับ':r.rank,'คะแนนรวม (เต็ม 100)':r.total,'ผลเกณฑ์':r.pass,
+          'เลขที่ผู้สอบ':r.code,'ชื่อ-นามสกุล':r.name,'เบอร์โทร':r.phone,'รูปแบบ':r.mode,'รอบครั้งที่':r.round,
+          'P1':r.p1,'P2':r.p2,'P3':r.p3,'P4':r.p4,'P5':r.p5,
+          'สถานะระบบ':r.status,'พฤติกรรมเสี่ยง (ครั้ง)':r.flags,'วันที่ส่ง':r.sub};});
+        var ws=XLSX.utils.json_to_sheet(data);
+        ws['!cols']=[{wch:6},{wch:16},{wch:13},{wch:13},{wch:22},{wch:12},{wch:9},{wch:10},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:16},{wch:16},{wch:16}];
+        ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:data.length,c:15}})};
+        var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'ผลสอบ '+(EXAM_RES_TAB==='onsite'?'ศูนย์สอบ':'ออนไลน์'));
+        var d=new Date(),pad=function(n){return ('0'+n).slice(-2);};
+        XLSX.writeFile(wb,'xvisor-results-'+EXAM_RES_TAB+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes())+'.xlsx');
+        xvToast('ส่งออก Excel แล้ว ('+data.length+' รายการ)','ok');
+      }catch(e){xvToast('สร้างไฟล์ Excel ไม่สำเร็จ','bad');}
+    }
+    if(window.XLSX){build();return;}
+    xvToast('กำลังเตรียมไฟล์ Excel…');
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=build; sc.onerror=function(){xvToast('โหลดตัวช่วย Excel ไม่สำเร็จ ลองใหม่','bad');};
+    document.head.appendChild(sc);
+  }
+  window.xvExportExcel=xvExportExcel;
   function renderExamTracker(){
     var all=EXAM_CACHE||[];
     var onsite=EXAM_TAB==='onsite';
@@ -1616,7 +1664,7 @@
       +xvKstrip(kstrip)
       +tabs
       +banner
-      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(onsite?'ผลการสอบที่ศูนย์สอบ':'ผลการสอบ')+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+passSel+roundSel+'<button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:var(--ink);cursor:pointer">⬇ ส่งออก CSV</button><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(onsite?'ผลการสอบที่ศูนย์สอบ':'ผลการสอบ')+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+passSel+roundSel+'<button onclick="xvExportExcel()" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ส่งออก Excel</button><button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer">CSV</button><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
       +'<div style="overflow-x:auto"><table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.rtab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_RES_TAB=b.getAttribute('data-rtab');if(EXAM_RES_TAB==='onsite')EXAM_RES_PASS='all';renderExamResult();});});
     var rsel=document.getElementById('resRound');if(rsel)rsel.addEventListener('change',function(){EXAM_RES_ROUND=rsel.value;renderExamResult();});
