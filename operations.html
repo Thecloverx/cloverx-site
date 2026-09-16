@@ -2716,5 +2716,13 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     obs.observe(ct,{childList:true,subtree:true});
   })();
 
-  go('podash'); // เปิดหน้า Dashboard เป็นค่าเริ่มต้น
+  // เปิดหน้าเริ่มต้น: ปกติ = Dashboard · ถ้าเข้าผ่าน /exam หรือ ?v=<view> → เปิดหน้านั้นเลย (ทางเข้าลัด)
+  (function(){ var v='podash';
+    try{
+      if(/\/exam\/?$/i.test(location.pathname)) v='exam-session';
+      var q=new URLSearchParams(location.search).get('v');
+      if(q && document.querySelector('#nav .item[data-view="'+q+'"]')) v=q;
+    }catch(e){}
+    go(v);
+  })();
 </script>
