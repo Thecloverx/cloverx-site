@@ -1651,7 +1651,7 @@
     if(onsite){
       // On-Site: read-only. System records & tracks scores; staff signs pass/fail on paper — no verification in-system.
       rows=list.map(function(s){
-        var st=xvOnsiteStat(s), sys=xvSysResult(s);
+        var st=xvOnsiteStat(s), sys=xvSysResult(s), delNm2=xvName(s).replace(/["'\\]/g,'');
         return '<tr><td class="num">'+(s.code||'—')+'</td>'
           +'<td><b>'+xvName(s)+'</b>'+(s.scoreEdited?' <span class="pill" style="background:#FDF3E1;color:#B7791F;font-size:.64rem" title="'+String(s.scoreEditReason||'').replace(/"/g,'&quot;')+'">✎ แก้ไขโดยจนท.</span>':'')+'<div style="color:var(--muted);font-size:.76rem">ที่ศูนย์สอบ'+((s.candidate||{}).phone?(' · '+s.candidate.phone):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
@@ -1660,7 +1660,7 @@
           +'<td><span class="xatt">'+xvAttLabel(s)+'</span>'+(s.roundNo?'<div style="color:var(--muted);font-size:.72rem">รอบครั้งที่ '+s.roundNo+'</div>':'')+'</td>'
           +'<td class="num">'+xvTimeUsed(s)+'</td>'
           +'<td><span class="pill '+sys.cl+'">'+sys.t+'</span>'
-          +' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--brand);font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+xvReopenBtn(s)+'</td></tr>';
+          +' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--brand);font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+xvReopenBtn(s)+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
       }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ศูนย์สอบ</td></tr>';
       head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะการทำข้อสอบ</th><th>รอบการสอบ</th><th>เวลาที่ใช้</th><th>ผลจากเกณฑ์ระบบ</th></tr>';
       var subC=list.filter(function(s){return s.status==='submitted';}).length;
