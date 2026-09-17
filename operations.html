@@ -702,8 +702,11 @@
     return '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">'+cells+'</div>';}
   // live progress cell (in_progress): พาร์ท/ข้อปัจจุบัน · เสร็จกี่พาร์ท · ตอบ/ถูก/ผิด
   function xvLiveCell(s){var lv=s.live;if(!lv)return '<div style="min-width:230px">'+xvPartPills(s)+'</div>';
-    return '<div style="min-width:250px">'+xvLivePills(lv)
-      +'<div style="font-size:.76rem;color:var(--muted);margin-top:4px">กำลังทำ <b style="color:var(--ink)">พาร์ท '+lv.curPart+'</b> · ข้อ '+lv.curQ+'/'+QPP+' · เสร็จ <b style="color:var(--ink)">'+lv.partsDone+'/'+lv.partsTotal+'</b> พาร์ท</div>'
+    // ถ้ามีผลรอบก่อน (สอบซ่อม/ทีมงานเปิดพาร์ตใหม่) แสดงคะแนนเดิมของทุกพาร์ตควบคู่กับความคืบหน้ารอบซ่อม — คะแนนเดิมไม่หาย
+    var hasPrev=(s.results||[]).length>0;
+    var prevBlock=hasPrev?('<div style="font-size:.68rem;font-weight:800;color:var(--muted);letter-spacing:.02em;margin-bottom:3px">คะแนนเดิม (รอบก่อน)</div>'+xvPartPills(s)+'<div style="font-size:.68rem;font-weight:800;color:#0A67D8;letter-spacing:.02em;margin:9px 0 3px">กำลังสอบซ่อม ▾</div>'):'';
+    return '<div style="min-width:250px">'+prevBlock+xvLivePills(lv)
+      +'<div style="font-size:.76rem;color:var(--muted);margin-top:4px">กำลังทำ <b style="color:var(--ink)">พาร์ท '+lv.curPart+'</b> · ข้อ '+lv.curQ+'/'+QPP+' · เสร็จ <b style="color:var(--ink)">'+lv.partsDone+'/'+lv.partsTotal+'</b> พาร์ท'+(hasPrev?' <span style="color:#0A67D8">(เฉพาะพาร์ตที่ซ่อม)</span>':'')+'</div>'
       +'<div style="font-size:.76rem;color:var(--muted)">ตอบแล้ว <b style="color:var(--ink)">'+lv.totalAnswered+'</b>/'+lv.totalQ+' · <span style="color:var(--good);font-weight:700">ถูก '+lv.totalCorrect+'</span> · <span style="color:var(--bad);font-weight:700">ผิด '+lv.totalWrong+'</span></div></div>';}
   function fmtHMS(sec){sec=Math.max(0,sec|0);var h=(sec/3600)|0,m=((sec%3600)/60)|0,s=sec%60;var p=function(n){return(n<10?'0':'')+n;};return p(h)+':'+p(m)+':'+p(s);}
   // progress: how many parts have a recorded result vs 5, and answered-in-current
