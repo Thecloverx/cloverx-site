@@ -852,18 +852,23 @@ window.xvEnterFS=xvEnterFS;
      หน้าคะแนนรวมเมื่อผ่านเกณฑ์ (all_passed/final_report ฯลฯ) ไม่อยู่ในนี้ = แคปได้ */
   var protectedPhase=function(){return S&&(S.phase==='active_exam'||S.phase==='wrong_review');};
   window.xvProtectedPhase=protectedPhase;
+  // นับ "จำนวนครั้งที่ออกจากหน้าสอบ" (นับ 1 ครั้งต่อการออก 1 หน — รวม blur+hidden ที่มักยิงพร้อมกัน) แล้วโชว์ให้ผู้สอบเห็นเป็นตัวป้องปราม
+  var leftCount=0, away=false;
+  window.xvLeftCount=function(){return leftCount;};
+  function noteAway(){ if(!examing()||away)return; away=true; leftCount++; }
+  function noteBack(){ if(!away)return; away=false; if(examing()&&leftCount>0)toast('⚠ คุณออกจากหน้าสอบไปแล้ว '+leftCount+' ครั้ง · ระบบบันทึกไว้ให้ทีมงานแล้ว'); }
   function report(type){
     if(!examing())return;
     var now=Date.now(); if(last[type]&&now-last[type]<800)return; last[type]=now;
     if(S.api&&S.api.on){try{fetch('/api/xv/proctor',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:S.api.id,token:S.api.token,type:type})});}catch(e){}}
-    if(type==='leave'||type==='blur')toast('⚠ ระบบบันทึกการออกจากหน้าสอบ');
-    else if(type==='printscreen')toast('⚠ ระบบบันทึกการพยายามแคปหน้าจอ');
+    if(type==='printscreen')toast('⚠ ระบบบันทึกการพยายามแคปหน้าจอ');
     else if(type==='fullscreen_exit')toast('⚠ ออกจากโหมดเต็มจอ — ระบบบันทึกไว้ แตะปุ่ม "เข้าเต็มจอ" เพื่อกลับ');
     else if(type==='paste'||type==='copy'||type==='cut')toast('⚠ ปิดการคัดลอก/วางระหว่างสอบ — ระบบบันทึกไว้');
   }
   window.xvProctorReport=report;
-  document.addEventListener('visibilitychange',function(){if(document.hidden)report('leave');});
-  window.addEventListener('blur',function(){if(!document.hidden)report('blur');});
+  document.addEventListener('visibilitychange',function(){if(document.hidden){report('leave');noteAway();}else{noteBack();}});
+  window.addEventListener('blur',function(){if(!document.hidden){report('blur');noteAway();}});
+  window.addEventListener('focus',function(){noteBack();});
   window.addEventListener('keyup',function(e){if(e.key==='PrintScreen')report('printscreen');});
   window.addEventListener('keydown',function(e){
     if(e.key==='PrintScreen'){report('printscreen');return;}
@@ -903,12 +908,12 @@ window.xvEnterFS=xvEnterFS;
     if(ov)return ov;
     ov=document.createElement('div');ov.id='xvBlur';
     ov.style.cssText='position:fixed;inset:0;z-index:9998;display:none;background:#0B1220;color:#E6EDF7;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:24px;font-family:inherit;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)';
-    ov.innerHTML='<div style="font-size:34px">🔒</div><div style="font-weight:800;font-size:17px">เนื้อหาถูกซ่อนชั่วคราว</div><div style="opacity:.8;font-size:13px;max-width:360px;line-height:1.6">กรุณากลับมาที่หน้าสอบเพื่อดูเนื้อหาต่อ · ระบบซ่อนคำถามอัตโนมัติเมื่อออกจากหน้าจอเพื่อป้องกันการบันทึกภาพ</div>';
+    ov.innerHTML='<div style="font-size:34px">🔒</div><div style="font-weight:800;font-size:17px">เนื้อหาถูกซ่อนชั่วคราว</div><div style="opacity:.8;font-size:13px;max-width:360px;line-height:1.6">กรุณากลับมาที่หน้าสอบเพื่อดูเนื้อหาต่อ · ระบบซ่อนคำถามอัตโนมัติเมื่อออกจากหน้าจอเพื่อป้องกันการบันทึกภาพ</div><div id="xvBlurCount" style="margin-top:8px;font-weight:800;font-size:14px;color:#FFB4A6"></div>';
     var mount=function(){if(document.body&&!ov.parentNode)document.body.appendChild(ov);};
     if(document.body)mount();else document.addEventListener('DOMContentLoaded',mount);
     return ov;
   }
-  function cover(){ensure().style.display=prot()?'flex':'none';}
+  function cover(){var o=ensure();var cc=document.getElementById('xvBlurCount');if(cc){var n=(window.xvLeftCount?window.xvLeftCount():0);cc.textContent=n>0?('นี่เป็นครั้งที่ '+n+' ที่คุณออกจากหน้าสอบ · ระบบบันทึกไว้แล้ว'):'';}o.style.display=prot()?'flex':'none';}
   function uncover(){if(ov)ov.style.display='none';}
   window.addEventListener('blur',function(){if(prot())cover();});
   window.addEventListener('focus',uncover);
