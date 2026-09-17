@@ -64,8 +64,8 @@ input{font-family:inherit}
 .btn-primary:active{transform:translateY(0) scale(.985)}
 .btn-primary:disabled{background:linear-gradient(180deg,#a6c8f4,#8fb6ee);color:#fff;box-shadow:0 0 0 1px rgba(39,200,255,.18),inset 0 1px 0 rgba(255,255,255,.45),0 8px 18px -12px rgba(45,109,190,.45);cursor:not-allowed;animation:none;text-shadow:none}
 .btn-primary:disabled::after{display:none}
-.btn-ghost{color:var(--text-primary);background:linear-gradient(180deg,#fff,#f3f8ff);border:1px solid transparent;box-shadow:0 6px 18px -12px rgba(45,109,190,.4)}
-.btn-ghost::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.3px;pointer-events:none;background:linear-gradient(135deg,var(--cyan-400),var(--primary-500) 55%,var(--primary-600));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.45;transition:opacity .25s}
+.btn-ghost{color:var(--text-primary);background:linear-gradient(180deg,#fff,#f3f8ff);border:1.5px solid rgba(45,136,255,.5);box-shadow:0 6px 18px -12px rgba(45,109,190,.4)}
+.btn-ghost::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;background:linear-gradient(135deg,var(--cyan-400),var(--primary-500) 55%,var(--primary-600));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.85;transition:opacity .25s}
 .btn-ghost::after{content:"";position:absolute;top:-25%;bottom:-25%;left:0;width:24%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(39,200,255,.4),transparent);transform:translateX(-170%) skewX(-20deg);opacity:0}
 .btn-ghost>*{position:relative;z-index:1}
 .btn-ghost:hover{transform:translateY(-1px);box-shadow:0 10px 24px -12px rgba(45,109,190,.5),0 0 20px rgba(39,200,255,.28)}
@@ -149,6 +149,7 @@ input{font-family:inherit}
 .option.selected .ock{opacity:1;transform:scale(1)}
 .option.selected::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-140%) skewX(-18deg);animation:sweep .7s var(--ease)}
 .navrow{display:flex;align-items:center;gap:var(--space-3)}.navrow .spacer{flex:1}
+.navrow.exam .qnav{min-width:132px;min-height:50px;padding-left:var(--space-4);padding-right:var(--space-4)}
 .side{display:flex;flex-direction:column;gap:var(--space-5)}
 .progress-card{padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);align-items:center}
 .progress-card .slabel{align-self:flex-start}
