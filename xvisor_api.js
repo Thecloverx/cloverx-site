@@ -796,8 +796,20 @@ module.exports = function (app, DATA) {
     if (b.venue != null) r.venue = String(b.venue).slice(0, 200);
     if (b.timeslot != null) r.timeslot = String(b.timeslot).slice(0, 60);
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
-    // กดเปิดสอบ (closed → open) = เริ่มนาฬิการวมของห้อง 120 นาที · เปิดซ้ำในหน้าต่างเดิมไม่รีเซ็ต · เปิดใหม่หลังหมดเวลา = เริ่มนับใหม่
-    if (r.status === 'open' && !wasOpen && (!r.examDeadlineAt || Date.now() > r.examDeadlineAt)) { r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }
+    // กดเปิดสอบ (closed → open) = เริ่มนาฬิการวมของห้อง 120 นาทีใหม่ทุกครั้ง
+    if (r.status === 'open' && !wasOpen) {
+      r.examOpenedAt = Date.now();
+      r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000;
+      // คนที่กำลังสอบด้วยนาฬิกาห้อง (รอบแรก) รีเซ็ตเวลาตามนาฬิกาห้องใหม่ด้วย
+      const allS = readS(); let touched = false;
+      allS.forEach(s => {
+        if (s.roundId === r.id && s.status === 'in_progress' && s.roomClock && s.phase === 'first') {
+          s.startedAt = r.examOpenedAt; s.deadlineAt = r.examDeadlineAt; s.remaining = TOTAL; s.paused = false; s.pausedAt = null;
+          touched = true;
+        }
+      });
+      if (touched) writeS(allS);
+    }
     writeR(all);
     logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.status === 'open' ? 'เปิดสอบ (เริ่มจับเวลา)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
     res.json({ ok: true, round: pubRound(r) });
