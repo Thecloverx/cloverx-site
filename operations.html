@@ -1625,57 +1625,74 @@
     if(!base.length){xvToast('ไม่มีผลสอบให้ส่งออกในขอบเขตนี้','bad');return;}
     function build(){
       try{
+        // ===== ชุดสีแบรนด์ CloverX (ให้เหมือนใบตัวอย่าง) =====
+        var BR='FF0077B6',TITLE='FF023E8A',MUTE='FF5E7691',INK='FF12324F',ZEBRA='FFF3F8FC',LINE='FFE3ECF9',GOOD='FF0E9F6E',BAD='FFC0392B',BANDBG='FFEAF4FB';
+        var thin={style:'thin',color:{argb:LINE}};var BORDER={top:thin,left:thin,bottom:thin,right:thin};
+        var RESC={'ผ่าน':GOOD,'ไม่ผ่าน':BAD,'ตัดสิทธิ์':MUTE};
         var cands=base.map(xvCand);
         var byScore=cands.slice().sort(function(a,b){var d=b.total-a.total;if(d)return d;return a.name.localeCompare(b.name,'th');});
-        var wb=XLSX.utils.book_new();
+        var wb=new ExcelJS.Workbook();wb.creator='CloverX X-VISOR';
         var genTxt=xvThaiDT(Date.now());
         var HEAD=['อันดับ','ชื่อ-นามสกุล','เบอร์โทร','ชุดข้อสอบ','คะแนน','เต็ม','คิดเป็น','ผลการสอบ','จำนวนพาร์ทที่ซ่อม','พาร์ทที่ซ่อม','จำนวนครั้งที่สอบซ่อม','พาร์ทที่ยังไม่ถึงขั้นต่ำ','พาร์ทที่ใช้สิทธิ์ซ่อมครบแล้วยังไม่ผ่าน','คะแนนรายพาร์ท','สอบล่าสุด','บันทึกของทีมงาน','หมายเหตุ'];
-        var COLW=[{wch:6},{wch:24},{wch:13},{wch:34},{wch:7},{wch:6},{wch:7},{wch:9},{wch:9},{wch:12},{wch:9},{wch:12},{wch:16},{wch:40},{wch:20},{wch:22},{wch:26}];
+        var COLW=[6,24,13,36,7,6,8,10,10,14,11,14,18,44,20,22,26];
         var rowOf=function(cn,i){return [i+1,cn.name,cn.phone,cn.set,cn.total,cn.full,cn.pct,cn.result,cn.remCount,xvPlist(cn.remParts),cn.remSubs,xvPlist(cn.below),xvPlist(cn.exhaust),cn.perStr,cn.lastTxt,cn.note,cn.remark];};
-        var tableSheet=function(title,sub,arr){
-          var aoa=[[title],[sub],[],HEAD];arr.forEach(function(cn,i){aoa.push(rowOf(cn,i));});
-          var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=COLW;
-          ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3+arr.length,c:HEAD.length-1}})};
+        // หัวเรื่อง + คำโปรย (แถว 1-2)
+        function titleRows(ws,title,sub,span){
+          ws.mergeCells(1,1,1,span);var t=ws.getCell(1,1);t.value=title;t.font={bold:true,size:18,color:{argb:TITLE}};t.alignment={vertical:'middle'};ws.getRow(1).height=27;
+          ws.mergeCells(2,1,2,span);var s=ws.getCell(2,1);s.value=sub;s.font={size:11,color:{argb:MUTE}};ws.getRow(2).height=18;
+        }
+        function headerRow(ws,rowIdx,head){var hr=ws.getRow(rowIdx);head.forEach(function(h,i){var c=ws.getCell(rowIdx,i+1);c.value=h;c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:BR}};c.alignment={vertical:'middle',horizontal:'left',wrapText:true};c.border=BORDER;});hr.height=24;}
+        function dataRow(ws,rowIdx,arr,zeb,opt){arr.forEach(function(v,ci){var c=ws.getCell(rowIdx,ci+1);c.value=v;c.font={color:{argb:INK},size:11};c.alignment={vertical:'middle',horizontal:(typeof v==='number'?'center':'left'),wrapText:false};if(zeb)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEBRA}};c.border=BORDER;});
+          if(opt&&opt.resultCol){var rc=ws.getCell(rowIdx,opt.resultCol);var col=RESC[arr[opt.resultCol-1]];if(col)rc.font={color:{argb:col},bold:true,size:11};}
+          if(opt&&opt.pctCol){ws.getCell(rowIdx,opt.pctCol).numFmt='0%';}}
+        function mkTable(name,title,sub,arr){
+          var ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:3}]});
+          COLW.forEach(function(w,i){ws.getColumn(i+1).width=w;});
+          titleRows(ws,title,sub,HEAD.length);headerRow(ws,3,HEAD);
+          arr.forEach(function(cn,i){dataRow(ws,4+i,rowOf(cn,i),i%2===1,{resultCol:8,pctCol:7});});
+          if(arr.length)ws.autoFilter={from:{row:3,column:1},to:{row:3+arr.length,column:HEAD.length}};
           return ws;
-        };
-        // ---- 1) สรุปภาพรวม ----
+        }
         var nAll=cands.length,nPass=cands.filter(function(c){return c.passed;}).length,nFail=nAll-nPass;
         var top=byScore[0];var avg=nAll?Math.round(cands.reduce(function(a,c){return a+c.total;},0)/nAll*10)/10:0;
         var clean=cands.filter(function(c){return c.passed&&c.remCount===0;}).length;
         var totalSubs=cands.reduce(function(a,c){return a+((c.s.attemptLog||[]).length);},0);
         var grp={};cands.forEach(function(c){grp[c.remCount]=(grp[c.remCount]||0)+1;});
-        var sAoa=[['ผลสอบทั้งหมด'],['รายงานผลสอบ · '+xvFilterDesc()+' · ออกรายงาน '+genTxt],[],
-          ['ผู้เข้าสอบทั้งหมด',nAll+' คน'],
+        // ---- 1) สรุปภาพรวม ----
+        var ws1=wb.addWorksheet('สรุปภาพรวม');ws1.getColumn(1).width=32;ws1.getColumn(2).width=46;
+        titleRows(ws1,'ผลสอบทั้งหมด','รายงานผลสอบ · '+xvFilterDesc()+' · ออกรายงาน '+genTxt,2);
+        var sumRows=[['ผู้เข้าสอบทั้งหมด',nAll+' คน'],
           ['ผ่านเกณฑ์',nPass+' คน'+(nAll?(' ('+Math.round(nPass/nAll*1000)/10+'%)'):'')],
           ['ยังไม่ผ่านเกณฑ์',nFail+' คน'+(nAll?(' ('+Math.round(nFail/nAll*1000)/10+'%)'):'')],
           ['คะแนนสูงสุด',top?(top.total+'/'+top.full+' · '+top.name):'—'],
           ['คะแนนเฉลี่ย',avg+' คะแนน'],
           ['ผ่านโดยไม่ต้องสอบซ่อมเลย',clean+' คน'],
-          ['ใบผลที่บันทึกรายครั้ง',totalSubs+' ใบ (รวมรอบสอบซ่อม)'],
-          [],['แบ่งกลุ่มตามจำนวนพาร์ทที่สอบซ่อม']];
-        Object.keys(grp).sort(function(a,b){return a-b;}).forEach(function(k){sAoa.push([(k==='0'?'ผ่าน/สอบรวดเดียว (ไม่ซ่อม)':('ซ่อม '+k+' พาร์ท')),grp[k]+' คน']);});
-        var ws1=XLSX.utils.aoa_to_sheet(sAoa);ws1['!cols']=[{wch:30},{wch:40}];
-        XLSX.utils.book_append_sheet(wb,ws1,'สรุปภาพรวม');
+          ['ใบผลที่บันทึกรายครั้ง',totalSubs+' ใบ (รวมรอบสอบซ่อม)']];
+        sumRows.forEach(function(pr,i){var r=4+i;var a=ws1.getCell(r,1),b=ws1.getCell(r,2);a.value=pr[0];a.font={color:{argb:MUTE},size:11.5};b.value=pr[1];b.font={bold:true,size:13,color:{argb:BR}};ws1.getRow(r).height=20;});
+        var gr=4+sumRows.length+1;ws1.mergeCells(gr,1,gr,2);var gh=ws1.getCell(gr,1);gh.value='แบ่งกลุ่มตามจำนวนพาร์ทที่สอบซ่อม';gh.font={bold:true,size:12,color:{argb:TITLE}};
+        Object.keys(grp).sort(function(a,b){return a-b;}).forEach(function(k,i){var r=gr+1+i;var a=ws1.getCell(r,1),b=ws1.getCell(r,2);a.value=(k==='0'?'ผ่าน/สอบรวดเดียว (ไม่ซ่อม)':('ซ่อม '+k+' พาร์ท'));a.font={color:{argb:INK},size:11};b.value=grp[k]+' คน';b.font={bold:true,size:11,color:{argb:INK}};});
         // ---- 2) อันดับคะแนน ----
-        XLSX.utils.book_append_sheet(wb,tableSheet('อันดับคะแนนผู้เข้าสอบ','เรียงจากคะแนนสูงสุด · '+nAll+' คน',byScore),'อันดับคะแนน');
+        mkTable('อันดับคะแนน','อันดับคะแนนผู้เข้าสอบ','เรียงจากคะแนนสูงสุด · '+nAll+' คน',byScore);
         // ---- 3) ผ่านเกณฑ์ ----
         var passArr=cands.filter(function(c){return c.passed;}).sort(function(a,b){var d=a.remCount-b.remCount;if(d)return d;var e=b.total-a.total;if(e)return e;return a.name.localeCompare(b.name,'th');});
-        XLSX.utils.book_append_sheet(wb,tableSheet('ผู้ที่ผ่านเกณฑ์','เรียงจากซ่อมน้อยที่สุดและคะแนนสูงสุด · '+passArr.length+' คน',passArr),'ผ่านเกณฑ์');
+        mkTable('ผ่านเกณฑ์','ผู้ที่ผ่านเกณฑ์','เรียงจากซ่อมน้อยที่สุดและคะแนนสูงสุด · '+passArr.length+' คน',passArr);
         // ---- 4) ไม่ผ่านเกณฑ์ ----
         var failArr=cands.filter(function(c){return !c.passed;}).sort(function(a,b){return b.total-a.total;});
-        XLSX.utils.book_append_sheet(wb,tableSheet('ผู้ที่ยังไม่ผ่านเกณฑ์','เรียงจากคะแนนสูงสุด · '+failArr.length+' คน',failArr),'ไม่ผ่านเกณฑ์');
-        // ---- 5) คัดคนรับรางวัล (จัดกลุ่มตามจำนวนพาร์ทที่ซ่อม) ----
-        var aw=[['คัดผู้เข้าสอบเพื่อมอบรางวัล'],['เรียงจากผู้ที่สอบซ่อมน้อยที่สุดและคะแนนสูงที่สุดในแต่ละกลุ่ม · '+xvFilterDesc()],[]];
+        mkTable('ไม่ผ่านเกณฑ์','ผู้ที่ยังไม่ผ่านเกณฑ์','เรียงจากคะแนนสูงสุด · '+failArr.length+' คน',failArr);
+        // ---- 5) คัดคนรับรางวัล ----
+        var ws5=wb.addWorksheet('คัดคนรับรางวัล');var AW=[12,24,13,7,6,8,9,14,20];AW.forEach(function(w,i){ws5.getColumn(i+1).width=w;});
+        titleRows(ws5,'คัดผู้เข้าสอบเพื่อมอบรางวัล','เรียงจากซ่อมน้อยที่สุดและคะแนนสูงที่สุดในแต่ละกลุ่ม · '+xvFilterDesc(),9);
         var AHEAD=['อันดับในกลุ่ม','ชื่อ-นามสกุล','เบอร์โทร','คะแนน','เต็ม','คิดเป็น','จำนวนพาร์ทที่ซ่อม','พาร์ทที่ซ่อม','สอบล่าสุด'];
         var passByGrp={};passArr.forEach(function(c){(passByGrp[c.remCount]=passByGrp[c.remCount]||[]).push(c);});
+        var ar=4;
         Object.keys(passByGrp).sort(function(a,b){return a-b;}).forEach(function(k){
           var g=passByGrp[k].slice().sort(function(a,b){return b.total-a.total;});
-          aw.push([]);aw.push([(k==='0'?'ผ่านโดยไม่สอบซ่อมเลย':'ซ่อม '+k+' พาร์ท')+' — '+g.length+' คน']);aw.push(AHEAD);
-          g.forEach(function(c,i){aw.push([i+1,c.name,c.phone,c.total,c.full,c.pct,c.remCount,xvPlist(c.remParts),c.lastTxt]);});
+          ws5.mergeCells(ar,1,ar,9);var band=ws5.getCell(ar,1);band.value=(k==='0'?'ผ่านโดยไม่สอบซ่อมเลย':'ซ่อม '+k+' พาร์ท')+' — '+g.length+' คน';band.font={bold:true,size:12,color:{argb:TITLE}};band.fill={type:'pattern',pattern:'solid',fgColor:{argb:BANDBG}};ws5.getRow(ar).height=22;ar++;
+          headerRow(ws5,ar,AHEAD);ar++;
+          g.forEach(function(c,i){dataRow(ws5,ar,[i+1,c.name,c.phone,c.total,c.full,c.pct,c.remCount,xvPlist(c.remParts),c.lastTxt],i%2===1,{pctCol:6});ar++;});
+          ar++;
         });
-        var ws5=XLSX.utils.aoa_to_sheet(aw);ws5['!cols']=[{wch:12},{wch:24},{wch:13},{wch:7},{wch:6},{wch:7},{wch:9},{wch:12},{wch:20}];
-        XLSX.utils.book_append_sheet(wb,ws5,'คัดคนรับรางวัล');
-        // ---- 6) ประวัติรายครั้ง (จาก log การส่งทุกครั้ง) ----
+        // ---- 6) ประวัติรายครั้ง ----
         var hist=[];
         cands.forEach(function(c){(c.s.attemptLog||[]).forEach(function(e){
           var perStr=(e.parts||[]).map(function(p){return 'พ.'+p+' '+((e.perPart&&e.perPart[p]!=null)?e.perPart[p]:0)+'/'+QPP;}).join(' · ');
@@ -1684,22 +1701,28 @@
         });});
         hist.sort(function(a,b){return b.at-a.at;});
         var HHEAD=['ลำดับ','ส่งเมื่อ','ชื่อ-นามสกุล','เบอร์โทร','ชุดข้อสอบ','รอบ','คะแนน','เต็ม','เกณฑ์','ผล','คะแนนรายพาร์ท','พาร์ทที่ต้องซ่อม','หยุดเวลา (ครั้ง)','ทีมงานปรับคะแนน'];
-        var hAoa=[['ประวัติการสอบทุกครั้ง'],[hist.length?('ทุกใบผลที่ระบบบันทึกไว้ · '+hist.length+' ใบ · '+xvFilterDesc()):'ยังไม่มีบันทึกรายครั้ง (เริ่มบันทึกตั้งแต่รอบสอบถัดไป)'],[],HHEAD];
-        hist.forEach(function(h,i){hAoa.push([i+1,xvThaiDT(h.at),h.name,h.phone,h.set,h.round,h.score,h.full,h.crit,h.res,h.per,h.rem,h.pause,h.edit]);});
-        var ws6=XLSX.utils.aoa_to_sheet(hAoa);ws6['!cols']=[{wch:6},{wch:20},{wch:24},{wch:13},{wch:34},{wch:22},{wch:7},{wch:6},{wch:6},{wch:8},{wch:22},{wch:14},{wch:13},{wch:13}];
-        if(hist.length)ws6['!autofilter']={ref:XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3+hist.length,c:HHEAD.length-1}})};
-        XLSX.utils.book_append_sheet(wb,ws6,'ประวัติรายครั้ง');
-        // save
+        var HW=[6,20,24,13,36,24,7,6,6,8,24,14,13,13];
+        var ws6=wb.addWorksheet('ประวัติรายครั้ง',{views:[{state:'frozen',ySplit:3}]});HW.forEach(function(w,i){ws6.getColumn(i+1).width=w;});
+        titleRows(ws6,'ประวัติการสอบทุกครั้ง',(hist.length?('ทุกใบผลที่ระบบบันทึกไว้ · '+hist.length+' ใบ · '+xvFilterDesc()):'ยังไม่มีบันทึกรายครั้ง (เริ่มบันทึกตั้งแต่รอบสอบถัดไป)'),HHEAD.length);
+        headerRow(ws6,3,HHEAD);
+        hist.forEach(function(h,i){dataRow(ws6,4+i,[i+1,xvThaiDT(h.at),h.name,h.phone,h.set,h.round,h.score,h.full,h.crit,h.res,h.per,h.rem,h.pause,h.edit],i%2===1,{resultCol:10});});
+        if(hist.length)ws6.autoFilter={from:{row:3,column:1},to:{row:3+hist.length,column:HHEAD.length}};
+        // save (blob download)
         var d=new Date(),pad=function(n){return ('0'+n).slice(-2);};
         var fnScope=(EXAM_RES_TYPE!=='all'?(EXAM_RES_TYPE+'_'):'')+(EXAM_RES_TAB==='onsite'?'onsite':'online');
-        XLSX.writeFile(wb,'รายงานผลสอบ_'+fnScope+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.xlsx');
-        xvToast('ส่งออกรายงาน Excel แล้ว ('+nAll+' คน · '+wb.SheetNames.length+' ชีต)','ok');
+        var fname='รายงานผลสอบ_'+fnScope+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.xlsx';
+        wb.xlsx.writeBuffer().then(function(buf){
+          var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+          var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();
+          setTimeout(function(){try{URL.revokeObjectURL(url);a.remove();}catch(e){}},1500);
+          xvToast('ส่งออกรายงาน Excel แล้ว ('+nAll+' คน · '+wb.worksheets.length+' ชีต)','ok');
+        }).catch(function(){xvToast('สร้างไฟล์ Excel ไม่สำเร็จ','bad');});
       }catch(e){xvToast('สร้างไฟล์ Excel ไม่สำเร็จ: '+(e&&e.message||''),'bad');}
     }
-    if(window.XLSX){build();return;}
+    if(window.ExcelJS){build();return;}
     xvToast('กำลังเตรียมไฟล์ Excel…');
     var sc=document.createElement('script');
-    sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
     sc.onload=build; sc.onerror=function(){xvToast('โหลดตัวช่วย Excel ไม่สำเร็จ ลองใหม่','bad');};
     document.head.appendChild(sc);
   }
