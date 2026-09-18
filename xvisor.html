@@ -477,28 +477,38 @@ function freshSessionAPI(phase,dur){return {phase,remaining:dur||TOTAL,currentPa
 // ---- การซิงก์คำตอบแบบเชื่อถือได้: คิว + retry กันคำตอบตกหล่นจนจอผู้สอบกับหลังบ้านไม่ตรงกัน ----
 var _syncQ={}, _syncing=null;
 function queueAnswer(p,q,choice){ if(!(S.api&&S.api.on))return; _syncQ[p+'-'+q]=choice; flushAnswers(); }
+function pendingCount(){ return Object.keys(_syncQ).length; }
+function pendingForPart(p){ return Object.keys(_syncQ).filter(function(k){ return k.slice(0,k.indexOf('-'))===String(p); }).length; }
 function flushAnswers(){
   if(_syncing) return _syncing;
   if(!(S.api&&S.api.on)) return Promise.resolve();
   _syncing=(async function(){
     try{
       var guard=0;
-      while(Object.keys(_syncQ).length && guard++<300){
-        var k=Object.keys(_syncQ)[0]; var choice=_syncQ[k]; var pq=k.split('-'); var p=+pq[0], q=+pq[1];
-        try{
-          await apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:p,q:q,choice:choice,remaining:S.session?S.session.remaining:0});
-          if(_syncQ[k]===choice) delete _syncQ[k];   // ยืนยันแล้ว (ถ้าถูกเปลี่ยนระหว่างส่ง จะส่งค่าใหม่รอบถัดไป)
-        }catch(e){ break; }                          // ส่งไม่สำเร็จ → คงไว้ในคิว รอ retry
+      while(Object.keys(_syncQ).length && guard++<40){
+        var keys=Object.keys(_syncQ);
+        // ยิงทุกข้อที่ค้างพร้อมกัน (ขนาน) — เร็วกว่าบนเน็ตหน่วงมาก
+        var results=await Promise.allSettled(keys.map(function(k){
+          var choice=_syncQ[k]; var pq=k.split('-');
+          return apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:+pq[0],q:+pq[1],choice:choice,remaining:S.session?S.session.remaining:0})
+            .then(function(){ if(_syncQ[k]===choice) delete _syncQ[k]; });
+        }));
+        try{ updateSyncUI(); }catch(e){}
+        if(results.some(function(r){return r.status==='rejected';})){ await new Promise(function(r){setTimeout(r,700);}); } // บางข้อล้มเหลว → พักสั้น ๆ แล้ววนส่งเฉพาะที่ยังค้าง
+        else break;                                                                                                       // ส่งครบแล้ว
       }
     } finally { _syncing=null; }
+    try{ updateSyncUI(); }catch(e){}
   })();
   return _syncing;
 }
 // true เฉพาะเมื่อทุกข้อของพาร์ต p ถูกบันทึกขึ้นเซิร์ฟเวอร์ครบแล้ว
-async function syncPartComplete(p){ try{ await flushAnswers(); }catch(e){} for(var q=0;q<QPP;q++){ if((p+'-'+q) in _syncQ) return false; } return true; }
-async function syncAll(){ try{ await flushAnswers(); }catch(e){} return Object.keys(_syncQ).length===0; }
-// retry เบื้องหลัง: ความผิดพลาดชั่วคราวจะหายเองเมื่อเน็ตกลับมา
-setInterval(function(){ if(S.api&&S.api.on&&Object.keys(_syncQ).length) flushAnswers(); },4000);
+async function syncPartComplete(p){ try{ await flushAnswers(); }catch(e){} return pendingForPart(p)===0; }
+async function syncAll(){ try{ await flushAnswers(); }catch(e){} return pendingCount()===0; }
+// อัปเดตป้ายปุ่มหลักให้บอกสถานะการบันทึกแบบนุ่มนวล (แทน toast สีดำ)
+function updateSyncUI(){ var mb=document.getElementById('mainbtn'); if(!mb||!mb.dataset.saving)return; var n=pendingForPart(S.session&&S.session.currentPart); var lbl=mb.querySelector('.mainlbl'); if(lbl)lbl.textContent=n>0?('กำลังบันทึกคำตอบ… เหลือ '+n+' ข้อ'):'บันทึกครบแล้ว'; }
+// retry เบื้องหลัง: ความผิดพลาดชั่วคราวจะหายเองเมื่อเน็ตกลับมา (ถี่ขึ้น)
+setInterval(function(){ if(S.api&&S.api.on&&pendingCount()) flushAnswers(); },2500);
 // ส่งคำตอบค้างก่อนปิด/รีเฟรชแท็บ (best-effort)
 window.addEventListener('beforeunload',function(){ if(S.api&&S.api.on&&navigator.sendBeacon){ try{ Object.keys(_syncQ).forEach(function(k){ var pq=k.split('-'); navigator.sendBeacon('/api/xv/answer',new Blob([JSON.stringify({sessionId:S.api.id,token:S.api.token,part:+pq[0],q:+pq[1],choice:_syncQ[k],remaining:S.session?S.session.remaining:0})],{type:'application/json'})); }); }catch(e){} } });
 function initState(){S={phase:'registration',api:{on:false,id:null,token:null},
@@ -735,18 +745,29 @@ function openPause(){const ss=S.session;if(ss.pauseUsed>=PAUSE_MAX){toast('ใ�
 
 /* ---------- part flow + submit confirm ---------- */
 // ปุ่มหลัก: ทำทีละพาร์ท — ต้องทำพาร์ทปัจจุบันให้ครบก่อน จึงจะไปพาร์ทถัดไป/ยืนยันส่งได้
+var _savePoll=null;
+function mainBtnRestore(){var mb=document.getElementById('mainbtn');if(mb){mb.disabled=false;mb.style.opacity=1;delete mb.dataset.saving;var lbl=mb.querySelector('.mainlbl');if(lbl&&mb.dataset.lbl)lbl.textContent=mb.dataset.lbl;}}
 async function mainAction(){const ss=S.session,ap=activeParts(),cIdx=ap.indexOf(ss.currentPart),isLast=cIdx===ap.length-1;
  const miss=QPP-partAnswered(ss.currentPart);
  if(miss>0){const q=firstMissingQ(ss.currentPart);if(q>=0){ss.currentQ=q;loadQuestion(true);syncGrid();}
    toast('ยังทำพาร์ท '+ss.currentPart+' ไม่ครบ · เหลืออีก '+miss+' ข้อ — ทำให้ครบก่อนจึงจะไปต่อได้');return;}
- // กันคำตอบตกหล่น: ต้องบันทึกครบขึ้นเซิร์ฟเวอร์ก่อน จึงจะไปพาร์ตถัดไป/ส่งได้ (ด่านกั้นอิงผลที่เซิร์ฟเวอร์ยืนยัน ไม่ใช่แค่ในเครื่อง)
- if(S.api&&S.api.on){const mb=document.getElementById('mainbtn');if(mb){mb.disabled=true;mb.style.opacity=.7;}
-   const okSync=await syncPartComplete(ss.currentPart);
-   if(mb){mb.disabled=false;mb.style.opacity=1;}
-   if(!okSync){toast('กำลังบันทึกคำตอบขึ้นระบบ… รอสักครู่แล้วลองอีกครั้ง (ห้ามปิดหน้าจอ)');return;}
+ const advance=function(){ if(!isLast){ss.currentPart=ap[cIdx+1];ss.currentQ=0;renderExam();toast('เปิดพาร์ท '+ss.currentPart+' แล้ว');} else openSubmit(); };
+ // กันคำตอบตกหล่น: ต้องบันทึกครบขึ้นเซิร์ฟเวอร์ก่อน — แต่แสดงสถานะนุ่มนวลบนปุ่ม และเด้งไปต่อให้อัตโนมัติเมื่อครบ (ไม่ต้องกดซ้ำ)
+ if(S.api&&S.api.on && pendingForPart(ss.currentPart)>0){
+   var mb=document.getElementById('mainbtn');
+   if(mb){var lbl=mb.querySelector('.mainlbl');mb.dataset.lbl=lbl?lbl.textContent:'';mb.dataset.saving='1';mb.disabled=true;mb.style.opacity=.75;}
+   updateSyncUI();
+   if(_savePoll)clearInterval(_savePoll);
+   var tries=0;
+   _savePoll=setInterval(async function(){
+     tries++;
+     try{ await flushAnswers(); }catch(e){}
+     if(pendingForPart(ss.currentPart)===0){ clearInterval(_savePoll);_savePoll=null; mainBtnRestore(); advance(); }
+     else if(tries>=20){ clearInterval(_savePoll);_savePoll=null; mainBtnRestore(); toast('เน็ตช้ามาก — คำตอบยังอยู่ครบไม่หาย · ลองกดอีกครั้ง หรือย้ายไปจุดที่สัญญาณดีกว่า'); }
+   },1500);
+   return;
  }
- if(!isLast){ss.currentPart=ap[cIdx+1];ss.currentQ=0;renderExam();toast('เปิดพาร์ท '+ss.currentPart+' แล้ว');return;}
- openSubmit();
+ advance();
 }
 async function openSubmit(){const ap=activeParts();
  const miss=ap.map(p=>({p,n:QPP-partAnswered(p)})).filter(x=>x.n>0);
@@ -756,8 +777,18 @@ async function openSubmit(){const ap=activeParts();
    document.getElementById('cxl').onclick=()=>{closeScrim();const fp=miss[0].p;const q=firstMissingQ(fp);S.session.currentPart=fp;S.session.currentQ=q<0?0:q;renderExam();toast('พาไปยังข้อที่ยังไม่ได้ทำ · พาร์ต '+fp);};
    return;
  }
- // ครบทุกข้อในเครื่อง → ยืนยันว่าเซิร์ฟเวอร์บันทึกครบก่อนจึงให้ส่ง
- if(S.api&&S.api.on){const ok=await syncAll();if(!ok){toast('กำลังบันทึกคำตอบขึ้นระบบ… รอสักครู่แล้วกดส่งอีกครั้ง (ห้ามปิดหน้าจอ)');return;}}
+ // ครบทุกข้อในเครื่อง → ยืนยันว่าเซิร์ฟเวอร์บันทึกครบก่อนจึงให้ส่ง (แสดงสถานะบันทึกพร้อมสปินเนอร์ ไม่ใช้ toast)
+ if(S.api&&S.api.on && pendingCount()>0){
+   var okAll=false;
+   for(var t=0;t<20 && !okAll;t++){
+     scrim(`<div class="modal"><div class="mstack"><div class="mic"><div class="spinner" style="margin:0 auto"></div></div><div class="mhead"><h3>กำลังบันทึกคำตอบขึ้นระบบ</h3><p class="msub">เหลืออีก <b style="color:var(--primary-600)">${pendingCount()}</b> ข้อ · กรุณาอย่าปิดหน้าจอ ระบบจะส่งต่อให้อัตโนมัติ</p></div></div></div>`);
+     try{ await flushAnswers(); }catch(e){}
+     okAll = pendingCount()===0;
+     if(!okAll) await new Promise(function(r){setTimeout(r,1200);});
+   }
+   closeScrim();
+   if(!okAll){ toast('เน็ตช้ามาก — คำตอบยังอยู่ครบไม่หาย · ลองกดส่งอีกครั้ง หรือย้ายไปจุดที่สัญญาณดีกว่า'); return; }
+ }
  // ครบทุกข้อ → ยืนยันชั้นที่ 1
  scrim(`<div class="modal"><div class="mstack"><div class="mic ok">${I.checkc}</div><div class="mhead"><h3>ยืนยันการส่งข้อสอบ</h3><p class="msub">ตอบครบทั้ง ${activeTotal()} ข้อแล้ว — เมื่อส่งแล้วจะแก้ไขไม่ได้</p></div><div class="misslist"><div class="checkrow" style="justify-content:center"><span class="ci2" style="color:var(--success)">${I.checkc}</span>ตอบครบทุกพาร์ทเรียบร้อย</div></div><div class="mbtns"><button class="btn btn-ghost" id="cxl" style="flex:1">ตรวจอีกครั้ง</button><button class="btn btn-primary" id="ok" style="flex:1">ยืนยันการส่งคะแนน</button></div></div></div>`);
  document.getElementById('cxl').onclick=closeScrim;
