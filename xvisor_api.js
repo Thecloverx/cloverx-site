@@ -456,6 +456,21 @@ module.exports = function (app, DATA) {
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
   });
 
+  // ทีมงานบังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — ตรวจคำตอบที่มีตอนนี้เหมือนลูกค้ากดส่งเอง
+  // ข้อที่ยังไม่ตอบ = ผิด · ผ่าน=ผ่าน · ตกบางพาร์ต=เข้าสอบซ่อมตาม logic ปกติ · ไม่ถือว่าหมดเวลา
+  app.post('/api/xv/admin/session/:id/force-grade', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const b = req.body || {}; const all = readS(); const s = all.find(x => x.id === req.params.id);
+    if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (s.status !== 'in_progress') return res.status(409).json({ ok: false, error: 'not_in_progress', status: s.status });
+    const before = s.status;
+    score(s, false);
+    s.forcedGrade = { by: String(b.actor || 'staff').slice(0, 60), at: Date.now(), reason: String(b.reason || '').slice(0, 200) };
+    writeS(all);
+    logAudit('force_grade', 'session', s.id, s.code || '', before, s.status, 'ทีมงานบังคับตรวจคะแนน' + (b.reason ? (' · ' + b.reason) : ''), s.forcedGrade.by);
+    res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
+  });
+
   app.post('/api/xv/remedial/start', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'remedial_required') return res.status(400).json({ ok: false });

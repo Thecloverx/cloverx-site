@@ -398,7 +398,56 @@ input{font-family:inherit}
   .pgrid{grid-template-columns:1fr 1fr}.cert-meta,.cert-bottom{grid-template-columns:1fr}.reg-foot{flex-direction:column-reverse}.reg-foot .btn{width:100%}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.05ms!important}}
+
+/* ===== ใบรายงานผลคะแนน (redesign) ===== */
+.certwrap{display:flex;flex-direction:column;align-items:center;gap:var(--space-4);padding:var(--space-3) 0}
+.certcard{width:min(560px,100%);background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(9,42,100,.4),0 2px 0 rgba(255,255,255,.6) inset;border:1px solid #E3ECF9;position:relative}
+.certcard .cbar{height:7px;background:linear-gradient(90deg,#27C8FF,#075BFF 55%,#0A2A64)}
+.certhead{position:relative;padding:26px 28px 20px;text-align:center;background:radial-gradient(120% 90% at 50% -10%,rgba(39,200,255,.14),transparent 60%)}
+.certhead .cbrand{font-family:var(--num);font-weight:800;letter-spacing:.18em;font-size:14px;color:#075BFF}
+.certhead .cttl{font-size:19px;font-weight:800;color:#0A2A64;margin-top:2px}
+.certhead .cpass{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:8px 16px;border-radius:999px;background:linear-gradient(135deg,#12A9F5,#0E9F6E);color:#fff;font-weight:800;font-size:13.5px;box-shadow:0 10px 22px -10px rgba(14,159,110,.6)}
+.certhead .cpass svg{width:17px;height:17px}
+.certseal{width:66px;height:66px;margin:16px auto 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#27C8FF,#075BFF 60%,#0A2A64);box-shadow:0 0 0 6px rgba(7,91,255,.09),0 12px 26px -10px rgba(7,91,255,.5)}
+.certseal svg{width:34px;height:34px}
+.certname{font-size:23px;font-weight:800;color:#0A2A64;text-align:center;margin-top:2px;line-height:1.2}
+.certsub{text-align:center;color:#5E7691;font-size:12.5px;margin-top:4px}
+.certmeta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:16px 24px 4px}
+.certmeta .cm{flex:1;min-width:140px;background:#F4F8FE;border:1px solid #E6EEF9;border-radius:12px;padding:10px 14px;text-align:center}
+.certmeta .cm span{display:block;font-size:11px;color:#7290B5;font-weight:600}
+.certmeta .cm b{display:block;font-size:14.5px;color:#12203B;margin-top:3px}
+.certscore{margin:16px 22px 4px;background:linear-gradient(135deg,#0A2A64,#075BFF);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;color:#fff;gap:12px}
+.certscore .cs-l{font-size:12px;opacity:.85;font-weight:600}
+.certscore .cs-v{font-family:var(--num);font-weight:800;font-size:34px;line-height:1}.certscore .cs-v small{font-size:15px;opacity:.8;font-weight:700}
+.certscore .cs-badge{font-size:12px;font-weight:800;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);padding:7px 12px;border-radius:999px;white-space:nowrap}
+.certparts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 22px 4px}
+.certpart{background:#F4F8FE;border:1px solid #E6EEF9;border-radius:12px;padding:10px 4px;text-align:center}
+.certpart .pp{font-size:10.5px;color:#7290B5;font-weight:700}
+.certpart .pv{font-family:var(--num);font-weight:800;font-size:17px;color:#075BFF;margin:2px 0}
+.certpart .pk{color:#0E9F6E}.certpart .pk svg{width:14px;height:14px;vertical-align:-2px}
+.certfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px 22px;margin-top:10px;border-top:1px dashed #DCE7F5}
+.certfoot .cf-org{font-size:11px;color:#5E7691;line-height:1.5}
+.certfoot .cf-org b{color:#0A2A64;font-size:12.5px}
+.certfoot .cf-qr{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.certfoot .cf-qr span{font-size:9.5px;color:#9AAcc4}
+.certacts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:min(560px,100%)}
+.certacts .btn{flex:1;min-width:150px}
+@media (max-width:520px){
+  .certparts{grid-template-columns:repeat(5,1fr);gap:5px;padding:12px 14px 4px}
+  .certpart{padding:8px 2px}.certpart .pv{font-size:15px}.certpart .pp{font-size:9px}
+  .certmeta{padding:14px 16px 2px}.certscore{margin:14px 14px 2px;padding:14px 16px}
+  .certhead{padding:22px 18px 16px}.certname{font-size:20px}.certfoot{padding:14px 16px 20px}
+  .certacts .btn{flex:1 1 100%}
+}
+@media print{
+  body{background:#fff!important}
+  body *{visibility:hidden!important}
+  #certCard,#certCard *{visibility:visible!important}
+  #certCard{position:absolute;left:50%;top:16px;transform:translateX(-50%);box-shadow:none!important;border:1px solid #E3ECF9!important}
+  .appbar,.certacts,#xvFsBtn,.toast{display:none!important}
+}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <div class="app" id="app"></div>
@@ -812,17 +861,59 @@ function demoWrong(p){const seed=[[3,14],[7],[],[2,9,17],[]][p-1];return seed;}
 
 /* ---------- 13 final report ---------- */
 function renderFinal(){const total=S.results.reduce((a,r)=>a+r.score,0);
- app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-4)">
-   <h1 class="hero-h">ใบรายงานผลคะแนน X-VISOR</h1>
-   <div class="card cert"><div class="cert-top"><span class="brand">X-VISOR</span><span class="status"><span class="dot"></span>${(S.candidate&&S.candidate.mode==='onsite')?'บันทึกคะแนนแล้ว':'ยืนยันผลแล้ว'}</span></div>
-     <div class="cert-meta"><div><span>รหัสผู้เข้าสอบ</span><b class="num">${S.candidate.id}</b></div><div><span>ชื่อ-นามสกุล</span><b>${S.candidate.firstName||'ณัฐวัฒน์'} ${S.candidate.lastName||'ยิ้มใจ'}</b></div><div><span>วันที่สอบ</span><b>${thaiDate()}</b></div></div>
-     <table class="ctbl"><thead><tr><th>พาร์ท</th><th>คะแนนที่ได้</th><th style="text-align:right">ผลการสอบ</th></tr></thead><tbody>
-       ${[1,2,3,4,5].map(p=>{const r=S.results[p-1];return `<tr><td><span class="cn">${p}</span>พาร์ต ${p}</td><td class="num"><b>${r.score}</b> <span style="color:var(--text-secondary)">/ ${QPP}</span></td><td style="text-align:right"><span class="res">${I.checkc} ผ่าน</span></td></tr>`;}).join('')}</tbody></table>
-     <div class="cert-bottom"><div><span class="tl-l" style="color:var(--text-secondary);font-size:12px">คะแนนรวมทั้ง 5 พาร์ท</span><div class="cert-total">${total}<span> / 100</span></div></div>
-       <div style="display:flex;align-items:center;gap:var(--space-3)"><span class="trophy">${I.trophy}</span><span><span style="font-size:12px;color:var(--text-secondary)">ผลการสอบโดยรวม</span><br><b style="font-size:18px">ผ่านครบทั้ง 5 พาร์ท</b></span></div>
-       <div class="qr"><span style="font-size:11px;color:var(--text-secondary)">การยืนยันผล</span>${qrSVG()}</div></div></div>
-   <div class="rfoot"><button class="btn btn-primary lg" id="dl">${I.dl} ดาวน์โหลดใบคะแนน</button><button class="btn btn-ghost" id="again">เริ่มรอบใหม่</button></div></div>`;
- $('#dl').onclick=()=>toast('กำลังจัดเตรียมใบรับรอง (PDF) — ระบบจะเปิดให้ดาวน์โหลดเร็ว ๆ นี้');$('#again').onclick=()=>{clearResume();initState();render();};
+ const fullName=((S.candidate&&S.candidate.firstName)||'')+' '+((S.candidate&&S.candidate.lastName)||'');
+ const onsite=(S.candidate&&S.candidate.mode==='onsite');
+ app.innerHTML=`${appbar()}<div class="wrap-mid certwrap">
+   <div class="certcard" id="certCard">
+     <div class="cbar"></div>
+     <div class="certhead">
+       <div class="cbrand">X-VISOR CERTIFICATION</div>
+       <div class="cttl">ใบรายงานผลคะแนน</div>
+       <div class="cpass">${I.checkc} ผ่านการรับรอง</div>
+       <div class="certseal">${I.trophy}</div>
+       <div class="certname">${fullName.trim()||'ผู้เข้าสอบ'}</div>
+       <div class="certsub">ผ่านการทดสอบ X-VISOR ครบทั้ง 5 พาร์ท · ${onsite?'บันทึกคะแนนแล้ว':'ยืนยันผลแล้ว'}</div>
+     </div>
+     <div class="certmeta">
+       <div class="cm"><span>รหัสผู้เข้าสอบ</span><b class="num">${(S.candidate&&S.candidate.id)||'—'}</b></div>
+       <div class="cm"><span>วันที่สอบ</span><b>${thaiDate()}</b></div>
+     </div>
+     <div class="certscore">
+       <div><div class="cs-l">คะแนนรวมทั้ง 5 พาร์ท</div><div class="cs-v">${total}<small> / 100</small></div></div>
+       <div class="cs-badge">เกณฑ์ผ่าน ${PASS}/20 ทุกพาร์ท</div>
+     </div>
+     <div class="certparts">
+       ${[1,2,3,4,5].map(p=>{const r=S.results[p-1]||{score:0};return `<div class="certpart"><div class="pp">พาร์ต ${p}</div><div class="pv">${r.score}<span style="font-size:11px;color:#9AAcc4">/${QPP}</span></div><div class="pk">${I.checkc}</div></div>`;}).join('')}
+     </div>
+     <div class="certfoot">
+       <div class="cf-org"><b>CloverX (Thailand) Co., Ltd.</b><br>ออกโดยระบบสอบ X-VISOR · www.cloverxth.com</div>
+       <div class="cf-qr"><span>ยืนยันผล</span>${qrSVG()}</div>
+     </div>
+   </div>
+   <div class="certacts">
+     <button class="btn btn-primary lg" id="dl">${I.dl} ดาวน์โหลดใบคะแนน</button>
+     <button class="btn btn-ghost" id="prt">🖨 บันทึกเป็น PDF</button>
+     <button class="btn btn-ghost" id="again">เริ่มรอบใหม่</button>
+   </div></div>`;
+ $('#dl').onclick=certDownload;
+ $('#prt').onclick=function(){try{window.print();}catch(e){toast('อุปกรณ์ไม่รองรับการพิมพ์');}};
+ $('#again').onclick=()=>{clearResume();initState();render();};
+}
+// ดาวน์โหลดใบคะแนนเป็นรูปภาพ (PNG) — ใช้ html2canvas ถ้ามี, ไม่มี/พลาด → ใช้พิมพ์เป็น PDF แทน
+function certDownload(){
+ var card=document.getElementById('certCard');if(!card)return;
+ var fn='X-VISOR_'+(((S.candidate&&S.candidate.id))||'result')+'.png';
+ if(typeof html2canvas==='function'){
+   toast('กำลังสร้างไฟล์ใบคะแนน…');
+   html2canvas(card,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false}).then(function(canvas){
+     canvas.toBlob(function(blob){
+       if(!blob){try{window.print();}catch(e){}return;}
+       var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();
+       setTimeout(function(){try{URL.revokeObjectURL(url);a.remove();}catch(e){}},1500);
+       toast('ดาวน์โหลดใบคะแนนแล้ว ✓');
+     },'image/png');
+   }).catch(function(){toast('บันทึกเป็นรูปไม่ได้ — เปิดหน้าพิมพ์ให้แทน');try{window.print();}catch(e){}});
+ } else { toast('เปิดหน้าพิมพ์ให้บันทึกเป็น PDF'); try{window.print();}catch(e){} }
 }
 function qrSVG(){let r='';for(let y=0;y<7;y++)for(let x=0;x<7;x++){if((x*3+y*5+x*y)%3===0)r+=`<rect x="${x*8}" y="${y*8}" width="8" height="8" fill="var(--primary-700)"/>`;}
  return `<svg width="56" height="56" viewBox="0 0 56 56" style="border-radius:8px;background:#fff;padding:3px">${r}</svg>`;}
@@ -898,6 +989,27 @@ window.xvEnterFS=xvEnterFS;
   var place=function(){if(document.body)document.body.appendChild(b);};
   if(document.body)place();else document.addEventListener('DOMContentLoaded',place);
   setInterval(function(){var show=(S&&S.phase==='active_exam'&&S.api&&S.api.on&&!xvInFS());b.style.display=show?'block':'none';},700);
+})();
+/* ---------- ทีมงานอาจ "บังคับตรวจคะแนน" จากหลังบ้าน (เผื่อลูกค้ากดส่งไม่ได้) ----------
+   ระหว่างสอบ เช็กสถานะทุก 6 วินาที ถ้าถูกตรวจแล้ว (สถานะไม่ใช่ in_progress) → เด้งไปหน้าผล+คะแนนทันที */
+(function forceGradeWatch(){
+  var busy=false;
+  setInterval(function(){
+    if(busy)return;
+    if(!(S&&S.phase==='active_exam'&&S.api&&S.api.on))return;
+    busy=true;
+    apiGet('/api/xv/session/'+S.api.id+'?token='+encodeURIComponent(S.api.token)).then(function(res){
+      busy=false;
+      if(!res||!res.ok)return;
+      if(res.status&&res.status!=='in_progress'){
+        clearInterval(examTimer);
+        S.results=[1,2,3,4,5].map(function(p){var r=(res.results||[]).find(function(x){return x.part===p;})||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});
+        S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';
+        try{clearResume();}catch(e){}
+        S.phase='checking';render();
+      }
+    },function(){busy=false;}).catch(function(){busy=false;});
+  },6000);
 })();
 /* ---------- กันแคปจอ: เบลอ/บังเนื้อหาเมื่อหน้าต่างไม่ได้โฟกัส (เฉพาะหน้าคำถาม/ทบทวนข้อผิด) ----------
    ช่วยกันสกรีนช็อต/แชร์จอ: พอสลับหน้าต่างหรือเรียกเครื่องมือแคป หน้าจะถูกบังทันที

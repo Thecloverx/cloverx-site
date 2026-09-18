@@ -1375,6 +1375,27 @@
     },true);
   }
   window.xvDelSession=xvDelSession;
+  // บังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — ตรวจคำตอบที่มีตอนนี้แล้วสรุปผ่าน/ไม่ผ่านทันที
+  function xvForceGrade(id,name){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
+    xvConfirm('ตรวจคะแนนตอนนี้','บังคับตรวจคะแนนของ "'+name+'" เดี๋ยวนี้? ระบบจะตรวจคำตอบที่ทำมาถึงตอนนี้ (ข้อที่ยังไม่ตอบนับเป็นผิด) แล้วสรุปผ่าน/ไม่ผ่านทันที — ลูกค้าจะเห็นผลของตัวเองในไม่กี่วินาที','ตรวจคะแนน',function(){
+      fetch('/api/xv/admin/session/'+id+'/force-grade'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,actor:'staff'})})
+        .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
+          if(o.j&&o.j.ok){
+            var st=o.j.status, msg='ตรวจคะแนนแล้ว';
+            if(st==='submitted'||st==='awaiting_verify')msg='ตรวจแล้ว: ผ่านครบทุกพาร์ต ✓';
+            else if(st==='remedial_required')msg='ตรวจแล้ว: ต้องสอบซ่อมพาร์ต '+((o.j.remedialQueue||[]).join(', ')||'-');
+            else if(st==='ended_failed')msg='ตรวจแล้ว: ไม่ผ่าน (หมดสิทธิ์สอบซ่อม)';
+            xvToast(msg,'ok');
+            xvFetch(function(){renderExamTracker();});
+          }
+          else if(o.s===403)xvToast('รหัสแอดมินไม่ถูกต้อง หรือยังไม่ได้ใส่','bad');
+          else if(o.s===409)xvToast('รายการนี้ไม่ได้กำลังสอบอยู่ (อาจถูกตรวจไปแล้ว)','bad');
+          else xvToast('ตรวจคะแนนไม่สำเร็จ','bad');
+        }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    });
+  }
+  window.xvForceGrade=xvForceGrade;
   // ---- แก้ไขคะแนนผู้สอบ (กรณีระบบคำนวณผิด) — ต้องมี Admin Key + บังคับกรอกเหตุผล → บันทึก audit ----
   function xvScoreEdit(id){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อแก้คะแนนจริง','bad');return;}
@@ -1596,7 +1617,7 @@
         +'<td class="num">'+remain+'</td>'
         +'<td class="num">'+scoreCell+'</td>'
         +'<td>'+statusCell+'</td>'
-        +'<td>'+((s.camPhotos>0)?'<button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-right:6px">📷 '+s.camPhotos+'</button>':'')+'<button onclick="xvDelSession(\''+s.id+'\',\''+delName+'\',\'tracker\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;cursor:pointer;color:var(--bad);font-size:.9rem;line-height:1">🗑</button></td></tr>';
+        +'<td><button onclick="xvForceGrade(\''+s.id+'\',\''+delName+'\')" title="บังคับตรวจคะแนนตอนนี้ (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้)" style="border:1px solid #82D7B3;background:#EFFBF6;color:#078654;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:800;font-size:.78rem;line-height:1;margin-right:6px">✓ ตรวจคะแนน</button>'+((s.camPhotos>0)?'<button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-right:6px">📷 '+s.camPhotos+'</button>':'')+'<button onclick="xvDelSession(\''+s.id+'\',\''+delName+'\',\'tracker\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;cursor:pointer;color:var(--bad);font-size:.9rem;line-height:1">🗑</button></td></tr>';
     }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">ไม่มีผู้ที่กำลังสอบอยู่ตอนนี้ · ผู้ที่สอบเสร็จแล้วดูได้ที่ <a class="link" href="#" onclick="go(\'exam-result\');return false">หน้าผลการสอบ →</a></td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline · On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ · Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
