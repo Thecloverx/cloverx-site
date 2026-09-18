@@ -304,6 +304,15 @@ module.exports = function (app, DATA) {
     else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); s.remedialActive = null; }
     s.paused = false;
     s.submittedAt = Date.now();
+    // บันทึกประวัติการส่งรายครั้ง (สำหรับรายงาน "ประวัติรายครั้ง") — 1 record ต่อการส่ง 1 ครั้ง
+    try {
+      s.attemptLog = s.attemptLog || [];
+      const ev = { at: Date.now(), kind: (s.phase === 'remedial' ? 'remedial' : 'first'), parts: parts.slice(), perPart: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: false, expired: !!expired };
+      let evTot = 0; parts.forEach(p => { const rr = s.results.find(x => x.part === p); const sc = rr ? (rr.score || 0) : 0; ev.perPart[p] = sc; evTot += sc; });
+      ev.total = evTot; ev.full = parts.length * QPP; ev.pass = parts.every(p => (ev.perPart[p] || 0) >= PASS);
+      ev.remedialAfter = (s.remedialQueue || []).slice();
+      s.attemptLog.push(ev);
+    } catch (e) {}
   }
   const pubResults = (s) => s.results.map(r => ({ part: r.part, score: r.score, status: r.status, attempts: r.attempts }));
 
@@ -645,7 +654,8 @@ module.exports = function (app, DATA) {
         proctorPhotos: s.proctorPhotos || [], camPhotos: (s.proctorPhotos || []).length,
         proctorDecision: s.proctorDecision || null,
         scoreEdited: !!s.scoreEdited, scoreEditedBy: s.scoreEditedBy || null, scoreEditReason: s.scoreEditReason || null,
-        live: s.status === 'in_progress' ? xvLiveProgress(s) : null, pausedAt: s.pausedAt || null
+        live: s.status === 'in_progress' ? xvLiveProgress(s) : null, pausedAt: s.pausedAt || null,
+        attemptLog: s.attemptLog || []
       }))
     });
   });
@@ -713,6 +723,14 @@ module.exports = function (app, DATA) {
       else { s.status = 'awaiting_verify'; }
     } else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); }
     s.scoreEdited = true; s.scoreEditedAt = Date.now(); s.scoreEditedBy = actor; s.scoreEditReason = reason;
+    try {
+      s.attemptLog = s.attemptLog || [];
+      const parts = edits.map(e => parseInt(e.part, 10)).filter(p => p >= 1 && p <= PARTS.length);
+      const ev = { at: Date.now(), kind: 'edit', parts: parts.slice(), perPart: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: true };
+      let evTot = 0; parts.forEach(p => { const rr = s.results.find(x => x.part === p); const sc = rr ? (rr.score || 0) : 0; ev.perPart[p] = sc; evTot += sc; });
+      ev.total = evTot; ev.full = parts.length * QPP; ev.pass = parts.every(p => (ev.perPart[p] || 0) >= PASS); ev.remedialAfter = (s.remedialQueue || []).slice();
+      s.attemptLog.push(ev);
+    } catch (e) {}
     const after = snap();
     writeS(all);
     logAudit('score_edit', 'session', s.id, s.code || '', before, after, reason, actor);

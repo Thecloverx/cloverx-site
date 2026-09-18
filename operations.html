@@ -789,11 +789,13 @@
     EXAM_LOADING=true;
     Promise.all([
       fetch('/api/xv/admin/overview'+xvKeyQ()).then(function(r){return r.json();}).catch(function(){return null;}),
-      fetch('/api/xv/admin/sessions'+xvKeyQ()).then(function(r){return r.json();}).catch(function(){return null;})
+      fetch('/api/xv/admin/sessions'+xvKeyQ()).then(function(r){return r.json();}).catch(function(){return null;}),
+      fetch('/api/xv/admin/rounds'+xvKeyQ()).then(function(r){return r.json();}).catch(function(){return null;})
     ]).then(function(res){
-      var ov=res[0],ss=res[1];
+      var ov=res[0],ss=res[1],rr=res[2];
       if(ss&&ss.ok&&Array.isArray(ss.sessions)){EXAM_CACHE=ss.sessions;EXAM_OVW=(ov&&ov.ok)?ov:null;EXAM_LIVE=true;}
       else {EXAM_CACHE=xvDemo();EXAM_OVW=null;EXAM_LIVE=false;}
+      if(rr&&rr.ok&&Array.isArray(rr.rounds))EXAM_ROUNDS=rr.rounds; // สำหรับฟิลเตอร์ วันที่/รูปแบบ และ ชุดข้อสอบ ในรายงาน
       EXAM_LOADING=false;cb&&cb();
     });
   }
@@ -1542,6 +1544,8 @@
     var finished=all.filter(function(s){return s.status!=='in_progress'&&(((s.candidate||{}).mode||'online')===EXAM_RES_TAB);});
     return finished.filter(function(s){
       if(EXAM_RES_ROUND!=='all'&&String(s.roundNo)!==String(EXAM_RES_ROUND))return false;
+      if(EXAM_RES_DATE!=='all'&&xvRoundDate(s)!==EXAM_RES_DATE)return false;
+      if(EXAM_RES_TYPE!=='all'&&xvExamType(s)!==EXAM_RES_TYPE)return false;
       if(!onsite&&EXAM_RES_PASS!=='all'&&_passGroup[EXAM_RES_PASS].indexOf(s.status)<0)return false;
       if(!xvMatch(s,EXAM_RES_Q))return false;
       return true;
@@ -1580,24 +1584,117 @@
     xvDownloadCSV('xvisor-results-'+EXAM_RES_TAB+'-'+new Date().toISOString().slice(0,10)+'.csv',header,body);
   }
   window.xvExportResults=xvExportResults;
-  function xvExportExcel(){ // ไฟล์ .xlsx จริง (โหลด SheetJS ครั้งแรกที่ใช้)
-    var rows=xvResultRows();
-    if(!rows){xvToast('ไม่มีผลสอบให้ส่งออกในหมวดนี้','bad');return;}
+  function xvThaiDT(ms){if(!ms)return '';try{var d=new Date(ms);var m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];var p=function(n){return('0'+n).slice(-2);};return d.getDate()+' '+m[d.getMonth()]+' '+(d.getFullYear()+543)+' '+p(d.getHours())+':'+p(d.getMinutes());}catch(e){return '';}}
+  function xvPlist(a){return (a&&a.length)?a.join(', '):'—';}
+  // สร้างข้อมูลสรุปต่อผู้สอบ 1 คน (จาก session ที่จบแล้ว)
+  function xvCand(s){
+    var c=s.candidate||{};var ps={};(s.results||[]).forEach(function(r){ps[r.part]=r;});
+    var graded=[];for(var p=1;p<=PARTS_N;p++){if(ps[p]&&ps[p].score!=null)graded.push(p);}
+    var total=graded.reduce(function(a,p){return a+(ps[p].score||0);},0);
+    var full=graded.length*QPP; var pct=full?Math.round(total/full*100)/100:0;
+    var disq=(s.status==='disqualified');var passed=xvPassedCriteria(s);
+    var remParts=[],below=[],exhaust=[];
+    for(var p2=1;p2<=PARTS_N;p2++){var r=ps[p2];if(!r)continue;if((r.attempts||1)>1)remParts.push(p2);if((r.score||0)<PASS_PART){below.push(p2);if((r.attempts||1)>=MAXATT)exhaust.push(p2);}}
+    var log=(s.attemptLog||[]);
+    var remSubs=log.length?log.filter(function(e){return e.kind==='remedial';}).length:remParts.reduce(function(a,p){var r=ps[p];return a+Math.max(0,(r.attempts||1)-1);},0);
+    var perStr=graded.map(function(p){return 'พ.'+p+' '+(ps[p].score||0)+'/'+QPP;}).join(' · ');
+    var lastAt=s.submittedAt||(log.length?log[log.length-1].at:0);
+    var remark=disq?'ตัดสิทธิ์':(passed?(remParts.length===0?'ผ่านรวดเดียว':''):(exhaust.length?('ใช้สิทธิ์ซ่อมครบแล้วยังไม่ผ่าน พาร์ท '+exhaust.join(', ')):''));
+    return {s:s,name:((c.firstName||'')+' '+(c.lastName||'')).trim(),phone:c.phone||'',set:xvSetLabel(s),
+      total:total,full:full,pct:pct,result:(disq?'ตัดสิทธิ์':(passed?'ผ่าน':'ไม่ผ่าน')),passed:passed,disq:disq,
+      remCount:remParts.length,remParts:remParts,remSubs:remSubs,below:below,exhaust:exhaust,perStr:perStr,
+      lastAt:lastAt,lastTxt:xvThaiDT(lastAt),note:(s.scoreEditReason||''),remark:remark};
+  }
+  function xvFilterDesc(){
+    var parts=[];parts.push(EXAM_RES_TAB==='onsite'?'ที่ศูนย์สอบ (On-Site)':'ออนไลน์');
+    if(EXAM_RES_TYPE!=='all')parts.push(EXAM_RES_TYPE);
+    if(EXAM_RES_DATE!=='all')parts.push(xvThaiShort(EXAM_RES_DATE));else parts.push('ทุกวันที่');
+    if(EXAM_RES_ROUND!=='all')parts.push('รอบครั้งที่ '+EXAM_RES_ROUND);
+    return parts.join(' · ');
+  }
+  function xvExportExcel(){ // รายงานผลสอบหลายชีต (.xlsx จริง — โหลด SheetJS ครั้งแรกที่ใช้)
+    // ดึงทุกคนที่จบแล้วในขอบเขตฟิลเตอร์ (แท็บ/รูปแบบ/วันที่/รอบ) — ไม่กรองผ่าน/ไม่ผ่านและคำค้น เพื่อให้รายงานครบ
+    var base=(EXAM_CACHE||[]).filter(function(s){
+      if(s.status==='in_progress')return false;
+      if(((s.candidate||{}).mode||'online')!==EXAM_RES_TAB)return false;
+      if(EXAM_RES_ROUND!=='all'&&String(s.roundNo)!==String(EXAM_RES_ROUND))return false;
+      if(EXAM_RES_DATE!=='all'&&xvRoundDate(s)!==EXAM_RES_DATE)return false;
+      if(EXAM_RES_TYPE!=='all'&&xvExamType(s)!==EXAM_RES_TYPE)return false;
+      return true;
+    });
+    if(!base.length){xvToast('ไม่มีผลสอบให้ส่งออกในขอบเขตนี้','bad');return;}
     function build(){
       try{
-        var data=rows.map(function(r){return {
-          'อันดับ':r.rank,'คะแนนรวม (เต็ม 100)':r.total,'ผลเกณฑ์':r.pass,
-          'เลขที่ผู้สอบ':r.code,'ชื่อ-นามสกุล':r.name,'เบอร์โทร':r.phone,'รูปแบบ':r.mode,'รอบครั้งที่':r.round,
-          'P1':r.p1,'P2':r.p2,'P3':r.p3,'P4':r.p4,'P5':r.p5,
-          'สถานะระบบ':r.status,'พฤติกรรมเสี่ยง (ครั้ง)':r.flags,'วันที่ส่ง':r.sub};});
-        var ws=XLSX.utils.json_to_sheet(data);
-        ws['!cols']=[{wch:6},{wch:16},{wch:13},{wch:13},{wch:22},{wch:12},{wch:9},{wch:10},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:16},{wch:16},{wch:16}];
-        ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:data.length,c:15}})};
-        var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'ผลสอบ '+(EXAM_RES_TAB==='onsite'?'ศูนย์สอบ':'ออนไลน์'));
+        var cands=base.map(xvCand);
+        var byScore=cands.slice().sort(function(a,b){var d=b.total-a.total;if(d)return d;return a.name.localeCompare(b.name,'th');});
+        var wb=XLSX.utils.book_new();
+        var genTxt=xvThaiDT(Date.now());
+        var HEAD=['อันดับ','ชื่อ-นามสกุล','เบอร์โทร','ชุดข้อสอบ','คะแนน','เต็ม','คิดเป็น','ผลการสอบ','จำนวนพาร์ทที่ซ่อม','พาร์ทที่ซ่อม','จำนวนครั้งที่สอบซ่อม','พาร์ทที่ยังไม่ถึงขั้นต่ำ','พาร์ทที่ใช้สิทธิ์ซ่อมครบแล้วยังไม่ผ่าน','คะแนนรายพาร์ท','สอบล่าสุด','บันทึกของทีมงาน','หมายเหตุ'];
+        var COLW=[{wch:6},{wch:24},{wch:13},{wch:34},{wch:7},{wch:6},{wch:7},{wch:9},{wch:9},{wch:12},{wch:9},{wch:12},{wch:16},{wch:40},{wch:20},{wch:22},{wch:26}];
+        var rowOf=function(cn,i){return [i+1,cn.name,cn.phone,cn.set,cn.total,cn.full,cn.pct,cn.result,cn.remCount,xvPlist(cn.remParts),cn.remSubs,xvPlist(cn.below),xvPlist(cn.exhaust),cn.perStr,cn.lastTxt,cn.note,cn.remark];};
+        var tableSheet=function(title,sub,arr){
+          var aoa=[[title],[sub],[],HEAD];arr.forEach(function(cn,i){aoa.push(rowOf(cn,i));});
+          var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=COLW;
+          ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3+arr.length,c:HEAD.length-1}})};
+          return ws;
+        };
+        // ---- 1) สรุปภาพรวม ----
+        var nAll=cands.length,nPass=cands.filter(function(c){return c.passed;}).length,nFail=nAll-nPass;
+        var top=byScore[0];var avg=nAll?Math.round(cands.reduce(function(a,c){return a+c.total;},0)/nAll*10)/10:0;
+        var clean=cands.filter(function(c){return c.passed&&c.remCount===0;}).length;
+        var totalSubs=cands.reduce(function(a,c){return a+((c.s.attemptLog||[]).length);},0);
+        var grp={};cands.forEach(function(c){grp[c.remCount]=(grp[c.remCount]||0)+1;});
+        var sAoa=[['ผลสอบทั้งหมด'],['รายงานผลสอบ · '+xvFilterDesc()+' · ออกรายงาน '+genTxt],[],
+          ['ผู้เข้าสอบทั้งหมด',nAll+' คน'],
+          ['ผ่านเกณฑ์',nPass+' คน'+(nAll?(' ('+Math.round(nPass/nAll*1000)/10+'%)'):'')],
+          ['ยังไม่ผ่านเกณฑ์',nFail+' คน'+(nAll?(' ('+Math.round(nFail/nAll*1000)/10+'%)'):'')],
+          ['คะแนนสูงสุด',top?(top.total+'/'+top.full+' · '+top.name):'—'],
+          ['คะแนนเฉลี่ย',avg+' คะแนน'],
+          ['ผ่านโดยไม่ต้องสอบซ่อมเลย',clean+' คน'],
+          ['ใบผลที่บันทึกรายครั้ง',totalSubs+' ใบ (รวมรอบสอบซ่อม)'],
+          [],['แบ่งกลุ่มตามจำนวนพาร์ทที่สอบซ่อม']];
+        Object.keys(grp).sort(function(a,b){return a-b;}).forEach(function(k){sAoa.push([(k==='0'?'ผ่าน/สอบรวดเดียว (ไม่ซ่อม)':('ซ่อม '+k+' พาร์ท')),grp[k]+' คน']);});
+        var ws1=XLSX.utils.aoa_to_sheet(sAoa);ws1['!cols']=[{wch:30},{wch:40}];
+        XLSX.utils.book_append_sheet(wb,ws1,'สรุปภาพรวม');
+        // ---- 2) อันดับคะแนน ----
+        XLSX.utils.book_append_sheet(wb,tableSheet('อันดับคะแนนผู้เข้าสอบ','เรียงจากคะแนนสูงสุด · '+nAll+' คน',byScore),'อันดับคะแนน');
+        // ---- 3) ผ่านเกณฑ์ ----
+        var passArr=cands.filter(function(c){return c.passed;}).sort(function(a,b){var d=a.remCount-b.remCount;if(d)return d;var e=b.total-a.total;if(e)return e;return a.name.localeCompare(b.name,'th');});
+        XLSX.utils.book_append_sheet(wb,tableSheet('ผู้ที่ผ่านเกณฑ์','เรียงจากซ่อมน้อยที่สุดและคะแนนสูงสุด · '+passArr.length+' คน',passArr),'ผ่านเกณฑ์');
+        // ---- 4) ไม่ผ่านเกณฑ์ ----
+        var failArr=cands.filter(function(c){return !c.passed;}).sort(function(a,b){return b.total-a.total;});
+        XLSX.utils.book_append_sheet(wb,tableSheet('ผู้ที่ยังไม่ผ่านเกณฑ์','เรียงจากคะแนนสูงสุด · '+failArr.length+' คน',failArr),'ไม่ผ่านเกณฑ์');
+        // ---- 5) คัดคนรับรางวัล (จัดกลุ่มตามจำนวนพาร์ทที่ซ่อม) ----
+        var aw=[['คัดผู้เข้าสอบเพื่อมอบรางวัล'],['เรียงจากผู้ที่สอบซ่อมน้อยที่สุดและคะแนนสูงที่สุดในแต่ละกลุ่ม · '+xvFilterDesc()],[]];
+        var AHEAD=['อันดับในกลุ่ม','ชื่อ-นามสกุล','เบอร์โทร','คะแนน','เต็ม','คิดเป็น','จำนวนพาร์ทที่ซ่อม','พาร์ทที่ซ่อม','สอบล่าสุด'];
+        var passByGrp={};passArr.forEach(function(c){(passByGrp[c.remCount]=passByGrp[c.remCount]||[]).push(c);});
+        Object.keys(passByGrp).sort(function(a,b){return a-b;}).forEach(function(k){
+          var g=passByGrp[k].slice().sort(function(a,b){return b.total-a.total;});
+          aw.push([]);aw.push([(k==='0'?'ผ่านโดยไม่สอบซ่อมเลย':'ซ่อม '+k+' พาร์ท')+' — '+g.length+' คน']);aw.push(AHEAD);
+          g.forEach(function(c,i){aw.push([i+1,c.name,c.phone,c.total,c.full,c.pct,c.remCount,xvPlist(c.remParts),c.lastTxt]);});
+        });
+        var ws5=XLSX.utils.aoa_to_sheet(aw);ws5['!cols']=[{wch:12},{wch:24},{wch:13},{wch:7},{wch:6},{wch:7},{wch:9},{wch:12},{wch:20}];
+        XLSX.utils.book_append_sheet(wb,ws5,'คัดคนรับรางวัล');
+        // ---- 6) ประวัติรายครั้ง (จาก log การส่งทุกครั้ง) ----
+        var hist=[];
+        cands.forEach(function(c){(c.s.attemptLog||[]).forEach(function(e){
+          var perStr=(e.parts||[]).map(function(p){return 'พ.'+p+' '+((e.perPart&&e.perPart[p]!=null)?e.perPart[p]:0)+'/'+QPP;}).join(' · ');
+          var roundTxt=(e.kind==='first')?'รอบแรก':(e.kind==='edit')?('ทีมงานปรับคะแนน พาร์ท '+(e.parts||[]).join(', ')):('สอบซ่อม พาร์ท '+(e.parts||[]).join(', '));
+          hist.push({at:e.at,name:c.name,phone:c.phone,set:c.set,round:roundTxt,score:(e.total!=null?e.total:0),full:(e.full!=null?e.full:((e.parts||[]).length*QPP)),crit:((e.parts||[]).length*PASS_PART),res:(e.pass?'ผ่าน':'ไม่ผ่าน'),per:perStr,rem:xvPlist(e.remedialAfter||[]),pause:(e.pauseUsed||0),edit:(e.scoreEdited?'ใช่':'')});
+        });});
+        hist.sort(function(a,b){return b.at-a.at;});
+        var HHEAD=['ลำดับ','ส่งเมื่อ','ชื่อ-นามสกุล','เบอร์โทร','ชุดข้อสอบ','รอบ','คะแนน','เต็ม','เกณฑ์','ผล','คะแนนรายพาร์ท','พาร์ทที่ต้องซ่อม','หยุดเวลา (ครั้ง)','ทีมงานปรับคะแนน'];
+        var hAoa=[['ประวัติการสอบทุกครั้ง'],[hist.length?('ทุกใบผลที่ระบบบันทึกไว้ · '+hist.length+' ใบ · '+xvFilterDesc()):'ยังไม่มีบันทึกรายครั้ง (เริ่มบันทึกตั้งแต่รอบสอบถัดไป)'],[],HHEAD];
+        hist.forEach(function(h,i){hAoa.push([i+1,xvThaiDT(h.at),h.name,h.phone,h.set,h.round,h.score,h.full,h.crit,h.res,h.per,h.rem,h.pause,h.edit]);});
+        var ws6=XLSX.utils.aoa_to_sheet(hAoa);ws6['!cols']=[{wch:6},{wch:20},{wch:24},{wch:13},{wch:34},{wch:22},{wch:7},{wch:6},{wch:6},{wch:8},{wch:22},{wch:14},{wch:13},{wch:13}];
+        if(hist.length)ws6['!autofilter']={ref:XLSX.utils.encode_range({s:{r:3,c:0},e:{r:3+hist.length,c:HHEAD.length-1}})};
+        XLSX.utils.book_append_sheet(wb,ws6,'ประวัติรายครั้ง');
+        // save
         var d=new Date(),pad=function(n){return ('0'+n).slice(-2);};
-        XLSX.writeFile(wb,'xvisor-results-'+EXAM_RES_TAB+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes())+'.xlsx');
-        xvToast('ส่งออก Excel แล้ว ('+data.length+' รายการ)','ok');
-      }catch(e){xvToast('สร้างไฟล์ Excel ไม่สำเร็จ','bad');}
+        var fnScope=(EXAM_RES_TYPE!=='all'?(EXAM_RES_TYPE+'_'):'')+(EXAM_RES_TAB==='onsite'?'onsite':'online');
+        XLSX.writeFile(wb,'รายงานผลสอบ_'+fnScope+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.xlsx');
+        xvToast('ส่งออกรายงาน Excel แล้ว ('+nAll+' คน · '+wb.SheetNames.length+' ชีต)','ok');
+      }catch(e){xvToast('สร้างไฟล์ Excel ไม่สำเร็จ: '+(e&&e.message||''),'bad');}
     }
     if(window.XLSX){build();return;}
     xvToast('กำลังเตรียมไฟล์ Excel…');
@@ -1679,7 +1776,13 @@
   }
 
   /* ---------- 4) EXAM RESULT (+ staff verify) ---------- */
-  var EXAM_RES_ROUND='all', EXAM_RES_PASS='all', EXAM_RES_Q='';
+  var EXAM_RES_ROUND='all', EXAM_RES_PASS='all', EXAM_RES_Q='', EXAM_RES_DATE='all', EXAM_RES_TYPE='all';
+  // ---- ข้อมูลรอบ/รูปแบบ/วันที่ ของแต่ละผู้สอบ (ใช้กับฟิลเตอร์ + รายงาน) ----
+  function xvRoundOf(s){var rs=EXAM_ROUNDS||[];if(!rs.length)return null;var r=null;if(s.roundId)r=rs.find(function(x){return x.id===s.roundId;});if(!r&&s.roundNo!=null)r=rs.find(function(x){return String(x.no)===String(s.roundNo);});return r||null;}
+  function xvExamType(s){var r=xvRoundOf(s);var t=((r&&(r.topic||''))+' '+(r&&(r.setName||''))).toLowerCase();if(/x[\s\-]?lead/.test(t))return 'X-Lead';return 'X-Visor';}
+  function xvRoundDate(s){var r=xvRoundOf(s);return (r&&r.date)||'';}
+  function xvSetLabel(s){var r=xvRoundOf(s);if(!r)return (s.roundNo!=null?('รอบที่ '+s.roundNo):'');var topic=r.topic||'X-Visor Certification';var d=r.date?xvThaiShort(r.date):'';return topic+' · รอบที่ '+(r.no!=null?r.no:'')+(d?(' · '+d):'');}
+  function xvThaiShort(iso){try{var p=String(iso).slice(0,10).split('-');if(p.length<3)return iso;var m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];var y=(parseInt(p[0],10)<2500?parseInt(p[0],10)+543:parseInt(p[0],10));return parseInt(p[2],10)+' '+m[parseInt(p[1],10)-1]+' '+y;}catch(e){return iso;}}
   function xvMatch(s,q){if(!q)return true;q=q.toLowerCase().trim();var nm=(((s.candidate||{}).firstName||'')+' '+((s.candidate||{}).lastName||'')).toLowerCase();var ph=String((s.candidate||{}).phone||'').toLowerCase();var code=String(s.code||'').toLowerCase();return nm.indexOf(q)>=0||ph.indexOf(q)>=0||code.indexOf(q)>=0;}
   var _passGroup={pass:['awaiting_verify','verified','submitted'],fail:['remedial_required','ended_failed']};
   var EXAM_RES_TAB='online';
@@ -1694,13 +1797,23 @@
     var roundNos=[];finished.forEach(function(s){if(s.roundNo!=null&&roundNos.indexOf(s.roundNo)<0)roundNos.push(s.roundNo);});
     roundNos.sort(function(a,b){return b-a;});
     if(EXAM_RES_ROUND!=='all'&&roundNos.indexOf(parseInt(EXAM_RES_ROUND,10))<0)EXAM_RES_ROUND='all';
+    // ตัวเลือกวันที่ + รูปแบบ (X-Visor/X-Lead) จากรอบที่มีผู้สอบในแท็บนี้
+    var dateSet={},typeSet={};finished.forEach(function(s){var d=xvRoundDate(s);if(d)dateSet[d]=1;typeSet[xvExamType(s)]=1;});
+    var dates=Object.keys(dateSet).sort(function(a,b){return b.localeCompare(a);});
+    var types=Object.keys(typeSet).sort();
+    if(EXAM_RES_DATE!=='all'&&dates.indexOf(EXAM_RES_DATE)<0)EXAM_RES_DATE='all';
+    if(EXAM_RES_TYPE!=='all'&&types.indexOf(EXAM_RES_TYPE)<0)EXAM_RES_TYPE='all';
     var list=finished.filter(function(s){
       if(EXAM_RES_ROUND!=='all'&&String(s.roundNo)!==String(EXAM_RES_ROUND))return false;
+      if(EXAM_RES_DATE!=='all'&&xvRoundDate(s)!==EXAM_RES_DATE)return false;
+      if(EXAM_RES_TYPE!=='all'&&xvExamType(s)!==EXAM_RES_TYPE)return false;
       if(!onsite&&EXAM_RES_PASS!=='all'&&_passGroup[EXAM_RES_PASS].indexOf(s.status)<0)return false;
       if(!xvMatch(s,EXAM_RES_Q))return false;
       return true;
     });
     var selCss='border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.84rem;color:var(--ink);background:#fff;cursor:pointer';
+    var typeSel=(types.length>1)?('<select id="resType" style="'+selCss+'"><option value="all"'+(EXAM_RES_TYPE==='all'?' selected':'')+'>ทุกรูปแบบ</option>'+types.map(function(t){return '<option value="'+t+'"'+(EXAM_RES_TYPE===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select>'):'';
+    var dateSel=dates.length?('<select id="resDate" style="'+selCss+'"><option value="all"'+(EXAM_RES_DATE==='all'?' selected':'')+'>ทุกวันที่</option>'+dates.map(function(d){return '<option value="'+d+'"'+(EXAM_RES_DATE===d?' selected':'')+'>'+xvThaiShort(d)+'</option>';}).join('')+'</select>'):'';
     var roundSel=roundNos.length?('<select id="resRound" style="'+selCss+'"><option value="all"'+(EXAM_RES_ROUND==='all'?' selected':'')+'>ทุกรอบ</option>'+roundNos.map(function(n){return '<option value="'+n+'"'+(String(EXAM_RES_ROUND)===String(n)?' selected':'')+'>รอบครั้งที่ '+n+'</option>';}).join('')+'</select>'):'';
     var passSel=onsite?'':'<select id="resPass" style="'+selCss+'"><option value="all"'+(EXAM_RES_PASS==='all'?' selected':'')+'>ทุกเกณฑ์</option><option value="pass"'+(EXAM_RES_PASS==='pass'?' selected':'')+'>ผ่านเกณฑ์</option><option value="fail"'+(EXAM_RES_PASS==='fail'?' selected':'')+'>ไม่ผ่านเกณฑ์</option></select>';
     var searchBox='<input id="resSearch" type="text" value="'+String(EXAM_RES_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ-นามสกุล / เบอร์โทร" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;color:var(--ink);min-width:220px">';
@@ -1771,11 +1884,13 @@
       +xvKstrip(kstrip)
       +tabs
       +banner
-      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(onsite?'ผลการสอบที่ศูนย์สอบ':'ผลการสอบ')+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+passSel+roundSel+'<button onclick="xvExportExcel()" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ส่งออก Excel</button><button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer">CSV</button><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(onsite?'ผลการสอบที่ศูนย์สอบ':'ผลการสอบ')+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+typeSel+dateSel+passSel+roundSel+'<button onclick="xvExportExcel()" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ส่งออก Excel</button><button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer">CSV</button><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
       +'<div style="overflow-x:auto"><table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.rtab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_RES_TAB=b.getAttribute('data-rtab');if(EXAM_RES_TAB==='onsite')EXAM_RES_PASS='all';renderExamResult();});});
     var rsel=document.getElementById('resRound');if(rsel)rsel.addEventListener('change',function(){EXAM_RES_ROUND=rsel.value;renderExamResult();});
     var psel=document.getElementById('resPass');if(psel)psel.addEventListener('change',function(){EXAM_RES_PASS=psel.value;renderExamResult();});
+    var tsel=document.getElementById('resType');if(tsel)tsel.addEventListener('change',function(){EXAM_RES_TYPE=tsel.value;renderExamResult();});
+    var dsel=document.getElementById('resDate');if(dsel)dsel.addEventListener('change',function(){EXAM_RES_DATE=dsel.value;renderExamResult();});
     var qbox=document.getElementById('resSearch');if(qbox)qbox.addEventListener('input',function(){var pos=this.selectionStart;EXAM_RES_Q=this.value;renderExamResult();var el=document.getElementById('resSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
     gen.querySelectorAll('.xv-verify').forEach(function(b){
       b.addEventListener('click',function(){
