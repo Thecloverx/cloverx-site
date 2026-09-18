@@ -696,9 +696,20 @@
   // premium part-score pills P1..P5 (— for parts not graded yet)
   function xvPartPills(s){var by={};(s.results||[]).forEach(function(r){by[r.part]=r;});var cells='';for(var p=1;p<=PARTS_N;p++){var r=by[p];if(!r)cells+='<span class="xps miss">—</span>';else cells+='<span class="xps'+(r.score<PASS_PART?' bad':'')+'">'+r.score+'</span>';if(p<PARTS_N)cells+='<span class="xdiv">|</span>';}return '<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap">'+cells+'</div>';}
   function xvMaxTotal(){return PARTS_N*QPP;} // 100
-  // live pills: จำนวนข้อที่ตอบต่อพาร์ท ระหว่างกำลังสอบ (พาร์ทปัจจุบันมีขอบไฮไลต์)
-  function xvLivePills(lv){if(!lv||!lv.perPart)return '';var cells='';lv.perPart.forEach(function(pp){var isCur=pp.part===lv.curPart;var full=pp.answered>=QPP;var some=pp.answered>0;
-    cells+='<span title="พาร์ท '+pp.part+' · ตอบ '+pp.answered+'/'+QPP+'" style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;border-radius:6px;font-size:.72rem;font-weight:800;'+(isCur?'box-shadow:0 0 0 2px #0A67D8;':'')+'background:'+(full?'#E5F6EF':(some?'#EAF2FF':'#F0F3F8'))+';color:'+(full?'#0E9F6E':(some?'#0A67D8':'#9AA6B8'))+'">'+pp.answered+'</span>';});
+  // live pills ต่อพาร์ท: ทำครบแล้ว → โชว์ "คะแนนที่ได้ /20" สี ผ่าน=เขียว · ก้ำกึ่ง(50:50)=ส้ม · ไม่ผ่าน=แดง · ยังไม่ครบ → โชว์จำนวนข้อที่ตอบ
+  function xvLivePills(lv){if(!lv||!lv.perPart)return '';var cells='';lv.perPart.forEach(function(pp){
+    var isCur=pp.part===lv.curPart;var done=pp.answered>=QPP;var bg,fg,txt,tip;
+    if(done){
+      var sc=pp.correct||0;
+      var band=(sc>=PASS_PART)?'pass':((sc>=PASS_PART-4)?'mid':'fail'); // ผ่าน / ก้ำกึ่ง / ไม่ผ่าน
+      if(band==='pass'){bg='#E5F6EF';fg='#0E9F6E';}else if(band==='mid'){bg='#FEF1E0';fg='#D97706';}else{bg='#FDECEC';fg='#DC2626';}
+      txt='<b>'+sc+'</b><span style="font-size:.6rem;font-weight:700;opacity:.65">/'+QPP+'</span>';
+      tip='พาร์ท '+pp.part+' · ได้ '+sc+'/'+QPP+' ('+(band==='pass'?'ผ่าน':(band==='mid'?'ก้ำกึ่ง 50:50':'ไม่ผ่าน'))+')';
+    }else{
+      var some=pp.answered>0;bg=some?'#EAF2FF':'#F0F3F8';fg=some?'#0A67D8':'#9AA6B8';txt=String(pp.answered);
+      tip='พาร์ท '+pp.part+' · ตอบ '+pp.answered+'/'+QPP;
+    }
+    cells+='<span title="'+tip+'" style="display:inline-flex;align-items:center;justify-content:center;gap:1px;min-width:'+(done?'42px':'30px')+';height:24px;padding:0 5px;border-radius:6px;font-size:.72rem;font-weight:800;font-variant-numeric:tabular-nums;'+(isCur?'box-shadow:0 0 0 2px #0A67D8;':'')+'background:'+bg+';color:'+fg+'">'+txt+'</span>';});
     return '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">'+cells+'</div>';}
   // live progress cell (in_progress): พาร์ท/ข้อปัจจุบัน · เสร็จกี่พาร์ท · ตอบ/ถูก/ผิด
   function xvLiveCell(s){var lv=s.live;if(!lv)return '<div style="min-width:230px">'+xvPartPills(s)+'</div>';
