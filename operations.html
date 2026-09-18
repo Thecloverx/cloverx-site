@@ -1550,6 +1550,7 @@
   }
   window.xvExportExcel=xvExportExcel;
   function renderExamTracker(){
+    gen.classList.add('xv'); // กันเหนียว: การ์ด KPI/ตารางของหน้าสอบใช้ CSS ที่ผูกกับ .xv เสมอ
     var all=EXAM_CACHE||[];
     var onsite=EXAM_TAB==='onsite';
     var list=all.filter(function(s){return s.candidate.mode===EXAM_TAB;});
@@ -2840,10 +2841,13 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   setInterval(function(){
     try{
       if(EXAM_VIEW!=='exam-tracker')return;
+      // ต้องยังอยู่ที่หน้า Tracker จริง ๆ เท่านั้น (กันรีเฟรชอัตโนมัติทับหน้าอื่นเมื่อผู้ใช้เปลี่ยนเมนูไปแล้ว)
+      var _act=document.querySelector('#nav .item[data-view].active');
+      if(!_act||_act.getAttribute('data-view')!=='exam-tracker')return;
       if(!EXAM_LIVE)return;
       var sh=document.getElementById('xvSheet'); if(sh&&sh.style.display!=='none')return; // เปิด modal อยู่ → ไม่รีเฟรช
       var ae=document.activeElement; if(ae&&ae.id==='trkSearch')return; // กำลังพิมพ์ค้นหา → ไม่รีเฟรช
-      xvFetch(function(){ if(EXAM_VIEW==='exam-tracker')renderExamTracker(); });
+      xvFetch(function(){ var a=document.querySelector('#nav .item[data-view].active'); if(EXAM_VIEW==='exam-tracker'&&a&&a.getAttribute('data-view')==='exam-tracker')renderExamTracker(); });
     }catch(e){}
   }, 8000);
 
