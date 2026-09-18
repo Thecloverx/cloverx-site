@@ -464,10 +464,15 @@ module.exports = function (app, DATA) {
     if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
     if (s.status !== 'in_progress') return res.status(409).json({ ok: false, error: 'not_in_progress', status: s.status });
     const before = s.status;
+    // พาร์ตที่ทีมงานเลือกตรวจ (บันทึกไว้ตรวจสอบย้อนหลัง) — การให้คะแนนใช้ตัวตรวจปกติ: ตรวจทุกพาร์ตในขอบเขตจากคำตอบที่มี
+    // (ข้อไม่ตอบ = ผิด) แล้วจบการสอบทันที · พาร์ตที่ไม่ได้ทำจึงนับเป็นไม่ผ่าน เข้าสู่ผ่าน/ซ่อมตาม logic ปกติ
+    const active = activeParts(s);
+    let sel = Array.isArray(b.parts) ? b.parts.map(Number).filter(p => active.indexOf(p) >= 0) : active.slice();
+    if (!sel.length) sel = active.slice();
     score(s, false);
-    s.forcedGrade = { by: String(b.actor || 'staff').slice(0, 60), at: Date.now(), reason: String(b.reason || '').slice(0, 200) };
+    s.forcedGrade = { by: String(b.actor || 'staff').slice(0, 60), at: Date.now(), parts: sel, reason: String(b.reason || '').slice(0, 200) };
     writeS(all);
-    logAudit('force_grade', 'session', s.id, s.code || '', before, s.status, 'ทีมงานบังคับตรวจคะแนน' + (b.reason ? (' · ' + b.reason) : ''), s.forcedGrade.by);
+    logAudit('force_grade', 'session', s.id, s.code || '', before, s.status, 'ทีมงานบังคับตรวจคะแนน (พาร์ต ' + sel.join(', ') + ')' + (b.reason ? (' · ' + b.reason) : ''), s.forcedGrade.by);
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
   });
 

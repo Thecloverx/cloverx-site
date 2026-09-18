@@ -1386,25 +1386,45 @@
     },true);
   }
   window.xvDelSession=xvDelSession;
-  // บังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — ตรวจคำตอบที่มีตอนนี้แล้วสรุปผ่าน/ไม่ผ่านทันที
+  // บังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — เลือกได้ว่าจะตรวจพาร์ตไหน แล้วจบการสอบทันที
   function xvForceGrade(id,name){
-    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
-    xvConfirm('ตรวจคะแนนตอนนี้','บังคับตรวจคะแนนของ "'+name+'" เดี๋ยวนี้? ระบบจะตรวจคำตอบที่ทำมาถึงตอนนี้ (ข้อที่ยังไม่ตอบนับเป็นผิด) แล้วสรุปผ่าน/ไม่ผ่านทันที — ลูกค้าจะเห็นผลของตัวเองในไม่กี่วินาที','ตรวจคะแนน',function(){
-      fetch('/api/xv/admin/session/'+id+'/force-grade'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,actor:'staff'})})
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อตรวจจริง','bad');return;}
+    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
+    var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;}); if(!s){xvToast('ไม่พบผู้สอบ','bad');return;}
+    var lv=s.live||{}; var per={}; (lv.perPart||[]).forEach(function(pp){per[pp.part]=pp;});
+    // พาร์ตในขอบเขต (รอบแรก = 1-5 · สอบซ่อม = เฉพาะพาร์ตที่ซ่อม)
+    var scope=(lv.perPart||[]).filter(function(pp){return pp.inScope;}).map(function(pp){return pp.part;});
+    if(!scope.length)scope=[1,2,3,4,5];
+    var rows=scope.map(function(p){var pp=per[p]||{answered:0};var done=pp.answered>=QPP;
+      return '<label style="display:flex;align-items:center;gap:12px;margin-bottom:9px;padding:10px 12px;border:1px solid '+(done?'#82D7B3':'var(--line)')+';border-radius:10px;cursor:pointer;background:'+(done?'#F3FBF7':'#fff')+'">'
+        +'<input type="checkbox" class="fg_ck" value="'+p+'"'+(done?' checked':'')+' style="width:18px;height:18px;flex:none">'
+        +'<div style="flex:1"><b style="color:var(--ink)">พาร์ท '+p+'</b> <span style="color:var(--muted);font-size:.82rem">ทำแล้ว '+(pp.answered||0)+'/'+QPP+'</span></div>'
+        +(done?'<span style="color:#078654;font-size:.74rem;font-weight:800;background:#E5F6EF;border-radius:999px;padding:3px 9px">ทำครบ</span>':'<span style="color:#B45309;font-size:.74rem;font-weight:700;background:#FFF7ED;border-radius:999px;padding:3px 9px">ยังไม่ครบ</span>')+'</label>';
+    }).join('');
+    xvSheet('<h3 style="font-size:1.12rem">ตรวจคะแนน · '+xvName(s)+' <span style="color:var(--muted);font-weight:600;font-size:.9rem">('+(s.code||'')+')</span></h3>'
+      +'<p style="color:var(--muted);font-size:.84rem;margin:5px 0 14px;line-height:1.5">ใช้กรณีผู้สอบทำครบแต่กดส่งคะแนนไม่ได้ — ติ๊กเลือกพาร์ทที่ต้องการตรวจ (ค่าเริ่มต้นติ๊กเฉพาะพาร์ทที่ทำครบแล้ว) ระบบจะ<b>ตรวจแล้วจบการสอบทันที</b> · พาร์ทที่ยังไม่ได้ทำจะนับข้อที่ไม่ตอบเป็นผิด แล้วเข้าสู่ผ่าน/สอบซ่อมตามเกณฑ์ปกติ · ลูกค้าจะเห็นผลของตัวเองในไม่กี่วินาที</p>'
+      +rows
+      +'<div><label style="'+lblCss()+'">เหตุผล/บันทึก (ไม่บังคับ)</label><input id="fg_reason" placeholder="เช่น ลูกค้าทำครบแต่ปุ่มส่งค้าง" style="'+fieldCss()+'"></div>'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="fgGo" style="'+btnPri()+'">ตรวจคะแนน + จบการสอบ</button></div>');
+    document.getElementById('fgGo').onclick=function(){
+      var parts=[].slice.call(document.querySelectorAll('.fg_ck')).filter(function(c){return c.checked;}).map(function(c){return parseInt(c.value,10);});
+      if(!parts.length){xvToast('เลือกอย่างน้อย 1 พาร์ท','bad');return;}
+      var reason=((document.getElementById('fg_reason')||{}).value||'').trim();
+      var btn=this;btn.disabled=true;btn.textContent='กำลังตรวจ…';
+      fetch('/api/xv/admin/session/'+id+'/force-grade'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,actor:'staff',parts:parts,reason:reason})})
         .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
           if(o.j&&o.j.ok){
             var st=o.j.status, msg='ตรวจคะแนนแล้ว';
             if(st==='submitted'||st==='awaiting_verify')msg='ตรวจแล้ว: ผ่านครบทุกพาร์ต ✓';
             else if(st==='remedial_required')msg='ตรวจแล้ว: ต้องสอบซ่อมพาร์ต '+((o.j.remedialQueue||[]).join(', ')||'-');
             else if(st==='ended_failed')msg='ตรวจแล้ว: ไม่ผ่าน (หมดสิทธิ์สอบซ่อม)';
-            xvToast(msg,'ok');
-            xvFetch(function(){renderExamTracker();});
+            xvSheetClose();xvToast(msg,'ok');examRefresh();
           }
-          else if(o.s===403)xvToast('รหัสแอดมินไม่ถูกต้อง หรือยังไม่ได้ใส่','bad');
-          else if(o.s===409)xvToast('รายการนี้ไม่ได้กำลังสอบอยู่ (อาจถูกตรวจไปแล้ว)','bad');
-          else xvToast('ตรวจคะแนนไม่สำเร็จ','bad');
-        }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
-    });
+          else if(o.s===403){btn.disabled=false;btn.textContent='ตรวจคะแนน + จบการสอบ';xvToast('รหัสแอดมินไม่ถูกต้อง','bad');}
+          else if(o.s===409){btn.disabled=false;btn.textContent='ตรวจคะแนน + จบการสอบ';xvToast('รายการนี้ไม่ได้กำลังสอบอยู่ (อาจถูกตรวจไปแล้ว)','bad');}
+          else {btn.disabled=false;btn.textContent='ตรวจคะแนน + จบการสอบ';xvToast('ตรวจคะแนนไม่สำเร็จ','bad');}
+        }).catch(function(){btn.disabled=false;btn.textContent='ตรวจคะแนน + จบการสอบ';xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    };
   }
   window.xvForceGrade=xvForceGrade;
   // ---- แก้ไขคะแนนผู้สอบ (กรณีระบบคำนวณผิด) — ต้องมี Admin Key + บังคับกรอกเหตุผล → บันทึก audit ----
