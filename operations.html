@@ -799,7 +799,12 @@
   }
   // banner shown at top of each exam page: live vs demo + key unlock
   function xvBanner(){
-    if(EXAM_LIVE) return '<div style="display:inline-flex;align-items:center;gap:7px;background:var(--good-tint);color:var(--good);font-weight:700;font-size:.78rem;padding:5px 12px;border-radius:999px"><span style="width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px rgba(18,166,124,.18)"></span>เชื่อมต่อระบบสอบจริง (Live)</div>';
+    if(EXAM_LIVE) return '<div style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<span style="display:inline-flex;align-items:center;gap:7px;background:var(--good-tint);color:var(--good);font-weight:700;font-size:.78rem;padding:5px 12px;border-radius:999px"><span style="width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px rgba(18,166,124,.18)"></span>เชื่อมต่อระบบสอบจริง (Live)</span>'
+      +(OPS_KEY
+        ? '<button onclick="opsLock()" title="ล็อกสิทธิ์จัดการ — ล้าง Admin Key ออกจากเครื่องนี้ (กันคนอื่นมาลบ/แก้)" style="display:inline-flex;align-items:center;gap:6px;background:var(--good-tint);color:var(--good);border:1px solid #A7E0CC;border-radius:999px;padding:5px 12px;font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer">🔓 ล็อกสิทธิ์จัดการ</button>'
+        : '<button onclick="opsUnlock()" title="ใส่ Admin Key เพื่อ ลบ/ตรวจคะแนน/แก้คะแนน" style="display:inline-flex;align-items:center;gap:6px;background:var(--warn);color:#fff;border:0;border-radius:999px;padding:6px 13px;font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer">🔑 ใส่ Admin Key เพื่อจัดการ</button>')
+      +'</div>';
     return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-tint);border:1px solid #F3D9A8;border-radius:12px;padding:10px 14px;margin-bottom:16px">'
       +'<span style="font-weight:700;color:var(--warn);font-size:.84rem">โหมดตัวอย่าง (demo) — ยังไม่ได้เชื่อมข้อมูลจริง</span>'
       +'<span style="color:var(--muted);font-size:.8rem">ใส่ Admin Key เพื่อดึงข้อมูลผู้สอบจริงจากเซิร์ฟเวอร์</span>'
@@ -1376,6 +1381,7 @@
   // ลบรายการสอบ (สำหรับลบรายการทดสอบ/ผิดพลาด — ต้องมีสิทธิ์แอดมิน)
   function xvDelSession(id,name,which){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
+    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     xvConfirm('ลบรายการสอบ','ยืนยันลบรายการสอบของ "'+name+'"? การลบนี้ถาวร — ใช้สำหรับลบรายการทดสอบหรือรายการที่ผิดพลาดเท่านั้น','ลบรายการ',function(){
       fetch('/api/xv/admin/session/'+id+'/delete'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
         .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
@@ -2058,6 +2064,9 @@
   var OPS_KEY_ASKED=false;
   function ordersUrl(){return '/api/orders'+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):'');}
   function opsUnlock(){try{var k=prompt('ใส่ Admin Key เพื่อดูข้อมูลลูกค้าแบบเต็ม (สลิป/เบอร์/ที่อยู่)\\nเว้นว่าง = ดูแบบมาสก์ตาม PDPA');if(k!=null){OPS_KEY=k.trim();try{sessionStorage.setItem('opsKey',OPS_KEY);}catch(e){}var act=document.querySelector('#nav .item[data-view].active');var av=act?act.getAttribute('data-view'):'';if(av&&(av.indexOf('exam-')===0||av.indexOf('reg-')===0)){EXAM_QINFO=null;examRefresh();}else{poRefresh();}}}catch(e){}}
+  // ล็อกสิทธิ์จัดการกลับ — ล้าง Admin Key ออกจากเครื่องนี้ (ใช้เมื่อทำงานเสร็จ กันคนอื่นมากดลบ/แก้)
+  function opsLock(){OPS_KEY='';try{sessionStorage.removeItem('opsKey');}catch(e){}var act=document.querySelector('#nav .item[data-view].active');var av=act?act.getAttribute('data-view'):'';try{if(av&&(av.indexOf('exam-')===0||av.indexOf('reg-')===0)){EXAM_QINFO=null;examRefresh();}else{poRefresh();}}catch(e){}xvToast('ล็อกสิทธิ์จัดการแล้ว — ใส่ Admin Key ใหม่เมื่อต้องจัดการอีกครั้ง','ok');}
+  window.opsLock=opsLock;
   function ensureKey(cb){ cb(); }
   var PO_ST={pending:['รอตรวจสอบ','pend'],paid:['ชำระแล้ว','ok'],confirmed:['ยืนยันแล้ว','ok'],rejected:['ปฏิเสธ','bad'],cancelled:['ยกเลิก','bad'],refunded:['คืนเงินแล้ว','bad'],partially_refunded:['คืนเงินบางส่วน','pend'],failed:['ชำระไม่สำเร็จ','bad']};
   // ชำระผ่าน Stripe (ยืนยันอัตโนมัติ ไม่ต้องให้เจ้าหน้าที่ตรวจ) = บัตร + PromptPay QR
