@@ -1859,7 +1859,7 @@
       rows=list.map(function(s){
         var st=xvOnsiteStat(s), sys=xvSysResult(s), delNm2=xvName(s).replace(/["'\\]/g,'');
         return '<tr><td class="num">'+(s.code||'—')+'</td>'
-          +'<td><b>'+xvName(s)+'</b>'+(s.scoreEdited?' <span class="pill" style="background:#FDF3E1;color:#B7791F;font-size:.64rem" title="'+String(s.scoreEditReason||'').replace(/"/g,'&quot;')+'">✎ แก้ไขโดยจนท.</span>':'')+'<div style="color:var(--muted);font-size:.76rem">ที่ศูนย์สอบ'+((s.candidate||{}).phone?(' · '+s.candidate.phone):'')+'</div></td>'
+          +'<td><b>'+xvName(s)+'</b>'+'<div style="color:var(--muted);font-size:.76rem">ที่ศูนย์สอบ'+((s.candidate||{}).phone?(' · '+s.candidate.phone):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
@@ -1894,7 +1894,7 @@
           action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
         }
         var delNm2=xvName(s).replace(/["'\\]/g,'');
-        return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+(s.scoreEdited?' <span class="pill" style="background:#FDF3E1;color:#B7791F;font-size:.64rem" title="'+String(s.scoreEditReason||'').replace(/"/g,'&quot;')+'">✎ แก้ไขโดยจนท.</span>':'')+'<div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
+        return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+'<div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
