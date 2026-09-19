@@ -663,7 +663,9 @@ module.exports = function (app, DATA) {
   app.get('/api/xv/admin/session/:id', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const s = readS().find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
-    const out = Object.assign({}, s); delete out.token; // keep paper with keys for admin review
+    const out = Object.assign({}, s); delete out.token;
+    // ห้ามส่งเฉลย (index คำตอบ c) ออกฝั่ง client เด็ดขาด — endpoint นี้ไม่มีการล็อก + ผู้สอบรู้ id ตัวเอง จึงต้อง strip เฉลยทิ้ง (กันข้อสอบรั่ว)
+    if (out.paper) { const pp = {}; Object.keys(out.paper).forEach(p => { pp[p] = (out.paper[p] || []).map(x => ({ q: x.q, o: x.o })); }); out.paper = pp; }
     res.json({ ok: true, session: out });
   });
 
