@@ -1212,7 +1212,37 @@ async function tryResume(){
     return true;
   }catch(e){return false;}
 }
-initState();mountFeedback();
+/* ---------- ตัวเช็กเวอร์ชัน: กัน "โค้ดเก่าค้างในเครื่อง" หลัง deploy (เช่นเปิดหน้าค้างไว้ข้ามรอบอัปเดต) ---------- */
+var _appVer=null,_verBannerShown=false,_verChecking=false;
+async function _fetchAppTag(){ try{ var r=await fetch('/xvisor.html',{method:'HEAD',cache:'no-store'}); return r.headers.get('etag')||r.headers.get('last-modified')||null; }catch(e){ return null; } }
+async function captureAppVer(){ if(!_appVer)_appVer=await _fetchAppTag(); }
+async function checkAppVersion(){
+  if(_verBannerShown||_verChecking)return;
+  if(!(S.api&&S.api.on))return;                 // เช็กเฉพาะตอนสอบจริง — คำตอบถูกเก็บบนเซิร์ฟเวอร์ รีโหลดแล้ว resume ได้ครบ
+  _verChecking=true;
+  try{
+    if(!_appVer){ _appVer=await _fetchAppTag(); return; }   // ยังไม่มี baseline → เก็บไว้ก่อน
+    var cur=await _fetchAppTag();
+    if(cur&&cur!==_appVer) showUpdateBanner();
+  }catch(e){} finally{ _verChecking=false; }
+}
+function showUpdateBanner(){
+  if(_verBannerShown)return; _verBannerShown=true;
+  var b=document.createElement('div'); b.id='verBanner';
+  b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99999;background:var(--primary-600,#0077B6);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:15px;line-height:1.35;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.2);cursor:pointer';
+  b.innerHTML='<span>🔄 ระบบมีเวอร์ชันใหม่ — แตะเพื่ออัปเดต (คำตอบของคุณถูกบันทึกไว้แล้ว)</span>';
+  b.onclick=async function(){
+    b.style.opacity='.75'; b.innerHTML='<span>กำลังบันทึกคำตอบและอัปเดต…</span>';
+    try{ await syncAll(); }catch(e){}
+    if(typeof pendingCount==='function' && pendingCount()>0){ b.style.opacity='1'; b.innerHTML='<span>ยังบันทึกไม่ครบ — แตะอีกครั้งเมื่อสัญญาณกลับมา (คำตอบยังอยู่ครบ)</span>'; return; }
+    location.reload();
+  };
+  document.body.appendChild(b);
+}
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') checkAppVersion(); });
+setInterval(checkAppVersion,90000);
+
+initState();mountFeedback();captureAppVer();
 tryResume().then(function(ok){if(!ok){render();resolveRound();}}).catch(function(){render();resolveRound();});
 </script>
 </body>
