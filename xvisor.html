@@ -664,14 +664,25 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
  {const _cs=$('#consent');if(_cs)_cs.onclick=()=>{c.cameraConsent=!c.cameraConsent;_cs.classList.toggle('on',c.cameraConsent);upd();};}
  $('#back').onclick=()=>toast('อยู่ที่ขั้นตอนแรกแล้ว');
  $('#start').onclick=async()=>{if(!roundOpen()){toast('รอบนี้ยังไม่เปิดสอบ');return;}const btn=$('#start');btn.disabled=true;btn.style.opacity=.7;
-   try{const res=await apiPost('/api/xv/start',{firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode,roundId:S.round&&S.round.id,roundCode:S.round&&S.round.code});
-     if(res&&res.error==='round_closed'){btn.disabled=false;btn.style.opacity=1;S.round&&(S.round.open=false);toast('รอบนี้เพิ่งถูกปิด — เข้าสอบไม่ได้');render();return;}
-     if(res&&res.error==='already_taken'){btn.disabled=false;btn.style.opacity=1;toast('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
-     if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
-       if(res.resumed){S.answers=res.answers||{};if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
-       else{S.session=freshSessionAPI('first',res.durationSec);}
-       S.phase='active_exam';try{saveResume();}catch(e){}try{xvEnterFS();}catch(e){}render();startTimer();return;}
-   }catch(e){/* offline → demo mode */}
+   var _re=function(){btn.disabled=false;btn.style.opacity=1;};
+   var isLive=!!(S.round&&S.round.id);
+   var body={firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode,roundId:S.round&&S.round.id,roundCode:S.round&&S.round.code};
+   var res=null;
+   try{var r=await fetch('/api/xv/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});res=await r.json().catch(function(){return null;});}
+   catch(e){
+     // เน็ตล้มจริง — โหมดสอบจริง (มีรอบ) ห้ามหลุดเข้าโหมดในเครื่องที่บันทึกไม่ได้ ให้ลองใหม่ (เซิร์ฟเวอร์จะ resume ให้เองถ้าสร้าง session ไปแล้ว)
+     if(isLive){_re();toast('เชื่อมต่อไม่สำเร็จ — กรุณากด "เริ่มทำข้อสอบ" อีกครั้ง เมื่อสัญญาณกลับมา');return;}
+     S.api={on:false};S.session=freshSession('first');S.phase='active_exam';render();startTimer();return;
+   }
+   if(res&&res.error==='round_closed'){_re();S.round&&(S.round.open=false);toast('รอบนี้เพิ่งถูกปิด — เข้าสอบไม่ได้');render();return;}
+   if(res&&res.error==='already_taken'){_re();toast('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
+   if(res&&res.error==='exam_time_ended'){_re();toast('หมดเวลาสอบของรอบนี้แล้ว');return;}
+   if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
+     if(res.resumed){S.answers=res.answers||{};if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
+     else{S.session=freshSessionAPI('first',res.durationSec);}
+     S.phase='active_exam';try{saveResume();}catch(e){}try{xvEnterFS();}catch(e){}render();startTimer();return;}
+   // ไม่สำเร็จและไม่ทราบสาเหตุ (เช่น no_questions) — โหมดจริงแจ้ง error ไม่หลุดเข้าเดโม
+   if(isLive){_re();toast('เริ่มสอบไม่สำเร็จ'+((res&&res.error)?(' ('+res.error+')'):'')+' — กรุณาลองใหม่');return;}
    S.api={on:false};S.session=freshSession('first');S.phase='active_exam';render();startTimer();};
  upd();
 }
@@ -874,9 +885,20 @@ function renderRemedialPrep(){const q=S.remedialQueue.slice();
  refreshBegin();
  $('#begin').onclick=async()=>{const parts=Array.from(sel).sort((a,b)=>a-b);if(!parts.length||!agreed)return;
    S.remedialAttempted=parts.slice();
-   if(S.api&&S.api.on){try{const res=await apiPost('/api/xv/remedial/start',{sessionId:S.api.id,token:S.api.token,parts:parts});
-     if(res&&res.ok){res.parts.forEach(pp=>S.paper[pp]=res.paper[pp]);S.remedialQueue=res.parts.slice();res.parts.forEach(p=>{for(let i=0;i<QPP;i++)delete S.answers[key(p,i)];});S._review=null;S.session=freshSessionAPI('remedial',res.durationSec);S.phase='active_exam';render();startTimer();return;}}catch(e){}}
-   S.remedialQueue=parts.slice();parts.forEach(p=>{for(let i=0;i<QPP;i++)delete S.answers[key(p,i)];});S.session=freshSession('remedial');S.phase='active_exam';render();startTimer();};
+   var _bb=document.getElementById('begin');
+   var enterRemedial=function(sp,dur,paper,answers){var pp2=(sp&&sp.length?sp:parts);pp2.forEach(function(pp){if(paper&&paper[pp])S.paper[pp]=paper[pp];});S.remedialQueue=pp2.slice();if(answers&&Object.keys(answers).length){S.answers=answers;}else{pp2.forEach(function(p){for(var i=0;i<QPP;i++)delete S.answers[key(p,i)];});}S._review=null;S.session=freshSessionAPI('remedial',dur!=null?dur:TOTAL);S.phase='active_exam';try{saveResume();}catch(e){}render();startTimer();};
+   if(S.api&&S.api.on){
+     if(_bb){_bb.disabled=true;_bb.style.opacity=.7;}
+     var _recover=async function(){try{var chk=await apiGet('/api/xv/session/'+S.api.id+'?token='+encodeURIComponent(S.api.token));if(chk&&chk.ok&&chk.status==='in_progress'&&(chk.phase||'')==='remedial'){enterRemedial(chk.parts,chk.remaining,chk.paper,chk.answers||{});return true;}}catch(e){}return false;};
+     try{var res=await apiPost('/api/xv/remedial/start',{sessionId:S.api.id,token:S.api.token,parts:parts});
+       if(res&&res.ok){enterRemedial(res.parts,res.durationSec,res.paper,null);return;}}catch(e){}
+     if(await _recover())return;                       // เผื่อเริ่มไปแล้ว (กดซ้ำ/เน็ตหน่วง) → เข้าต่อด้วยข้อมูลจริงจากเซิร์ฟเวอร์
+     if(_bb){_bb.disabled=false;_bb.style.opacity=1;}
+     toast('เริ่มสอบซ่อมไม่สำเร็จ — สัญญาณไม่เสถียร กรุณากด "เริ่มสอบซ่อม" อีกครั้ง (คำตอบเดิมยังอยู่ครบ)');
+     return;                                            // สำคัญ: ไม่หลุดเข้าโหมดในเครื่องที่บันทึกขึ้นเซิร์ฟเวอร์ไม่ได้ (กันคำตอบหายตอนสอบซ่อม)
+   }
+   // ไม่มี API จริง (เดโมเท่านั้น) → เล่นในเครื่องได้
+   S.remedialQueue=parts.slice();parts.forEach(function(p){for(var i=0;i<QPP;i++)delete S.answers[key(p,i)];});S.session=freshSession('remedial');S.phase='active_exam';render();startTimer();};
 }
 
 /* ---------- 09 attempts completed ---------- */
