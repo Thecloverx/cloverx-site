@@ -648,7 +648,7 @@ module.exports = function (app, DATA) {
         id: s.id, code: s.code, candidate: s.candidate, phase: s.phase, status: s.status,
         roundId: s.roundId || null, roundNo: s.roundNo || null,
         results: pubResults(s), total: s.results.reduce((a, r) => a + (r.score || 0), 0),
-        pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), startedAt: s.startedAt, autoExpired: !!s.autoExpired,
+        pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, archived: !!s.archived, archivedAt: s.archivedAt || null, archivedBy: s.archivedBy || null, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), startedAt: s.startedAt, autoExpired: !!s.autoExpired,
         proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0, paste: s.proctor.paste || 0, cut: s.proctor.cut || 0, fullscreen_exit: s.proctor.fullscreen_exit || 0 } : null,
         flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0) + (s.proctor.paste || 0) + (s.proctor.cut || 0) + (s.proctor.fullscreen_exit || 0)) : 0,
         proctorPhotos: s.proctorPhotos || [], camPhotos: (s.proctorPhotos || []).length,
@@ -686,6 +686,26 @@ module.exports = function (app, DATA) {
     if (s.status !== 'awaiting_verify') return res.status(400).json({ ok: false, error: 'not_awaiting' });
     s.staffVerified = true; s.status = 'verified'; s.verifiedAt = Date.now(); writeS(all);
     res.json({ ok: true });
+  });
+
+  // จัดเก็บ/กู้คืน ผลสอบ (ย้ายออกจากลิสต์หลักไปคลังจัดเก็บ — ไม่ลบข้อมูล) · รับหลายรายการพร้อมกัน
+  app.post('/api/xv/admin/sessions/archive', (req, res) => {
+    if (!adminOk(req)) return res.status(403).json({ ok: false });
+    const b = req.body || {};
+    const ids = Array.isArray(b.ids) ? b.ids.map(String) : [];
+    if (!ids.length) return res.status(400).json({ ok: false, error: 'no_ids' });
+    const value = (b.value === false) ? false : true;   // ค่าเริ่มต้น = จัดเก็บ; ส่ง value:false = กู้คืน
+    const actor = String(b.actor || 'staff').slice(0, 60);
+    const all = readS(); let n = 0;
+    all.forEach(s => {
+      if (ids.indexOf(s.id) < 0) return;
+      if (s.status === 'in_progress') return;           // กันจัดเก็บคนที่ยังสอบอยู่
+      if (value) { s.archived = true; s.archivedAt = Date.now(); s.archivedBy = actor; }
+      else { s.archived = false; s.archivedAt = null; s.archivedBy = null; }
+      n++;
+    });
+    writeS(all);
+    res.json({ ok: true, updated: n, value });
   });
 
   // staff correction: แก้ไขคะแนนรายพาร์ทของผู้สอบ (กรณีระบบคำนวณผิด/ต้องปรับด้วยมือ)

@@ -1612,17 +1612,22 @@
     if(EXAM_RES_ROUND!=='all')parts.push('รอบครั้งที่ '+EXAM_RES_ROUND);
     return parts.join(' · ');
   }
-  function xvExportExcel(){ // รายงานผลสอบหลายชีต (.xlsx จริง — โหลด SheetJS ครั้งแรกที่ใช้)
+  function xvExportExcel(opts){ // รายงานผลสอบหลายชีต (.xlsx จริง — โหลด SheetJS ครั้งแรกที่ใช้)
+    opts=opts||{};
+    var roundF=(opts.round!=null)?opts.round:EXAM_RES_ROUND;
     // ดึงทุกคนที่จบแล้วในขอบเขตฟิลเตอร์ (แท็บ/รูปแบบ/วันที่/รอบ) — ไม่กรองผ่าน/ไม่ผ่านและคำค้น เพื่อให้รายงานครบ
     var base=(EXAM_CACHE||[]).filter(function(s){
       if(s.status==='in_progress')return false;
       if(((s.candidate||{}).mode||'online')!==EXAM_RES_TAB)return false;
-      if(EXAM_RES_ROUND!=='all'&&String(s.roundNo)!==String(EXAM_RES_ROUND))return false;
-      if(EXAM_RES_DATE!=='all'&&xvRoundDate(s)!==EXAM_RES_DATE)return false;
-      if(EXAM_RES_TYPE!=='all'&&xvExamType(s)!==EXAM_RES_TYPE)return false;
+      if(opts.archivedOnly){ if(!s.archived)return false; } else { if(s.archived)return false; }
+      if(roundF!=='all'&&String(s.roundNo)!==String(roundF))return false;
+      if(!opts.archivedOnly){
+        if(EXAM_RES_DATE!=='all'&&xvRoundDate(s)!==EXAM_RES_DATE)return false;
+        if(EXAM_RES_TYPE!=='all'&&xvExamType(s)!==EXAM_RES_TYPE)return false;
+      }
       return true;
     });
-    if(!base.length){xvToast('ไม่มีผลสอบให้ส่งออกในขอบเขตนี้','bad');return;}
+    if(!base.length){xvToast(opts.archivedOnly?'ไม่มีผลสอบที่จัดเก็บในรอบนี้':'ไม่มีผลสอบให้ส่งออกในขอบเขตนี้','bad');return;}
     function build(){
       try{
         // ===== ชุดสีแบรนด์ CloverX (ให้เหมือนใบตัวอย่าง) =====
@@ -1709,7 +1714,7 @@
         if(hist.length)ws6.autoFilter={from:{row:3,column:1},to:{row:3+hist.length,column:HHEAD.length}};
         // save (blob download)
         var d=new Date(),pad=function(n){return ('0'+n).slice(-2);};
-        var fnScope=(EXAM_RES_TYPE!=='all'?(EXAM_RES_TYPE+'_'):'')+(EXAM_RES_TAB==='onsite'?'onsite':'online');
+        var fnScope=(opts.archivedOnly?'คลังจัดเก็บ_':'')+(String(roundF)!=='all'?('รอบ'+roundF+'_'):'')+((EXAM_RES_TYPE!=='all'&&!opts.archivedOnly)?(EXAM_RES_TYPE+'_'):'')+(EXAM_RES_TAB==='onsite'?'onsite':'online');
         var fname='รายงานผลสอบ_'+fnScope+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.xlsx';
         wb.xlsx.writeBuffer().then(function(buf){
           var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -1800,6 +1805,7 @@
 
   /* ---------- 4) EXAM RESULT (+ staff verify) ---------- */
   var EXAM_RES_ROUND='all', EXAM_RES_PASS='all', EXAM_RES_Q='', EXAM_RES_DATE='all', EXAM_RES_TYPE='all';
+  var EXAM_RES_SEL={}, EXAM_RES_ARCHIVE=false;   // ติ๊กเลือกรายคน + โหมดคลังจัดเก็บ
   // ---- ข้อมูลรอบ/รูปแบบ/วันที่ ของแต่ละผู้สอบ (ใช้กับฟิลเตอร์ + รายงาน) ----
   function xvRoundOf(s){var rs=EXAM_ROUNDS||[];if(!rs.length)return null;var r=null;if(s.roundId)r=rs.find(function(x){return x.id===s.roundId;});if(!r&&s.roundNo!=null)r=rs.find(function(x){return String(x.no)===String(s.roundNo);});return r||null;}
   function xvExamType(s){var r=xvRoundOf(s);var t=((r&&(r.topic||''))+' '+(r&&(r.setName||''))).toLowerCase();if(/x[\s\-]?lead/.test(t))return 'X-Lead';return 'X-Visor';}
@@ -1812,7 +1818,7 @@
   function renderExamResult(){
     var all=EXAM_CACHE||[];
     // show finished sessions (not in-progress), newest first, split by exam mode
-    var finishedAll=all.filter(function(s){return s.status!=='in_progress';});
+    var finishedAll=all.filter(function(s){return s.status!=='in_progress' && (EXAM_RES_ARCHIVE?!!s.archived:!s.archived);});
     var onsite=EXAM_RES_TAB==='onsite';
     var finished=finishedAll.filter(function(s){return ((s.candidate||{}).mode||'online')===EXAM_RES_TAB;})
       .sort(function(a,b){return (b.submittedAt||0)-(a.submittedAt||0);});
@@ -1858,17 +1864,17 @@
       // On-Site: read-only. System records & tracks scores; staff signs pass/fail on paper — no verification in-system.
       rows=list.map(function(s){
         var st=xvOnsiteStat(s), sys=xvSysResult(s), delNm2=xvName(s).replace(/["'\\]/g,'');
-        return '<tr><td class="num">'+(s.code||'—')+'</td>'
+        return '<tr>'+xvSelBox(s)+'<td class="num">'+(s.code||'—')+'</td>'
           +'<td><b>'+xvName(s)+'</b>'+'<div style="color:var(--muted);font-size:.76rem">ที่ศูนย์สอบ'+((s.candidate||{}).phone?(' · '+s.candidate.phone):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
           +'<td><span class="xatt">'+xvAttLabel(s)+'</span>'+(s.roundNo?'<div style="color:var(--muted);font-size:.72rem">รอบครั้งที่ '+s.roundNo+'</div>':'')+'</td>'
           +'<td class="num">'+xvTimeUsed(s)+'</td>'
-          +'<td><span class="pill '+sys.cl+'">'+sys.t+'</span>'
-          +' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--brand);font-size:.76rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+xvReopenBtn(s)+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
-      }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ศูนย์สอบ</td></tr>';
-      head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะการทำข้อสอบ</th><th>รอบการสอบ</th><th>เวลาที่ใช้</th><th>ผลจากเกณฑ์ระบบ</th></tr>';
+          +'<td><span class="pill '+sys.cl+'">'+sys.t+'</span></td>'
+          +xvKebabCell(s)+'</tr>';
+      }).join('')||'<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:26px">'+(EXAM_RES_ARCHIVE?'ยังไม่มีผลสอบที่จัดเก็บ':'ยังไม่มีผลสอบที่ศูนย์สอบ')+'</td></tr>';
+      head='<tr>'+xvSelAllTh()+'<th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะการทำข้อสอบ</th><th>รอบการสอบ</th><th>เวลาที่ใช้</th><th>ผลจากเกณฑ์ระบบ</th><th>จัดการ</th></tr>';
       var subC=list.filter(function(s){return s.status==='submitted';}).length;
       var remC=list.filter(function(s){return s.status==='remedial_required';}).length;
       var failC=list.filter(function(s){return s.status==='ended_failed';}).length;
@@ -1884,23 +1890,18 @@
       rows=list.map(function(s){
         var st=XV_ST[s.status]||{cl:'wait',t:s.status};
         var action='';
-        if(s.status==='awaiting_verify'){
-          action='<button class="xv-verify" data-id="'+s.id+'" data-name="'+xvName(s).replace(/"/g,'')+'" style="background:var(--good);border:0;border-radius:8px;padding:6px 13px;color:#fff;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer">ยืนยันผล ✓</button>';
-        } else if(s.status==='verified'){
-          action='<span class="pill ok">✓ ยืนยันแล้ว</span>';
-        } else if(s.status==='remedial_required'){
-          action='<span style="color:var(--muted);font-size:.8rem">รอผู้สอบทำการสอบซ่อม</span>';
-        } else if(s.status==='ended_failed'){
-          action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
-        }
-        var delNm2=xvName(s).replace(/["'\\]/g,'');
-        return '<tr><td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+'<div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
+        if(s.status==='awaiting_verify') action='<span class="pill wait">รอยืนยัน</span>';
+        else if(s.status==='verified') action='<span class="pill ok">✓ ยืนยันแล้ว</span>';
+        else if(s.status==='remedial_required') action='<span style="color:var(--muted);font-size:.8rem">รอสอบซ่อม</span>';
+        else if(s.status==='ended_failed') action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
+        return '<tr>'+xvSelBox(s)+'<td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+'<div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?(' · รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
           +'<td><span class="pill '+st.cl+'">'+st.t+'</span></td>'
-          +'<td>'+action+' <button onclick="xvScoreEdit(\''+s.id+'\')" title="แก้ไขคะแนน (กรณีระบบคำนวณผิด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--brand);font-size:.78rem;line-height:1;font-weight:700;margin-left:6px">✎ แก้คะแนน</button>'+xvReopenBtn(s)+((s.camPhotos>0)?' <button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-left:6px">📷 '+s.camPhotos+'</button>':'')+' <button onclick="xvDelSession(\''+s.id+'\',\''+delNm2+'\',\'result\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--bad);font-size:.85rem;line-height:1;margin-left:6px">🗑</button></td></tr>';
-      }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:26px">ยังไม่มีผลสอบที่ตรวจเสร็จ</td></tr>';
-      head='<tr><th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th></tr>';
+          +'<td>'+action+'</td>'
+          +xvKebabCell(s)+'</tr>';
+      }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">'+(EXAM_RES_ARCHIVE?'ยังไม่มีผลสอบที่จัดเก็บ':'ยังไม่มีผลสอบที่ตรวจเสร็จ')+'</td></tr>';
+      head='<tr>'+xvSelAllTh()+'<th>เลขที่ผู้สอบ</th><th>ชื่อ–นามสกุล</th><th>คะแนนรายพาร์ท (P1–P5)</th><th>รวม</th><th>สถานะ</th><th>การยืนยัน</th><th>จัดการ</th></tr>';
       var tot2=Math.max(1,list.length);var vf=list.filter(function(s){return s.status==='verified';}).length;var ef=list.filter(function(s){return s.status==='ended_failed';}).length;
       kstrip=[
         xvKpi('ผลสอบทั้งหมด',String(list.length),'#0A67D8','ที่ตรวจเสร็จแล้ว',100,true),
@@ -1910,13 +1911,23 @@
       ];
       banner=awaiting?'<div style="background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:var(--brand-ink);font-size:.86rem">มีผลสอบ '+awaiting+' รายการที่ตรวจเสร็จแล้ว รอทีมงานกดยืนยันเพื่อปล่อยผลให้ผู้สอบ</div>':'';
     }
-    var colspan=onsite?8:6;
+    var colspan=onsite?10:8;
+    var arcN=all.filter(function(s){return s.status!=='in_progress'&&s.archived&&((s.candidate||{}).mode||'online')===EXAM_RES_TAB;}).length;
+    var toggleBtn=EXAM_RES_ARCHIVE
+      ? '<button id="resArcToggle" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:var(--ink);cursor:pointer">← กลับสู่ผลสอบ</button>'
+      : '<button id="resArcToggle" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:var(--ink);cursor:pointer">🗂️ คลังจัดเก็บ'+(arcN?(' ('+arcN+')'):'')+'</button>';
+    var expBtn=EXAM_RES_ARCHIVE
+      ? '<button onclick="xvExportExcel({archivedOnly:true,round:EXAM_RES_ROUND})" title="ดาวน์โหลดผลสอบที่จัดเก็บ — เลือกรอบจากตัวกรองเพื่อแยกเป็นไฟล์ของรอบนั้น" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ดาวน์โหลด'+(String(EXAM_RES_ROUND)!=='all'?(' รอบครั้งที่ '+EXAM_RES_ROUND):' (ทุกรอบ)')+'</button>'
+      : '<button onclick="xvExportExcel()" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ส่งออก Excel</button><button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer">CSV</button>';
+    var bulkBar='<div id="resbulk" style="display:none;align-items:center;gap:12px;background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:11px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap"><b style="color:var(--brand-ink)">เลือกไว้ <span id="resbulkn">0</span> รายการ</b><button id="bulkArchive" style="border:0;background:var(--brand);border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.83rem;color:#fff;cursor:pointer">'+(EXAM_RES_ARCHIVE?'♻️ กู้คืนที่เลือก':'🗂️ จัดเก็บที่เลือก')+'</button><button id="bulkClear" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.82rem;color:var(--muted);cursor:pointer">ล้างการเลือก</button></div>';
+    var arcBanner='<div style="background:#F4F7FB;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:600;color:var(--ink);font-size:.85rem;line-height:1.55">🗂️ คลังจัดเก็บ — รายชื่อที่ย้ายออกจากผลสอบหลัก · เลือก “รอบครั้งที่” จากตัวกรอง แล้วกด “ดาวน์โหลด” เพื่อได้ไฟล์แยกของรอบนั้น (1 รอบ = 1 ไฟล์) · กู้คืนได้ทุกเมื่อ</div>';
     gen.innerHTML=xvHead('ผลการสอบ · Exam Result',onsite?'On-Site: ระบบแสดงและบันทึกคะแนน · เจ้าหน้าที่เซ็นรับรองผลบนเอกสารหน้างาน':'ผลสอบ คะแนนรายพาร์ท และการยืนยันผลเพื่อออกใบรับรอง X-Visor')
       +xvKstrip(kstrip)
       +typeTabs
       +tabs
-      +banner
-      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(onsite?'ผลการสอบที่ศูนย์สอบ':'ผลการสอบ')+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+typeSel+dateSel+passSel+roundSel+'<button onclick="xvExportExcel()" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ส่งออก Excel</button><button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer">CSV</button><a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a></div></div>'
+      +(EXAM_RES_ARCHIVE?arcBanner:banner)
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(EXAM_RES_ARCHIVE?'คลังจัดเก็บ':(onsite?'ผลการสอบที่ศูนย์สอบ':'ผลการสอบ'))+' <span style="color:var(--muted);font-weight:600">('+list.length+')</span></h3><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+searchBox+typeSel+dateSel+passSel+roundSel+expBtn+toggleBtn+(EXAM_RES_ARCHIVE?'':'<a class="link" href="#" onclick="go(\'exam-tracker\');return false">ดูผู้กำลังสอบ →</a>')+'</div></div>'
+      +bulkBar
       +'<div style="overflow-x:auto"><table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div></div>';
     gen.querySelectorAll('.rtab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_RES_TAB=b.getAttribute('data-rtab');if(EXAM_RES_TAB==='onsite')EXAM_RES_PASS='all';renderExamResult();});});
     gen.querySelectorAll('.ttab-sm').forEach(function(b){b.addEventListener('click',function(){EXAM_RES_TYPE=b.getAttribute('data-ttab');renderExamResult();});});
@@ -1924,6 +1935,16 @@
     var psel=document.getElementById('resPass');if(psel)psel.addEventListener('change',function(){EXAM_RES_PASS=psel.value;renderExamResult();});
     var dsel=document.getElementById('resDate');if(dsel)dsel.addEventListener('change',function(){EXAM_RES_DATE=dsel.value;renderExamResult();});
     var qbox=document.getElementById('resSearch');if(qbox)qbox.addEventListener('input',function(){var pos=this.selectionStart;EXAM_RES_Q=this.value;renderExamResult();var el=document.getElementById('resSearch');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}});
+    // ---- ติ๊กเลือก / เลือกทั้งหมด / เมนู ⋮ / จัดเก็บ ----
+    var _lids=list.map(function(s){return s.id;});
+    gen.querySelectorAll('.rsel').forEach(function(cb){cb.addEventListener('change',function(){var id=cb.getAttribute('data-id');if(cb.checked)EXAM_RES_SEL[id]=true;else delete EXAM_RES_SEL[id];updateBulkBar();var sa=document.getElementById('rselall');if(sa)sa.checked=_lids.length>0&&_lids.every(function(i){return EXAM_RES_SEL[i];});});});
+    var selall=document.getElementById('rselall');
+    if(selall){selall.checked=_lids.length>0&&_lids.every(function(i){return EXAM_RES_SEL[i];});selall.addEventListener('change',function(){_lids.forEach(function(i){if(selall.checked)EXAM_RES_SEL[i]=true;else delete EXAM_RES_SEL[i];});renderExamResult();});}
+    gen.querySelectorAll('.reskebab').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();examResMenu(b);});});
+    var arcT=document.getElementById('resArcToggle');if(arcT)arcT.addEventListener('click',function(){EXAM_RES_ARCHIVE=!EXAM_RES_ARCHIVE;EXAM_RES_SEL={};EXAM_RES_ROUND='all';EXAM_RES_PASS='all';renderExamResult();});
+    var bkA=document.getElementById('bulkArchive');if(bkA)bkA.addEventListener('click',function(){xvArchive(xvSelIds(),!EXAM_RES_ARCHIVE);});
+    var bkC=document.getElementById('bulkClear');if(bkC)bkC.addEventListener('click',function(){EXAM_RES_SEL={};renderExamResult();});
+    updateBulkBar();
     gen.querySelectorAll('.xv-verify').forEach(function(b){
       b.addEventListener('click',function(){
         var id=b.getAttribute('data-id'), nm=b.getAttribute('data-name');
@@ -1938,6 +1959,69 @@
             }).catch(function(){b.disabled=false;b.textContent='ยืนยันผล ✓';xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
         });
       });
+    });
+  }
+
+  // ===== Exam Result: ติ๊กเลือก + เมนู ⋮ + จัดเก็บ =====
+  function xvSelBox(s){return '<td style="width:32px;text-align:center"><input type="checkbox" class="rsel" data-id="'+s.id+'"'+(EXAM_RES_SEL[s.id]?' checked':'')+' style="width:16px;height:16px;cursor:pointer"></td>';}
+  function xvSelAllTh(){return '<th style="width:32px;text-align:center"><input type="checkbox" id="rselall" title="เลือก/ยกเลิกทั้งหมด" style="width:16px;height:16px;cursor:pointer"></th>';}
+  function xvKebabCell(s){return '<td style="text-align:right;white-space:nowrap"><button class="reskebab" data-id="'+s.id+'" title="จัดการ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:3px 12px;cursor:pointer;color:var(--ink);font-size:1.15rem;line-height:1;font-weight:800">⋮</button></td>';}
+  function xvSelIds(){return Object.keys(EXAM_RES_SEL).filter(function(k){return EXAM_RES_SEL[k];});}
+  function updateBulkBar(){var bar=document.getElementById('resbulk');if(!bar)return;var n=xvSelIds().length;bar.style.display=n?'flex':'none';var lbl=document.getElementById('resbulkn');if(lbl)lbl.textContent=n;}
+  function closeResMenus(){document.querySelectorAll('.resmenu').forEach(function(x){x.remove();});}
+  function examResMenu(btn){
+    var wasFor=(document.querySelector('.resmenu')||{}).getAttribute?document.querySelector('.resmenu').getAttribute('data-for'):null;
+    closeResMenus();if(wasFor===btn.dataset.id)return;
+    var id=btn.dataset.id;var s=(EXAM_CACHE||[]).filter(function(x){return x.id===id;})[0];if(!s)return;
+    var nm=xvName(s).replace(/["'\\]/g,'');
+    var m=document.createElement('div');m.className='resmenu';m.setAttribute('data-for',id);
+    m.style.cssText='position:fixed;z-index:9995;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px -12px rgba(0,0,0,.3);padding:6px;min-width:214px';
+    var mi=function(a,icon,label,color){return '<button data-act="'+a+'" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:9px 11px;font-family:inherit;font-weight:600;font-size:.86rem;color:'+(color||'var(--ink)')+';cursor:pointer"><span style="width:18px;text-align:center;flex:none">'+icon+'</span><span>'+label+'</span></button>';};
+    var html='';
+    if(!EXAM_RES_ARCHIVE&&s.status==='awaiting_verify')html+=mi('verify','✓','ยืนยันผล','var(--good)');
+    html+=mi('edit','✎','แก้ไขคะแนน');
+    if(xvReopenEligible(s))html+=mi('reopen','↻','เปิดพาร์ตให้ทำใหม่');
+    if(s.camPhotos>0)html+=mi('photos','📷','ดูภาพเว็บแคม ('+s.camPhotos+')');
+    html+='<div style="height:1px;background:var(--line);margin:4px 6px"></div>';
+    if(EXAM_RES_ARCHIVE)html+=mi('restore','♻️','กู้คืนจากคลัง','var(--brand)');
+    else html+=mi('archive','🗂️','จัดเก็บ','var(--brand)');
+    html+=mi('del','🗑','ลบรายการนี้','var(--bad)');
+    m.innerHTML=html;document.body.appendChild(m);
+    var r=btn.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,r.right-(m.offsetWidth||214))+'px';
+    m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('mouseenter',function(){b.style.background='var(--soft)';});b.addEventListener('mouseleave',function(){b.style.background='none';});});
+    m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){
+      var act=b.getAttribute('data-act');closeResMenus();
+      if(act==='verify')xvVerifyResult(id,nm);
+      else if(act==='edit')xvScoreEdit(id);
+      else if(act==='reopen')xvReopenParts(id);
+      else if(act==='photos')xvShowPhotos(id);
+      else if(act==='archive')xvArchive([id],true);
+      else if(act==='restore')xvArchive([id],false);
+      else if(act==='del')xvDelSession(id,nm,'result');
+    });});
+  }
+  document.addEventListener('click',function(e){if(!e.target.closest('.reskebab')&&!e.target.closest('.resmenu'))closeResMenus();});
+  window.addEventListener('resize',closeResMenus);
+  function xvArchive(ids,value){
+    if(!demoGuard())return;
+    ids=ids||[];if(!ids.length){xvToast('ยังไม่ได้เลือกรายการ','bad');return;}
+    var act=value?'จัดเก็บ':'กู้คืน';
+    xvConfirm(act+'ผลสอบ',act+' '+ids.length+' รายการ ใช่ไหม?'+(value?' — รายการจะย้ายไปคลังจัดเก็บ (ไม่ลบข้อมูล)':' — รายการจะกลับมาที่ผลสอบหลัก'),act,function(){
+      fetch('/api/xv/admin/sessions/archive'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,ids:ids,value:value,actor:'staff'})})
+        .then(function(r){return r.json();})
+        .then(function(j){if(j&&j.ok){EXAM_RES_SEL={};xvToast(act+'แล้ว '+j.updated+' รายการ','ok');xvFetch(function(){renderExamResult();});}
+          else xvToast(act+'ไม่สำเร็จ: '+((j&&j.error)||'ตรวจสอบ Admin Key'),'bad');})
+        .catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    });
+  }
+  function xvVerifyResult(id,nm){
+    if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อยืนยันผลจริง','bad');return;}
+    xvConfirm('ยืนยันผลการสอบ','ยืนยันผลของ "'+nm+'" ใช่ไหม? เมื่อยืนยันแล้ว ผู้สอบจะเห็นผลและระบบจะออกใบรับรองให้','ยืนยันผล ✓',function(){
+      fetch('/api/xv/admin/session/'+id+'/verify'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
+        .then(function(r){return r.json();})
+        .then(function(j){if(j&&j.ok){xvToast('ยืนยันผลเรียบร้อย','ok');xvFetch(function(){renderExamResult();});}
+          else xvToast('ยืนยันไม่สำเร็จ: '+((j&&j.error)||'ตรวจสอบ Admin Key'),'bad');})
+        .catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
     });
   }
 
