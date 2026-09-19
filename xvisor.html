@@ -471,17 +471,18 @@ function buildPaper(parts){parts.forEach(p=>{const src=QBANK[p];const order=shuf
 /* ================= state ================= */
 let S;
 /* ---- backend API layer (falls back to client demo if unreachable) ---- */
-async function apiPost(p,b){const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});if(!r.ok)throw new Error('http'+r.status);return r.json();}
+async function apiPost(p,b){var _c=('AbortController'in window)?new AbortController():null;var _t=_c?setTimeout(function(){try{_c.abort();}catch(e){}},25000):null;try{const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{}),signal:_c?_c.signal:undefined});if(!r.ok)throw new Error('http'+r.status);return await r.json();}finally{if(_t)clearTimeout(_t);}}
 async function apiGet(p){const r=await fetch(p);if(!r.ok)throw new Error('http'+r.status);return r.json();}
 function freshSessionAPI(phase,dur){return {phase,remaining:dur||TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
 // ---- การซิงก์คำตอบแบบเชื่อถือได้: คิว + retry กันคำตอบตกหล่นจนจอผู้สอบกับหลังบ้านไม่ตรงกัน ----
-var _syncQ={}, _syncing=null;
+var _syncQ={}, _syncing=null, _syncingAt=0;
 function queueAnswer(p,q,choice){ if(!(S.api&&S.api.on))return; _syncQ[p+'-'+q]=choice; flushAnswers(); }
 function pendingCount(){ return Object.keys(_syncQ).length; }
 function pendingForPart(p){ return Object.keys(_syncQ).filter(function(k){ return k.slice(0,k.indexOf('-'))===String(p); }).length; }
 function flushAnswers(){
-  if(_syncing) return _syncing;
+  if(_syncing){ if(Date.now()-_syncingAt < 45000) return _syncing; _syncing=null; } // กัน deadlock: ถ้าตัวล็อกค้างเกิน 45 วิ (เช่น fetch แขวนบนเน็ตหน่วง) บังคับปลดล็อกแล้วเริ่มส่งใหม่
   if(!(S.api&&S.api.on)) return Promise.resolve();
+  _syncingAt=Date.now();
   _syncing=(async function(){
     try{
       var guard=0;
