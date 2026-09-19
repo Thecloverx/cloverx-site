@@ -48,11 +48,25 @@ module.exports = function (app, DATA) {
       pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [coll, JSON.stringify(snap)])
     ).catch(e => console.error('[x-visor] PG persist ' + coll + ' failed:', e.message));
   };
-  const readColl = (coll) => (pool && pgReady) ? mem[coll] : rd(fileOf[coll], []);
-  const writeColl = (coll, all) => {
-    wr(fileOf[coll], all);                     // durable file backup (sync) — always
-    if (pool && pgReady) { mem[coll] = all; pgPersist(coll); }
+  // hydrate the in-memory store from files at boot (PG mode overwrites this once PG is ready).
+  // in-memory becomes the authoritative read source → GETs no longer re-read+parse the whole file each call.
+  COLLS.forEach(c => { try { const d = rd(fileOf[c], []); mem[c] = Array.isArray(d) ? d : []; } catch (e) { mem[c] = []; } });
+  const readColl = (coll) => mem[coll] || [];
+  // durable file mirror — debounced & ASYNC so a burst of writes (e.g. answers) never blocks the event loop
+  // with a synchronous full-file rewrite. Postgres (when on) is the primary durable store; file is the backup.
+  const _fileDirty = {}, _fileTimer = {}, FILE_DEBOUNCE = 1200;
+  const flushColl = (coll) => {
+    if (!_fileDirty[coll]) return; _fileDirty[coll] = false;
+    try { fs.writeFile(fileOf[coll], JSON.stringify(mem[coll], null, 2), () => {}); } catch (e) {}
   };
+  const flushAllColls = () => { COLLS.forEach(c => { if (_fileTimer[c]) { clearTimeout(_fileTimer[c]); _fileTimer[c] = null; } if (_fileDirty[c]) { _fileDirty[c] = false; try { fs.writeFileSync(fileOf[c], JSON.stringify(mem[c], null, 2)); } catch (e) {} } }); };
+  const writeColl = (coll, all) => {
+    mem[coll] = all;                           // authoritative in-memory (read-after-write stays consistent)
+    if (pool && pgReady) pgPersist(coll);      // durable in Postgres (async, queued)
+    _fileDirty[coll] = true;                    // durable file mirror — debounced + async (non-blocking)
+    if (!_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, FILE_DEBOUNCE);
+  };
+  process.on('SIGTERM', flushAllColls); process.on('SIGINT', flushAllColls); process.on('beforeExit', flushAllColls); // กัน redeploy/restart แล้วข้อมูลค้างในคิวหาย
   if (USE_PG) {
     try {
       const { Pool } = require('pg');
@@ -651,7 +665,7 @@ module.exports = function (app, DATA) {
         pauseUsed: s.pauseUsed, paused: !!s.paused, staffVerified: s.staffVerified, archived: !!s.archived, archivedAt: s.archivedAt || null, archivedBy: s.archivedBy || null, createdAt: s.createdAt, submittedAt: s.submittedAt, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), startedAt: s.startedAt, autoExpired: !!s.autoExpired,
         proctor: s.proctor ? { leave: s.proctor.leave || 0, blur: s.proctor.blur || 0, printscreen: s.proctor.printscreen || 0, copy: s.proctor.copy || 0, contextmenu: s.proctor.contextmenu || 0, paste: s.proctor.paste || 0, cut: s.proctor.cut || 0, fullscreen_exit: s.proctor.fullscreen_exit || 0 } : null,
         flags: s.proctor ? ((s.proctor.leave || 0) + (s.proctor.blur || 0) + (s.proctor.printscreen || 0) + (s.proctor.copy || 0) + (s.proctor.contextmenu || 0) + (s.proctor.paste || 0) + (s.proctor.cut || 0) + (s.proctor.fullscreen_exit || 0)) : 0,
-        proctorPhotos: s.proctorPhotos || [], camPhotos: (s.proctorPhotos || []).length,
+        camPhotos: (s.proctorPhotos || []).length, /* ภาพเว็บแคมโหลดตอนกดดู (ลดขนาด payload ให้โหลดไว) */
         proctorDecision: s.proctorDecision || null,
         scoreEdited: !!s.scoreEdited, scoreEditedBy: s.scoreEditedBy || null, scoreEditReason: s.scoreEditReason || null,
         live: s.status === 'in_progress' ? xvLiveProgress(s) : null, pausedAt: s.pausedAt || null,

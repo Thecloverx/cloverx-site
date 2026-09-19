@@ -1515,7 +1515,15 @@
   // ---- ดูภาพเว็บแคม proctoring ของผู้สอบ ----
   function xvShowPhotos(id){
     var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;});
-    var photos=(s&&s.proctorPhotos)||[];
+    if(!s||!(s.camPhotos>0)){xvToast('ยังไม่มีภาพเว็บแคม','bad');return;}
+    // โหลดภาพตอนกดดูเท่านั้น (ไม่ติดมากับลิสต์ทั้งหมด → หน้าโหลดไวขึ้น)
+    xvToast('กำลังโหลดภาพ…');
+    fetch('/api/xv/admin/session/'+id+xvKeyQ()).then(function(r){return r.json();}).then(function(j){
+      var ses=(j&&j.ok&&j.session)||s;
+      xvRenderPhotos(ses,(ses.proctorPhotos)||[]);
+    }).catch(function(){xvToast('โหลดภาพไม่สำเร็จ','bad');});
+  }
+  function xvRenderPhotos(s,photos){
     if(!photos.length){xvToast('ยังไม่มีภาพเว็บแคม','bad');return;}
     var nm=s?(((s.candidate||{}).firstName||'')+' '+((s.candidate||{}).lastName||'')).trim():'';
     var grid=photos.map(function(p){var t=p.at?new Date(p.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}):'';return '<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#000"><img src="'+p.url+'" style="width:100%;display:block;aspect-ratio:4/3;object-fit:cover" loading="lazy"><div style="font-size:.72rem;color:var(--muted);padding:4px 8px;background:var(--panel)">'+t+'</div></div>';}).join('');
