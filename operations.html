@@ -1474,7 +1474,7 @@
   // ---- ทีมงานเปิดพาร์ตให้ผู้สอบกลับไปทำใหม่ (กันเคสหลุด Browser / กดส่งคะแนนไม่ได้) ----
   function xvReopenEligible(s){
     if(!s||!Array.isArray(s.results)||s.status==='in_progress')return [];
-    return s.results.filter(function(r){return (r.score||0)<PASS_PART && (r.attempts||1)<MAXATT;}).map(function(r){return r.part;}).sort(function(a,b){return a-b;});
+    return s.results.filter(function(r){return (r.score||0)<PASS_PART;}).map(function(r){return r.part;}).sort(function(a,b){return a-b;});
   }
   function xvReopenBtn(s){
     if(!xvReopenEligible(s).length)return '';

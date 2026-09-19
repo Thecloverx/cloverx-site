@@ -743,7 +743,8 @@ module.exports = function (app, DATA) {
     const b = req.body || {}; const all = readS(); const s = all.find(x => x.id === req.params.id);
     if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
     // พาร์ตที่ "ไม่ผ่าน" (คะแนน < เกณฑ์) และยังไม่หมดสิทธิ์ (ทำมาแล้วน้อยกว่า MAXATT ครั้ง)
-    const failedParts = (s.results || []).filter(r => (r.score || 0) < PASS && (r.attempts || 1) < MAXATT).map(r => r.part).sort((a, b) => a - b);
+    // ทีมงาน (admin) เปิดพาร์ตที่ "ไม่ผ่าน" ให้ทำใหม่ได้ — รวมกรณีใช้สิทธิ์ซ่อมครบแล้ว (เผื่อระบบมีปัญหา/คำตอบไม่ถูกบันทึก) · admin-only + บันทึก audit
+    const failedParts = (s.results || []).filter(r => (r.score || 0) < PASS).map(r => r.part).sort((a, b) => a - b);
     let sel = Array.isArray(b.parts) ? b.parts.map(Number).filter(p => failedParts.indexOf(p) >= 0) : [];
     sel = Array.from(new Set(sel)).sort((a, b) => a - b);
     if (!sel.length) return res.status(400).json({ ok: false, error: 'no_valid_parts', failedParts: failedParts });
