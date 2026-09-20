@@ -1204,8 +1204,11 @@ async function tryResume(){
     S.api={on:true,id:d.id,token:d.token,code:d.code};
     S.candidate={firstName:d.firstName||'',lastName:d.lastName||'',phone:d.phone||'',mode:d.mode||res.mode||'onsite',id:d.code||''};
     S.paper={};(res.parts||[]).forEach(function(pp){S.paper[pp]=res.paper[pp];});
-    S.answers=res.answers||{};S.remedialQueue=res.remedialQueue||[];
-    var ph=res.phase||'first';if(ph==='remedial')S.remedialActive=(res.parts||[]).slice();
+    S.answers=res.answers||{};
+    var ph=res.phase||'first';
+    // สอบซ่อม: ต้องขับด้วย "พาร์ตที่กำลังซ่อมรอบนี้" (res.parts ที่โหลดข้อสอบมา) ไม่ใช่ remedialQueue ทั้งหมด — กันจอว่างตอนเลือกซ่อมบางพาร์ตแล้ว refresh
+    S.remedialQueue=(ph==='remedial')?((res.parts&&res.parts.length)?res.parts.slice():(res.remedialQueue||[]).slice()):(res.remedialQueue||[]);
+    if(ph==='remedial')S.remedialActive=(res.parts||[]).slice();
     S.session=freshSessionAPI(ph,res.remaining!=null?res.remaining:TOTAL);
     try{var ap=activeParts(),cp=ap[0];for(var i=0;i<ap.length;i++){cp=ap[i];if(!partComplete(ap[i]))break;}S.session.currentPart=cp;var fq=firstMissingQ(cp);S.session.currentQ=fq<0?0:fq;}catch(e){}
     S.phase='active_exam';render();startTimer();toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');

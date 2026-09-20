@@ -282,7 +282,7 @@ module.exports = function (app, DATA) {
     const paper = {};
     parts.forEach(p => {
       const src = B.bank[p] || B.bank[String(p)] || [];
-      const order = shuffle(src.map((_, i) => i));
+      const order = shuffle(src.map((_, i) => i)).slice(0, QPP); // ใช้ไม่เกิน 20 ข้อ/พาร์ท (กันชุดที่มีข้อเกิน)
       paper[p] = order.map(qi => { const it = src[qi]; const oi = shuffle([0, 1, 2, 3]); return { q: it.q, o: oi.map(k => it.o[k]), c: oi.indexOf(it.c) }; });
     });
     return paper;
@@ -298,7 +298,8 @@ module.exports = function (app, DATA) {
     const parts = activeParts(s);
     parts.forEach(p => {
       let sc = 0; const wrong = [];
-      for (let q = 0; q < QPP; q++) { if (s.answers[p + '-' + q] === s.paper[p][q].c) sc++; else wrong.push(q + 1); }
+      const pp = s.paper[p] || s.paper[String(p)] || []; const lim = Math.min(QPP, pp.length); // กัน crash ถ้าชุดข้อไม่ครบ
+      for (let q = 0; q < lim; q++) { if (pp[q] && s.answers[p + '-' + q] === pp[q].c) sc++; else wrong.push(q + 1); }
       let r = s.results.find(x => x.part === p);
       if (!r) { r = { part: p, attempts: 0 }; s.results.push(r); }
       r.score = sc; r.attempts = (r.attempts || 0) + 1; r.status = sc >= PASS ? 'passed' : 'failed'; r.wrongIds = wrong;
@@ -432,8 +433,10 @@ module.exports = function (app, DATA) {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s || s.status !== 'in_progress') return res.status(404).json({ ok: false });
     // ซิงก์ pause ของ On-Site ก่อน (มีผลต่อการคำนวณเวลา)
-    if (typeof b.paused === 'boolean') xvSyncPause(s, b.paused);
-    if (typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
+    // pause เป็นสิทธิ์ของ On-Site เท่านั้น — กันผู้สอบออนไลน์ส่ง paused:true มาหยุดนาฬิกาเอง (โกงเวลา)
+    var _onsite = !!(s.candidate && s.candidate.mode === 'onsite');
+    if (_onsite && typeof b.paused === 'boolean') xvSyncPause(s, b.paused);
+    if (_onsite && typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
     // บังคับเวลาจากเซิร์ฟเวอร์: หมดเวลาแล้ว → ตัดข้อสอบทันที ไม่รับคำตอบเพิ่ม (ไม่เชื่อค่าเวลาจากลูกค้า)
     if (xvExpired(s)) { score(s, true); writeS(all); return res.json({ ok: true, expired: true, status: s.status, remaining: 0 }); }
     if (b.part && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) s.answers[b.part + '-' + b.q] = b.choice;
@@ -1117,6 +1120,7 @@ module.exports = function (app, DATA) {
     Object.keys(data.bank).forEach(p => {
       const arr = data.bank[p];
       if (!Array.isArray(arr) || !arr.length) { errs.push('part ' + p + ' empty'); return; }
+      if (arr.length !== QPP) { errs.push('part ' + p + ' ต้องมี ' + QPP + ' ข้อพอดี (พบ ' + arr.length + ')'); return; }
       arr.forEach((it, i) => {
         if (!it || typeof it.q !== 'string' || !it.q.trim()) errs.push('part ' + p + ' q' + (i + 1) + ': missing question');
         else if (!Array.isArray(it.o) || it.o.length !== 4 || it.o.some(o => typeof o !== 'string' || !o.trim())) errs.push('part ' + p + ' q' + (i + 1) + ': need 4 options');
