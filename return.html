@@ -38,8 +38,19 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);overflow-x:hidden;
   font-family:"Prompt","Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   word-break:normal;overflow-wrap:break-word;line-break:normal;-webkit-line-break:auto;text-wrap:pretty}
+/* ---- aurora background (แสงน้ำเงินนวล + เส้นแสงเฉียงด้านล่าง) ---- */
+body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:
+  radial-gradient(1100px 620px at 50% -12%, var(--aura1), transparent 60%),
+  radial-gradient(820px 520px at 92% 112%, var(--aura2), transparent 60%),
+  radial-gradient(680px 520px at 6% 104%, var(--aura3), transparent 58%);}
+body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:46%;z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(116deg, transparent 0 40px, var(--aline) 40px 42px);
+  -webkit-mask:linear-gradient(to top,#000,transparent);mask:linear-gradient(to top,#000,transparent);}
+:root{--aura1:rgba(48,101,175,.10);--aura2:rgba(42,142,195,.08);--aura3:rgba(59,120,240,.07);--aline:rgba(48,101,175,.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--aura1:rgba(59,120,240,.26);--aura2:rgba(42,142,195,.20);--aura3:rgba(48,101,175,.16);--aline:rgba(120,170,240,.06)}}
+:root[data-theme="dark"]{--aura1:rgba(59,120,240,.26);--aura2:rgba(42,142,195,.20);--aura3:rgba(48,101,175,.16);--aline:rgba(120,170,240,.06)}
 .num{font-variant-numeric:tabular-nums;font-family:"Inter","Prompt",sans-serif}
-.app{max-width:640px;margin:0 auto;padding:18px 14px calc(72px + env(safe-area-inset-bottom))}
+.app{max-width:640px;margin:0 auto;padding:18px 14px calc(72px + env(safe-area-inset-bottom));position:relative;z-index:0}
 /* ---- brand / CloverX logo ---- */
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
 .clogo-img{height:29px;width:auto;display:block}
