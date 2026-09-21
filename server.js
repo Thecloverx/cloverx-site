@@ -688,11 +688,20 @@ function ownsOrder(o, ph, em) {
   return (ph && op && op === ph) || (em && oe && oe === em);
 }
 // ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล) — คืนเฉพาะออเดอร์ที่ตรง
+function retLog(r, text) { r.history = Array.isArray(r.history) ? r.history : []; r.history.unshift({ at: new Date().toISOString(), text: text }); }
+function retOwns(r, ph, em) { return (ph && digitsOnly(r.phone) === ph) || (em && String(r.email || '').trim().toLowerCase() === em); }
+function saveDataImage(dataUrl, prefix) {
+  if (typeof dataUrl !== 'string' || !/^data:image\//.test(dataUrl)) return null;
+  var m = dataUrl.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/); if (!m) return null;
+  try { var ext = m[1].toLowerCase().replace('jpeg', 'jpg').replace('svg+xml', 'svg'); var fn = prefix + '-' + Date.now() + '.' + ext; fs.writeFileSync(path.join(SLIPS, fn), Buffer.from(m[2], 'base64')); return '/api/slips/' + fn; } catch (e) { return null; }
+}
+// ค้นหาคำสั่งซื้อ + คำขอคืนของลูกค้าเอง (สำหรับยื่นคำขอ และติดตามสถานะ)
 app.post('/api/returns/lookup', function (req, res) {
   var b = req.body || {}; var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
   if (!ph && !em) return res.status(400).json({ ok: false, error: 'need_phone_or_email' });
   var matches = read().filter(function (o) { return ownsOrder(o, ph, em); });
-  res.json({ ok: true, orders: matches.map(pubOrder) });
+  var mine = readReturns().filter(function (r) { return retOwns(r, ph, em); });
+  res.json({ ok: true, orders: matches.map(pubOrder), myReturns: mine });
 });
 // ลูกค้ายื่นคำขอคืนสินค้า/รอปรับปรุง
 app.post('/api/returns', function (req, res) {
@@ -705,34 +714,81 @@ app.post('/api/returns', function (req, res) {
   var channel = b.channel === 'bank' ? 'bank' : 'card';
   var items = (Array.isArray(b.selected) ? b.selected : []).map(function (s) { return { name: String(s.name || '').slice(0, 120), key: String(s.key || '').slice(0, 40), price: Number(s.price) || 0 }; });
   var amount = items.reduce(function (a, it) { return a + it.price; }, 0);
-  var slip = null;
-  if (choice === 'return' && channel === 'bank' && typeof b.slip === 'string' && /^data:image\//.test(b.slip)) {
-    var m = b.slip.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/);
-    if (m) { try { var ext = m[1].toLowerCase().replace('jpeg', 'jpg').replace('svg+xml', 'svg'); var fn = 'RS-' + o.id + '-' + Date.now() + '.' + ext; fs.writeFileSync(path.join(SLIPS, fn), Buffer.from(m[2], 'base64')); slip = '/api/slips/' + fn; } catch (e) {} }
-  }
+  var slip = (choice === 'return' && channel === 'bank') ? saveDataImage(b.slip, 'RSP-' + o.id) : null;
+  var reason = String(b.reason || '').slice(0, 200);
+  var note = String(b.note || '').slice(0, 500);
+  var returnMethod = b.returnMethod === 'pickup' ? 'pickup' : 'dropoff';
+  var evidence = (Array.isArray(b.evidence) ? b.evidence : []).slice(0, 10).map(function (d) { return saveDataImage(d, 'EVD-' + o.id); }).filter(Boolean);
   var rlist = readReturns();
   var seq = (rlist.length ? Math.max.apply(null, rlist.map(function (x) { return x.seq || 0; })) : 0) + 1;
   var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
   var rid = (choice === 'wait' ? 'WAIT-' : 'RMA-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
-  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: o.phone || '', email: o.email || '', choice: choice, channel: channel, items: items, amount: amount, slip: slip, status: 'pending' };
+  var initStatus = choice === 'wait' ? 'wait' : 'awaiting_shipment';
+  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: o.phone || '', email: o.email || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, status: initStatus, history: [] };
+  retLog(rec, choice === 'wait' ? 'ลูกค้าเลือกรอการปรับปรุง Application' : ('ลูกค้ายื่นคำขอคืนสินค้า' + (reason ? (' · เหตุผล: ' + reason) : '') + ' — รอจัดส่งสินค้าคืน'));
   rlist.unshift(rec); writeReturns(rlist);
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
 app.get('/api/returns', function (req, res) { res.json({ ok: true, returns: readReturns() }); });
-// แอดมิน: อัปเดตสถานะคำขอ (อนุมัติ/ปฏิเสธ/คืนเงินแล้ว)
+// ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
+app.post('/api/returns/:rid/ship', function (req, res) {
+  var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
+  if (!retOwns(r, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  if (r.choice === 'wait') return res.status(400).json({ ok: false, error: 'not_applicable' });
+  var tracking = String(b.trackingNo || '').trim().slice(0, 60), carrier = String(b.carrier || '').trim().slice(0, 60);
+  var rslip = saveDataImage(b.returnSlip, 'RTN-' + r.orderId);
+  if (!tracking && !rslip) return res.status(400).json({ ok: false, error: 'need_tracking_or_slip' });
+  r.returnTracking = tracking; r.returnCarrier = carrier; if (rslip) r.returnSlip = rslip;
+  r.status = 'in_transit'; r.shippedAt = new Date().toISOString();
+  retLog(r, 'ลูกค้าแจ้งการส่งคืน' + (tracking ? (' · เลขพัสดุ ' + tracking) : '') + (carrier ? (' (' + carrier + ')') : '') + (rslip ? ' · แนบสลิป' : ''));
+  writeReturns(rlist);
+  res.json({ ok: true, ret: r });
+});
+// แอดมิน: ตรวจรับสินค้า + เลือกผล (good/damaged/incomplete/reject)
+app.post('/api/returns/:rid/inspect', function (req, res) {
+  var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  var result = b.result;
+  if (['good', 'damaged', 'incomplete', 'reject'].indexOf(result) < 0) return res.status(400).json({ ok: false, error: 'bad_result' });
+  var reason = String(b.reason || '').slice(0, 500);
+  if ((result === 'damaged' || result === 'incomplete' || result === 'reject') && !reason) return res.status(400).json({ ok: false, error: 'reason_required' });
+  var LBL = { good: 'สินค้าสภาพสมบูรณ์ 100%', damaged: 'สินค้าชำรุด/เสียหาย', incomplete: 'สินค้าไม่ครบ', reject: 'ปฏิเสธการรับคืน' };
+  r.inspection = { result: result, reason: reason, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60) };
+  if (result === 'reject') { r.status = 'rejected'; retLog(r, 'ตรวจรับ: ปฏิเสธการรับคืน — ' + reason + ' · ส่งกลับคืนลูกค้า'); }
+  else { r.status = 'refund_review'; retLog(r, 'ตรวจรับสินค้าแล้ว: ' + LBL[result] + (reason ? (' — ' + reason) : '') + ' · เข้าสู่การอนุมัติคืนเงิน'); }
+  writeReturns(rlist);
+  res.json({ ok: true, ret: r });
+});
+// แอดมิน: อนุมัติคืนเงิน (บางส่วน/เต็มจำนวน)
+app.post('/api/returns/:rid/refund', function (req, res) {
+  var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  var type = b.type === 'partial' ? 'partial' : 'full';
+  var amount = type === 'full' ? (Number(r.amount) || 0) : (Number(b.amount) || 0);
+  if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'invalid_amount' });
+  r.refund = { type: type, amount: amount, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60), note: String(b.note || '').slice(0, 300) };
+  r.approvedAmount = amount; r.status = 'refunded';
+  retLog(r, 'อนุมัติคืนเงิน' + (type === 'full' ? 'เต็มจำนวน' : 'บางส่วน') + ' ' + amount.toLocaleString('en-US') + ' บาท');
+  writeReturns(rlist);
+  res.json({ ok: true, ret: r });
+});
+// แอดมิน: ปรับสถานะทั่วไป (รับทราบ/ปฏิเสธ/ทำเครื่องหมายคืนเงินแล้ว)
 app.post('/api/returns/:rid/status', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-  var to = b.status; if (['pending', 'approved', 'rejected', 'refunded'].indexOf(to) < 0) return res.status(400).json({ ok: false, error: 'bad_status' });
+  var to = b.status;
+  if (['awaiting_shipment', 'in_transit', 'refund_review', 'refunded', 'rejected', 'wait', 'acknowledged'].indexOf(to) < 0) return res.status(400).json({ ok: false, error: 'bad_status' });
   r.status = to;
   if (typeof b.amount === 'number') r.approvedAmount = b.amount;
   if (typeof b.note === 'string') r.note = b.note.slice(0, 500);
   r.actedAt = new Date().toISOString(); r.actor = (b.actor || 'staff').slice(0, 60);
+  retLog(r, 'อัปเดตสถานะเป็น ' + to + (b.note ? (' — ' + b.note) : ''));
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
 });
-
 // ---- ADMIN: delete an order (guarded by ADMIN_KEY) ----
 app.delete("/api/orders/:id", (req, res) => {
   const list = read();
