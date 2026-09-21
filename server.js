@@ -750,6 +750,17 @@ app.post('/api/returns/:rid/ship', function (req, res) {
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
 });
+// ลูกค้า: ยกเลิกคำขอคืนสินค้า/คืนเงิน (กลับไปเริ่มใหม่ได้)
+app.post('/api/returns/:rid/cancel', function (req, res) {
+  var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
+  if (!retOwns(r, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  if (['refunded', 'rejected', 'cancelled'].indexOf(r.status) >= 0) return res.status(400).json({ ok: false, error: 'not_cancelable' });
+  r.status = 'cancelled'; r.cancelledAt = new Date().toISOString();
+  retLog(r, 'ลูกค้ายกเลิกคำขอคืนสินค้า/คืนเงิน');
+  writeReturns(rlist); res.json({ ok: true, ret: r });
+});
 // แอดมิน: ลบคำขอคืน (ถังขยะ)
 app.delete('/api/returns/:rid', function (req, res) {
   var rlist = readReturns(); var i = rlist.findIndex(function (x) { return x.rid === req.params.rid; });

@@ -78,7 +78,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 
 @keyframes sp{to{transform:rotate(360deg)}}
 /* ---- product tile ---- */
 .ptile{border-radius:12px;background:var(--tile);border:1px solid var(--line2);display:grid;place-items:center;flex:0 0 auto;overflow:hidden}
-.ptile img{width:88%;height:88%;object-fit:contain;display:block}
+.ptile img{width:100%;height:100%;object-fit:contain;padding:5px;display:block}
 .ptile .ic{color:var(--muted)}
 /* ---- order list ---- */
 .oc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -89,7 +89,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 
 .oc-ship{display:flex;align-items:center;gap:9px;background:var(--surface2);border-radius:11px;padding:10px 12px;margin:12px 0;font-size:12.5px;color:var(--muted)}
 .oc-ship .ic{font-size:17px;color:var(--blue)}
 .oc-item{display:flex;align-items:center;gap:12px;padding:9px 0}
-.oc-item .ptile{width:56px;height:56px}
+.oc-item .ptile{width:64px;height:64px}
 .oc-item .nm{font-weight:600;font-size:13.5px;line-height:1.35}
 .oc-item .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
 .oc-item .rt{margin-left:auto;text-align:right;white-space:nowrap}
@@ -374,13 +374,13 @@ function lookup(){
 }
 function refreshThen(cb){fetch('/api/returns/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email})}).then(function(r){return r.json();}).then(function(j){ORDERS=(j&&j.orders)||[];MYRET=(j&&j.myReturns)||[];cb&&cb();});}
 
-function retForOrder(oid){return MYRET.filter(function(r){return r.orderId===oid;})[0];}
+function retForOrder(oid){return MYRET.filter(function(r){return r.orderId===oid&&r.status!=='cancelled';})[0];}
 function renderOrders(){
   var box=document.getElementById('s_orders');
-  var name=(document.getElementById('f_name').value||'').trim();
-  var head='<div style="display:flex;align-items:flex-start;margin-bottom:14px;gap:10px"><div><h1 style="margin:0">คำสั่งซื้อของฉัน</h1><p class="lead" style="margin:2px 0 0">'+(name?('สวัสดีคุณ '+esc(name)+' · '):'')+'เลือกคำสั่งซื้อที่ต้องการคืนสินค้า</p></div><button class="btn ghost sm" style="margin-left:auto;flex:0 0 auto" onclick="logout()">ออกจากระบบ</button></div>';
+  var name=((ORDERS[0]&&ORDERS[0].name)||'').trim()||(document.getElementById('f_name').value||'').trim();
+  var head='<div style="display:flex;align-items:flex-start;margin-bottom:14px;gap:10px"><div style="flex:1;min-width:0"><h1 style="margin:0">คำสั่งซื้อของฉัน</h1><p class="lead" style="margin:5px 0 0">'+(name?('สวัสดีคุณ <b>'+esc(name)+'</b><br>'):'')+'เลือกคำสั่งซื้อหรือรายการสินค้าที่ต้องการคืน</p></div><button class="btn ghost sm" style="flex:0 0 auto" onclick="logout()">ออกจากระบบ</button></div>';
   var track='';
-  if(MYRET.length){track='<div class="oc-ret" onclick="viewTrack()" style="margin:0 0 14px">'+icon('search')+'<span class="rl">คุณมีคำขอคืน '+MYRET.length+' รายการ — แตะเพื่อติดตามสถานะ / แนบหลักฐานการส่งคืน</span><span class="rr">ติดตาม '+icon('chev')+'</span></div>';}
+  if(MYRET.length){track='<div class="oc-ret" onclick="viewTrack()" style="margin:0 0 14px;align-items:center"><span class="ic" style="flex:0 0 auto;font-size:19px">'+IC.search+'</span><span class="rl" style="flex:1;min-width:0;line-height:1.5"><b>คุณมีคำขอคืนสินค้า '+MYRET.length+' รายการ</b><br><span style="font-weight:500;opacity:.9">แตะเพื่อติดตาม / แนบเอกสารอื่น ๆ เพิ่มเติม</span></span><span class="rr" style="flex:0 0 auto">ติดตาม '+icon('chev')+'</span></div>';}
   var cards=ORDERS.map(function(o){
     var ret=retForOrder(o.id);
     var itemsHtml=o.sets.map(function(s){
@@ -522,7 +522,7 @@ function submitWait(){
     }).catch(function(){btn.innerHTML='ยืนยันรอการปรับปรุง';btn.disabled=false;alert('เชื่อมต่อไม่สำเร็จ');});
 }
 
-var RET_ST_C={awaiting_shipment:{l:'รอจัดส่งสินค้าคืน',c:'wait'},in_transit:{l:'กำลังส่งคืน / รอตรวจรับ',c:'pend'},refund_review:{l:'รออนุมัติคืนเงิน',c:'pend'},refunded:{l:'คืนเงินสำเร็จ',c:'ok'},rejected:{l:'ปฏิเสธการรับคืน',c:'bad'},wait:{l:'รอการปรับปรุง Application',c:'wait'}};
+var RET_ST_C={awaiting_shipment:{l:'รอจัดส่งสินค้าคืน',c:'wait'},in_transit:{l:'กำลังส่งคืน / รอตรวจรับ',c:'pend'},refund_review:{l:'รออนุมัติคืนเงิน',c:'pend'},refunded:{l:'คืนเงินสำเร็จ',c:'ok'},rejected:{l:'ปฏิเสธการรับคืน',c:'bad'},cancelled:{l:'ยกเลิกแล้ว',c:'bad'},wait:{l:'รอการปรับปรุง Application',c:'wait'}};
 function crumbs(status){
   var retDone=(status==='refund_review'||status==='refunded');var phase=(status==='refunded'||status==='refund_review')?2:1;
   var lbl=['คำขอ','การคืนสินค้า','การคืนเงิน'];
@@ -536,8 +536,8 @@ function trackDots(status){
     var done=(status==='refunded')?true:(i<cur);var now=(i===cur&&status!=='refunded');
     var col=done?'var(--ok)':(now?'var(--blue)':'var(--line)');var tcol=(done||now)?'var(--ink)':'var(--muted)';
     return '<div style="flex:1;text-align:center;position:relative">'
-      +(i>0?'<div style="position:absolute;left:-50%;top:11px;width:100%;height:2px;background:'+((i<=cur||status==='refunded')?'var(--ok)':'var(--line)')+'"></div>':'')
-      +'<div style="position:relative;width:24px;height:24px;border-radius:50%;margin:0 auto;background:'+col+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700">'+(done?'<span class="ic" style="font-size:14px">'+IC.check+'</span>':(i+1))+'</div>'
+      +(i>0?'<div style="position:absolute;left:calc(-50% + 14px);top:11px;width:calc(100% - 28px);height:2px;z-index:0;background:'+((i<=cur||status==='refunded')?'var(--ok)':'var(--line)')+'"></div>':'')
+      +'<div style="position:relative;z-index:1;width:24px;height:24px;border-radius:50%;margin:0 auto;background:'+col+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700">'+(done?'<span class="ic" style="font-size:14px">'+IC.check+'</span>':(i+1))+'</div>'
       +'<div style="font-size:.72rem;margin-top:5px;color:'+tcol+';font-weight:'+(now?'700':'500')+'">'+labels[k]+'</div></div>';
   }).join('');
 }
@@ -545,8 +545,10 @@ function viewTrack(){renderTrack();show('s_track');}
 function renderTrack(){
   var box=document.getElementById('s_track');
   var cards=MYRET.map(function(r){return trackCard(r);}).join('');
-  var newBtn=ORDERS.length?'<button class="btn ghost" onclick="goOrders()" style="margin-top:6px">'+icon('plus')+' ยื่นคำขอคืนใหม่ / ดูคำสั่งซื้อ</button>':'';
-  box.innerHTML='<div style="display:flex;align-items:flex-start;margin-bottom:14px;gap:10px"><div><h1 style="margin:0">ติดตามการคืนสินค้า / คืนเงิน</h1><p class="lead" style="margin:2px 0 0">คำขอของคุณ ('+MYRET.length+') — ตรวจสอบสถานะและแนบหลักฐานการส่งคืนได้ตลอดเวลา</p></div><button class="btn ghost sm" style="margin-left:auto;flex:0 0 auto" onclick="logout()">ออกจากระบบ</button></div>'+cards+newBtn;
+  var canCancel=MYRET.some(function(r){return ['refunded','rejected','cancelled'].indexOf(r.status)<0;});
+  var newBtn='<button class="btn primary" onclick="trackRefresh()" style="margin-top:6px">'+icon('search')+' ติดตามสถานะการคืนสินค้า / คืนเงิน</button>'
+    +(canCancel?'<button class="btn ghost" onclick="cancelReturns()" style="margin-top:10px;color:var(--danger);border-color:color-mix(in srgb,var(--danger) 32%,var(--line))">ยกเลิกการคืนสินค้า / คืนเงิน</button>':(ORDERS.length?'<button class="btn ghost" onclick="goOrders()" style="margin-top:10px">'+icon('plus')+' ยื่นคำขอคืนใหม่ / ดูคำสั่งซื้อ</button>':''));
+  box.innerHTML='<div style="display:flex;align-items:flex-start;margin-bottom:14px;gap:10px"><div style="flex:1;min-width:0"><h1 style="margin:0">ติดตามการคืนสินค้า / คืนเงิน</h1><p class="lead" style="margin:5px 0 0"><b>คำขอของคุณ ('+MYRET.length+')</b><br>ตรวจสอบสถานะและแนบหลักฐานการคืน</p></div><button class="btn ghost sm" style="flex:0 0 auto" onclick="logout()">ออกจากระบบ</button></div>'+cards+newBtn;
 }
 function trackCard(r){
   var st=RET_ST_C[r.status]||{l:r.status,c:'pend'};var isWait=(r.choice==='wait');
@@ -582,7 +584,7 @@ function trackCard(r){
       +(r.returnCarrier?'<div class="rrow"><span class="rk">ขนส่ง</span><span class="rv">'+esc(r.returnCarrier)+'</span></div>':'')
       +(r.returnTracking?'<div class="rrow"><span class="rk">หมายเลขติดตามพัสดุ</span><span class="rv"><span class="trkval">'+esc(r.returnTracking)+'</span><button class="copy" onclick="copyTxt(\''+esc(r.returnTracking)+'\')">'+icon('copy')+'คัดลอก</button></span></div>':'')
       +(acct.no?'<div class="rrow"><span class="rk">บัญชีรับเงินคืน</span><span class="rv" style="text-align:right">'+esc(acct.bank||'')+' '+esc(acct.no)+'<br><span style="font-weight:500;color:var(--muted);font-size:12px">'+esc(acct.name||'')+'</span></span></div>':'')
-      +'<div class="rrow"><span class="rk">ที่อยู่ส่งคืนสินค้า</span><span class="rv" style="font-weight:500;text-align:right;max-width:62%;font-size:12px;color:var(--muted)">'+RETURN_ADDR.name+'</span></div>';
+      +'<div style="padding:12px 0;border-top:1px solid var(--line2)"><div style="font-size:13px;color:var(--muted);margin-bottom:4px">ที่อยู่ส่งคืนสินค้า</div><div style="font-weight:600;font-size:12px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+RETURN_ADDR.name+'</div></div>';
   }
   var evHtml=(r.evidence&&r.evidence.length)?('<div class="rrow"><span class="rk">รูปภาพ/หลักฐาน</span><span class="rv"></span></div><div class="evrow">'+r.evidence.map(function(u){return '<img src="'+esc(u)+'">';}).join('')+'</div>'):'';
   var itemsTxt=(r.items||[]).map(function(it){return it.name;}).join(', ');
@@ -612,6 +614,13 @@ function shipSubmit(rid){
       if(!j||!j.ok){btn.innerHTML='ยืนยันการส่งคืน';btn.disabled=false;alert('บันทึกไม่สำเร็จ: '+((j&&j.error)||''));return;}
       refreshThen(function(){renderTrack();});
     }).catch(function(){btn.innerHTML='ยืนยันการส่งคืน';btn.disabled=false;alert('เชื่อมต่อไม่สำเร็จ');});
+}
+function trackRefresh(){refreshThen(function(){renderTrack();});}
+function cancelReturns(){
+  var ids=MYRET.filter(function(r){return ['refunded','rejected','cancelled'].indexOf(r.status)<0;}).map(function(r){return r.rid;});
+  if(!ids.length){goOrders();return;}
+  if(!confirm('ยืนยันยกเลิกคำขอคืนสินค้า / คืนเงิน '+ids.length+' รายการ? ระบบจะกลับไปหน้าแรก'))return;
+  var done=0;ids.forEach(function(rid){fetch('/api/returns/'+encodeURIComponent(rid)+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email})}).then(function(){}).catch(function(){}).then(function(){done++;if(done>=ids.length){refreshThen(function(){goOrders();});}});});
 }
 function restart(){goOrders();}
 fillIcons();
