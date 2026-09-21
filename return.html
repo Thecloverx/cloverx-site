@@ -104,7 +104,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 
 .oc-ship .ic{font-size:17px;color:var(--blue)}
 .oc-item{display:flex;align-items:center;gap:12px;padding:9px 0}
 .oc-item .ptile{width:64px;height:64px}
-.oc-item .nm{font-weight:600;font-size:13.5px;line-height:1.35}
+.oc-item .nm{font-weight:700;font-size:14px;line-height:1.3}
+.oc-item .ctag{display:inline-block;font-size:11px;font-weight:600;color:var(--blue-deep);background:var(--blue-soft);border-radius:999px;padding:2px 10px;margin-top:5px}
+.oc-item .nsub{font-size:11.5px;color:var(--muted);margin-top:4px}
 .oc-item .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
 .oc-item .rt{margin-left:auto;text-align:right;white-space:nowrap}
 .oc-item .rt .pr{font-weight:600;font-size:13px}.oc-item .rt .qt{font-size:12px;color:var(--muted);margin-top:2px}
@@ -244,6 +246,7 @@ input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay
 .clist li{position:relative;padding-left:15px;font-size:12px;color:var(--muted);margin:3px 0;line-height:1.5}
 .clist li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--blue)}
 .clist .csub{display:block;font-size:11px;color:var(--muted);opacity:.9;margin-top:1px}
+.clist .cinline{font-size:11.5px;color:var(--muted);opacity:.9}
 .cdrow{display:flex;align-items:center;gap:7px;background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 25%,var(--line));border-radius:11px;padding:9px 13px;margin:10px 0 2px;font-size:13px;color:var(--danger);font-weight:600}
 .cdrow .ic{font-size:16px}.cdval{font-variant-numeric:tabular-nums;font-family:"Inter","Prompt",sans-serif}
 .shipcard{border:1px solid color-mix(in srgb,var(--blue) 35%,var(--line));border-radius:14px;padding:15px;margin-top:12px;background:var(--surface2)}
@@ -386,7 +389,8 @@ function show(id){document.querySelectorAll('.scr').forEach(function(s){s.classL
 function partsFor(key){if(key==='band-black'||key==='band-cream')return ['Standless Strap','Nylon Strap'];if(key==='routinex')return ['Flavor+ (Free gift)'];return [];}
 var COMP_LABEL={'band-black':'Xircle Band (Black)','band-cream':'Xircle Band (Cream)','scale':'Xircle Scale','routinex':'RoutineX','flavor':'Flavor+'};
 function compLabel(key,fb){return COMP_LABEL[key]||fb||key;}
-function setBullets(sets){var items=[];sets.forEach(function(s){(s.comps||[]).forEach(function(c){items.push(c);});});return '<ul class="clist">'+items.map(function(c){var sub=partsFor(c.key);return '<li>'+esc(compLabel(c.key,c.label))+(sub.length?('<span class="csub">'+sub.map(esc).join('  /  ')+'</span>'):'')+'</li>';}).join('')+'</ul>';}
+function parseProd(nm){nm=dsep(nm);var COLEN={'ดำ':'Black','ครีม':'Cream','ขาว':'White','เงิน':'Silver','น้ำเงิน':'Navy','เทา':'Gray'};var tag='';var cm=nm.match(/สี([ก-๙]+)/);if(cm){var en=COLEN[cm[1]]||'';tag='สี'+cm[1]+(en?(' ('+en+')'):'');}var base=nm.replace(/สี[ก-๙]+/,'').trim();var title,sub='';if(/ครอบครัว|family/i.test(base)){title='[FAMILY] Xircle Band';}else{var pm=base.match(/^(.*?)\s*\(([^)]*)\)\s*$/);if(pm){title=pm[1].trim();sub=pm[2].replace(/\+/g,' + ').replace(/\s+/g,' ').trim();}else{title=base;}}return {title:title,sub:sub,tag:tag};}
+function setBullets(sets){var items=[];sets.forEach(function(s){(s.comps||[]).forEach(function(c){items.push(c);});});return '<ul class="clist">'+items.map(function(c){var sub=partsFor(c.key);if(c.key==='routinex'&&sub.length)return '<li>'+esc(compLabel(c.key,c.label))+' <span class="cinline">'+sub.map(esc).join('  /  ')+'</span></li>';return '<li>'+esc(compLabel(c.key,c.label))+(sub.length?('<span class="csub">'+sub.map(esc).join('  /  ')+'</span>'):'')+'</li>';}).join('')+'</ul>';}
 var _cdTimer=null;
 function startCountdown(){var el=document.getElementById('cdown');var ic=document.getElementById('_cdclk');if(ic)ic.innerHTML=IC.clock;if(!el)return;if(_cdTimer)clearInterval(_cdTimer);function p(n){return (n<10?'0':'')+n;}function tick(){var d=RETURN_DEADLINE_TS-Date.now();if(d<=0){el.textContent='หมดเวลาแล้ว';clearInterval(_cdTimer);return;}var s=Math.floor(d/1000),dd=Math.floor(s/86400),hh=Math.floor(s%86400/3600),mm=Math.floor(s%3600/60),ss=s%60;el.textContent=dd+' วัน '+p(hh)+':'+p(mm)+':'+p(ss);}tick();_cdTimer=setInterval(tick,1000);}
 function imgKeyFor(key){if(PROD_IMG[key])return key;if(key==='band'||key==='set')return 'band-black';return '';}
@@ -421,7 +425,8 @@ function renderOrders(){
     var ret=retForOrder(o.id);
     var itemsHtml=o.sets.map(function(s){
       var price=s.comps.reduce(function(a,c){return a+(c.est||0);},0);
-      return '<div class="oc-item">'+ptile((s.comps[0]||{}).key||'')+'<div style="flex:1;min-width:0"><div class="nm">'+esc(dsep(s.nm))+'</div>'+setBullets([s])+'</div><div class="rt"><div class="pr num">'+baht(price)+'</div><div class="qt">x1</div></div></div>';
+      var pp=parseProd(s.nm);
+      return '<div class="oc-item">'+ptile((s.comps[0]||{}).key||'')+'<div style="flex:1;min-width:0"><div class="nm">'+esc(pp.title)+'</div>'+(pp.tag?'<span class="ctag">'+esc(pp.tag)+'</span>':'')+(pp.sub?'<div class="nsub">'+esc(pp.sub)+'</div>':'')+setBullets([s])+'</div><div class="rt"><div class="pr num">'+baht(price)+'</div><div class="qt">x1</div></div></div>';
     }).join('');
     var foot;
     if(ret){var st=RET_ST_C[ret.status]||{l:ret.status,c:'pend'};foot='<div class="oc-ret" onclick="viewTrack()"><span class="rl">คำขอคืน '+esc(ret.rid)+'&nbsp;&nbsp;<span class="pill '+st.c+'">'+st.l+'</span></span><span class="rr">ติดตาม '+icon('chev')+'</span></div>';}
