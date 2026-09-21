@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const crypto = require('crypto');
+// บีบอัด/ย่อรูปสลิป-หลักฐาน (optional): ถ้าติดตั้ง sharp ไม่ได้ ระบบยังทำงานปกติ เพียงเก็บรูปตามต้นฉบับ
+let sharp = null;
+try { sharp = require('sharp'); } catch (e) { console.log('[img] sharp ไม่พร้อมใช้งาน — จะเก็บรูปตามขนาดต้นฉบับ'); }
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -230,6 +233,21 @@ function write(d) {
     try { fs.unlinkSync(tmp); } catch (_e) {}
     throw e;
   }
+}
+
+// บีบอัด/ย่อรูปที่บันทึกแล้วแบบทับไฟล์เดิม (best-effort, async) — คงรูปแบบ/นามสกุลเดิมไว้
+// เขียนทับเฉพาะเมื่อบีบแล้วเล็กลงจริง; ถ้าล้มเหลวคงไฟล์ต้นฉบับไว้ ไม่กระทบการอัปโหลด
+function compressFileInPlace(fullPath, ext) {
+  if (!sharp) return;
+  try {
+    var img = sharp(fullPath, { failOn: 'none' }).rotate().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true });
+    if (ext === 'png') img = img.png({ compressionLevel: 9, palette: true });
+    else if (ext === 'webp') img = img.webp({ quality: 72 });
+    else img = img.jpeg({ quality: 72, mozjpeg: true });
+    img.toBuffer().then(function (out) {
+      try { var cur = fs.statSync(fullPath).size; if (out && out.length && out.length < cur) fs.writeFileSync(fullPath, out); } catch (e) {}
+    }).catch(function () {});
+  } catch (e) {}
 }
 
 // ================= SEED: นำเข้าออเดอร์ประวัติ (ครั้งเดียว) =================
@@ -478,7 +496,7 @@ app.post('/api/orders', (req, res) => {
     if (m) {
       const ext = m[1].toLowerCase().replace('jpeg', 'jpg').replace('svg+xml', 'svg');
       const fn = id + '.' + ext;
-      try { fs.writeFileSync(path.join(SLIPS, fn), Buffer.from(m[2], 'base64')); slipUrl = '/api/slips/' + fn; } catch (e) {}
+      try { const full = path.join(SLIPS, fn); fs.writeFileSync(full, Buffer.from(m[2], 'base64')); slipUrl = '/api/slips/' + fn; if (ext !== 'svg' && ext !== 'gif') compressFileInPlace(full, ext); } catch (e) {}
     }
   }
 
@@ -749,7 +767,7 @@ function retOwns(r, ph, em, nm) { return identityOwns(r.phone, r.email, r.name, 
 function saveDataImage(dataUrl, prefix) {
   if (typeof dataUrl !== 'string' || !/^data:image\//.test(dataUrl)) return null;
   var m = dataUrl.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/); if (!m) return null;
-  try { var ext = m[1].toLowerCase().replace('jpeg', 'jpg').replace('svg+xml', 'svg'); var fn = prefix + '-' + Date.now() + '.' + ext; fs.writeFileSync(path.join(SLIPS, fn), Buffer.from(m[2], 'base64')); return '/api/slips/' + fn; } catch (e) { return null; }
+  try { var ext = m[1].toLowerCase().replace('jpeg', 'jpg').replace('svg+xml', 'svg'); var fn = prefix + '-' + Date.now() + '.' + ext; var full = path.join(SLIPS, fn); fs.writeFileSync(full, Buffer.from(m[2], 'base64')); if (ext !== 'svg' && ext !== 'gif') compressFileInPlace(full, ext); return '/api/slips/' + fn; } catch (e) { return null; }
 }
 // ค้นหาคำสั่งซื้อ + คำขอคืนของลูกค้าเอง (สำหรับยื่นคำขอ และติดตามสถานะ)
 app.post('/api/returns/lookup', function (req, res) {
