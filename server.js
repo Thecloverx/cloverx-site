@@ -683,13 +683,39 @@ function returnSets(o) {
 function pubOrder(o) {
   return { id: o.id, at: o.at, name: o.name || '', total: Number(o.total) || 0, pay: o.pay || '', ship: o.ship || '', status: o.status || '', refundedTotal: Number(o.refundedTotal) || 0, sets: returnSets(o) };
 }
-function ownsOrder(o, ph, em) {
-  var op = digitsOnly(o.phone), oe = String(o.email || '').trim().toLowerCase();
-  return (ph && op && op === ph) || (em && oe && oe === em);
+// ---- ยืนยันตัวตนลูกค้า ----
+// ข้อมูลออเดอร์ที่นำเข้าเก็บเบอร์แบบปิดบัง (4 ตัวท้าย) และไม่มีอีเมล
+// จึงเทียบได้ 2 แบบ: (1) ตรงทั้งเบอร์/อีเมล  (2) เบอร์ 4 ตัวท้ายตรงกัน + ชื่อ-นามสกุลตรงกัน (กันชนกรณีเลขท้ายซ้ำ)
+function normName(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function nameFactorOk(storedName, enteredName) {
+  var s = normName(storedName), e = normName(enteredName);
+  if (!s || !e) return false;
+  if (s === e) return true;
+  var sp = s.split(' '), ep = e.split(' ');
+  if (!sp[0] || !ep[0] || sp[0] !== ep[0]) return false;            // ชื่อจริงต้องตรงกัน
+  var ss = sp.slice(1).join('').replace(/\./g, ''), es = ep.slice(1).join('');
+  if (!ss) return true;                                             // ข้อมูลเดิมมีแต่ชื่อจริง
+  return !!(es && es.charAt(0) === ss.charAt(0));                   // อักษรแรกของนามสกุลตรงกัน
 }
-// ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล) — คืนเฉพาะออเดอร์ที่ตรง
+function phoneFactor(storedDigits, enteredDigits) {
+  if (!storedDigits || !enteredDigits) return 'none';
+  if (storedDigits === enteredDigits) return 'exact';
+  if (storedDigits.length >= 4 && storedDigits.length < enteredDigits.length && enteredDigits.slice(-storedDigits.length) === storedDigits) return 'suffix';
+  if (enteredDigits.length >= 4 && enteredDigits.length < storedDigits.length && storedDigits.slice(-enteredDigits.length) === enteredDigits) return 'suffix';
+  return 'none';
+}
+function identityOwns(recPhone, recEmail, recName, ph, em, nm) {
+  var oe = String(recEmail || '').trim().toLowerCase();
+  if (em && oe && oe === em) return true;
+  var pf = phoneFactor(digitsOnly(recPhone), ph);
+  if (pf === 'exact') return true;
+  if (pf === 'suffix' && nameFactorOk(recName, nm)) return true;
+  return false;
+}
+function ownsOrder(o, ph, em, nm) { return identityOwns(o.phone, o.email, o.name, ph, em, nm); }
+// ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล/ชื่อ) — คืนเฉพาะออเดอร์ที่ตรง
 function retLog(r, text) { r.history = Array.isArray(r.history) ? r.history : []; r.history.unshift({ at: new Date().toISOString(), text: text }); }
-function retOwns(r, ph, em) { return (ph && digitsOnly(r.phone) === ph) || (em && String(r.email || '').trim().toLowerCase() === em); }
+function retOwns(r, ph, em, nm) { return identityOwns(r.phone, r.email, r.name, ph, em, nm); }
 function saveDataImage(dataUrl, prefix) {
   if (typeof dataUrl !== 'string' || !/^data:image\//.test(dataUrl)) return null;
   var m = dataUrl.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/); if (!m) return null;
@@ -697,10 +723,10 @@ function saveDataImage(dataUrl, prefix) {
 }
 // ค้นหาคำสั่งซื้อ + คำขอคืนของลูกค้าเอง (สำหรับยื่นคำขอ และติดตามสถานะ)
 app.post('/api/returns/lookup', function (req, res) {
-  var b = req.body || {}; var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
+  var b = req.body || {}; var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
   if (!ph && !em) return res.status(400).json({ ok: false, error: 'need_phone_or_email' });
-  var matches = read().filter(function (o) { return ownsOrder(o, ph, em); });
-  var mine = readReturns().filter(function (r) { return retOwns(r, ph, em); });
+  var matches = read().filter(function (o) { return ownsOrder(o, ph, em, nm); });
+  var mine = readReturns().filter(function (r) { return retOwns(r, ph, em, nm); });
   res.json({ ok: true, orders: matches.map(pubOrder), myReturns: mine });
 });
 // ลูกค้ายื่นคำขอคืนสินค้า/รอปรับปรุง
@@ -708,8 +734,8 @@ app.post('/api/returns', function (req, res) {
   var b = req.body || {};
   var list = read(); var o = list.find(function (x) { return x.id === b.orderId; });
   if (!o) return res.status(404).json({ ok: false, error: 'order_not_found' });
-  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
-  if (!ownsOrder(o, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
+  if (!ownsOrder(o, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   var choice = b.choice === 'wait' ? 'wait' : 'return';
   var opay = String(o.pay || '').toLowerCase();
   var channel = opay === 'bank' ? 'bank' : (opay === 'card' ? 'card' : (b.channel === 'bank' ? 'bank' : 'card'));
@@ -725,7 +751,7 @@ app.post('/api/returns', function (req, res) {
   var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
   var rid = (choice === 'wait' ? 'WAIT-' : 'RT-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
   var initStatus = choice === 'wait' ? 'wait' : 'awaiting_shipment';
-  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: o.phone || '', email: o.email || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, status: initStatus, history: [] };
+  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, status: initStatus, history: [] };
   retLog(rec, choice === 'wait' ? 'ลูกค้าเลือกรอการปรับปรุง Application' : ('ลูกค้ายื่นคำขอคืนสินค้า' + (reason ? (' · เหตุผล: ' + reason) : '') + ' — รอจัดส่งสินค้าคืน'));
   rlist.unshift(rec); writeReturns(rlist);
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
@@ -736,8 +762,8 @@ app.get('/api/returns', function (req, res) { res.json({ ok: true, returns: read
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
-  if (!retOwns(r, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
+  if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   if (r.choice === 'wait') return res.status(400).json({ ok: false, error: 'not_applicable' });
   var tracking = String(b.trackingNo || '').trim().slice(0, 60), carrier = String(b.carrier || '').trim().slice(0, 60);
   var rslip = saveDataImage(b.returnSlip, 'RTN-' + r.orderId);
@@ -754,8 +780,8 @@ app.post('/api/returns/:rid/ship', function (req, res) {
 app.post('/api/returns/:rid/cancel', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
-  if (!retOwns(r, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
+  if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   if (['refunded', 'rejected', 'cancelled'].indexOf(r.status) >= 0) return res.status(400).json({ ok: false, error: 'not_cancelable' });
   r.status = 'cancelled'; r.cancelledAt = new Date().toISOString();
   retLog(r, 'ลูกค้ายกเลิกคำขอคืนสินค้า/คืนเงิน');

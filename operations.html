@@ -2936,6 +2936,10 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     w.innerHTML=bulk+'<div style="overflow-x:auto"><table class="potbl" style="min-width:1120px"><colgroup><col style="width:4%"><col style="width:14%"><col style="width:9%"><col style="width:16%"><col style="width:11%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"></colgroup>'
       +'<thead><tr><th><input type="checkbox" id="retOAll" '+(allChk?'checked':'')+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer"></th><th>เลขคำขอ</th><th>วันที่</th><th>ลูกค้า</th><th>ออเดอร์</th><th>ช่องทาง</th><th>ยอดขอคืน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'
       +pr.map(function(r){var isWait=(r.choice==='wait');var sel=RET_OSEL[r.rid]?'checked':'';
+        var omi='display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;font-family:inherit;font-weight:600;font-size:.85rem;cursor:pointer;';
+        var omenu=retMenuActions(r).map(function(a){return '<button data-act="'+a.act+'" data-rid="'+r.rid+'" style="'+omi+'color:'+(a.color||'var(--ink)')+'">'+a.label+'</button>';}).join('');
+        omenu+='<button data-act="detail" data-rid="'+r.rid+'" style="'+omi+'color:var(--ink)">ดูรายละเอียด</button>';
+        omenu+='<div style="height:1px;background:var(--line);margin:4px 6px"></div><button data-act="delete" data-rid="'+r.rid+'" style="'+omi+'color:#dc2626">'+retTrashIcon()+' ลบคำขอ</button>';
         return '<tr>'
         +'<td><input type="checkbox" class="ret-ochk" data-rid="'+poEsc(r.rid)+'" '+sel+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer"></td>'
         +'<td><div style="font-weight:700">'+poEsc(r.rid)+'</div></td>'
@@ -2945,14 +2949,15 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
         +'<td>'+(isWait?'—':(RET_CHLBL[r.channel]||'-'))+'</td>'
         +'<td>'+(isWait?'<span style="color:var(--muted);font-size:.8rem">รอปรับปรุง</span>':('<span class="num" style="font-weight:700">'+retBaht(r.amount)+'</span>'))+'</td>'
         +'<td>'+retStPill(r.status)+'</td>'
-        +'<td><div style="display:flex;gap:6px;align-items:center"><button data-odetail="'+poEsc(r.rid)+'" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-family:inherit;font-weight:700;font-size:.76rem;color:var(--brand);cursor:pointer">จัดการ →</button>'
-          +'<button data-odel="'+poEsc(r.rid)+'" title="ลบ" style="border:1px solid #fecaca;background:#fff;border-radius:8px;padding:6px 8px;color:#dc2626;cursor:pointer;display:grid;place-items:center">'+retTrashIcon()+'</button></div></td></tr>';
+        +'<td><div style="display:flex;justify-content:flex-end"><button data-omenu="'+poEsc(r.rid)+'" title="จัดการ" style="width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted);display:grid;place-items:center">'+retKebabIcon()+'</button>'
+          +'<div id="retomenu_'+poEsc(r.rid)+'" style="display:none;position:fixed;z-index:120;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(16,27,45,.16);padding:6px;min-width:210px">'+omenu+'</div></div></td></tr>';
       }).join('')+'</tbody></table></div>'+retOPager(pages);
     var oa=document.getElementById('retOAll'); if(oa)oa.addEventListener('change',function(e){pr.forEach(function(r){if(e.target.checked)RET_OSEL[r.rid]=1;else delete RET_OSEL[r.rid];});retDraw();});
     w.querySelectorAll('.ret-ochk').forEach(function(cb){cb.addEventListener('change',function(){var rid=cb.getAttribute('data-rid');if(cb.checked)RET_OSEL[rid]=1;else delete RET_OSEL[rid];retDraw();});});
-    w.querySelectorAll('button[data-odetail]').forEach(function(b){b.addEventListener('click',function(){retDetail(b.getAttribute('data-odetail'));});});
-    w.querySelectorAll('button[data-odel]').forEach(function(b){b.addEventListener('click',function(){retAct('delete',b.getAttribute('data-odel'),b);});});
+    w.querySelectorAll('[data-omenu]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retToggleOMenu(b.getAttribute('data-omenu'),b);});});
+    w.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
     w.querySelectorAll('.ret-opgbtn').forEach(function(b){b.addEventListener('click',function(){RET_OPAGE=+b.getAttribute('data-pg');retDraw();});});
+    if(!RET_MENUBOUND){RET_MENUBOUND=true;document.addEventListener('click',function(){document.querySelectorAll('[id^="retmenu_"],[id^="retomenu_"]').forEach(function(m){m.style.display='none';});});}
   }
 
   /* ---------- Management (workflow board) ---------- */
@@ -3002,7 +3007,12 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     list.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
     list.querySelectorAll('[data-detail]').forEach(function(c){c.addEventListener('click',function(){retDetail(c.getAttribute('data-detail'));});});
     list.querySelectorAll('.ret-pgbtn').forEach(function(b){b.addEventListener('click',function(){RET_MPAGE=+b.getAttribute('data-pg');retManageDraw();});});
-    if(!RET_MENUBOUND){RET_MENUBOUND=true;document.addEventListener('click',function(){document.querySelectorAll('[id^="retmenu_"]').forEach(function(m){m.style.display='none';});});}
+    if(!RET_MENUBOUND){RET_MENUBOUND=true;document.addEventListener('click',function(){document.querySelectorAll('[id^="retmenu_"],[id^="retomenu_"]').forEach(function(m){m.style.display='none';});});}
+  }
+  function retToggleOMenu(rid,btn){
+    var m=document.getElementById('retomenu_'+rid);var wasOpen=m&&m.style.display==='block';
+    document.querySelectorAll('[id^="retmenu_"],[id^="retomenu_"]').forEach(function(x){x.style.display='none';});
+    if(m&&!wasOpen){m.style.visibility='hidden';m.style.display='block';var rc=btn.getBoundingClientRect();var mw=m.offsetWidth,mh=m.offsetHeight;var left=Math.max(8,rc.right-mw);var top=rc.bottom+4;if(top+mh>window.innerHeight-8)top=Math.max(8,rc.top-mh-4);m.style.left=left+'px';m.style.top=top+'px';m.style.visibility='visible';}
   }
   function retPager(pages){if(pages<=1)return '';var out='<div style="display:flex;gap:6px;justify-content:center;margin-top:6px;flex-wrap:wrap">';for(var i=1;i<=pages;i++){out+='<button class="ret-pgbtn" data-pg="'+i+'" style="min-width:36px;height:36px;border:1px solid '+(i===RET_MPAGE?'var(--brand)':'var(--line)')+';background:'+(i===RET_MPAGE?'var(--brand)':'#fff')+';color:'+(i===RET_MPAGE?'#fff':'var(--ink)')+';border-radius:9px;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">'+i+'</button>';}return out+'</div>';}
   function retMenuActions(r){var a=[];
