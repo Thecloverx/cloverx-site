@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Xircle · คืนสินค้า / คืนเงิน</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F1F6FC;--surface:#fff;--surface2:#F5F9FE;--ink:#16233F;--muted:#5D6C86;
+  --line:#DEE7F2;--line2:#EBF1F9;--blue:#3065AF;--blue-deep:#22508C;--blue-soft:#E7F0FB;
+  --navy:#1A2B56;--navy-soft:#E9F0FA;--cyan:#2A8EC3;--cyan-soft:#E3F2FA;
+  --danger:#C2453B;--danger-soft:#FBE9E6;--warn:#B07A1E;--warn-soft:#F6ECD6;--ok:#1E9E6A;
+  --shadow:0 1px 2px rgba(26,43,86,.05),0 10px 30px rgba(26,43,86,.09);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1426;--surface:#141E36;--surface2:#101A30;--ink:#E7EEF9;--muted:#95A4C0;
+  --line:#26314D;--line2:#1C2740;--blue:#5B93D6;--blue-deep:#3065AF;--blue-soft:#182746;
+  --navy:#AFC5E8;--navy-soft:#18213E;--cyan:#4FB0DE;--cyan-soft:#12293C;
+  --danger:#E0796C;--danger-soft:#2E1A17;--warn:#E0A94E;--warn-soft:#2A2413;--ok:#4FB98A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.5);
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  font-family:"Prompt","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;font-family:"Inter","Prompt",sans-serif}
+.app{max-width:640px;margin:0 auto;padding:24px 16px 64px}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:grid;place-items:center;color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(48,101,175,.35)}
+.bt{font-weight:700;font-size:17px;letter-spacing:.02em;background:linear-gradient(135deg,#3065AF,#2A8EC3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.bs{font-size:12px;color:var(--muted)}
+.badge{margin-left:auto;font-size:11px;font-weight:600;color:var(--blue-deep);background:var(--blue-soft);border:1px solid color-mix(in srgb,var(--blue) 25%,var(--line));padding:4px 10px;border-radius:999px}
+.steps{display:flex;gap:6px;margin-bottom:20px}
+.step{flex:1;display:flex;flex-direction:column;gap:6px}
+.step .rail{height:4px;border-radius:3px;background:var(--line)}
+.step.done .rail,.step.now .rail{background:var(--blue)}
+.step .lb{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step.now .lb{color:var(--ink);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
+h1{font-size:21px;margin:0 0 6px;text-wrap:balance}
+.lead{color:var(--muted);font-size:14px;margin:0 0 20px}
+.scr{display:none}.scr.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+label.fl{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+.field{margin-bottom:15px}
+input[type=text],input[type=tel],input[type=email]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:var(--surface2);color:var(--ink);transition:.15s}
+input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 18%,transparent);background:var(--surface)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.err{display:none;margin-top:8px;font-size:12.5px;color:var(--danger);font-weight:500;background:var(--danger-soft);padding:9px 12px;border-radius:10px}
+.err.on{display:block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 18px;border-radius:12px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:.15s}
+.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue-deep)}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--muted);border-color:var(--line)}.btn.ghost:hover{color:var(--ink);border-color:var(--muted)}
+.btnrow{display:flex;gap:10px;margin-top:20px}.btnrow .btn{width:auto;flex:1}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.chooser:not(:empty){margin-top:16px;display:flex;flex-direction:column;gap:9px}
+.chtitle{font-size:12.5px;color:var(--muted);font-weight:600}
+.chcard{text-align:left;width:100%;border:1px solid var(--line);background:var(--surface2);border-radius:12px;padding:12px 14px;cursor:pointer;font:inherit}
+.chcard:hover{border-color:var(--blue)}
+.chrow{display:flex;justify-content:space-between;gap:10px}.chid{font-weight:700;font-size:14px}.chtot{font-weight:700;color:var(--blue-deep)}
+.chset{font-size:12.5px;color:var(--muted);margin-top:4px}
+.osum{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
+.orow{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:5px 0}
+.orow .k{color:var(--muted)}.orow .v{font-weight:600;text-align:right}
+.orow.total{border-top:1px dashed var(--line);margin-top:6px;padding-top:11px}.orow.total .v{font-size:17px;color:var(--blue-deep)}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--blue-soft);color:var(--blue-deep)}
+.itemhead{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.03em;margin:18px 0 8px;text-transform:uppercase}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:9px;background:var(--surface)}
+.item .ico{width:38px;height:38px;border-radius:10px;background:var(--blue-soft);display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+.item .nm{font-weight:600;font-size:14px}.item .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.item .qty{margin-left:auto;font-weight:600;font-size:13px;color:var(--muted);white-space:nowrap}
+.choice{display:block;border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;transition:.15s}
+.choice:hover{border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
+.choice .top{display:flex;align-items:center;gap:11px}
+.choice .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;display:grid;place-items:center;transition:.15s}
+.choice .radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--blue);transform:scale(0);transition:.15s}
+.choice .ct{font-weight:700;font-size:15px}
+.choice .cd{font-size:13px;color:var(--muted);margin-top:9px;line-height:1.5}
+.choice .tag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;margin-top:11px}
+.choice[data-v="1"] .tag{background:var(--navy-soft);color:var(--navy)}
+.choice[data-v="2"] .tag{background:var(--cyan-soft);color:var(--cyan)}
+input[name=path]{position:absolute;opacity:0;pointer-events:none}
+input[name=path]:checked + .choice{border-color:var(--blue);background:color-mix(in srgb,var(--blue-soft) 60%,var(--surface))}
+input[name=path]:checked + .choice .radio{border-color:var(--blue)}
+input[name=path]:checked + .choice .radio::after{transform:scale(1)}
+.grouphd{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--blue-deep);margin:14px 0 8px}
+.grouphd>span:first-child{flex:1;min-width:0}
+.grouphd:first-child{margin-top:0}
+.gtag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.gtag.gsplit{background:var(--blue-soft);color:var(--blue-deep)}.gtag.gwhole{background:var(--navy-soft);color:var(--navy)}
+.ritem{margin-bottom:10px}.ritem.dim .parts{opacity:.5}
+.ck{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--surface);transition:.15s}
+.ck:hover{border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
+.ck input{position:absolute;opacity:0}
+.ck .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:0 0 auto;display:grid;place-items:center;transition:.15s}
+.ck .box svg{width:13px;height:13px;stroke:#fff;stroke-width:3;fill:none;opacity:0}
+.ck input:checked ~ .box{background:var(--blue);border-color:var(--blue)}.ck input:checked ~ .box svg{opacity:1}
+.ck .info{flex:1;min-width:0}.ck .info .nm{font-weight:600;font-size:14px;display:block}.ck .info .sub{font-size:12px;color:var(--muted);display:block;margin-top:1px}
+.ck .amt{font-weight:700;font-size:14px;color:var(--navy);white-space:nowrap}
+.ck.checked{border-color:color-mix(in srgb,var(--blue) 45%,var(--line));background:color-mix(in srgb,var(--blue-soft) 40%,var(--surface))}
+.parts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:9px 12px 2px}
+.parts .ptitle{font-size:11px;font-weight:700;color:var(--muted)}
+.parts .chip{font-size:11.5px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:3px 9px}
+.parts .plink{flex-basis:100%;font-size:11.5px;color:var(--navy);font-weight:600;margin-top:2px}
+.selall{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:2px 0 4px;cursor:pointer}
+.selall input{width:15px;height:15px;accent-color:var(--blue)}
+.refund{background:linear-gradient(160deg,var(--navy-soft),var(--surface));border:1px solid color-mix(in srgb,var(--navy) 30%,var(--line));border-radius:14px;padding:16px;margin-top:10px}
+.refund .rk{font-size:12.5px;color:var(--muted);font-weight:600}
+.refund .rv{font-size:28px;font-weight:700;color:var(--navy);margin-top:3px}
+.refund .rn{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+input[name=pay]{position:absolute;opacity:0;pointer-events:none}
+.payopt{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.payopt:hover{border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
+.payopt .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;display:grid;place-items:center}
+.payopt .radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--blue);transform:scale(0);transition:.15s}
+.payopt .pi{font-size:20px}.payopt .pt{display:flex;flex-direction:column}.payopt .pt b{font-size:14px}.payopt .pt .pd{font-size:12px;color:var(--muted);margin-top:1px}
+input[name=pay]:checked + .payopt{border-color:var(--blue);background:color-mix(in srgb,var(--blue-soft) 55%,var(--surface))}
+input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay]:checked + .payopt .radio::after{transform:scale(1)}
+.slipbox{display:none}.slipbox.on{display:block;animation:fade .2s ease}
+.upload{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:12px;padding:15px;cursor:pointer;background:var(--surface2)}
+.upload.filled{border-style:solid;border-color:var(--blue);background:var(--blue-soft)}
+.upload input{position:absolute;opacity:0;width:0;height:0}.upload .up-ic{font-size:20px}.upload .up-tx{font-size:13.5px;color:var(--muted)}
+.upload.filled .up-tx{color:var(--blue-deep);font-weight:600}
+.addr{border:1px solid var(--line);border-radius:13px;padding:15px 16px;background:var(--surface2)}
+.addr .an{font-weight:700;font-size:14px}.addr .aa{font-size:13px;margin-top:6px;line-height:1.55}.addr .ap{font-size:13px;margin-top:8px;color:var(--muted)}.addr .ap b{color:var(--ink)}
+.addr a.map{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--blue-deep);text-decoration:none;background:var(--blue-soft);padding:6px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--blue) 25%,var(--line))}
+.banner{display:flex;gap:11px;padding:14px 15px;border-radius:13px;font-size:13px;line-height:1.55;margin:16px 0}
+.banner .bi{font-size:18px;flex:0 0 auto}
+.banner.warn{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line))}
+.banner.info{background:var(--cyan-soft);border:1px solid color-mix(in srgb,var(--cyan) 25%,var(--line))}
+.deadline{font-weight:700;color:var(--warn)}.deadline.ind{color:var(--cyan)}
+.done{text-align:center;padding:8px 0}
+.check{width:64px;height:64px;border-radius:50%;background:var(--blue-soft);display:grid;place-items:center;margin:6px auto 16px}
+.check svg{width:32px;height:32px;stroke:var(--blue);stroke-width:2.5;fill:none}
+.refno{display:inline-block;font-family:"Inter";font-weight:700;font-size:17px;background:var(--surface2);border:1px dashed var(--line);border-radius:10px;padding:9px 16px;margin:8px 0 4px}
+.steps-next{text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-top:18px}
+.steps-next h3{font-size:14px;margin:0 0 10px}.steps-next ol{margin:0;padding-left:20px}.steps-next li{margin:6px 0;font-size:13.5px}
+.footnote{font-size:11.5px;color:var(--muted);text-align:center;margin-top:22px;line-height:1.5}
+@media (max-width:400px){.app{padding:18px 12px 48px}.card{padding:18px}h1{font-size:19px}.step .lb{font-size:10px}}
+@media (max-width:340px){.card{padding:15px}.btnrow{flex-direction:column}.btnrow .btn{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><div class="logo">X</div><div><div class="bt">Xircle</div><div class="bs">ระบบคืนสินค้า / คืนเงิน · Pre-Order</div></div><span class="badge">Return &amp; Refund</span></div>
+  <div class="steps" id="steps">
+    <div class="step now"><div class="rail"></div><div class="lb">1 · ค้นหาคำสั่งซื้อ</div></div>
+    <div class="step"><div class="rail"></div><div class="lb">2 · คำสั่งซื้อ</div></div>
+    <div class="step"><div class="rail"></div><div class="lb">3 · เลือกดำเนินการ</div></div>
+    <div class="step"><div class="rail"></div><div class="lb">4 · ยืนยัน</div></div>
+  </div>
+  <div class="card">
+    <div class="scr on" id="s1">
+      <h1>ตรวจสอบคำสั่งซื้อของคุณ</h1>
+      <p class="lead">กรอกข้อมูลเพื่อค้นหาคำสั่งซื้อ Pre-Order ของท่าน แล้วเลือกดำเนินการคืนสินค้า / คืนเงิน</p>
+      <div class="field"><label class="fl" for="f_name">ชื่อ-นามสกุล</label><input type="text" id="f_name" placeholder="เช่น สมชาย ใจดี" autocomplete="name"></div>
+      <div class="field"><label class="fl" for="f_phone">เบอร์โทรติดต่อ</label><input type="tel" id="f_phone" placeholder="08X-XXX-XXXX" autocomplete="tel"></div>
+      <div class="field"><label class="fl" for="f_email">อีเมล</label><input type="email" id="f_email" placeholder="you@email.com" autocomplete="email"></div>
+      <div class="err" id="e_lookup">ไม่พบคำสั่งซื้อจากข้อมูลนี้ — กรุณาตรวจเบอร์โทร/อีเมลอีกครั้ง หรือติดต่อเจ้าหน้าที่ 065 514 6576</div>
+      <button class="btn primary" id="btnLookup">ค้นหาคำสั่งซื้อ</button>
+      <div class="chooser" id="chooser"></div>
+    </div>
+    <div class="scr" id="s2">
+      <h1>คำสั่งซื้อของคุณ</h1>
+      <p class="lead">ตรวจสอบรายการและเลือกวิธีดำเนินการ</p>
+      <div class="osum" id="osum"></div>
+      <div class="itemhead">รายการสินค้าในคำสั่งซื้อ</div>
+      <div id="itemlist"></div>
+      <div class="itemhead" style="margin-top:22px">เลือกวิธีดำเนินการ</div>
+      <input type="radio" name="path" id="p1" value="1">
+      <label class="choice" data-v="1" for="p1"><div class="top"><span class="radio"></span><span class="ct">กรณีที่ 1 · รับทราบ ประสงค์การคืนสินค้า</span></div><div class="cd">ลูกค้าจะเข้าสู่รายการการคืนเงิน และเลือกรายการที่ต้องการคืนตามข้อมูลที่มีการสั่งซื้อ</div><span class="tag">📦 ส่งคืนภายใน 3 วันทำการหลังยืนยัน</span></label>
+      <input type="radio" name="path" id="p2" value="2">
+      <label class="choice" data-v="2" for="p2"><div class="top"><span class="radio"></span><span class="ct">กรณีที่ 2 · รับทราบ ประสงค์รอการปรับปรุง Application</span></div><div class="cd">ลูกค้ายินดีรอการพัฒนาระบบ บริษัทขอเวลาปรับปรุง Application ให้ดียิ่งขึ้น — จะไม่เข้าสู่หน้าการคืนเงิน</div><span class="tag">⏳ รอถึง 31 ต.ค. 2569</span></label>
+      <div class="btnrow"><button class="btn ghost" onclick="go(1)">ย้อนกลับ</button><button class="btn primary" id="btnPath" disabled onclick="toStep3()">ถัดไป</button></div>
+    </div>
+    <div class="scr" id="s3a">
+      <h1>เลือกรายการที่ต้องการคืน</h1>
+      <p class="lead">ติ๊กรายการที่ต้องการส่งคืน · Triple Set แยกคืนรายชิ้นได้ · เซตอื่นคืนทั้งเซต</p>
+      <div id="returnItems"></div>
+      <div class="refund"><div class="rk">ยอดเงินคืนโดยประมาณ</div><div class="rv num" id="refundAmt">฿ 0</div><div class="rn">* ยอดโดยประมาณจากราคาที่ชำระ เจ้าหน้าที่จะยืนยันยอดสุทธิตามเงื่อนไขอีกครั้ง</div></div>
+      <div class="itemhead" style="margin-top:22px">ช่องทางการชำระเงินเดิม</div>
+      <p class="lead" style="margin:-4px 0 12px;font-size:13px">โปรดเลือกช่องทางที่ท่านใช้ชำระ เพื่อให้บริษัทคืนเงินได้ถูกต้อง</p>
+      <input type="radio" name="pay" id="pay_card" value="card"><label class="payopt" for="pay_card"><span class="radio"></span><span class="pi">💳</span><span class="pt"><b>ชำระผ่านบัตรเครดิต</b><span class="pd">คืนเงินเข้าบัตรใบเดิมที่ใช้ชำระ</span></span></label>
+      <input type="radio" name="pay" id="pay_bank" value="bank"><label class="payopt" for="pay_bank"><span class="radio"></span><span class="pi">🏦</span><span class="pt"><b>ชำระผ่านบัญชีธนาคาร</b><span class="pd">ต้องแนบสลิปการโอนเงินเพื่อยืนยันการชำระ</span></span></label>
+      <div id="slipBox" class="slipbox"><div class="itemhead" style="margin-top:4px">แนบสลิปการโอนเงิน <span style="color:var(--danger)">*</span></div>
+        <label class="upload" id="upLabel"><input type="file" id="slipFile" accept="image/*"><span class="up-ic">📎</span><span class="up-tx" id="upTx">แตะเพื่อเลือกไฟล์สลิป (รูปภาพ)</span></label></div>
+      <div class="itemhead" style="margin-top:22px">ที่อยู่สำหรับส่งคืนสินค้า</div>
+      <div class="addr" id="addrBox"></div>
+      <div class="banner warn"><span class="bi">📦</span><div>รบกวนคุณลูกค้าส่งสินค้าคืนภายใน <span class="deadline">3 วันทำการหลังยืนยันข้อมูล</span><br>เมื่อทางบริษัทฯ ได้รับสินค้าเรียบร้อยแล้ว จะเข้าสู่กระบวนการคืนเงินในลำดับถัดไป โดยการคืนเงินของท่านจะเป็นไปตามเงื่อนไขของธนาคาร<br><br>ขออภัยเป็นอย่างสูง และขอขอบพระคุณทุกท่านที่ไว้วางใจค่ะ</div></div>
+      <div class="btnrow"><button class="btn ghost" onclick="go(2)">ย้อนกลับ</button><button class="btn primary" id="btnConfirm1" disabled onclick="submitReturn()">ยืนยันคำขอคืนสินค้า</button></div>
+    </div>
+    <div class="scr" id="s3b">
+      <h1>ยืนยันการรอปรับปรุงระบบ</h1>
+      <p class="lead">ขอบคุณที่ยินดีรอการพัฒนา Application ของเรา</p>
+      <div class="banner info"><span class="bi">⏳</span><div>บริษัทขอเวลาในการปรับปรุงและพัฒนา Application จนถึง <span class="deadline ind">วันที่ 31 ตุลาคม 2569</span> เพื่อยกระดับประสิทธิภาพและเสถียรภาพของระบบให้ดียิ่งขึ้น</div></div>
+      <div class="osum" id="waitsum"></div>
+      <div class="banner info" style="background:var(--surface2);border-color:var(--line)"><span class="bi">✅</span><div>ท่านจะยังได้รับสินค้าตามคำสั่งซื้อเดิม และเราจะแจ้งความคืบหน้าเมื่อระบบพร้อมใช้งาน หากภายหลังเปลี่ยนใจ ยังขอคืนสินค้าได้ตามเงื่อนไขบริษัท</div></div>
+      <div class="btnrow"><button class="btn ghost" onclick="go(2)">ย้อนกลับ</button><button class="btn primary" id="btnConfirm2" onclick="submitWait()">ยืนยันรอการปรับปรุง</button></div>
+    </div>
+    <div class="scr" id="s4">
+      <div class="done"><div class="check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h1 id="doneTitle">ส่งคำขอเรียบร้อยแล้ว</h1><p class="lead" id="doneLead" style="margin-bottom:10px"></p>
+        <div class="refno num" id="refNo">—</div><div class="steps-next" id="nextSteps"></div></div>
+      <div class="btnrow"><button class="btn primary" onclick="restart()">เสร็จสิ้น</button></div>
+    </div>
+  </div>
+  <div class="footnote">CloverX (Thailand) Co., Ltd. · Xircle Pre-Order · Return &amp; Refund</div>
+</div>
+<script>
+var RETURN_ADDR={name:'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด',addr:'762/84 หมู่บ้าน เดอะปาล์ม (ภัสสร 37) ซอย พัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250',tel:'065 514 6576',map:'https://www.google.co.th/maps/search/762%2F84+%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99+%E0%B9%80%E0%B8%94%E0%B8%AD%E0%B8%B0%E0%B8%9B%E0%B8%B2%E0%B8%A5%E0%B9%8C%E0%B8%A1+%28%E0%B8%A0%E0%B8%B1%E0%B8%AA%E0%B8%AA%E0%B8%A3+37%29'};
+var CUR=null,PATH=null,PAY=null,SLIP=null;
+var digits=function(s){return (s||'').replace(/\D/g,'');};
+var baht=function(n){return '฿ '+(Number(n)||0).toLocaleString('en-US');};
+var stepEls=[].slice.call(document.querySelectorAll('#steps .step'));
+function setStep(n){stepEls.forEach(function(e,i){e.classList.toggle('done',i<n-1);e.classList.toggle('now',i===n-1);});}
+function show(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');window.scrollTo({top:0,behavior:'smooth'});}
+function go(step){if(step===1){setStep(1);show('s1');}else if(step===2){setStep(2);show('s2');}}
+function partsFor(key){
+  if(key==='band-black'||key==='band-cream') return ['สาย Standless','สาย Nylon'];
+  if(key==='routinex') return ['Flavor+ (ของแถม)'];
+  return [];
+}
+function iconFor(key){if(key==='scale')return '⚖️';if(key==='routinex')return '📦';if(key.indexOf('band')===0)return '⌚';return '🎁';}
+document.getElementById('btnLookup').addEventListener('click',lookup);
+['f_phone','f_email','f_name'].forEach(function(id){document.getElementById(id).addEventListener('keydown',function(e){if(e.key==='Enter')lookup();});});
+function lookup(){
+  var ph=digits(document.getElementById('f_phone').value), em=document.getElementById('f_email').value.trim().toLowerCase();
+  var err=document.getElementById('e_lookup'); err.classList.remove('on'); document.getElementById('chooser').innerHTML='';
+  if(!ph&&!em){err.textContent='กรุณากรอกเบอร์โทรหรืออีเมล';err.classList.add('on');return;}
+  var btn=document.getElementById('btnLookup'); btn.innerHTML='<span class="spin"></span> กำลังค้นหา...'; btn.disabled=true;
+  fetch('/api/returns/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,email:em})})
+    .then(function(r){return r.json();}).then(function(j){
+      btn.innerHTML='ค้นหาคำสั่งซื้อ'; btn.disabled=false;
+      var orders=(j&&j.orders)||[];
+      if(!orders.length){err.textContent='ไม่พบคำสั่งซื้อจากข้อมูลนี้ — กรุณาตรวจเบอร์โทร/อีเมลอีกครั้ง หรือติดต่อเจ้าหน้าที่ 065 514 6576';err.classList.add('on');return;}
+      if(orders.length===1)pick(orders[0]); else renderChooser(orders);
+    }).catch(function(){btn.innerHTML='ค้นหาคำสั่งซื้อ';btn.disabled=false;err.textContent='เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';err.classList.add('on');});
+}
+function renderChooser(list){
+  var c=document.getElementById('chooser');
+  c.innerHTML='<div class="chtitle">พบ '+list.length+' คำสั่งซื้อ — โปรดเลือกที่ต้องการ</div>';
+  list.forEach(function(o){
+    var sets=o.sets.map(function(s){return s.nm;}).join(' · ');
+    var el=document.createElement('button');el.className='chcard';
+    el.innerHTML='<div class="chrow"><span class="chid">'+o.id+'</span><span class="chtot num">'+baht(o.total)+'</span></div><div class="chset">'+sets+'</div>';
+    el.addEventListener('click',function(){document.getElementById('chooser').innerHTML='';pick(o);});
+    c.appendChild(el);
+  });
+}
+function pick(o){CUR=o;renderOrder(o);setStep(2);show('s2');}
+function payLabel(p){return p==='card'?'บัตรเครดิต':(p==='promptpay'?'PromptPay QR':(p==='bank'?'โอนธนาคาร':'-'));}
+function renderOrder(o){
+  document.getElementById('osum').innerHTML=
+    row('เลขคำสั่งซื้อ',o.id)+row('ชื่อผู้สั่งซื้อ',o.name||'-')+
+    row('ช่องทางการชำระ',payLabel(o.pay))+
+    (o.refundedTotal>0?row('คืนเงินแล้ว',baht(o.refundedTotal)):'')+
+    '<div class="orow total"><span class="k">ยอดชำระทั้งหมด</span><span class="v num">'+baht(o.total)+'</span></div>';
+  var items=o.sets.map(function(s){
+    var partsTxt=s.comps.reduce(function(a,c){return a.concat([c.label]).concat(partsFor(c.key));},[]).join(' · ');
+    return '<div class="item"><span class="ico">'+iconFor((s.comps[0]||{}).key||'')+'</span><div style="flex:1;min-width:0"><div class="nm">'+s.nm+'</div><div class="sub">ประกอบด้วย: '+partsTxt+'</div></div></div>';
+  });
+  document.getElementById('itemlist').innerHTML=items.join('')||'<div class="hint">ไม่พบรายการสินค้า</div>';
+  PATH=null;document.querySelectorAll('input[name=path]').forEach(function(r){r.checked=false;});document.getElementById('btnPath').disabled=true;
+}
+function row(k,v){return '<div class="orow"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+document.querySelectorAll('input[name=path]').forEach(function(r){r.addEventListener('change',function(){PATH=r.value;document.getElementById('btnPath').disabled=false;});});
+function toStep3(){setStep(3);if(PATH==='1'){renderReturn();show('s3a');}else{renderWait();show('s3b');}}
+function returnGroups(o){
+  return o.sets.map(function(s){
+    if(s.splittable){
+      return {title:'เซต · '+s.nm,note:'แยกคืนรายชิ้นได้',split:true,comps:s.comps.map(function(c){
+        return {name:c.label,ic:iconFor(c.key),price:c.est,key:c.key,parts:partsFor(c.key),linkFlavor:c.key==='routinex',sub:'คืนเฉพาะรายการนี้'};})};
+    }
+    var price=s.comps.reduce(function(a,c){return a+(c.est||0);},0);
+    var parts=s.comps.reduce(function(a,c){return a.concat([c.label]).concat(partsFor(c.key));},[]);
+    var flav=s.comps.some(function(c){return c.key==='routinex';});
+    return {title:'เซต · '+s.nm,note:'คืนทั้งเซตเท่านั้น',split:false,comps:[{name:s.nm,ic:iconFor((s.comps[0]||{}).key||''),price:price,key:'set',parts:parts,linkFlavor:flav,sub:'คืนทั้งเซต — แยกคืนไม่ได้'}]};
+  });
+}
+function renderReturn(){
+  var o=CUR,box=document.getElementById('returnItems');box.innerHTML='';
+  var groups=returnGroups(o);
+  if(!groups.length){box.innerHTML='<div class="hint">ไม่พบรายการที่คืนได้</div>';}
+  groups.forEach(function(g){
+    var hd=document.createElement('div');hd.className='grouphd';
+    hd.innerHTML='<span>'+g.title+'</span><span class="gtag '+(g.split?'gsplit':'gwhole')+'">'+g.note+'</span>';box.appendChild(hd);
+    g.comps.forEach(function(c){
+      var wrap=document.createElement('div');wrap.className='ritem';
+      var el=document.createElement('label');el.className='ck checked';
+      el.innerHTML='<input type="checkbox" checked data-price="'+c.price+'" data-name="'+c.name.replace(/"/g,'&quot;')+'" data-key="'+c.key+'"><span class="box"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span><span class="info"><span class="nm">'+c.ic+' '+c.name+'</span><span class="sub">'+c.sub+'</span></span><span class="amt num">'+baht(c.price)+'</span>';
+      wrap.appendChild(el);
+      if(c.parts&&c.parts.length){var d=document.createElement('div');d.className='parts';d.innerHTML='<span class="ptitle">ประกอบด้วย</span>'+c.parts.map(function(x){return '<span class="chip">'+x+'</span>';}).join('')+(c.linkFlavor?'<div class="plink">* คืน RoutineX ต้องส่งคืน Flavor+ ที่แถมมาด้วย</div>':'');wrap.appendChild(d);}
+      var cb=el.querySelector('input');cb.addEventListener('change',function(){el.classList.toggle('checked',cb.checked);wrap.classList.toggle('dim',!cb.checked);updateReturn();});
+      box.appendChild(wrap);
+    });
+  });
+  var sa=document.createElement('label');sa.className='selall';sa.innerHTML='<input type="checkbox" id="selAll" checked> เลือกคืนทั้งหมด (คืนเต็มจำนวน)';box.appendChild(sa);
+  sa.querySelector('input').addEventListener('change',function(e){document.querySelectorAll('#returnItems .ck input').forEach(function(cb){cb.checked=e.target.checked;cb.closest('.ck').classList.toggle('checked',e.target.checked);var w=cb.closest('.ritem');if(w)w.classList.toggle('dim',!e.target.checked);});updateReturn();});
+  var note=document.createElement('div');note.className='hint';note.style.marginTop='4px';note.innerHTML='* จำนวนสาย (Standless / Nylon) ที่ได้รับจริงอาจต่างกันในบางท่าน — เจ้าหน้าที่จะยืนยันตามข้อมูลการจัดส่ง';box.appendChild(note);
+  PAY=null;SLIP=null;document.querySelectorAll('input[name=pay]').forEach(function(r){r.checked=false;});
+  document.getElementById('slipBox').classList.remove('on');document.getElementById('upLabel').classList.remove('filled');
+  document.getElementById('upTx').textContent='แตะเพื่อเลือกไฟล์สลิป (รูปภาพ)';document.getElementById('slipFile').value='';
+  document.getElementById('addrBox').innerHTML='<div class="an">📍 '+RETURN_ADDR.name+'</div><div class="aa">'+RETURN_ADDR.addr+'</div><div class="ap">โทร <b>'+RETURN_ADDR.tel+'</b></div><a class="map" href="'+RETURN_ADDR.map+'" target="_blank" rel="noopener">🗺️ เปิดแผนที่ Google Maps</a>';
+  updateReturn();
+}
+document.querySelectorAll('input[name=pay]').forEach(function(r){r.addEventListener('change',function(){PAY=r.value;document.getElementById('slipBox').classList.toggle('on',PAY==='bank');updateReturn();});});
+document.getElementById('slipFile').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];var up=document.getElementById('upLabel');
+  if(f){var rd=new FileReader();rd.onload=function(){SLIP=rd.result;up.classList.add('filled');document.getElementById('upTx').textContent='✅ '+f.name;updateReturn();};rd.readAsDataURL(f);}
+  else{SLIP=null;up.classList.remove('filled');updateReturn();}
+});
+function updateReturn(){
+  var boxes=[].slice.call(document.querySelectorAll('#returnItems .ck input'));
+  var sum=0;boxes.forEach(function(cb){if(cb.checked)sum+=+cb.dataset.price;});
+  document.getElementById('refundAmt').textContent=baht(sum);
+  var sa=document.getElementById('selAll');if(sa)sa.checked=boxes.length>0&&boxes.every(function(cb){return cb.checked;});
+  var ok=sum>0&&PAY&&(PAY!=='bank'||SLIP);
+  document.getElementById('btnConfirm1').disabled=!ok;
+}
+function renderWait(){var o=CUR;document.getElementById('waitsum').innerHTML=row('เลขคำสั่งซื้อ',o.id)+row('ชื่อผู้สั่งซื้อ',o.name||'-')+'<div class="orow total"><span class="k">ยอดชำระทั้งหมด</span><span class="v num">'+baht(o.total)+'</span></div>';}
+function selectedItems(){return [].slice.call(document.querySelectorAll('#returnItems .ck input')).filter(function(cb){return cb.checked;}).map(function(cb){return {name:cb.dataset.name,key:cb.dataset.key,price:+cb.dataset.price};});}
+function submitReturn(){
+  var btn=document.getElementById('btnConfirm1');btn.innerHTML='<span class="spin"></span> กำลังส่งคำขอ...';btn.disabled=true;
+  var payTxt=PAY==='bank'?'โอนผ่านบัญชีธนาคาร (แนบสลิปแล้ว)':'บัตรเครดิต';
+  var body={orderId:CUR.id,name:document.getElementById('f_name').value.trim(),phone:digits(document.getElementById('f_phone').value),email:document.getElementById('f_email').value.trim().toLowerCase(),choice:'return',channel:PAY,selected:selectedItems(),slip:(PAY==='bank'?SLIP:null)};
+  fetch('/api/returns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(function(j){
+      if(!j||!j.ok){btn.innerHTML='ยืนยันคำขอคืนสินค้า';btn.disabled=false;alert('ส่งคำขอไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อเจ้าหน้าที่');return;}
+      setStep(4);
+      document.getElementById('doneTitle').textContent='รับคำขอคืนสินค้าแล้ว';
+      document.getElementById('doneLead').innerHTML='ยอดเงินคืนโดยประมาณ <b style="color:var(--navy)">'+baht(j.amount)+'</b> · '+payTxt;
+      document.getElementById('refNo').textContent=j.rid;
+      document.getElementById('nextSteps').innerHTML='<h3>ขั้นตอนถัดไป</h3><ol><li>เจ้าหน้าที่จะติดต่อกลับเพื่อยืนยันข้อมูลและยอดคืน</li><li>ส่งคืนสินค้ามาที่ <b>'+RETURN_ADDR.name+'</b><br><span style="color:var(--muted)">'+RETURN_ADDR.addr+' · โทร '+RETURN_ADDR.tel+'</span></li><li>ส่งคืน<b>ภายใน 3 วันทำการหลังยืนยันข้อมูล</b> — เมื่อบริษัทได้รับสินค้าเรียบร้อย จะเข้าสู่กระบวนการคืนเงิน โดยเป็นไปตามเงื่อนไขของธนาคาร</li></ol><div style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.6">ขออภัยเป็นอย่างสูง และขอขอบพระคุณทุกท่านที่ไว้วางใจค่ะ</div>';
+      show('s4');
+    }).catch(function(){btn.innerHTML='ยืนยันคำขอคืนสินค้า';btn.disabled=false;alert('เชื่อมต่อไม่สำเร็จ');});
+}
+function submitWait(){
+  var btn=document.getElementById('btnConfirm2');btn.innerHTML='<span class="spin"></span> กำลังบันทึก...';btn.disabled=true;
+  var body={orderId:CUR.id,name:document.getElementById('f_name').value.trim(),phone:digits(document.getElementById('f_phone').value),email:document.getElementById('f_email').value.trim().toLowerCase(),choice:'wait'};
+  fetch('/api/returns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(function(j){
+      if(!j||!j.ok){btn.innerHTML='ยืนยันรอการปรับปรุง';btn.disabled=false;alert('บันทึกไม่สำเร็จ');return;}
+      setStep(4);
+      document.getElementById('doneTitle').textContent='บันทึกการรอปรับปรุงแล้ว';
+      document.getElementById('doneLead').textContent='ขอบคุณที่ยินดีรอการพัฒนาระบบของเรา';
+      document.getElementById('refNo').textContent=j.rid;
+      document.getElementById('nextSteps').innerHTML='<h3>สิ่งที่จะเกิดขึ้นต่อไป</h3><ol><li>ท่านจะได้รับสินค้าตามคำสั่งซื้อเดิม</li><li>บริษัทพัฒนา Application ให้เสร็จภายใน <b>31 ต.ค. 2569</b></li><li>เราจะแจ้งความคืบหน้าผ่านเบอร์/อีเมลที่ท่านให้ไว้</li></ol>';
+      show('s4');
+    }).catch(function(){btn.innerHTML='ยืนยันรอการปรับปรุง';btn.disabled=false;alert('เชื่อมต่อไม่สำเร็จ');});
+}
+function restart(){['f_name','f_phone','f_email'].forEach(function(id){document.getElementById(id).value='';});CUR=null;PATH=null;PAY=null;SLIP=null;document.getElementById('chooser').innerHTML='';go(1);}
+// deep link ?order=PO-xxxx (จาก QR/ลิงก์รายออเดอร์ที่แอดมินส่ง) — ยังต้องกรอกเบอร์/อีเมลเพื่อยืนยันตัวตน
+(function(){try{var q=new URLSearchParams(location.search);var oid=q.get('order');if(oid){var h=document.querySelector('#s1 .lead');if(h)h.innerHTML='คำสั่งซื้อ <b>'+oid.replace(/[<>&]/g,'')+'</b> — กรุณายืนยันตัวตนด้วยเบอร์โทรหรืออีเมลที่ใช้สั่งซื้อ';}}catch(e){}})();
+</script>
+</body>
+</html>

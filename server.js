@@ -653,6 +653,86 @@ app.post('/api/orders/:id/refund', (req, res) => {
   }
 });
 
+// =====================================================================
+// Return & Refund — customer return requests + admin queue
+// =====================================================================
+const RET = path.join(DATA, 'returns.json');
+function readReturns() { try { return JSON.parse(fs.readFileSync(RET, 'utf8')); } catch (e) { return []; } }
+function writeReturns(d) { try { fs.mkdirSync(DATA, { recursive: true }); } catch (e) {} try { fs.writeFileSync(RET, JSON.stringify(d, null, 2)); } catch (e) {} }
+const RET_W = { 'band-cream': 4590, 'band-black': 4590, 'scale': 1290, 'routinex': 7490 };
+function digitsOnly(s) { return String(s || '').replace(/\D/g, ''); }
+// แตกออเดอร์เป็นเซต/ชิ้น + ประมาณยอดคืนต่อชิ้น (เฉลี่ยจากยอดรวมตามน้ำหนักราคาอ้างอิง)
+function returnSets(o) {
+  var comps = [];
+  var sets = (Array.isArray(o.items) ? o.items : []).map(function (it, si) {
+    var nm = String(it && it.nm || '');
+    var ks = itemComponents(nm);
+    var splittable = /TRIPLE/i.test(nm);
+    var cs = ks.map(function (k) { comps.push({ si: si, key: k }); return { key: k, label: STOCK_LABELS[k] || k }; });
+    return { nm: nm, splittable: splittable, comps: cs };
+  });
+  var wsum = comps.reduce(function (a, c) { return a + (RET_W[c.key] || 1); }, 0) || 1;
+  var total = Number(o.total) || 0;
+  var alloc = comps.map(function (c) { return Math.floor(total * (RET_W[c.key] || 1) / wsum); });
+  var rem = total - alloc.reduce(function (a, b) { return a + b; }, 0);
+  var ord = comps.map(function (_, i) { return i; }).sort(function (a, b) { return (RET_W[comps[b].key] || 1) - (RET_W[comps[a].key] || 1); });
+  for (var k = 0; k < rem; k++) alloc[ord[k % ord.length]]++;
+  var ci = 0; sets.forEach(function (s) { s.comps.forEach(function (c) { c.est = alloc[ci++] || 0; }); });
+  return sets;
+}
+function pubOrder(o) {
+  return { id: o.id, at: o.at, name: o.name || '', total: Number(o.total) || 0, pay: o.pay || '', ship: o.ship || '', status: o.status || '', refundedTotal: Number(o.refundedTotal) || 0, sets: returnSets(o) };
+}
+function ownsOrder(o, ph, em) {
+  var op = digitsOnly(o.phone), oe = String(o.email || '').trim().toLowerCase();
+  return (ph && op && op === ph) || (em && oe && oe === em);
+}
+// ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล) — คืนเฉพาะออเดอร์ที่ตรง
+app.post('/api/returns/lookup', function (req, res) {
+  var b = req.body || {}; var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
+  if (!ph && !em) return res.status(400).json({ ok: false, error: 'need_phone_or_email' });
+  var matches = read().filter(function (o) { return ownsOrder(o, ph, em); });
+  res.json({ ok: true, orders: matches.map(pubOrder) });
+});
+// ลูกค้ายื่นคำขอคืนสินค้า/รอปรับปรุง
+app.post('/api/returns', function (req, res) {
+  var b = req.body || {};
+  var list = read(); var o = list.find(function (x) { return x.id === b.orderId; });
+  if (!o) return res.status(404).json({ ok: false, error: 'order_not_found' });
+  var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
+  if (!ownsOrder(o, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  var choice = b.choice === 'wait' ? 'wait' : 'return';
+  var channel = b.channel === 'bank' ? 'bank' : 'card';
+  var items = (Array.isArray(b.selected) ? b.selected : []).map(function (s) { return { name: String(s.name || '').slice(0, 120), key: String(s.key || '').slice(0, 40), price: Number(s.price) || 0 }; });
+  var amount = items.reduce(function (a, it) { return a + it.price; }, 0);
+  var slip = null;
+  if (choice === 'return' && channel === 'bank' && typeof b.slip === 'string' && /^data:image\//.test(b.slip)) {
+    var m = b.slip.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/);
+    if (m) { try { var ext = m[1].toLowerCase().replace('jpeg', 'jpg').replace('svg+xml', 'svg'); var fn = 'RS-' + o.id + '-' + Date.now() + '.' + ext; fs.writeFileSync(path.join(SLIPS, fn), Buffer.from(m[2], 'base64')); slip = '/api/slips/' + fn; } catch (e) {} }
+  }
+  var rlist = readReturns();
+  var seq = (rlist.length ? Math.max.apply(null, rlist.map(function (x) { return x.seq || 0; })) : 0) + 1;
+  var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
+  var rid = (choice === 'wait' ? 'WAIT-' : 'RMA-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
+  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: o.phone || '', email: o.email || '', choice: choice, channel: channel, items: items, amount: amount, slip: slip, status: 'pending' };
+  rlist.unshift(rec); writeReturns(rlist);
+  res.json({ ok: true, rid: rid, amount: amount, choice: choice });
+});
+// แอดมิน: รายการคำขอคืนทั้งหมด
+app.get('/api/returns', function (req, res) { res.json({ ok: true, returns: readReturns() }); });
+// แอดมิน: อัปเดตสถานะคำขอ (อนุมัติ/ปฏิเสธ/คืนเงินแล้ว)
+app.post('/api/returns/:rid/status', function (req, res) {
+  var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  var to = b.status; if (['pending', 'approved', 'rejected', 'refunded'].indexOf(to) < 0) return res.status(400).json({ ok: false, error: 'bad_status' });
+  r.status = to;
+  if (typeof b.amount === 'number') r.approvedAmount = b.amount;
+  if (typeof b.note === 'string') r.note = b.note.slice(0, 500);
+  r.actedAt = new Date().toISOString(); r.actor = (b.actor || 'staff').slice(0, 60);
+  writeReturns(rlist);
+  res.json({ ok: true, ret: r });
+});
+
 // ---- ADMIN: delete an order (guarded by ADMIN_KEY) ----
 app.delete("/api/orders/:id", (req, res) => {
   const list = read();
