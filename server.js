@@ -912,12 +912,13 @@ function httpsJson(host, pathStr, method, headers, bodyObj) {
 // ขอ temp token จาก static key (แคชไว้ ใช้ซ้ำ ~6 ชม.)
 function tpToken(force) {
   return new Promise(function (resolve) {
-    if (!trackConfigured()) { resolve(''); return; }
-    if (!force && _tpTok.token && Date.now() < _tpTok.exp) { resolve(_tpTok.token); return; }
-    httpsJson(TP_HOST, '/post/api/v1/authenticate/token', 'POST', { 'Authorization': 'Token ' + process.env.THAILANDPOST_KEY }, {}).then(function (r) {
+    if (!trackConfigured()) { resolve({ token: '', http: 0 }); return; }
+    if (!force && _tpTok.token && Date.now() < _tpTok.exp) { resolve({ token: _tpTok.token, http: 200 }); return; }
+    var key = String(process.env.THAILANDPOST_KEY || '').trim(); // กันช่องว่าง/ขึ้นบรรทัดใหม่ติดมาตอน paste
+    httpsJson(TP_HOST, '/post/api/v1/authenticate/token', 'POST', { 'Authorization': 'Token ' + key }, null).then(function (r) {
       var tok = r.ok && r.body && (r.body.token || r.body.access_token || (r.body.response && r.body.response.token));
-      if (tok) { _tpTok.token = tok; _tpTok.exp = Date.now() + 6 * 60 * 60 * 1000; resolve(tok); }
-      else resolve('');
+      if (tok) { _tpTok.token = tok; _tpTok.exp = Date.now() + 6 * 60 * 60 * 1000; resolve({ token: tok, http: r.http || 0 }); }
+      else resolve({ token: '', http: r.http || 0, err: r.error || '', raw: String(r.raw || (r.body ? JSON.stringify(r.body) : '')).slice(0, 140) });
     });
   });
 }
@@ -965,9 +966,9 @@ function refreshTrack(r, force) {
       r.trackStatus = out; resolve(out);
     }
     function doTrack(retry) {
-      tpToken(false).then(function (tok) {
-        if (!tok) { finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString() }); return; }
-        httpsJson(TP_HOST, '/post/api/v1/track', 'POST', { 'Authorization': 'Token ' + tok }, { status: 'all', language: 'TH', barcode: [no] }).then(function (q) {
+      tpToken(false).then(function (a) {
+        if (!a.token) { finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString(), dbg: { step: 'auth', http: a.http, err: a.err, raw: a.raw } }); return; }
+        httpsJson(TP_HOST, '/post/api/v1/track', 'POST', { 'Authorization': 'Token ' + a.token }, { status: 'all', language: 'TH', barcode: [no] }).then(function (q) {
           if (q.http === 401 && !retry) { _tpTok.token = ''; tpToken(true).then(function () { doTrack(true); }); return; }
           if (q.ok && q.body && q.body.response && q.body.response.items) {
             var items = q.body.response.items; var arr = items[no];
@@ -975,7 +976,7 @@ function refreshTrack(r, force) {
             if (Array.isArray(arr) && arr.length) finish(normTrack(arr, no));
             else finish({ state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ (อาจยังไม่เข้าระบบ หรือไม่ใช่พัสดุไปรษณีย์ไทย)', checkpoints: [], at: new Date().toISOString() });
           } else if (!q.ok) {
-            finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString() });
+            finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString(), dbg: { step: 'track', http: q.http, err: q.error, raw: String(q.raw || (q.body ? JSON.stringify(q.body) : '')).slice(0, 140) } });
           } else {
             finish({ state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ', checkpoints: [], at: new Date().toISOString() });
           }
