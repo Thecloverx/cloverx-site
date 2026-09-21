@@ -2866,79 +2866,86 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   function renderPreorder(){ poDraw(); poRefresh(); }
 
-  /* ===== Return & Refund (คำขอคืนเงินจากลูกค้า) ===== */
-  var RET_ALL=[], RET_CH='all', RET_STAT='pending';
+  /* ===== Return & Refund (คำขอคืนเงินจากลูกค้า) — เลย์เอาต์แบบ Pre-Order · Order ===== */
+  var RET_ALL=[], RET_CH='all', RET_STAT='all', RET_Q='';
   var RET_CHLBL={card:'บัตรเครดิต',bank:'โอนธนาคาร',promptpay:'PromptPay'};
   var RET_STPILL={pending:['รอดำเนินการ','pend'],approved:['อนุมัติแล้ว','ok'],rejected:['ปฏิเสธ','bad'],refunded:['คืนเงินแล้ว','ok']};
   function retBaht(n){return '฿'+(Number(n)||0).toLocaleString('en-US');}
+  function retIcon(p){return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+p+'</svg>';}
   function renderReturns(){
-    var gen=document.getElementById('view-generic'); if(!gen)return;
-    gen.classList.remove('xv');
+    var gen=document.getElementById('view-generic'); if(!gen)return; gen.classList.remove('xv');
     gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'
       +'<div><h1>Return &amp; Refund</h1><p>คำขอคืนสินค้า/คืนเงินจากลูกค้า (ผ่านหน้า /return) · อนุมัติเต็มจำนวนหรือบางส่วน แยกช่องทางการชำระ</p></div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><a href="/return" target="_blank" rel="noopener" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;text-decoration:none">เปิดหน้าลูกค้า ↗</a>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><a href="/return" target="_blank" rel="noopener" style="border:1px solid var(--line);border-radius:9px;padding:8px 14px;text-decoration:none;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem">เปิดหน้าลูกค้า ↗</a>'
       +'<button onclick="retRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button></div></div>'
-      +'<div id="retFilters" style="margin:6px 0 16px"></div>'
-      +'<div id="retSum" style="font-size:.85rem;color:var(--muted);margin-bottom:14px"></div>'
-      +'<div id="retList"></div>';
+      +'<div id="retKpis"></div>'
+      +'<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>คำขอคืนเงิน <span id="retCount" style="font-size:.8rem;font-weight:500;color:var(--muted)"></span></h3></div>'
+      +'<input id="retSearch" placeholder="ค้นหาเลข RMA / ออเดอร์ / ชื่อ / เบอร์" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:.9rem;margin-bottom:12px">'
+      +'<div id="retFilters"></div>'
+      +'<div id="retTableWrap" style="overflow-x:auto;margin-top:6px"></div></div>';
+    var si=document.getElementById('retSearch'); if(si)si.addEventListener('input',function(){RET_Q=this.value.trim().toLowerCase();retDraw();});
     retRefresh();
   }
   function retRefresh(){
-    var list=document.getElementById('retList'); if(list)list.innerHTML='<div style="color:var(--muted);font-size:.86rem;padding:20px 0">กำลังโหลด…</div>';
-    fetch('/api/returns').then(function(r){return r.json();}).then(function(j){RET_ALL=(j&&j.returns)||[];retDraw();}).catch(function(){if(list)list.innerHTML='<div style="color:#dc2626;font-size:.86rem">โหลดข้อมูลไม่สำเร็จ</div>';});
+    var w=document.getElementById('retTableWrap'); if(w)w.innerHTML='<div style="color:var(--muted);font-size:.86rem;padding:20px 0">กำลังโหลด…</div>';
+    fetch('/api/returns').then(function(r){return r.json();}).then(function(j){RET_ALL=(j&&j.returns)||[];retDraw();}).catch(function(){if(w)w.innerHTML='<div style="color:#dc2626;font-size:.86rem;padding:18px 0">โหลดข้อมูลไม่สำเร็จ</div>';});
   }
   function retChip(val,cur,label,grp){var on=(val===cur);return '<button data-grp="'+grp+'" data-val="'+val+'" style="border:1.5px solid '+(on?'var(--brand)':'var(--line)')+';background:'+(on?'var(--brand-tint)':'#fff')+';color:'+(on?'var(--brand)':'var(--ink)')+';border-radius:999px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer;margin:0 6px 6px 0">'+label+'</button>';}
   function retDraw(){
+    var all=RET_ALL;
+    var pend=all.filter(function(r){return r.status==='pending';});
+    var refunded=all.filter(function(r){return r.status==='refunded';});
+    var pendAmt=all.filter(function(r){return r.status==='pending'&&r.choice!=='wait';}).reduce(function(a,r){return a+(Number(r.amount)||0);},0);
+    var waitN=all.filter(function(r){return r.choice==='wait';}).length;
+    var k=document.getElementById('retKpis');
+    if(k)k.innerHTML='<div class="kpis">'
+      +'<div class="kpi"><div class="top"><div class="lb">คำขอทั้งหมด</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)">'+retIcon('<path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>')+'</div></div><div class="v num">'+all.length+'</div><div class="delta up">รวมทุกสถานะ</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">รอดำเนินการ</div><div class="ic" style="background:var(--warn-tint);color:var(--warn)">'+retIcon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+'</div></div><div class="v num">'+pend.length+'</div><div class="delta down">ต้องตรวจสอบ</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">คืนเงินแล้ว</div><div class="ic" style="background:var(--good-tint);color:var(--good)">'+retIcon('<path d="M20 6 9 17l-5-5"/>')+'</div></div><div class="v num">'+refunded.length+'</div><div class="delta up">เสร็จสิ้น</div></div>'
+      +'<div class="kpi"><div class="top"><div class="lb">ยอดรอคืนรวม</div><div class="ic" style="background:var(--brand-tint);color:var(--brand)">'+retIcon('<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')+'</div></div><div class="v num">'+retBaht(pendAmt)+'</div><div class="delta up">'+waitN+' รายรอปรับปรุงแอป</div></div>'
+      +'</div>';
     var fil=document.getElementById('retFilters');
-    if(fil){
-      fil.innerHTML='<div style="margin-bottom:2px">'
-        +retChip('all',RET_STAT,'ทั้งหมด','stat')+retChip('pending',RET_STAT,'รอดำเนินการ','stat')+retChip('approved',RET_STAT,'อนุมัติแล้ว','stat')+retChip('refunded',RET_STAT,'คืนเงินแล้ว','stat')+retChip('rejected',RET_STAT,'ปฏิเสธ','stat')
-        +'</div><div>'
-        +retChip('all',RET_CH,'ทุกช่องทาง','ch')+retChip('card',RET_CH,'💳 บัตรเครดิต','ch')+retChip('bank',RET_CH,'🏦 โอนธนาคาร','ch')
-        +'</div>';
-      fil.querySelectorAll('button[data-grp]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.grp==='stat')RET_STAT=b.dataset.val;else RET_CH=b.dataset.val;retDraw();});});
-    }
-    var rows=RET_ALL.filter(function(r){
+    if(fil){fil.innerHTML=retChip('all',RET_STAT,'ทั้งหมด','stat')+retChip('pending',RET_STAT,'รอดำเนินการ','stat')+retChip('approved',RET_STAT,'อนุมัติแล้ว','stat')+retChip('refunded',RET_STAT,'คืนเงินแล้ว','stat')+retChip('rejected',RET_STAT,'ปฏิเสธ','stat')
+      +'<span style="display:inline-block;width:14px"></span>'+retChip('all',RET_CH,'ทุกช่องทาง','ch')+retChip('card',RET_CH,'💳 บัตรเครดิต','ch')+retChip('bank',RET_CH,'🏦 โอนธนาคาร','ch');
+      fil.querySelectorAll('button[data-grp]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.grp==='stat')RET_STAT=b.dataset.val;else RET_CH=b.dataset.val;retDraw();});});}
+    var rows=all.filter(function(r){
       if(RET_STAT!=='all'&&r.status!==RET_STAT)return false;
       if(RET_CH!=='all'&&r.channel!==RET_CH)return false;
+      if(RET_Q){var hay=(r.rid+' '+r.orderId+' '+(r.name||'')+' '+(r.phone||'')).toLowerCase();if(hay.indexOf(RET_Q)<0)return false;}
       return true;
     });
-    var pendAmt=rows.filter(function(r){return r.status==='pending'&&r.choice!=='wait';}).reduce(function(a,r){return a+(Number(r.amount)||0);},0);
-    var waitN=RET_ALL.filter(function(r){return r.choice==='wait';}).length;
-    var sum=document.getElementById('retSum');
-    if(sum)sum.innerHTML='แสดง '+rows.length+' คำขอ · ยอดรอคืน (ตามตัวกรอง) <b style="color:var(--brand)">'+retBaht(pendAmt)+'</b> · ประสงค์รอปรับปรุงแอป '+waitN+' ราย';
-    var list=document.getElementById('retList'); if(!list)return;
-    if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:34px 0;border:1px dashed var(--line);border-radius:14px">ยังไม่มีคำขอตามเงื่อนไขที่เลือก</div>';return;}
-    list.innerHTML=rows.map(retCard).join('');
-    list.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
+    var cnt=document.getElementById('retCount'); if(cnt)cnt.textContent='('+rows.length+(rows.length!==all.length?(' / '+all.length):'')+')';
+    var w=document.getElementById('retTableWrap'); if(!w)return;
+    if(!all.length){w.innerHTML='<div style="text-align:center;color:var(--muted);padding:46px 0"><div style="font-size:2rem;margin-bottom:8px">📭</div>ยังไม่มีคำขอคืนเงินเข้ามา<div style="font-size:.8rem;margin-top:6px">เมื่อลูกค้ายื่นคำขอผ่านหน้า <b>/return</b> รายการจะปรากฏที่นี่</div></div>';return;}
+    if(!rows.length){w.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px 0">ไม่พบคำขอตามเงื่อนไขที่เลือก</div>';return;}
+    w.innerHTML='<table class="potbl"><colgroup><col style="width:14%"><col style="width:9%"><col style="width:17%"><col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:10%"><col style="width:16%"></colgroup>'
+      +'<thead><tr><th>เลขคำขอ</th><th>วันที่</th><th>ลูกค้า</th><th>ออเดอร์</th><th>ช่องทาง</th><th>ยอดขอคืน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'
+      +rows.map(retRow).join('')+'</tbody></table>';
+    w.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
   }
-  function retCard(r){
-    var st=RET_STPILL[r.status]||['-','pend'];
-    var isWait=(r.choice==='wait');
-    var chTxt=RET_CHLBL[r.channel]||'-';
-    var itemsHtml=isWait?'<div style="font-size:.85rem;color:var(--muted)">ลูกค้าประสงค์รอการปรับปรุง Application (ไม่ขอคืนเงิน)</div>'
-      :('<div style="display:flex;flex-direction:column;gap:5px">'+(r.items||[]).map(function(it){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:.86rem"><span>'+poEsc(it.name)+'</span><span class="num" style="font-weight:700">'+retBaht(it.price)+'</span></div>';}).join('')+'</div>');
-    var slip=r.slip?'<button data-act="slip" data-rid="'+r.rid+'" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 13px;font-family:inherit;font-weight:600;font-size:.82rem;color:var(--brand);cursor:pointer">📄 ดูสลิป</button>':'';
-    var actions='';
+  function retRow(r){
+    var st=RET_STPILL[r.status]||['-','pend']; var isWait=(r.choice==='wait');
+    var ch=isWait?'—':(RET_CHLBL[r.channel]||'-');
+    var amt=isWait?'<span style="color:var(--muted);font-size:.8rem">รอปรับปรุงแอป</span>':('<span class="num" style="font-weight:700">'+retBaht(r.amount)+'</span>'+((r.approvedAmount!=null&&r.approvedAmount!==r.amount)?('<div style="font-size:.7rem;color:var(--good)">อนุมัติ '+retBaht(r.approvedAmount)+'</div>'):''));
+    var bx='display:inline-flex;align-items:center;gap:4px;border-radius:8px;padding:6px 10px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;margin:2px 3px 0 0;';
+    var acts=[];
+    if(r.slip)acts.push('<button data-act="slip" data-rid="'+r.rid+'" style="'+bx+'border:1px solid var(--line);background:#fff;color:var(--brand)">📄 สลิป</button>');
     if(r.status==='pending'){
-      if(isWait){ actions='<button data-act="ack" data-rid="'+r.rid+'" style="'+btnPri()+'">รับทราบ</button>'; }
-      else{ actions='<button data-act="approve" data-rid="'+r.rid+'" style="'+btnPri()+'">✓ อนุมัติคืนเงิน</button>'
-        +'<button data-act="reject" data-rid="'+r.rid+'" style="border:1px solid #fecaca;background:#fff;border-radius:10px;padding:10px 15px;font-family:inherit;font-weight:700;font-size:.84rem;color:#dc2626;cursor:pointer">ปฏิเสธ</button>'; }
-    } else if(r.status==='approved' && !isWait){
-      actions='<button data-act="goref" data-rid="'+r.rid+'" data-oid="'+r.orderId+'" style="'+btnPri()+'">↩ ไปคืนเงินออเดอร์นี้</button>'
-        +'<button data-act="markref" data-rid="'+r.rid+'" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 15px;font-family:inherit;font-weight:700;font-size:.84rem;color:var(--ink);cursor:pointer">ทำเครื่องหมายคืนเงินแล้ว</button>';
+      if(isWait){acts.push('<button data-act="ack" data-rid="'+r.rid+'" style="'+bx+'border:0;background:var(--brand);color:#fff">รับทราบ</button>');}
+      else{acts.push('<button data-act="approve" data-rid="'+r.rid+'" style="'+bx+'border:0;background:var(--brand);color:#fff">✓ อนุมัติ</button>');
+        acts.push('<button data-act="reject" data-rid="'+r.rid+'" style="'+bx+'border:1px solid #fecaca;background:#fff;color:#dc2626">✕</button>');}
+    } else if(r.status==='approved'&&!isWait){
+      acts.push('<button data-act="goref" data-rid="'+r.rid+'" data-oid="'+r.orderId+'" style="'+bx+'border:0;background:var(--brand);color:#fff">↩ คืนเงิน</button>');
+      acts.push('<button data-act="markref" data-rid="'+r.rid+'" style="'+bx+'border:1px solid var(--line);background:#fff;color:var(--ink)">✓ คืนแล้ว</button>');
     }
-    var amtLine=isWait?'':'<div style="text-align:right"><div style="font-size:.72rem;color:var(--muted)">ยอดขอคืน</div><div class="num" style="font-weight:800;font-size:1.15rem;color:var(--brand)">'+retBaht(r.amount)+'</div>'+(r.approvedAmount!=null?'<div style="font-size:.72rem;color:var(--good)">อนุมัติ '+retBaht(r.approvedAmount)+'</div>':'')+'</div>';
-    return '<div style="border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:13px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
-        +'<div><div style="font-weight:800">'+poEsc(r.rid)+' · '+poEsc(r.orderId)+'</div>'
-        +'<div style="font-size:.78rem;color:var(--muted);margin-top:2px">'+poEsc(r.name||'-')+' · '+poEsc(r.phone||'')+'</div>'
-        +'<div style="font-size:.72rem;color:var(--muted);margin-top:2px">'+poTime(r.at)+' · '+(isWait?'⏳ รอปรับปรุงแอป':('ช่องทาง '+chTxt))+'</div></div>'
-        +'<div style="display:flex;align-items:center;gap:10px">'+amtLine+'<span class="pill '+st[1]+'">'+st[0]+'</span></div>'
-      +'</div>'
-      +'<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)">'+itemsHtml+'</div>'
-      +((actions||slip)?('<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;justify-content:flex-end">'+slip+actions+'</div>'):'')
-      +'</div>';
+    return '<tr><td><div style="font-weight:700">'+poEsc(r.rid)+'</div></td>'
+      +'<td style="font-size:.78rem;color:var(--muted)">'+poTime(r.at)+'</td>'
+      +'<td><div style="font-weight:600">'+poEsc(r.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+poEsc(r.phone||'')+'</div></td>'
+      +'<td style="font-weight:600">'+poEsc(r.orderId)+'</td>'
+      +'<td>'+(isWait?'<span class="pill pend">รอปรับปรุง</span>':ch)+'</td>'
+      +'<td>'+amt+'</td>'
+      +'<td><span class="pill '+st[1]+'">'+st[0]+'</span></td>'
+      +'<td>'+(acts.join('')||'<span style="color:var(--muted);font-size:.76rem">—</span>')+'</td></tr>';
   }
   function retSetStatus(rid,status,amount,cb){
     var body={status:status,actor:'staff'}; if(amount!=null)body.amount=amount;
@@ -2950,7 +2957,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var r=RET_ALL.find(function(x){return x.rid===rid;}); if(!r&&act!=='goref')return;
     if(act==='slip'){ if(r&&r.slip)window.open(r.slip,'_blank'); return; }
     if(act==='approve'){
-      var amt=prompt('ยอดที่อนุมัติคืน (บาท) — แก้ได้หากคืนบางส่วน\\nยอดที่ลูกค้าขอ: '+retBaht(r.amount), String(r.amount||0));
+      var amt=prompt('ยอดที่อนุมัติคืน (บาท) — แก้ได้หากคืนบางส่วน\nยอดที่ลูกค้าขอ: '+retBaht(r.amount), String(r.amount||0));
       if(amt==null)return; amt=Number(amt); if(!(amt>0)){xvToast('ยอดไม่ถูกต้อง','bad');return;}
       retSetStatus(rid,'approved',amt,function(){xvToast('อนุมัติคำขอแล้ว — ไปคืนเงินจริงในเมนู Order','ok');});
     } else if(act==='reject'){
