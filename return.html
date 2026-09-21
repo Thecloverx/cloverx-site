@@ -217,6 +217,16 @@ input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay
 .refno{display:inline-block;font-family:"Inter";font-weight:700;font-size:17px;background:var(--surface2);border:1px dashed var(--line);border-radius:10px;padding:9px 16px;margin:8px 0 4px}
 .steps-next{text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-top:18px}
 .steps-next h3{font-size:14px;margin:0 0 10px}.steps-next ol{margin:0;padding-left:20px}.steps-next li{margin:6px 0;font-size:13.5px;line-height:1.6}
+.snhd{display:flex;align-items:center;gap:9px;font-size:14.5px;font-weight:800;margin:0 0 13px}
+.snhd .ic{color:var(--blue);font-size:18px;flex:0 0 auto}
+.snsteps{display:flex;flex-direction:column;gap:13px}
+.snstep{display:flex;gap:12px;align-items:flex-start}
+.snstep .n{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--blue-soft);color:var(--blue-deep);font-family:"Inter";font-weight:700;font-size:13px;display:grid;place-items:center;margin-top:1px}
+.snstep .t{flex:1;min-width:0;font-size:13.5px;line-height:1.6}
+.sndiv{height:1px;background:var(--line2);margin:17px 0}
+.sncontact{border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-top:2px}
+.sncrow{display:flex;align-items:center;gap:10px;font-size:13.5px;padding:5px 0}
+.sncrow .ic{color:var(--blue);flex:0 0 auto;font-size:17px}
 .footnote{font-size:11.5px;color:var(--muted);text-align:center;margin-top:22px;line-height:1.6}
 .toplink{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:none;border:0;font:inherit;padding:6px 0;margin-bottom:8px}.toplink .ic{font-size:15px}
 .clist{list-style:none;margin:5px 0 0;padding:0}
@@ -339,7 +349,12 @@ var IC={
  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>',
  box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
- copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5 15H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1"/></svg>'
+ copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5 15H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1"/></svg>',
+ doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 15.5h6M9 8.5h2"/></svg>',
+ headset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M4 13.5a2 2 0 0 1 2-2h1v5H6a2 2 0 0 1-2-2z"/><path d="M20 13.5a2 2 0 0 0-2-2h-1v5h1a2 2 0 0 0 2-2z"/><path d="M20 16.5v1a3 3 0 0 1-3 3h-3"/></svg>',
+ phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h3l1.5 4-2 1.3a11 11 0 0 0 4.7 4.7l1.3-2 4 1.5v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4 5.7 2 2 0 0 1 6 3.5z"/></svg>',
+ mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="m4 7 8 6 8-6"/></svg>',
+ line:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10.5c0-4-4-7.2-9-7.2s-9 3.2-9 7.2c0 3.6 3.2 6.6 7.5 7.1.9.2.8.6.7 1.2l-.2 1.1c-.1.5.3.9.9.6 2.9-1.3 6.4-3.8 8-6.3a6.6 6.6 0 0 0 1.1-3.7z"/></svg>'
 };
 function icon(n){return '<span class="ic">'+(IC[n]||'')+'</span>';}
 function fillIcons(){var m={_bk1:'back',_clk1:'clock',_ok1:'check',_chk1:'check',_x1:'x',_x2:'x',_bk2:'back',_box1:'box',_clk2:'clock',_cv1:'chev',_cv2:'chev'};for(var id in m){var el=document.getElementById(id);if(el)el.innerHTML=IC[m[id]];}
@@ -514,7 +529,27 @@ function submitReturn(){
       document.getElementById('doneTitle').textContent='รับคำขอคืนสินค้าแล้ว';
       document.getElementById('doneLead').innerHTML='ยอดเงินคืนโดยประมาณ <b style="color:var(--navy)">'+baht(j.amount)+'</b>&nbsp;&nbsp;('+payTxt+')';
       document.getElementById('refNo').textContent=j.rid;
-      document.getElementById('nextSteps').innerHTML='<h3>ขั้นตอนการดำเนินการ</h3><ol><li>ลูกค้าทำการส่งคืนสินค้าที่ขนส่งใกล้พื้นที่</li><li>ลูกค้าแนบภาพสลิปการคืน ที่ระบุค่าจัดส่ง ค่ากล่อง แบบชัดเจน</li><li>กรณีชำระผ่านบัญชีธนาคาร รบกวนลูกค้าระบุบัญชีธนาคารสำหรับการรับเงินคืน</li><li>หากสินค้าถึงปลายทางเรียบร้อยแล้ว ทีมงานจะทำการตรวจสอบ และดำเนินการคืนเงินในขั้นตอนถัดไป สามารถเข้ามาดูสถานะได้ตลอด หรือสอบถามทางทีมงานผ่าน @Official ของบริษัทฯ</li></ol><div style="margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.7"><div style="font-weight:700;color:var(--ink);margin-bottom:3px">ที่อยู่จัดส่งคืน :</div><div><b>'+RETURN_ADDR.name+'</b></div><div>'+RETURN_ADDR.addr+'</div><div>โทร <b>'+RETURN_ADDR.tel+'</b></div></div><div style="margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.7">ขออภัยเป็นอย่างสูงสำหรับเหตุการณ์ที่เกิดขึ้น และขอขอบพระคุณที่ไว้วางใจเป็นอย่างยิ่ง</div>';
+      var _snstep=function(n,t){return '<div class="snstep"><div class="n">'+n+'</div><div class="t">'+t+'</div></div>';};
+      document.getElementById('nextSteps').innerHTML=
+        '<div class="snhd">'+icon('doc')+'ขั้นตอนการดำเนินการ</div>'
+        +'<div class="snsteps">'
+          +_snstep(1,'ลูกค้าส่งคืนสินค้าที่จุดบริการขนส่งใกล้พื้นที่')
+          +_snstep(2,'แนบภาพสลิปการคืน ที่ระบุค่าจัดส่งและค่ากล่องอย่างชัดเจน')
+          +_snstep(3,'กรณีชำระผ่านบัญชีธนาคาร รบกวนระบุบัญชีธนาคารสำหรับรับเงินคืน')
+          +_snstep(4,'เมื่อสินค้าถึงปลายทางเรียบร้อย ทีมงานจะตรวจสอบและดำเนินการคืนเงินในลำดับถัดไป โดยเข้ามาดูสถานะได้ตลอดเวลา')
+        +'</div>'
+        +'<div class="sndiv"></div>'
+        +'<div style="font-weight:700;margin-bottom:5px">ที่อยู่จัดส่งคืน :</div>'
+        +'<div style="font-size:12.5px;color:var(--muted);line-height:1.7"><div style="color:var(--ink);font-weight:600">'+RETURN_ADDR.name+'</div><div>'+RETURN_ADDR.addr+'</div><div>โทร <b>'+RETURN_ADDR.tel+'</b></div></div>'
+        +'<div class="sndiv"></div>'
+        +'<div class="snhd">'+icon('headset')+'ติดต่อสอบถามเพิ่มเติม</div>'
+        +'<div style="font-size:12.5px;color:var(--muted);margin-bottom:9px">หากมีข้อสงสัยหรือพบปัญหา สามารถติดต่อทีมงานได้ที่</div>'
+        +'<div class="sncontact">'
+          +'<div class="sncrow">'+icon('line')+'LINE <b>@cloverx</b> (10.30 - 19.30 น.)</div>'
+          +'<div class="sncrow">'+icon('phone')+'โทร <b>065 514 6576</b></div>'
+          +'<div class="sncrow">'+icon('mail')+'อีเมล <b>info@cloverxth.com</b></div>'
+        +'</div>'
+        +'<div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:15px">ขออภัยเป็นอย่างสูงสำหรับเหตุการณ์ที่เกิดขึ้น และขอขอบพระคุณที่ไว้วางใจเป็นอย่างยิ่ง</div>';
       refreshThen(function(){show('s4');});
     }).catch(function(){btn.innerHTML='ส่งคำขอคืนสินค้า';btn.disabled=false;alert('เชื่อมต่อไม่สำเร็จ');});
 }
