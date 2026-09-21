@@ -885,18 +885,19 @@ app.post('/api/returns/:rid/status', function (req, res) {
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
 });
-// ========================= ติดตามสถานะพัสดุส่งคืน (Track123) =========================
-// ชั้น provider เดียว — สลับเจ้าอื่นภายหลังแก้เฉพาะบล็อกนี้ได้ / API key อ่านจาก env เท่านั้น
-function track123Configured() { return !!process.env.TRACK123_KEY; }
+// ========================= ติดตามสถานะพัสดุส่งคืน (ไปรษณีย์ไทย Track & Trace API) =========================
+// provider ชั้นเดียว — สลับเป็นเจ้าอื่น (TrackingMore ฯลฯ) ภายหลังแก้เฉพาะบล็อกนี้
+// ตั้ง env THAILANDPOST_KEY = API key (static token) จาก https://track.thailandpost.co.th/developerGuide
+function trackConfigured() { return !!process.env.THAILANDPOST_KEY; }
 var TRACK_TTL = Number(process.env.TRACK_TTL_MS) || 30 * 60 * 1000; // แคชผลไว้ 30 นาที กันยิง API ถี่เกิน
-function track123Req(pathStr, bodyObj) {
+var TP_HOST = 'trackapi.thailandpost.co.th';
+var _tpTok = { token: '', exp: 0 }; // แคช temp token ในหน่วยความจำ
+function httpsJson(host, pathStr, method, headers, bodyObj) {
   return new Promise(function (resolve) {
-    if (!track123Configured()) { resolve({ ok: false, error: 'not_configured' }); return; }
-    var body = JSON.stringify(bodyObj);
-    var rq = https.request({
-      hostname: 'api.track123.com', path: pathStr, method: 'POST',
-      headers: { 'Track123-Api-Secret': process.env.TRACK123_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
-    }, function (resp) {
+    var body = (bodyObj != null) ? JSON.stringify(bodyObj) : '';
+    var h = Object.assign({}, headers || {});
+    if (body) { h['Content-Type'] = 'application/json'; h['Content-Length'] = Buffer.byteLength(body); }
+    var rq = https.request({ hostname: host, path: pathStr, method: method, headers: h }, function (resp) {
       var b = ''; resp.on('data', function (d) { b += d; });
       resp.on('end', function () {
         try { resolve({ ok: resp.statusCode >= 200 && resp.statusCode < 300, http: resp.statusCode, body: JSON.parse(b) }); }
@@ -905,47 +906,45 @@ function track123Req(pathStr, bodyObj) {
     });
     rq.on('error', function (e) { resolve({ ok: false, error: e.message }); });
     rq.setTimeout(15000, function () { rq.destroy(); resolve({ ok: false, error: 'timeout' }); });
-    rq.write(body); rq.end();
+    if (body) rq.write(body); rq.end();
   });
 }
-// แปลงชื่อขนส่งที่ลูกค้ากรอก → courierCode ของ Track123 (ไม่รู้จัก = ปล่อยว่างให้ auto-detect)
-function courierCode(hint) {
-  var s = String(hint || '').toLowerCase();
-  if (/ไปรษณีย|thai\s*post|thaipost|ปณท|\bems\b|ลงทะเบียน/.test(s)) return 'thailand-post';
-  if (/flash|แฟลช/.test(s)) return 'flash-express';
-  if (/j&t|jt|เจแอนด|เจ\s*แอน/.test(s)) return 'jt-express-th';
-  if (/kerry|เคอรี|เคอร์รี/.test(s)) return 'kerry-express-th';
-  if (/best|เบสท/.test(s)) return 'best-inc-th';
-  if (/ninja|นินจา/.test(s)) return 'ninja-van-th';
-  if (/scg|จ่าดำ/.test(s)) return 'scg-express';
-  if (/dhl/.test(s)) return 'dhl';
-  return '';
+// ขอ temp token จาก static key (แคชไว้ ใช้ซ้ำ ~6 ชม.)
+function tpToken(force) {
+  return new Promise(function (resolve) {
+    if (!trackConfigured()) { resolve(''); return; }
+    if (!force && _tpTok.token && Date.now() < _tpTok.exp) { resolve(_tpTok.token); return; }
+    httpsJson(TP_HOST, '/post/api/v1/authenticate/token', 'POST', { 'Authorization': 'Token ' + process.env.THAILANDPOST_KEY }, {}).then(function (r) {
+      var tok = r.ok && r.body && (r.body.token || r.body.access_token || (r.body.response && r.body.response.token));
+      if (tok) { _tpTok.token = tok; _tpTok.exp = Date.now() + 6 * 60 * 60 * 1000; resolve(tok); }
+      else resolve('');
+    });
+  });
 }
-// map สถานะ Track123 → สถานะภาษาไทยชุดสั้น ๆ ของเรา
-function trackStateLabel(ts) {
-  var s = String(ts || '').toUpperCase();
-  if (/DELIVERED/.test(s)) return { state: 'delivered', label: 'จัดส่งสำเร็จ' };
-  if (/PICK_?UP|OUT_?FOR|DELIVERING|NElED|NEED_?PICK/.test(s)) return { state: 'out_for_delivery', label: 'กำลังนำจ่าย' };
-  if (/RETURN/.test(s)) return { state: 'returned', label: 'ตีกลับผู้ส่ง' };
-  if (/FAIL|EXCEPTION|UNDELIVER|ALERT|EXPIRED/.test(s)) return { state: 'problem', label: 'จัดส่งมีปัญหา' };
-  if (/TRANSIT/.test(s)) return { state: 'in_transit', label: 'กำลังจัดส่ง' };
-  if (/INFO_?RECEIVED|INFORECEIVED|PENDING|ACCEPTED/.test(s)) return { state: 'info', label: 'ผู้ส่งเตรียมพัสดุ' };
-  if (/NOT_?FOUND|NOTFOUND/.test(s)) return { state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ' };
-  return { state: 'pending', label: 'รอเข้าระบบขนส่ง' };
+// map สถานะไปรษณีย์ไทย → สถานะภาษาไทยชุดสั้น ๆ ของเรา (เทียบจากคำอธิบาย + รหัส)
+function trackStateLabel(desc, code) {
+  var s = String(desc || ''); var c = String(code || '');
+  if (/นำจ่ายสำเร็จ|จ่ายสำเร็จ|ส่งสำเร็จ|delivered/i.test(s) || c === '501') return { state: 'delivered', label: 'จัดส่งสำเร็จ' };
+  if (/อยู่ระหว่างการนำจ่าย|กำลังนำจ่าย|เตรียมการนำจ่าย|out for delivery/i.test(s) || c === '301') return { state: 'out_for_delivery', label: 'กำลังนำจ่าย' };
+  if (/ตีกลับ|คืนต้นทาง|ส่งคืนผู้ฝาก/i.test(s)) return { state: 'returned', label: 'ตีกลับผู้ส่ง' };
+  if (/ไม่สำเร็จ|ตกค้าง|ข้อขัดข้อง|ปัญหา/i.test(s)) return { state: 'problem', label: 'จัดส่งมีปัญหา' };
+  if (/รับฝาก|accepted/i.test(s) || c === '103') return { state: 'info', label: 'รับฝากพัสดุแล้ว' };
+  if (/ระหว่างการขนส่ง|ขนส่ง|ถึงที่ทำการ|ส่งต่อ|นำเข้า|in transit/i.test(s)) return { state: 'in_transit', label: 'กำลังจัดส่ง' };
+  return { state: 'in_transit', label: 'กำลังจัดส่ง' };
 }
-function normTrack(item, no) {
-  if (!item) return { state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ', checkpoints: [], at: new Date().toISOString(), no: no || '' };
-  var sl = trackStateLabel(item.transitStatus);
-  var lg = item.localLogisticsInfo || {};
-  var details = Array.isArray(lg.trackingDetails) ? lg.trackingDetails : [];
-  var checkpoints = details.map(function (d) {
-    return { time: String(d.eventTime || d.eventTimeUtc || ''), text: String(d.eventDetail || d.eventName || ''), place: String(d.address || d.location || '') };
+// events = array ของ status ต่อ 1 พัสดุ (จาก response.items[barcode])
+function normTrack(events, no) {
+  if (!Array.isArray(events) || !events.length) return { state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ', checkpoints: [], at: new Date().toISOString(), no: no || '' };
+  var ev = events.slice().sort(function (a, b) { return new Date(b.status_date || 0) - new Date(a.status_date || 0); });
+  var top = ev[0] || {};
+  var sl = trackStateLabel(top.status_description, top.status);
+  var checkpoints = ev.map(function (e) {
+    return { time: String(e.status_date || ''), text: String(e.status_description || e.status || ''), place: String(e.location || e.postcode || '') };
   });
   return {
-    state: sl.state, label: sl.label, raw: String(item.transitStatus || ''),
-    courier: String(lg.courierCode || item.courierCode || ''),
-    deliveredTime: String(item.deliveredTime || ''),
-    checkpoints: checkpoints, at: new Date().toISOString(), no: no || String(item.trackNo || '')
+    state: sl.state, label: sl.label, raw: String(top.status || ''),
+    courier: 'thailand-post', deliveredTime: (sl.state === 'delivered' ? String(top.status_date || '') : ''),
+    checkpoints: checkpoints, at: new Date().toISOString(), no: no || String(top.barcode || '')
   };
 }
 // ดึงสถานะ + แคชลงใน return record; force=true เพื่อบังคับดึงใหม่ (ปุ่มรีเฟรช)
@@ -953,34 +952,37 @@ function refreshTrack(r, force) {
   return new Promise(function (resolve) {
     var no = String(r.returnTracking || '').trim();
     if (!no) { resolve(null); return; }
-    if (!track123Configured()) {
+    if (!trackConfigured()) {
       resolve({ state: 'unconfigured', label: 'ยังไม่ได้เชื่อมระบบติดตามพัสดุ', checkpoints: [], at: new Date().toISOString(), no: no });
       return;
     }
     var cur = r.trackStatus;
     if (!force && cur && cur.at && cur.state && cur.state !== 'unconfigured' && cur.state !== 'error' &&
       (Date.now() - new Date(cur.at).getTime()) < TRACK_TTL) { resolve(cur); return; }
-    var cc = courierCode(r.returnCarrier);
-    var info = cc ? { trackNo: no, courierCode: cc } : { trackNo: no };
     function finish(out) {
       out.no = no;
       try { var rl = readReturns(); var rr = rl.find(function (x) { return x.rid === r.rid; }); if (rr) { rr.trackStatus = out; writeReturns(rl); } } catch (e) {}
       r.trackStatus = out; resolve(out);
     }
-    // ลงทะเบียนเลขก่อน (best-effort) แล้วค่อย query
-    track123Req('/gateway/open-api/tk/v2/track/import', [info]).then(function () {
-      track123Req('/gateway/open-api/tk/v2.1/track/query', { trackNoInfos: [info] }).then(function (q) {
-        if (q.ok && q.body && q.body.data && q.body.data.accepted && Array.isArray(q.body.data.accepted.content) && q.body.data.accepted.content.length) {
-          finish(normTrack(q.body.data.accepted.content[0], no));
-        } else if (q.ok && q.body && String(q.body.code) !== '00000' && q.body.code != null) {
-          finish({ state: 'error', label: 'ตรวจสอบไม่สำเร็จ ลองใหม่อีกครั้ง', msg: String(q.body.msg || ''), checkpoints: [], at: new Date().toISOString() });
-        } else if (!q.ok) {
-          finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString() });
-        } else {
-          finish({ state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ (อาจยังไม่เข้าระบบขนส่ง)', checkpoints: [], at: new Date().toISOString() });
-        }
+    function doTrack(retry) {
+      tpToken(false).then(function (tok) {
+        if (!tok) { finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString() }); return; }
+        httpsJson(TP_HOST, '/post/api/v1/track', 'POST', { 'Authorization': 'Token ' + tok }, { status: 'all', language: 'TH', barcode: [no] }).then(function (q) {
+          if (q.http === 401 && !retry) { _tpTok.token = ''; tpToken(true).then(function () { doTrack(true); }); return; }
+          if (q.ok && q.body && q.body.response && q.body.response.items) {
+            var items = q.body.response.items; var arr = items[no];
+            if (!arr) { var ks = Object.keys(items); if (ks.length) arr = items[ks[0]]; }
+            if (Array.isArray(arr) && arr.length) finish(normTrack(arr, no));
+            else finish({ state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ (อาจยังไม่เข้าระบบ หรือไม่ใช่พัสดุไปรษณีย์ไทย)', checkpoints: [], at: new Date().toISOString() });
+          } else if (!q.ok) {
+            finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString() });
+          } else {
+            finish({ state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ', checkpoints: [], at: new Date().toISOString() });
+          }
+        });
       });
-    });
+    }
+    doTrack(false);
   });
 }
 // ลูกค้า(เจ้าของ) หรือ ทีมงาน: ตรวจสอบสถานะพัสดุส่งคืน
@@ -992,9 +994,9 @@ app.post('/api/returns/:rid/track', function (req, res) {
     var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(), nm = String(b.name || '');
     if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   }
-  if (!r.returnTracking) return res.json({ ok: true, track: null, configured: track123Configured() });
+  if (!r.returnTracking) return res.json({ ok: true, track: null, configured: trackConfigured() });
   var force = b.force === true || b.force === '1' || b.force === 1;
-  refreshTrack(r, force).then(function (t) { res.json({ ok: true, track: t, configured: track123Configured() }); });
+  refreshTrack(r, force).then(function (t) { res.json({ ok: true, track: t, configured: trackConfigured() }); });
 });
 
 // ---- ADMIN: delete an order (guarded by ADMIN_KEY) ----
