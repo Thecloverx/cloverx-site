@@ -216,6 +216,18 @@ input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay
 .steps-next h3{font-size:14px;margin:0 0 10px}.steps-next ol{margin:0;padding-left:20px}.steps-next li{margin:6px 0;font-size:13.5px;line-height:1.6}
 .footnote{font-size:11.5px;color:var(--muted);text-align:center;margin-top:22px;line-height:1.6}
 .toplink{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:none;border:0;font:inherit;padding:6px 0;margin-bottom:8px}.toplink .ic{font-size:15px}
+.clist{list-style:none;margin:5px 0 0;padding:0}
+.clist li{position:relative;padding-left:15px;font-size:12px;color:var(--muted);margin:3px 0;line-height:1.5}
+.clist li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--blue)}
+.clist .csub{display:block;font-size:11px;color:var(--muted);opacity:.9;margin-top:1px}
+.cdrow{display:flex;align-items:center;gap:7px;background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 25%,var(--line));border-radius:11px;padding:9px 13px;margin:10px 0 2px;font-size:13px;color:var(--danger);font-weight:600}
+.cdrow .ic{font-size:16px}.cdval{font-variant-numeric:tabular-nums;font-family:"Inter","Prompt",sans-serif}
+.shipcard{border:1px solid color-mix(in srgb,var(--blue) 35%,var(--line));border-radius:14px;padding:15px;margin-top:12px;background:var(--surface2)}
+.shiphd{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;margin-bottom:3px}.shiphd .ic{color:var(--blue);font-size:18px}
+.shipsub{font-size:.8rem;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.shipcard .flm{display:block;font-size:12px;font-weight:600;margin:10px 0 5px;color:var(--ink)}
+.acctbox{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.acctnote{font-size:12px;color:var(--blue-deep);background:var(--blue-soft);border-radius:9px;padding:9px 11px;margin-bottom:4px;line-height:1.5}
 @media (max-width:400px){.app{padding:16px 11px 56px}.card{padding:17px}h1{font-size:19px}}
 @media (max-width:340px){.card{padding:14px}.btnrow{flex-direction:column}.btnrow .btn{width:100%}}
 </style>
@@ -329,13 +341,19 @@ function fillIcons(){var m={_bk1:'back',_clk1:'clock',_ok1:'check',_chk1:'check'
 var RETURN_ADDR={name:'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด',addr:'762/84 หมู่บ้าน เดอะปาล์ม (ภัสสร 37) ซอย พัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250',tel:'065 514 6576',map:'https://www.google.co.th/maps/search/762%2F84+%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99+%E0%B9%80%E0%B8%94%E0%B8%AD%E0%B8%B0%E0%B8%9B%E0%B8%B2%E0%B8%A5%E0%B9%8C%E0%B8%A1+%28%E0%B8%A0%E0%B8%B1%E0%B8%AA%E0%B8%AA%E0%B8%A3+37%29'};
 var REASONS=['สินค้าชำรุด / เสียหาย','สินค้าไม่ตรงกับที่สั่ง / ไม่ตรงคำอธิบาย','ได้รับสินค้าไม่ครบ','สินค้ามีตำหนิ / ใช้งานไม่ได้','จัดส่งล่าช้ากว่ากำหนด','เปลี่ยนใจ / ไม่ต้องการสินค้าแล้ว','อื่น ๆ (โปรดระบุในข้อความ)'];
 var RETURN_DEADLINE='30 กันยายน 2569';
+var RETURN_DEADLINE_TS=new Date('2026-09-30T23:59:59+07:00').getTime();
 var ME={phone:'',email:''},ORDERS=[],MYRET=[];
 var CUR=null,PATH=null,REASON=null,PAY=null,SLIP=null,NOTE='',EVID=[];
 var digits=function(s){return (s||'').replace(/\D/g,'');};
 var baht=function(n){return '฿ '+(Number(n)||0).toLocaleString('en-US');};
 var esc=function(s){return String(s||'').replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});};
 function show(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');window.scrollTo({top:0,behavior:'smooth'});}
-function partsFor(key){if(key==='band-black'||key==='band-cream')return ['สาย Standless (เมช)','สาย Nylon (ทอ)'];if(key==='routinex')return ['Flavor+ (ของแถม)'];return [];}
+function partsFor(key){if(key==='band-black'||key==='band-cream')return ['Standless Strap','Nylon Strap'];if(key==='routinex')return ['Flavor+ (Free gift)'];return [];}
+var COMP_LABEL={'band-black':'Xircle Band (Black)','band-cream':'Xircle Band (Cream)','scale':'Xircle Scale','routinex':'RoutineX','flavor':'Flavor+'};
+function compLabel(key,fb){return COMP_LABEL[key]||fb||key;}
+function setBullets(sets){var items=[];sets.forEach(function(s){(s.comps||[]).forEach(function(c){items.push(c);});});return '<ul class="clist">'+items.map(function(c){var sub=partsFor(c.key);return '<li>'+esc(compLabel(c.key,c.label))+(sub.length?('<span class="csub">'+sub.map(esc).join(' · ')+'</span>'):'')+'</li>';}).join('')+'</ul>';}
+var _cdTimer=null;
+function startCountdown(){var el=document.getElementById('cdown');var ic=document.getElementById('_cdclk');if(ic)ic.innerHTML=IC.clock;if(!el)return;if(_cdTimer)clearInterval(_cdTimer);function p(n){return (n<10?'0':'')+n;}function tick(){var d=RETURN_DEADLINE_TS-Date.now();if(d<=0){el.textContent='หมดเวลาแล้ว';clearInterval(_cdTimer);return;}var s=Math.floor(d/1000),dd=Math.floor(s/86400),hh=Math.floor(s%86400/3600),mm=Math.floor(s%3600/60),ss=s%60;el.textContent=dd+' วัน '+p(hh)+':'+p(mm)+':'+p(ss);}tick();_cdTimer=setInterval(tick,1000);}
 function imgKeyFor(key){if(PROD_IMG[key])return key;if(key==='band'||key==='set')return 'band-black';return '';}
 function ptile(key,cls){var ik=imgKeyFor(key);var inner=ik?('<img src="'+PROD_IMG[ik]+'" alt="" loading="lazy">'):IC.box;return '<span class="ptile '+(cls||'')+'">'+inner+'</span>';}
 
@@ -366,9 +384,8 @@ function renderOrders(){
   var cards=ORDERS.map(function(o){
     var ret=retForOrder(o.id);
     var itemsHtml=o.sets.map(function(s){
-      var partsTxt=s.comps.reduce(function(a,c){return a.concat([c.label]).concat(partsFor(c.key));},[]).join(' · ');
       var price=s.comps.reduce(function(a,c){return a+(c.est||0);},0);
-      return '<div class="oc-item">'+ptile((s.comps[0]||{}).key||'')+'<div style="flex:1;min-width:0"><div class="nm">'+esc(s.nm)+'</div><div class="sub">'+esc(partsTxt)+'</div></div><div class="rt"><div class="pr num">'+baht(price)+'</div><div class="qt">x1</div></div></div>';
+      return '<div class="oc-item">'+ptile((s.comps[0]||{}).key||'')+'<div style="flex:1;min-width:0"><div class="nm">'+esc(s.nm)+'</div>'+setBullets([s])+'</div><div class="rt"><div class="pr num">'+baht(price)+'</div><div class="qt">x1</div></div></div>';
     }).join('');
     var foot;
     if(ret){var st=RET_ST_C[ret.status]||{l:ret.status,c:'pend'};foot='<div class="oc-ret" onclick="viewTrack()"><span class="rl">คำขอคืน '+esc(ret.rid)+' · <span class="pill '+st.c+'">'+st.l+'</span></span><span class="rr">ติดตาม '+icon('chev')+'</span></div>';}
@@ -398,9 +415,9 @@ function confirmReason(){closeSheet();var rv=document.getElementById('reasonVal'
 
 function returnGroups(o){
   return o.sets.map(function(s){
-    if(s.splittable){return {title:'เซต · '+s.nm,note:'แยกคืนรายชิ้นได้',split:true,comps:s.comps.map(function(c){return {name:c.label,key:c.key,price:c.est,parts:partsFor(c.key),linkFlavor:c.key==='routinex',sub:'คืนเฉพาะรายการนี้'};})};}
+    if(s.splittable){return {title:'เซต · '+s.nm,note:'แยกคืนรายชิ้นได้',split:true,comps:s.comps.map(function(c){return {name:compLabel(c.key,c.label),key:c.key,price:c.est,parts:partsFor(c.key),linkFlavor:c.key==='routinex',sub:'คืนเฉพาะรายการนี้'};})};}
     var price=s.comps.reduce(function(a,c){return a+(c.est||0);},0);
-    var parts=s.comps.reduce(function(a,c){return a.concat([c.label]).concat(partsFor(c.key));},[]);
+    var parts=s.comps.reduce(function(a,c){return a.concat([compLabel(c.key,c.label)]).concat(partsFor(c.key));},[]);
     var flav=s.comps.some(function(c){return c.key==='routinex';});
     return {title:'เซต · '+s.nm,note:'คืนทั้งเซตเท่านั้น',split:false,comps:[{name:s.nm,key:'set',imgKey:(s.comps[0]||{}).key,price:price,parts:parts,linkFlavor:flav,sub:'คืนทั้งเซต — แยกคืนไม่ได้'}]};
   });
@@ -410,36 +427,31 @@ function renderRequest(){
   var html='<button class="toplink" onclick="goOrders()">'+icon('back')+' กลับไปรายการคำสั่งซื้อ</button>'
     +'<div class="card"><h1>ส่งคำขอคืนสินค้า</h1><p class="lead">คำสั่งซื้อ '+esc(o.id)+' · '+esc(o.name||'')+'</p>'
     +'<div class="reqbanner">'+icon('shield')+' วิธีขอคืนเงิน &amp; เงื่อนไขการคืนสินค้า <span class="ra">'+icon('chev')+'</span></div>'
-    +'<div class="sechd">สินค้า · เลือกรายการที่ต้องการคืน</div>'
-    +'<p class="hint" style="margin:-4px 0 10px">Triple Set แยกคืนรายชิ้นได้ · เซตอื่นคืนทั้งเซต</p>'
+    +'<div class="sechd">เลือกรายการสินค้าที่ต้องการจะคืน</div>'
+    +'<p class="hint" style="margin:-4px 0 10px">เผื่อกรณีที่ลูกค้ามีหลายคำสั่งซื้อ / หลายเซต หรือหลายชิ้น · Triple Set แยกคืนรายชิ้นได้</p>'
     +'<div id="returnItems"></div>'
     +'<div class="sechd">รายละเอียดคำขอ</div>'
     +'<div class="rrow tap" onclick="reopenReason()"><span class="rk">เหตุผล</span><span class="rv" id="reasonVal">'+esc(REASON||'เลือกเหตุผล')+' '+icon('chev')+'</span></div>'
     +'<div class="rrow"><span class="rk">วิธีแก้ปัญหา</span><span class="rv">การคืนสินค้า</span></div>'
     +'<div class="rrow"><span class="rk">คืนสินค้าฟรีได้จนถึง</span><span class="rv" style="color:var(--danger)">'+RETURN_DEADLINE+'</span></div>'
+    +'<div class="cdrow"><span class="ic" id="_cdclk"></span> เหลือเวลาอีก <span class="cdval" id="cdown">—</span></div>'
     +'<div class="refund"><div class="rk">ยอดรวมการคืนเงินโดยประมาณ</div><div class="rv num" id="refundAmt">฿ 0</div><div class="rn">* ยอดโดยประมาณจากราคาที่ชำระ (รวมค่าจัดส่งตามเงื่อนไข) — เจ้าหน้าที่จะยืนยันยอดสุทธิอีกครั้ง</div></div>'
-    +'<div class="sechd">เลือกวิธีการคืนเงิน</div>'
-    +'<p class="hint" style="margin:-4px 0 12px">คุณจะได้รับเงินคืนหลังจากคำขอได้รับอนุมัติ — โปรดเลือกช่องทางเดิมที่ใช้ชำระ</p>'
-    +'<input type="radio" name="pay" id="pay_card" value="card"><label class="payopt" for="pay_card"><span class="radio"></span><span class="pi">'+icon('card')+'</span><span class="pt"><b>ชำระผ่านบัตรเครดิต</b><span class="pd">คืนเงินเข้าบัตรใบเดิมที่ใช้ชำระ</span></span></label>'
-    +'<input type="radio" name="pay" id="pay_bank" value="bank"><label class="payopt" for="pay_bank"><span class="radio"></span><span class="pi">'+icon('bank')+'</span><span class="pt"><b>ชำระผ่านบัญชีธนาคาร</b><span class="pd">ต้องแนบสลิปการโอนเงินเพื่อยืนยันการชำระ</span></span></label>'
-    +'<div id="slipBox" class="slipbox"><div class="sechd" style="margin-top:6px">แนบสลิปการโอนเงิน <span style="color:var(--danger)">*</span></div>'
-    +'<label class="upload" id="upLabel"><input type="file" id="slipFile" accept="image/*">'+icon('clip')+'<span class="up-tx" id="upTx">แตะเพื่อเลือกไฟล์สลิป (รูปภาพ)</span></label></div>'
-    +'<div class="sechd">เพิ่มข้อความ <span style="color:var(--danger)">*</span></div>'
-    +'<div class="ta-wrap"><textarea id="noteBox" maxlength="300" placeholder="ระบุรายละเอียดของปัญหาโดยละเอียด เพื่อให้ทีมงานพิจารณาได้เร็วขึ้น"></textarea><span class="ta-count" id="noteCount">0/300</span></div>'
+    +'<div class="rrow"><span class="rk">ช่องทางที่ชำระ</span><span class="rv">'+(CUR.pay==='bank'?'โอนบัญชีธนาคาร':'บัตรเครดิต')+'</span></div>'
+    +'<p class="hint" style="margin:8px 0 0">ท่านจะระบุ<b>บัญชีสำหรับรับเงินคืน</b>ในขั้นตอนแจ้งส่งคืนสินค้า (หลังส่งพัสดุ) — '+(CUR.pay==='bank'?'คืนเต็มจำนวนเข้าบัญชีธนาคาร':'ค่าสินค้าคืนเข้าบัตรเดิม · บริษัทคืนค่าจัดส่งเข้าบัญชีที่ระบุ')+'</p>'
+    +'<div class="sechd">มีอะไรอยากฝากบอกถึงบริษัทไหม?</div>'
+    +'<div class="ta-wrap"><textarea id="noteBox" maxlength="300" placeholder="ระบุสิ่งที่ต้องการให้ทางบริษัทได้รับทราบ โดยจะมีการเก็บเป็น Feedback เพื่อปรับปรุงและแก้ไขในลำดับถัดไป"></textarea><span class="ta-count" id="noteCount">0/300</span></div>'
     +'<div class="sechd">อัปโหลดหลักฐาน <span style="color:var(--danger)">*</span></div>'
-    +'<p class="hint" style="margin:-4px 0 10px">โปรดแนบรูป/วิดีโอที่ชัดเจน แสดงปัญหาของสินค้า (สูงสุด 10 รูป · 10MB ต่อรูป)</p>'
+    +'<p class="hint" style="margin:-4px 0 10px">โปรดแนบรูป/วิดีโอที่ชัดเจน แสดงปัญหาของสินค้า (แนบได้ 1–4 รูป · 10MB ต่อรูป)</p>'
     +'<div class="evgrid" id="evGrid"></div>'
     +'<div class="sechd">ที่อยู่สำหรับส่งคืนสินค้า</div>'
     +'<div class="addr" id="addrBox"></div>'
-    +'<div class="banner warn">'+icon('box')+'<div>รบกวนคุณลูกค้าส่งสินค้าคืนภายใน <span class="deadline">3 วันทำการหลังยืนยันข้อมูล</span><br>เมื่อทางบริษัทฯ ได้รับสินค้าเรียบร้อยแล้ว จะเข้าสู่กระบวนการคืนเงินในลำดับถัดไป โดยการคืนเงินของท่านจะเป็นไปตามเงื่อนไขของธนาคาร<br><br>ขออภัยเป็นอย่างสูง และขอขอบพระคุณทุกท่านที่ไว้วางใจค่ะ</div></div>'
     +'<div class="btnrow"><button class="btn ghost" onclick="goOrders()">ย้อนกลับ</button><button class="btn primary" id="btnConfirm1" disabled onclick="submitReturn()">ส่งคำขอคืนสินค้า</button></div></div>';
   document.getElementById('s_request').innerHTML=html;
   buildReturnItems();
   document.getElementById('addrBox').innerHTML='<div class="an">'+icon('pin')+RETURN_ADDR.name+'</div><div class="aa">'+RETURN_ADDR.addr+'</div><div class="ap">โทร <b>'+RETURN_ADDR.tel+'</b></div><a class="map" href="'+RETURN_ADDR.map+'" target="_blank" rel="noopener">'+icon('map')+' เปิดแผนที่ Google Maps</a>';
-  [].slice.call(document.querySelectorAll('input[name=pay]')).forEach(function(r){r.addEventListener('change',function(){PAY=r.value;document.getElementById('slipBox').classList.toggle('on',PAY==='bank');if(PAY!=='bank'){SLIP=null;var up=document.getElementById('upLabel');if(up){up.classList.remove('filled');document.getElementById('upTx').textContent='แตะเพื่อเลือกไฟล์สลิป (รูปภาพ)';}}updateRequest();});});
-  document.getElementById('slipFile').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];var up=document.getElementById('upLabel');if(f){var rd=new FileReader();rd.onload=function(){SLIP=rd.result;up.classList.add('filled');document.getElementById('upTx').textContent='✓ '+f.name;updateRequest();};rd.readAsDataURL(f);}else{SLIP=null;up.classList.remove('filled');updateRequest();}});
+  // (payment channel & slip are handled at the ship step)
   var nb=document.getElementById('noteBox');nb.addEventListener('input',function(){NOTE=nb.value;document.getElementById('noteCount').textContent=nb.value.length+'/300';updateRequest();});
-  renderEvGrid();updateRequest();
+  renderEvGrid();updateRequest();startCountdown();
 }
 function buildReturnItems(){
   var box=document.getElementById('returnItems');box.innerHTML='';
@@ -465,31 +477,31 @@ function reopenReason(){buildReasonList();openSheet('sheetReason');}
 function renderEvGrid(){
   var g=document.getElementById('evGrid');if(!g)return;
   var thumbs=EVID.map(function(src,i){return '<div class="evthumb"><img src="'+src+'"><button class="del" onclick="delEv('+i+')">'+icon('x')+'</button></div>';}).join('');
-  var add=EVID.length<10?'<label class="evadd">'+icon('camera')+'<span class="lb">'+EVID.length+'/10</span><input type="file" accept="image/*" multiple onchange="addEv(this)"></label>':'';
+  var add=EVID.length<4?'<label class="evadd">'+icon('camera')+'<span class="lb">'+EVID.length+'/4</span><input type="file" accept="image/*" multiple onchange="addEv(this)"></label>':'';
   g.innerHTML=thumbs+add;
 }
-function addEv(inp){var files=[].slice.call(inp.files||[]);inp.value='';var room=10-EVID.length;files=files.slice(0,room);var pending=files.length;if(!pending)return;files.forEach(function(f){var rd=new FileReader();rd.onload=function(){EVID.push(rd.result);pending--;if(pending<=0){renderEvGrid();updateRequest();}};rd.readAsDataURL(f);});}
+function addEv(inp){var files=[].slice.call(inp.files||[]);inp.value='';var room=4-EVID.length;files=files.slice(0,room);var pending=files.length;if(!pending)return;files.forEach(function(f){var rd=new FileReader();rd.onload=function(){EVID.push(rd.result);pending--;if(pending<=0){renderEvGrid();updateRequest();}};rd.readAsDataURL(f);});}
 function delEv(i){EVID.splice(i,1);renderEvGrid();updateRequest();}
 function updateRequest(){
   var boxes=[].slice.call(document.querySelectorAll('#returnItems .ck input'));
   var sum=0;boxes.forEach(function(cb){if(cb.checked)sum+=+cb.dataset.price;});
   var ra=document.getElementById('refundAmt');if(ra)ra.textContent=baht(sum);
   var sa=document.getElementById('selAll');if(sa)sa.checked=boxes.length>0&&boxes.every(function(cb){return cb.checked;});
-  var ok=sum>0&&!!PAY&&(PAY!=='bank'||!!SLIP)&&!!REASON&&NOTE.trim().length>0&&EVID.length>0;
+  var ok=sum>0&&!!REASON&&EVID.length>=1&&EVID.length<=4;
   var b=document.getElementById('btnConfirm1');if(b)b.disabled=!ok;
 }
 function selectedItems(){return [].slice.call(document.querySelectorAll('#returnItems .ck input')).filter(function(cb){return cb.checked;}).map(function(cb){return {name:cb.dataset.name,key:cb.dataset.key,price:+cb.dataset.price};});}
 function submitReturn(){
   var btn=document.getElementById('btnConfirm1');btn.innerHTML='<span class="spin"></span> กำลังส่งคำขอ...';btn.disabled=true;
-  var payTxt=PAY==='bank'?'โอนผ่านบัญชีธนาคาร (แนบสลิปแล้ว)':'บัตรเครดิต';
-  var body={orderId:CUR.id,name:document.getElementById('f_name').value.trim(),phone:ME.phone,email:ME.email,choice:'return',channel:PAY,reason:REASON,note:NOTE,evidence:EVID,returnMethod:'dropoff',selected:selectedItems(),slip:(PAY==='bank'?SLIP:null)};
+  var payTxt=(CUR.pay==='bank'?'โอนบัญชีธนาคาร':'บัตรเครดิต');
+  var body={orderId:CUR.id,name:document.getElementById('f_name').value.trim(),phone:ME.phone,email:ME.email,choice:'return',reason:REASON,note:NOTE,evidence:EVID,returnMethod:'dropoff',selected:selectedItems()};
   fetch('/api/returns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(j){
       if(!j||!j.ok){btn.innerHTML='ส่งคำขอคืนสินค้า';btn.disabled=false;alert('ส่งคำขอไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อเจ้าหน้าที่');return;}
       document.getElementById('doneTitle').textContent='รับคำขอคืนสินค้าแล้ว';
       document.getElementById('doneLead').innerHTML='ยอดเงินคืนโดยประมาณ <b style="color:var(--navy)">'+baht(j.amount)+'</b> · '+payTxt;
       document.getElementById('refNo').textContent=j.rid;
-      document.getElementById('nextSteps').innerHTML='<h3>ขั้นตอนถัดไป</h3><ol><li>เจ้าหน้าที่จะตรวจสอบคำขอและยืนยันยอดคืน</li><li>ส่งคืนสินค้ามาที่ <b>'+RETURN_ADDR.name+'</b><br><span style="color:var(--muted)">'+RETURN_ADDR.addr+' · โทร '+RETURN_ADDR.tel+'</span></li><li>กลับมาที่หน้านี้เพื่อ<b>แนบเลขพัสดุการส่งคืน</b> ภายใน 3 วันทำการหลังยืนยัน</li><li>เมื่อบริษัทได้รับสินค้าเรียบร้อย จะเข้าสู่กระบวนการคืนเงิน โดยเป็นไปตามเงื่อนไขของธนาคาร</li></ol><div style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.6">ขออภัยเป็นอย่างสูง และขอขอบพระคุณทุกท่านที่ไว้วางใจค่ะ</div>';
+      document.getElementById('nextSteps').innerHTML='<h3>ขั้นตอนการดำเนินการ</h3><ol><li>ลูกค้าทำการส่งคืนสินค้าที่ขนส่งใกล้พื้นที่</li><li>ลูกค้าแนบภาพสลิปการคืน ที่ระบุค่าจัดส่ง ค่ากล่อง แบบชัดเจน</li><li>กรณีชำระผ่านบัญชีธนาคาร รบกวนลูกค้าระบุบัญชีธนาคารสำหรับการรับเงินคืน</li><li>หากสินค้าถึงปลายทางเรียบร้อยแล้ว ทีมงานจะทำการตรวจสอบ และดำเนินการคืนเงินในขั้นตอนถัดไป สามารถเข้ามาดูสถานะได้ตลอด หรือสอบถามทางทีมงานผ่าน @Official ของบริษัทฯ</li></ol><div style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.6">ที่อยู่จัดส่งคืน: <b>'+RETURN_ADDR.name+'</b> · '+RETURN_ADDR.addr+'<br><br>ขออภัยเป็นอย่างสูงสำหรับเหตุการณ์ที่เกิดขึ้น และขอขอบพระคุณที่ไว้วางใจเป็นอย่างยิ่ง</div>';
       refreshThen(function(){show('s4');});
     }).catch(function(){btn.innerHTML='ส่งคำขอคืนสินค้า';btn.disabled=false;alert('เชื่อมต่อไม่สำเร็จ');});
 }
@@ -541,25 +553,35 @@ function trackCard(r){
   var head='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px"><div><div style="font-weight:700" class="num">'+esc(r.rid)+'</div><div style="font-size:.76rem;color:var(--muted)">คำสั่งซื้อ '+esc(r.orderId)+'</div></div><span class="pill '+st.c+'">'+st.l+'</span></div>';
   if(isWait){return '<div class="card" style="margin-bottom:14px;padding:18px">'+head+'<div class="banner info" style="margin:10px 0 0">'+icon('clock')+'<div>ท่านเลือกรอการปรับปรุง Application — บริษัทจะพัฒนาระบบให้เสร็จภายใน <b>31 ต.ค. 2569</b> และแจ้งความคืบหน้าให้ทราบ</div></div>'+histBlock(r)+'</div>';}
   var prog='<div class="tprog">'+trackDots(r.status)+'</div>';
-  var deadline=(r.status==='awaiting_shipment')?'<div class="deadrow">โปรดส่งคืนสินค้าภายใน <b>3 วันทำการหลังยืนยันข้อมูล</b></div>':'';
+  var deadline='';
   var refundBox=r.refund?('<div style="background:var(--ok-soft);border-radius:12px;padding:14px;margin-top:12px"><div style="font-size:.8rem;color:var(--muted)">คืนเงิน'+(r.refund.type==='full'?'เต็มจำนวน':'บางส่วน')+'สำเร็จ</div><div style="font-size:1.5rem;font-weight:700;color:var(--ok);margin-top:2px" class="num">'+baht(r.refund.amount)+'</div><div style="font-size:.72rem;color:var(--muted);margin-top:4px">ช่องทาง: '+(r.channel==='bank'?'บัญชีธนาคาร':'บัตรเครดิต')+(r.refund.at?(' · '+new Date(r.refund.at).toLocaleDateString('th-TH')):'')+'</div>'+(r.refund.note?('<div style="font-size:.75rem;color:var(--muted);margin-top:4px">หมายเหตุ: '+esc(r.refund.note)+'</div>'):'')+'</div>'):'';
   var rejBox=(r.status==='rejected')?('<div style="background:var(--danger-soft);border-radius:12px;padding:13px;margin-top:12px;font-size:.85rem;color:var(--danger)">ปฏิเสธการรับคืน'+(r.inspection&&r.inspection.reason?(' — '+esc(r.inspection.reason)):'')+' · สินค้าจะถูกส่งกลับคืนท่าน</div>'):'';
   var shipForm='';
   if(r.status==='awaiting_shipment'){
-    shipForm='<div style="border:1px dashed var(--blue);border-radius:12px;padding:14px;margin-top:12px;background:var(--surface2)">'
-      +'<div style="font-weight:700;font-size:.92rem;margin-bottom:4px;display:flex;align-items:center;gap:7px">'+icon('box')+' แนบหลักฐานการส่งคืน</div>'
-      +'<div style="font-size:.8rem;color:var(--muted);margin-bottom:10px">กรอกเลขพัสดุที่ส่งคืน (และแนบสลิป/รูปถ่ายได้) เพื่อให้ทีมงานตรวจรับ — สถานะจะเปลี่ยนเป็น “รอตรวจรับ” อัตโนมัติ</div>'
-      +'<input type="text" id="tk_'+r.rid+'" placeholder="เลขพัสดุ / หมายเลขติดตาม (เช่น TH123...)" style="margin-bottom:8px">'
-      +'<input type="text" id="cr_'+r.rid+'" placeholder="ขนส่ง (เช่น Kerry, Flash, J&T) — ถ้ามี" style="margin-bottom:8px">'
-      +'<label class="upload" id="upl_'+r.rid+'" style="margin-bottom:10px"><input type="file" accept="image/*" onchange="trackSlip(this,\''+r.rid+'\')">'+icon('clip')+'<span class="up-tx" id="uptx_'+r.rid+'">แนบรูป/สลิปการส่งคืน (ถ้ามี)</span></label>'
-      +'<button class="btn primary" onclick="shipSubmit(\''+r.rid+'\')" id="shipbtn_'+r.rid+'">ยืนยันการส่งคืน</button></div>';
+    var acctNote=(r.channel==='card')
+      ? 'ค่าสินค้าจะคืนเข้าบัตรเครดิตใบเดิม · ส่วนค่าจัดส่งที่ท่านสำรองจ่าย บริษัทจะโอนคืนเข้าบัญชีด้านล่าง'
+      : 'บริษัทจะโอนเงินคืนเข้าบัญชีธนาคารที่ท่านระบุด้านล่าง';
+    shipForm='<div class="shipcard">'
+      +'<div class="shiphd">'+icon('box')+' แนบหลักฐานการส่งคืน + บัญชีรับเงินคืน</div>'
+      +'<div class="shipsub">เมื่อส่งคืนสินค้าเรียบร้อยแล้ว กรอกเลขพัสดุ + แนบสลิปการคืน แล้วระบุบัญชีสำหรับรับเงินคืน (แนบได้ตลอด ไม่ต้องรอ)</div>'
+      +'<label class="flm">เลขพัสดุ / หมายเลขติดตาม</label><input type="text" id="tk_'+r.rid+'" placeholder="เช่น TH123...">'
+      +'<label class="flm">ขนส่ง (ถ้ามี)</label><input type="text" id="cr_'+r.rid+'" placeholder="เช่น Kerry, Flash, J&T">'
+      +'<label class="flm">สลิปการคืน (ระบุค่าจัดส่ง / ค่ากล่อง ให้ชัดเจน)</label>'
+      +'<label class="upload" id="upl_'+r.rid+'"><input type="file" accept="image/*" onchange="trackSlip(this,\''+r.rid+'\')">'+icon('clip')+'<span class="up-tx" id="uptx_'+r.rid+'">แนบสลิป / รูปการส่งคืน</span></label>'
+      +'<div class="acctbox"><div class="acctnote">'+acctNote+'</div>'
+      +'<label class="flm">ชื่อบัญชี</label><input type="text" id="an_'+r.rid+'" placeholder="ชื่อ-นามสกุล เจ้าของบัญชี" value="'+esc((r.refundAccount||{}).name||'')+'">'
+      +'<label class="flm">ธนาคาร</label><input type="text" id="bk_'+r.rid+'" placeholder="เช่น กสิกรไทย, ไทยพาณิชย์" value="'+esc((r.refundAccount||{}).bank||'')+'">'
+      +'<label class="flm">เลขที่บัญชี</label><input type="text" id="ac_'+r.rid+'" inputmode="numeric" placeholder="เลขบัญชีธนาคาร" value="'+esc((r.refundAccount||{}).no||'')+'"></div>'
+      +'<button class="btn primary" onclick="shipSubmit(\''+r.rid+'\')" id="shipbtn_'+r.rid+'" style="margin-top:12px">ยืนยันการส่งคืน + บัญชีรับเงิน</button></div>';
   }
+  var acct=r.refundAccount||{};
   var shipDet='';
-  if(r.returnTracking||r.returnCarrier){
+  if(r.returnTracking||r.returnCarrier||acct.no){
     shipDet='<h3>การจัดส่งสินค้าคืน</h3>'
       +'<div class="rrow"><span class="rk">วิธีการส่งคืน</span><span class="rv">จัดส่งพัสดุมาที่บริษัท</span></div>'
       +(r.returnCarrier?'<div class="rrow"><span class="rk">ขนส่ง</span><span class="rv">'+esc(r.returnCarrier)+'</span></div>':'')
       +(r.returnTracking?'<div class="rrow"><span class="rk">หมายเลขติดตามพัสดุ</span><span class="rv"><span class="trkval">'+esc(r.returnTracking)+'</span><button class="copy" onclick="copyTxt(\''+esc(r.returnTracking)+'\')">'+icon('copy')+'คัดลอก</button></span></div>':'')
+      +(acct.no?'<div class="rrow"><span class="rk">บัญชีรับเงินคืน</span><span class="rv" style="text-align:right">'+esc(acct.bank||'')+' '+esc(acct.no)+'<br><span style="font-weight:500;color:var(--muted);font-size:12px">'+esc(acct.name||'')+'</span></span></div>':'')
       +'<div class="rrow"><span class="rk">ที่อยู่ส่งคืนสินค้า</span><span class="rv" style="font-weight:500;text-align:right;max-width:62%;font-size:12px;color:var(--muted)">'+RETURN_ADDR.name+'</span></div>';
   }
   var evHtml=(r.evidence&&r.evidence.length)?('<div class="rrow"><span class="rk">รูปภาพ/หลักฐาน</span><span class="rv"></span></div><div class="evrow">'+r.evidence.map(function(u){return '<img src="'+esc(u)+'">';}).join('')+'</div>'):'';
@@ -579,11 +601,13 @@ function histBlock(r){return (r.history&&r.history.length)?('<details style="mar
 function copyTxt(t){try{navigator.clipboard.writeText(t);}catch(e){}}
 function trackSlip(inp,rid){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){inp.setAttribute('data-slip',rd.result);document.getElementById('uptx_'+rid).textContent='✓ '+f.name;document.getElementById('upl_'+rid).classList.add('filled');};rd.readAsDataURL(f);}
 function shipSubmit(rid){
-  var tk=(document.getElementById('tk_'+rid).value||'').trim();var cr=(document.getElementById('cr_'+rid).value||'').trim();
+  function gv(id){return ((document.getElementById(id)||{}).value||'').trim();}
+  var tk=gv('tk_'+rid),cr=gv('cr_'+rid),an=gv('an_'+rid),bk=gv('bk_'+rid),ac=gv('ac_'+rid);
   var slipInp=document.querySelector('#upl_'+rid+' input[type=file]');var slip=slipInp?slipInp.getAttribute('data-slip'):null;
   if(!tk&&!slip){alert('กรุณากรอกเลขพัสดุ หรือแนบสลิป/รูปการส่งคืน');return;}
+  if(!an||!ac){alert('กรุณาระบุบัญชีรับเงินคืน (ชื่อบัญชี + เลขที่บัญชี)');return;}
   var btn=document.getElementById('shipbtn_'+rid);btn.innerHTML='<span class="spin"></span> กำลังบันทึก...';btn.disabled=true;
-  fetch('/api/returns/'+encodeURIComponent(rid)+'/ship',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email,trackingNo:tk,carrier:cr,returnSlip:slip})})
+  fetch('/api/returns/'+encodeURIComponent(rid)+'/ship',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email,trackingNo:tk,carrier:cr,returnSlip:slip,acctName:an,bankName:bk,acctNo:ac})})
     .then(function(r){return r.json();}).then(function(j){
       if(!j||!j.ok){btn.innerHTML='ยืนยันการส่งคืน';btn.disabled=false;alert('บันทึกไม่สำเร็จ: '+((j&&j.error)||''));return;}
       refreshThen(function(){renderTrack();});

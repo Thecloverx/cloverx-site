@@ -711,7 +711,8 @@ app.post('/api/returns', function (req, res) {
   var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase();
   if (!ownsOrder(o, ph, em)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   var choice = b.choice === 'wait' ? 'wait' : 'return';
-  var channel = b.channel === 'bank' ? 'bank' : 'card';
+  var opay = String(o.pay || '').toLowerCase();
+  var channel = opay === 'bank' ? 'bank' : (opay === 'card' ? 'card' : (b.channel === 'bank' ? 'bank' : 'card'));
   var items = (Array.isArray(b.selected) ? b.selected : []).map(function (s) { return { name: String(s.name || '').slice(0, 120), key: String(s.key || '').slice(0, 40), price: Number(s.price) || 0 }; });
   var amount = items.reduce(function (a, it) { return a + it.price; }, 0);
   var slip = (choice === 'return' && channel === 'bank') ? saveDataImage(b.slip, 'RSP-' + o.id) : null;
@@ -722,7 +723,7 @@ app.post('/api/returns', function (req, res) {
   var rlist = readReturns();
   var seq = (rlist.length ? Math.max.apply(null, rlist.map(function (x) { return x.seq || 0; })) : 0) + 1;
   var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
-  var rid = (choice === 'wait' ? 'WAIT-' : 'RMA-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
+  var rid = (choice === 'wait' ? 'WAIT-' : 'RT-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
   var initStatus = choice === 'wait' ? 'wait' : 'awaiting_shipment';
   var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: o.phone || '', email: o.email || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, status: initStatus, history: [] };
   retLog(rec, choice === 'wait' ? 'ลูกค้าเลือกรอการปรับปรุง Application' : ('ลูกค้ายื่นคำขอคืนสินค้า' + (reason ? (' · เหตุผล: ' + reason) : '') + ' — รอจัดส่งสินค้าคืน'));
@@ -740,12 +741,21 @@ app.post('/api/returns/:rid/ship', function (req, res) {
   if (r.choice === 'wait') return res.status(400).json({ ok: false, error: 'not_applicable' });
   var tracking = String(b.trackingNo || '').trim().slice(0, 60), carrier = String(b.carrier || '').trim().slice(0, 60);
   var rslip = saveDataImage(b.returnSlip, 'RTN-' + r.orderId);
+  var acct = { name: String(b.acctName || '').trim().slice(0, 80), bank: String(b.bankName || '').trim().slice(0, 60), no: String(b.acctNo || '').trim().slice(0, 40) };
   if (!tracking && !rslip) return res.status(400).json({ ok: false, error: 'need_tracking_or_slip' });
   r.returnTracking = tracking; r.returnCarrier = carrier; if (rslip) r.returnSlip = rslip;
+  if (acct.name || acct.no || acct.bank) r.refundAccount = acct;
   r.status = 'in_transit'; r.shippedAt = new Date().toISOString();
-  retLog(r, 'ลูกค้าแจ้งการส่งคืน' + (tracking ? (' · เลขพัสดุ ' + tracking) : '') + (carrier ? (' (' + carrier + ')') : '') + (rslip ? ' · แนบสลิป' : ''));
+  retLog(r, 'ลูกค้าแจ้งการส่งคืน' + (tracking ? (' · เลขพัสดุ ' + tracking) : '') + (carrier ? (' (' + carrier + ')') : '') + (rslip ? ' · แนบสลิปการคืน' : '') + (acct.no ? (' · บัญชีรับเงินคืน ' + acct.bank + ' ' + acct.no) : ''));
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
+});
+// แอดมิน: ลบคำขอคืน (ถังขยะ)
+app.delete('/api/returns/:rid', function (req, res) {
+  var rlist = readReturns(); var i = rlist.findIndex(function (x) { return x.rid === req.params.rid; });
+  if (i < 0) return res.status(404).json({ ok: false, error: 'not_found' });
+  var removed = rlist.splice(i, 1)[0]; writeReturns(rlist);
+  res.json({ ok: true, removed: removed.rid });
 });
 // แอดมิน: ตรวจรับสินค้า + เลือกผล (good/damaged/incomplete/reject)
 app.post('/api/returns/:rid/inspect', function (req, res) {

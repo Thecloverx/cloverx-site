@@ -2872,7 +2872,9 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function renderPreorder(){ poDraw(); poRefresh(); }
 
   /* ===== Return & Refund — Purchase Order / Management / Customer ===== */
-  var RET_ALL=[], RET_Q='', RET_CH='all', RET_STAT='all', RET_MTAB='all', RET_VIEW='orders';
+  var RET_ALL=[], RET_Q='', RET_CH='all', RET_STAT='all', RET_MTAB='all', RET_VIEW='orders', RET_SEL={}, RET_MPAGE=1, RET_MENUBOUND=false;
+  function retKebabIcon(){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>';}
+  function retTrashIcon(){return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/></svg>';}
   var RET_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyCAIAAABnRsZeAAAHxElEQVR4nO3dwY0sNRRAURpNFqRAPsRIPqRAHMUWCckM+BrbxTnbr+6uruq58uLp/c/zPD8AdH7cfQHA28gKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9jXz4p9+/qW6jkP8/tuvg38df9/xa8dm7uTM546tu6ozfzm7nuCZZu6G0woQkxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJuash1bN/05Y9005I2TsjOfu2siecb4qnbdq13W/S04rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsYVTtmPrJvzWTTSeuZ/1zC2q6+7Vuune9z3BXdO9TitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGzblO2Ndu3BHc9K7poqHjtzs++Zn/s+TitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQMyU7T+waxPqronVXRtnd5mZdebPnFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgNi2KVszi5Vd86y7nuCZE7oz3ve34LQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQWTtm+bxpyZtfputfOWPe577tXM868qnWcVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2Od5nt3XcI1dk6Pr3Di/O3OvznwK7+O0AsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEpqZsd+0cfd/m13XznTduUX3fvPKuyeBdv0mnFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9rXrg9dNQ66baFz3uWNnbn6d+dx1s783PsFdz2gdpxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVIDa1y3bGjZOjY2fuK33fbtcZu+7z/22/stMKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCbmrI9c3bwxp2yZ25gHds1dbprnnVs14Turqc/5rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsS+Zl585jzrrnc+c/rzzN29Z84cv+8Z7ZrQdVoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJTU7ZjZ+4rXffON85orptJtdv1+86cz57htALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxD7P82z54HWzkrumTmesmzodO3PKduzMGdwzdwbv4rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQWTtmeuYNz15zlrtlQM7jff+czd8qeOVU85rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsS+Zl585jTk2JlTiWO79qTeeK/Gds3RznzumdPqY04rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0Bsasp2l/ftZ33fzPGuGdwbZ1JnnPn0nVaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgNjneZ5//eIbp05v3L87tmuu9Ma7ceaM9diud57htALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxKZ22d44R7tusvDMyeAZZ17VOuu+0Y2TsjOcVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2NQu27EbpzB37Tqdceb21pl3nnHmBPaMG7cvO60AMVkBYrICxGQFiMkKEJMVICYrQExWgJisALGpXbbv21Y7885nfu66edYbdwaPnfmbHDtzMthpBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWITU3Z7trPuu6165w5hXnmvPKZT3DGjVuBZzitADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxqSnbsXX/0/0uN+6FPXMKc91VnfnLWTdVfOb3dVoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJTU7a79rPOmLnmdXthd83C7tpWO/PO6167zq6r2vUX6rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQ+z/PsvoZrnDlHu2ue9X0TumPrZlLtsgX4G7ICxGQFiMkKEJMVICYrQExWgJisADFZAWILd9neaN3M4ro9uGM3zrPe+Ltad5/PfPpjTitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGxqynbszC2bN05wjs18o113Y9fkqE2333/nmW/ktALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxBZO2Y7dOO945mzortfOsGH3+2aekV22wEvIChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIbZuyvdHMzOLMROOZW4F3bW/dtZ91xrqr2jX5Pea0AsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLETNn+R2Y2od64rXaXXTO4N95Ju2yBa8gKEJMVICYrQExWgJisADFZAWKyAsRkBYh9nuf51y8+c2/o2I3XfKYz7+SuPbjrpmzP3Bk85rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQW7rK9cbvn2K650l2TozNu3N07czd27cGd+UZ22QLXkBUgJitATFaAmKwAMVkBYrICxGQFiMkKEJvaZQvwV04rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsT8AEbnvU/dQlSMAAAAASUVORK5CYII=';
   var RET_CHLBL={card:'บัตรเครดิต',bank:'โอนธนาคาร',promptpay:'PromptPay'};
   var RET_ST={awaiting_shipment:{l:'รอลูกค้าส่งคืน',c:'wait'},in_transit:{l:'รอตรวจรับสินค้า',c:'pend'},refund_review:{l:'รออนุมัติคืนเงิน',c:'pend'},refunded:{l:'คืนเงินแล้ว',c:'ok'},rejected:{l:'ปฏิเสธ/ส่งกลับ',c:'bad'},wait:{l:'รอปรับปรุงแอป',c:'pend'}};
@@ -2969,57 +2971,90 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var rows=all.filter(function(r){return RET_MTAB==='all'||r.status===RET_MTAB;});
     var cnt=document.getElementById('retMCount'); if(cnt)cnt.textContent='('+rows.length+')';
     var list=document.getElementById('retMList'); if(!list)return;
-    if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:44px 0">ไม่มีคำขอในสถานะนี้</div>';return;}
-    list.innerHTML=rows.map(retManageCard).join('');
-    list.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
+    if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:44px 0">ไม่มีคำขอในสถานะนี้</div>';RET_SEL={};return;}
+    var visRids={}; rows.forEach(function(r){visRids[r.rid]=1;}); Object.keys(RET_SEL).forEach(function(k){if(!visRids[k])delete RET_SEL[k];});
+    var PER=10, pages=Math.ceil(rows.length/PER); if(RET_MPAGE>pages)RET_MPAGE=1; if(RET_MPAGE<1)RET_MPAGE=1;
+    var pageRows=rows.slice((RET_MPAGE-1)*PER, RET_MPAGE*PER);
+    var selN=Object.keys(RET_SEL).length;
+    var allChecked=pageRows.length>0&&pageRows.every(function(r){return RET_SEL[r.rid];});
+    var toolbar='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:var(--soft);border-radius:11px">'
+      +'<label style="display:flex;align-items:center;gap:8px;font-size:.84rem;font-weight:600;cursor:pointer"><input type="checkbox" id="retSelAll" '+(allChecked?'checked':'')+' style="width:18px;height:18px;accent-color:var(--brand);cursor:pointer"> เลือกทั้งหน้า</label>'
+      +(selN?('<span style="font-size:.82rem;color:var(--muted)">เลือก '+selN+' รายการ</span><button onclick="retBulkDelete()" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:9px;padding:8px 13px;font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer">'+retTrashIcon()+' ลบที่เลือก</button>'):'')
+      +'</div>';
+    list.innerHTML=toolbar+pageRows.map(retManageCard).join('')+retPager(pages);
+    var sa=document.getElementById('retSelAll'); if(sa)sa.addEventListener('change',function(e){pageRows.forEach(function(r){if(e.target.checked)RET_SEL[r.rid]=1;else delete RET_SEL[r.rid];});retManageDraw();});
+    list.querySelectorAll('.ret-chk').forEach(function(cb){cb.addEventListener('click',function(e){e.stopPropagation();});cb.addEventListener('change',function(){var rid=cb.getAttribute('data-rid');if(cb.checked)RET_SEL[rid]=1;else delete RET_SEL[rid];retManageDraw();});});
+    list.querySelectorAll('[data-menu]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retToggleMenu(b.getAttribute('data-menu'));});});
+    list.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
+    list.querySelectorAll('[data-detail]').forEach(function(c){c.addEventListener('click',function(){retDetail(c.getAttribute('data-detail'));});});
+    list.querySelectorAll('.ret-pgbtn').forEach(function(b){b.addEventListener('click',function(){RET_MPAGE=+b.getAttribute('data-pg');retManageDraw();});});
+    if(!RET_MENUBOUND){RET_MENUBOUND=true;document.addEventListener('click',function(){document.querySelectorAll('[id^="retmenu_"]').forEach(function(m){m.style.display='none';});});}
+  }
+  function retPager(pages){if(pages<=1)return '';var out='<div style="display:flex;gap:6px;justify-content:center;margin-top:6px;flex-wrap:wrap">';for(var i=1;i<=pages;i++){out+='<button class="ret-pgbtn" data-pg="'+i+'" style="min-width:36px;height:36px;border:1px solid '+(i===RET_MPAGE?'var(--brand)':'var(--line)')+';background:'+(i===RET_MPAGE?'var(--brand)':'#fff')+';color:'+(i===RET_MPAGE?'#fff':'var(--ink)')+';border-radius:9px;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">'+i+'</button>';}return out+'</div>';}
+  function retMenuActions(r){var a=[];
+    if(r.status==='awaiting_shipment'){a.push({act:'shipadmin',label:'บันทึกเลขพัสดุแทนลูกค้า'});}
+    else if(r.status==='in_transit'){a.push({act:'insp_good',label:'ตรวจรับ: สมบูรณ์ 100%',color:'var(--brand)'});a.push({act:'insp_damaged',label:'ตรวจรับ: ชำรุด/เสียหาย'});a.push({act:'insp_incomplete',label:'ตรวจรับ: สินค้าไม่ครบ'});a.push({act:'insp_reject',label:'ปฏิเสธการรับคืน',color:'#dc2626'});}
+    else if(r.status==='refund_review'){a.push({act:'refund_full',label:'อนุมัติคืนเต็มจำนวน '+retBaht(r.amount),color:'var(--brand)'});a.push({act:'refund_partial',label:'อนุมัติคืนบางส่วน…'});}
+    return a;}
+  function retToggleMenu(rid){var open=document.getElementById('retmenu_'+rid);var wasOpen=open&&open.style.display==='block';document.querySelectorAll('[id^="retmenu_"]').forEach(function(m){m.style.display='none';});if(open&&!wasOpen)open.style.display='block';}
+  function retBulkDelete(){var ids=Object.keys(RET_SEL);if(!ids.length)return;if(!confirm('ลบคำขอที่เลือก '+ids.length+' รายการ? การลบไม่สามารถกู้คืนได้'))return;var done=0,ok=0;ids.forEach(function(rid){fetch('/api/returns/'+encodeURIComponent(rid),{method:'DELETE'}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok)ok++;}).catch(function(){}).then(function(){done++;if(done>=ids.length){RET_SEL={};xvToast('ลบแล้ว '+ok+' รายการ','ok');retRefresh();}});});}
+  function retModal(html){var w=document.getElementById('retModalWrap');if(!w){w=document.createElement('div');w.id='retModalWrap';w.style.cssText='position:fixed;inset:0;z-index:200;display:none';w.innerHTML='<div id="retModalBg" style="position:absolute;inset:0;background:rgba(16,27,45,.5)"></div><div id="retModalCard" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,94vw);max-height:90vh;overflow-y:auto;background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(16,27,45,.3)"></div>';document.body.appendChild(w);w.querySelector('#retModalBg').addEventListener('click',retModalClose);}
+    w.querySelector('#retModalCard').innerHTML=html;w.style.display='block';}
+  function retModalClose(){var w=document.getElementById('retModalWrap');if(w)w.style.display='none';}
+  function retDetail(rid){var r=RET_ALL.find(function(x){return x.rid===rid;});if(!r)return;
+    var acts=retMenuActions(r);
+    var rdbtn='padding:11px 14px;border-radius:10px;background:#fff;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;width:100%;text-align:center;';
+    var actBtns=acts.map(function(a){return '<button data-act="'+a.act+'" data-rid="'+r.rid+'" style="'+rdbtn+'border:1px solid '+((a.color&&a.color.indexOf('#')===0)?a.color:'var(--brand)')+';color:'+(a.color||'var(--brand)')+'">'+a.label+'</button>';}).join('');
+    var sec=function(t){return '<div style="font-weight:800;font-size:.88rem;margin:16px 0 7px">'+t+'</div>';};
+    var row=function(k,v){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:.85rem;padding:5px 0"><span style="color:var(--muted)">'+k+'</span><span style="font-weight:600;text-align:right;max-width:62%">'+v+'</span></div>';};
+    var itemsHtml=(r.items||[]).map(function(it){return row(poEsc(it.name),retBaht(it.price));}).join('')||'<div style="color:var(--muted);font-size:.82rem">—</div>';
+    var ev=(r.evidence&&r.evidence.length)?('<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+r.evidence.map(function(u){return '<a href="'+poEsc(u)+'" target="_blank"><img src="'+poEsc(u)+'" style="width:60px;height:60px;object-fit:cover;border-radius:9px;border:1px solid var(--line)"></a>';}).join('')+'</div>'):'';
+    var acct=r.refundAccount||{};
+    var timeline=(r.history&&r.history.length)?r.history.map(function(h){return '<div style="position:relative;padding-left:20px;padding-bottom:12px"><span style="position:absolute;left:0;top:3px;width:11px;height:11px;border-radius:50%;background:var(--brand)"></span><div style="font-size:.8rem">'+poEsc(h.text)+'</div><div style="font-size:.72rem;color:var(--muted);margin-top:2px">'+poTime(h.at)+'</div></div>';}).join(''):'<div style="color:var(--muted);font-size:.82rem">—</div>';
+    var html='<div style="position:sticky;top:0;background:#fff;padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:10px;border-radius:18px 18px 0 0;z-index:2">'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:1.02rem">รายละเอียดคำขอคืน</div><div style="font-size:.78rem;color:var(--muted);margin-top:2px">'+poEsc(r.rid)+' · '+poEsc(r.orderId)+'</div></div>'
+      +'<div style="flex:none">'+retStPill(r.status)+'</div>'
+      +'<button onclick="retModalClose()" style="border:0;background:none;font-size:1.35rem;color:var(--muted);cursor:pointer;line-height:1;flex:none">×</button></div>'
+      +'<div style="padding:2px 18px 18px">'
+      +sec('👤 ข้อมูลลูกค้า')+row('ชื่อลูกค้า',poEsc(r.name||'-'))+row('เบอร์โทรศัพท์',poEsc(r.phone||'-'))+row('อีเมล',poEsc(r.email||'-'))+row('ช่องทางที่ชำระ',r.channel==='bank'?'โอนบัญชีธนาคาร':'บัตรเครดิต')
+      +sec('📦 รายการสินค้า')+itemsHtml
+      +sec('💬 เหตุผล / ข้อความจากลูกค้า')+row('เหตุผล',poEsc(r.reason||'-'))+(r.note?('<div style="font-size:.85rem;color:var(--muted);margin-top:4px">“'+poEsc(r.note)+'”</div>'):'')+ev
+      +sec('🚚 การส่งคืน & บัญชีรับเงินคืน')+row('เลขพัสดุ',poEsc(r.returnTracking||'-'))+row('ขนส่ง',poEsc(r.returnCarrier||'-'))+(r.returnSlip?row('สลิปการคืน','<a href="'+poEsc(r.returnSlip)+'" target="_blank" style="color:var(--brand)">ดูสลิป</a>'):'')+(acct.no?row('บัญชีรับเงินคืน',poEsc(acct.bank||'')+' '+poEsc(acct.no)+'<br>'+poEsc(acct.name||'')):'')
+      +(r.inspection?(sec('🔍 ผลตรวจรับ')+row('ผล',({good:'สมบูรณ์ 100%',damaged:'ชำรุด/เสียหาย',incomplete:'สินค้าไม่ครบ',reject:'ปฏิเสธ'}[r.inspection.result]||r.inspection.result))+(r.inspection.reason?row('เหตุผล',poEsc(r.inspection.reason)):'')):'')
+      +(r.refund?(sec('💰 การคืนเงิน')+row('ประเภท',r.refund.type==='full'?'เต็มจำนวน':'บางส่วน')+row('ยอดคืน',retBaht(r.refund.amount))):'')
+      +sec('🧾 สรุปการชำระเงิน')+row('ยอดขอคืนโดยประมาณ','<b style="color:var(--brand)">'+retBaht(r.amount)+'</b>')
+      +sec('🕓 รายละเอียดการดำเนินการ')+'<div style="border-left:2px solid var(--line);margin-left:5px;padding-left:8px;margin-top:4px">'+timeline+'</div>'
+      +(actBtns?('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">'+actBtns+'</div>'):'')
+      +'<button data-act="delete" data-rid="'+r.rid+'" style="'+rdbtn+'border:1px solid #fecaca;color:#dc2626;margin-top:8px">'+retTrashIcon()+' ลบคำขอนี้</button>'
+      +'</div>';
+    retModal(html);
+    var card=document.getElementById('retModalCard');
+    card.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
   }
   function retManageCard(r){
-    var bx='display:inline-flex;align-items:center;gap:5px;border-radius:9px;padding:8px 13px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;margin:6px 6px 0 0;';
-    var pri='border:0;background:var(--brand);color:#fff;';
-    var out='border:1px solid var(--line);background:#fff;color:var(--ink);';
-    var bad='border:1px solid #fecaca;background:#fff;color:#dc2626;';
-    var itemsHtml='<div style="display:flex;flex-direction:column;gap:4px">'+(r.items||[]).map(function(it){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:.84rem"><span>'+poEsc(it.name)+'</span><span class="num" style="font-weight:700">'+retBaht(it.price)+'</span></div>';}).join('')+'</div>';
-    var cust='';
-    if(r.reason||r.note||(r.evidence&&r.evidence.length)){
-      cust='<div style="background:var(--soft);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.82rem">'
-        +(r.reason?('<div><span style="color:var(--muted)">เหตุผลจากลูกค้า:</span> <b>'+poEsc(r.reason)+'</b></div>'):'')
-        +(r.note?('<div style="margin-top:4px"><span style="color:var(--muted)">ข้อความ:</span> '+poEsc(r.note)+'</div>'):'')
-        +((r.evidence&&r.evidence.length)?('<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+r.evidence.map(function(u){return '<a href="'+poEsc(u)+'" target="_blank"><img src="'+poEsc(u)+'" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';}).join('')+'</div>'):'')
-        +'</div>';
-    }
-    var logi='';
-    if(r.returnTracking||r.returnCarrier||r.returnSlip){
-      logi='<div style="background:var(--soft);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.82rem">🚚 การส่งคืนจากลูกค้า: '+(r.returnTracking?('<b>'+poEsc(r.returnTracking)+'</b>'):'')+(r.returnCarrier?(' · '+poEsc(r.returnCarrier)):'')+(r.returnSlip?(' · <a href="'+poEsc(r.returnSlip)+'" target="_blank" style="color:var(--brand);font-weight:600">ดูสลิป</a>'):'')+'</div>';
-    }
-    var insp=r.inspection?('<div style="font-size:.82rem;color:var(--muted);margin-top:8px">ผลตรวจรับ: <b style="color:var(--ink)">'+({good:'สมบูรณ์ 100%',damaged:'ชำรุด/เสียหาย',incomplete:'ไม่ครบ',reject:'ปฏิเสธ'}[r.inspection.result]||r.inspection.result)+'</b>'+(r.inspection.reason?(' — '+poEsc(r.inspection.reason)):'')+'</div>'):'';
-    var refunded=r.refund?('<div style="font-size:.82rem;color:var(--good);margin-top:8px;font-weight:700">✓ คืนเงิน'+(r.refund.type==='full'?'เต็มจำนวน':'บางส่วน')+' '+retBaht(r.refund.amount)+'</div>'):'';
-    var acts=[];
-    if(r.status==='awaiting_shipment'){
-      acts.push('<div style="font-size:.82rem;color:var(--muted)">รอลูกค้าแนบเลขพัสดุ/สลิปการส่งคืน — สถานะจะเปลี่ยนอัตโนมัติเมื่อลูกค้าแจ้ง</div>');
-      acts.push('<button data-act="shipadmin" data-rid="'+r.rid+'" style="'+bx+out+'">✎ บันทึกเลขพัสดุแทนลูกค้า</button>');
-    } else if(r.status==='in_transit'){
-      acts.push('<div style="font-size:.82rem;color:var(--ink);font-weight:600;margin-bottom:2px">ตรวจรับสินค้าที่ได้รับ แล้วเลือกผล:</div>');
-      acts.push('<button data-act="insp_good" data-rid="'+r.rid+'" style="'+bx+pri+'">✓ สมบูรณ์ 100%</button>');
-      acts.push('<button data-act="insp_damaged" data-rid="'+r.rid+'" style="'+bx+out+'">⚠ ชำรุด/เสียหาย</button>');
-      acts.push('<button data-act="insp_incomplete" data-rid="'+r.rid+'" style="'+bx+out+'">⚠ สินค้าไม่ครบ</button>');
-      acts.push('<button data-act="insp_reject" data-rid="'+r.rid+'" style="'+bx+bad+'">✕ ปฏิเสธการรับคืน</button>');
-    } else if(r.status==='refund_review'){
-      acts.push('<div style="font-size:.82rem;color:var(--ink);font-weight:600;margin-bottom:2px">อนุมัติการคืนเงิน:</div>');
-      acts.push('<button data-act="refund_full" data-rid="'+r.rid+'" style="'+bx+pri+'">คืนเต็มจำนวน '+retBaht(r.amount)+'</button>');
-      acts.push('<button data-act="refund_partial" data-rid="'+r.rid+'" style="'+bx+out+'">คืนบางส่วน…</button>');
-    } else if(r.status==='rejected'){
-      acts.push('<div style="font-size:.82rem;color:#dc2626">ปฏิเสธการรับคืน · ส่งกลับคืนลูกค้า</div>');
-    }
-    var hist=(r.history&&r.history.length)?('<details style="margin-top:10px"><summary style="cursor:pointer;font-size:.8rem;color:var(--brand);font-weight:600">ประวัติสถานะ ('+r.history.length+')</summary><div style="margin-top:8px;border-left:2px solid var(--line);padding-left:12px">'+r.history.map(function(h){return '<div style="font-size:.78rem;margin-bottom:7px"><span style="color:var(--muted)">'+poTime(h.at)+'</span><br>'+poEsc(h.text)+'</div>';}).join('')+'</div></details>'):'';
-    return '<div style="border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:14px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
-        +'<div><div style="font-weight:800">'+poEsc(r.rid)+' · '+poEsc(r.orderId)+'</div>'
-        +'<div style="font-size:.78rem;color:var(--muted);margin-top:2px">'+poEsc(r.name||'-')+' · '+poEsc(r.phone||'')+' · '+poTime(r.at)+'</div></div>'
-        +'<div style="text-align:right"><div class="num" style="font-weight:800;font-size:1.1rem;color:var(--brand)">'+retBaht(r.amount)+'</div><div style="margin-top:4px">'+retStPill(r.status)+'</div></div>'
-      +'</div>'
-      +'<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)">'+itemsHtml+'</div>'
-      +cust+logi+insp+refunded
-      +'<div style="margin-top:12px">'+acts.join('')+'</div>'+hist+'</div>';
+    var sel=RET_SEL[r.rid]?'checked':'';
+    var mitem='display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;font-family:inherit;font-weight:600;font-size:.85rem;cursor:pointer;';
+    var menu=retMenuActions(r).map(function(a){return '<button data-act="'+a.act+'" data-rid="'+r.rid+'" style="'+mitem+'color:'+(a.color||'var(--ink)')+'">'+a.label+'</button>';}).join('');
+    menu+='<button data-act="detail" data-rid="'+r.rid+'" style="'+mitem+'color:var(--ink)">ดูรายละเอียด</button>';
+    menu+='<div style="height:1px;background:var(--line);margin:4px 6px"></div><button data-act="delete" data-rid="'+r.rid+'" style="'+mitem+'color:#dc2626">'+retTrashIcon()+' ลบคำขอ</button>';
+    var itemsTxt=(r.items||[]).map(function(it){return poEsc(it.name);}).join(', ')||'—';
+    var stTag='';
+    if(r.status==='awaiting_shipment')stTag='รอลูกค้าส่งคืน';
+    else if(r.status==='in_transit')stTag='รอทีมงานตรวจรับ';
+    else if(r.status==='refund_review')stTag='รออนุมัติคืนเงิน';
+    return '<div style="border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:11px;background:#fff;box-shadow:0 1px 3px rgba(16,27,45,.05)">'
+      +'<div style="display:flex;align-items:flex-start;gap:12px">'
+        +'<input type="checkbox" class="ret-chk" data-rid="'+r.rid+'" '+sel+' style="width:18px;height:18px;margin-top:3px;accent-color:var(--brand);flex:none;cursor:pointer">'
+        +'<div data-detail="'+r.rid+'" style="flex:1;min-width:0;cursor:pointer">'
+          +'<div style="font-weight:800">'+poEsc(r.rid)+'</div>'
+          +'<div style="font-size:.77rem;color:var(--muted);margin-top:2px">'+poEsc(r.orderId)+' · '+poEsc(r.name||'-')+' · '+poEsc(r.phone||'')+'</div>'
+          +'<div style="font-size:.8rem;color:var(--muted);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+itemsTxt+'</div>'
+          +(stTag?('<div style="font-size:.76rem;color:var(--brand);font-weight:600;margin-top:5px">▸ '+stTag+'</div>'):'')
+        +'</div>'
+        +'<div style="text-align:right;flex:none"><div class="num" style="font-weight:800;color:var(--brand)">'+retBaht(r.amount)+'</div><div style="margin-top:4px">'+retStPill(r.status)+'</div></div>'
+        +'<div style="position:relative;flex:none"><button data-menu="'+r.rid+'" title="จัดการ" style="width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted);display:grid;place-items:center">'+retKebabIcon()+'</button>'
+          +'<div id="retmenu_'+r.rid+'" style="display:none;position:absolute;right:0;top:38px;z-index:20;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(16,27,45,.16);padding:6px;min-width:200px">'+menu+'</div></div>'
+      +'</div></div>';
   }
 
   /* ---------- Customer (share QR) ---------- */
@@ -3047,6 +3082,15 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   function retAct(act,rid,btn){
     var r=RET_ALL.find(function(x){return x.rid===rid;}); if(!r)return;
+    if(act==='detail'){retDetail(rid);return;}
+    var mnu=document.getElementById('retmenu_'+rid); if(mnu)mnu.style.display='none';
+    if(act==='delete'){
+      if(!confirm('ลบคำขอ '+rid+' ? การลบไม่สามารถกู้คืนได้'))return;
+      retModalClose();
+      fetch('/api/returns/'+encodeURIComponent(rid),{method:'DELETE'}).then(function(x){return x.json();}).then(function(j){if(j&&j.ok){xvToast('ลบคำขอแล้ว','ok');delete RET_SEL[rid];retRefresh();}else xvToast('ลบไม่สำเร็จ','bad');}).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+      return;
+    }
+    retModalClose();
     if(act==='shipadmin'){
       var tn=prompt('บันทึกเลขพัสดุการส่งคืนของลูกค้า (แทนลูกค้า)\nคำขอ '+rid); if(tn==null)return; tn=String(tn).trim(); if(!tn){xvToast('กรุณากรอกเลขพัสดุ','bad');return;}
       retPost(rid,'ship',{phone:r.phone,email:r.email,trackingNo:tn},'บันทึกเลขพัสดุแล้ว — รอตรวจรับ');
