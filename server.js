@@ -933,10 +933,19 @@ function trackStateLabel(desc, code) {
   if (/ระหว่างการขนส่ง|ขนส่ง|ถึงที่ทำการ|ส่งต่อ|นำเข้า|in transit/i.test(s)) return { state: 'in_transit', label: 'กำลังจัดส่ง' };
   return { state: 'in_transit', label: 'กำลังจัดส่ง' };
 }
+// ไปรษณีย์ไทยส่งวันที่เป็น พ.ศ. รูปแบบ DD/MM/YYYY HH:MM:SS+07:00 → แปลงเป็น timestamp ให้เรียงได้
+function tpParseDate(s) {
+  s = String(s || '');
+  var d = new Date(s.replace(' ', 'T'));
+  if (!isNaN(d.getTime())) return d.getTime();
+  var m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (m) { var yr = +m[3]; if (yr > 2400) yr -= 543; return new Date(yr, +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0)).getTime(); }
+  return 0;
+}
 // events = array ของ status ต่อ 1 พัสดุ (จาก response.items[barcode])
 function normTrack(events, no) {
   if (!Array.isArray(events) || !events.length) return { state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ', checkpoints: [], at: new Date().toISOString(), no: no || '' };
-  var ev = events.slice().sort(function (a, b) { return new Date(b.status_date || 0) - new Date(a.status_date || 0); });
+  var ev = events.slice().sort(function (a, b) { return tpParseDate(b.status_date) - tpParseDate(a.status_date); });
   var top = ev[0] || {};
   var sl = trackStateLabel(top.status_description, top.status);
   var checkpoints = ev.map(function (e) {
