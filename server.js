@@ -256,7 +256,7 @@ function compressFileInPlace(fullPath, ext) {
 // - idempotent: เพิ่มเฉพาะ id ที่ยังไม่มี ไม่แตะออเดอร์เดิม (ออเดอร์จริงคนละรูปแบบ id)
 (function seedImportedOrders() {
   try {
-    var marker = path.join(DATA, '.seed-imported-v1');
+    var marker = path.join(DATA, '.seed-imported-v2');
     if (fs.existsSync(marker)) return;                       // เคยนำเข้าแล้ว
     var f = path.join(__dirname, 'imported-orders-full.json');
     if (!fs.existsSync(f)) return;
@@ -822,6 +822,7 @@ app.post('/api/returns/:rid/ship', function (req, res) {
   r.status = 'in_transit'; r.shippedAt = new Date().toISOString();
   retLog(r, 'ลูกค้าแจ้งการส่งคืน' + (tracking ? (' · เลขพัสดุ ' + tracking) : '') + (carrier ? (' (' + carrier + ')') : '') + (rslip ? ' · แนบสลิปการคืน' : '') + (acct.no ? (' · บัญชีรับเงินคืน ' + acct.bank + ' ' + acct.no) : ''));
   writeReturns(rlist);
+  if (tracking) { try { refreshTrack(r, true); } catch (e) {} } // เริ่มดึงสถานะพัสดุทันที (ไม่บล็อกการตอบกลับ)
   res.json({ ok: true, ret: r });
 });
 // ลูกค้า: ยกเลิกคำขอคืนสินค้า/คืนเงิน (กลับไปเริ่มใหม่ได้)
@@ -884,6 +885,118 @@ app.post('/api/returns/:rid/status', function (req, res) {
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
 });
+// ========================= ติดตามสถานะพัสดุส่งคืน (Track123) =========================
+// ชั้น provider เดียว — สลับเจ้าอื่นภายหลังแก้เฉพาะบล็อกนี้ได้ / API key อ่านจาก env เท่านั้น
+function track123Configured() { return !!process.env.TRACK123_KEY; }
+var TRACK_TTL = Number(process.env.TRACK_TTL_MS) || 30 * 60 * 1000; // แคชผลไว้ 30 นาที กันยิง API ถี่เกิน
+function track123Req(pathStr, bodyObj) {
+  return new Promise(function (resolve) {
+    if (!track123Configured()) { resolve({ ok: false, error: 'not_configured' }); return; }
+    var body = JSON.stringify(bodyObj);
+    var rq = https.request({
+      hostname: 'api.track123.com', path: pathStr, method: 'POST',
+      headers: { 'Track123-Api-Secret': process.env.TRACK123_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+    }, function (resp) {
+      var b = ''; resp.on('data', function (d) { b += d; });
+      resp.on('end', function () {
+        try { resolve({ ok: resp.statusCode >= 200 && resp.statusCode < 300, http: resp.statusCode, body: JSON.parse(b) }); }
+        catch (e) { resolve({ ok: false, error: 'parse', http: resp.statusCode, raw: b.slice(0, 300) }); }
+      });
+    });
+    rq.on('error', function (e) { resolve({ ok: false, error: e.message }); });
+    rq.setTimeout(15000, function () { rq.destroy(); resolve({ ok: false, error: 'timeout' }); });
+    rq.write(body); rq.end();
+  });
+}
+// แปลงชื่อขนส่งที่ลูกค้ากรอก → courierCode ของ Track123 (ไม่รู้จัก = ปล่อยว่างให้ auto-detect)
+function courierCode(hint) {
+  var s = String(hint || '').toLowerCase();
+  if (/ไปรษณีย|thai\s*post|thaipost|ปณท|\bems\b|ลงทะเบียน/.test(s)) return 'thailand-post';
+  if (/flash|แฟลช/.test(s)) return 'flash-express';
+  if (/j&t|jt|เจแอนด|เจ\s*แอน/.test(s)) return 'jt-express-th';
+  if (/kerry|เคอรี|เคอร์รี/.test(s)) return 'kerry-express-th';
+  if (/best|เบสท/.test(s)) return 'best-inc-th';
+  if (/ninja|นินจา/.test(s)) return 'ninja-van-th';
+  if (/scg|จ่าดำ/.test(s)) return 'scg-express';
+  if (/dhl/.test(s)) return 'dhl';
+  return '';
+}
+// map สถานะ Track123 → สถานะภาษาไทยชุดสั้น ๆ ของเรา
+function trackStateLabel(ts) {
+  var s = String(ts || '').toUpperCase();
+  if (/DELIVERED/.test(s)) return { state: 'delivered', label: 'จัดส่งสำเร็จ' };
+  if (/PICK_?UP|OUT_?FOR|DELIVERING|NElED|NEED_?PICK/.test(s)) return { state: 'out_for_delivery', label: 'กำลังนำจ่าย' };
+  if (/RETURN/.test(s)) return { state: 'returned', label: 'ตีกลับผู้ส่ง' };
+  if (/FAIL|EXCEPTION|UNDELIVER|ALERT|EXPIRED/.test(s)) return { state: 'problem', label: 'จัดส่งมีปัญหา' };
+  if (/TRANSIT/.test(s)) return { state: 'in_transit', label: 'กำลังจัดส่ง' };
+  if (/INFO_?RECEIVED|INFORECEIVED|PENDING|ACCEPTED/.test(s)) return { state: 'info', label: 'ผู้ส่งเตรียมพัสดุ' };
+  if (/NOT_?FOUND|NOTFOUND/.test(s)) return { state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ' };
+  return { state: 'pending', label: 'รอเข้าระบบขนส่ง' };
+}
+function normTrack(item, no) {
+  if (!item) return { state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ', checkpoints: [], at: new Date().toISOString(), no: no || '' };
+  var sl = trackStateLabel(item.transitStatus);
+  var lg = item.localLogisticsInfo || {};
+  var details = Array.isArray(lg.trackingDetails) ? lg.trackingDetails : [];
+  var checkpoints = details.map(function (d) {
+    return { time: String(d.eventTime || d.eventTimeUtc || ''), text: String(d.eventDetail || d.eventName || ''), place: String(d.address || d.location || '') };
+  });
+  return {
+    state: sl.state, label: sl.label, raw: String(item.transitStatus || ''),
+    courier: String(lg.courierCode || item.courierCode || ''),
+    deliveredTime: String(item.deliveredTime || ''),
+    checkpoints: checkpoints, at: new Date().toISOString(), no: no || String(item.trackNo || '')
+  };
+}
+// ดึงสถานะ + แคชลงใน return record; force=true เพื่อบังคับดึงใหม่ (ปุ่มรีเฟรช)
+function refreshTrack(r, force) {
+  return new Promise(function (resolve) {
+    var no = String(r.returnTracking || '').trim();
+    if (!no) { resolve(null); return; }
+    if (!track123Configured()) {
+      resolve({ state: 'unconfigured', label: 'ยังไม่ได้เชื่อมระบบติดตามพัสดุ', checkpoints: [], at: new Date().toISOString(), no: no });
+      return;
+    }
+    var cur = r.trackStatus;
+    if (!force && cur && cur.at && cur.state && cur.state !== 'unconfigured' && cur.state !== 'error' &&
+      (Date.now() - new Date(cur.at).getTime()) < TRACK_TTL) { resolve(cur); return; }
+    var cc = courierCode(r.returnCarrier);
+    var info = cc ? { trackNo: no, courierCode: cc } : { trackNo: no };
+    function finish(out) {
+      out.no = no;
+      try { var rl = readReturns(); var rr = rl.find(function (x) { return x.rid === r.rid; }); if (rr) { rr.trackStatus = out; writeReturns(rl); } } catch (e) {}
+      r.trackStatus = out; resolve(out);
+    }
+    // ลงทะเบียนเลขก่อน (best-effort) แล้วค่อย query
+    track123Req('/gateway/open-api/tk/v2/track/import', [info]).then(function () {
+      track123Req('/gateway/open-api/tk/v2.1/track/query', { trackNoInfos: [info] }).then(function (q) {
+        if (q.ok && q.body && q.body.data && q.body.data.accepted && Array.isArray(q.body.data.accepted.content) && q.body.data.accepted.content.length) {
+          finish(normTrack(q.body.data.accepted.content[0], no));
+        } else if (q.ok && q.body && String(q.body.code) !== '00000' && q.body.code != null) {
+          finish({ state: 'error', label: 'ตรวจสอบไม่สำเร็จ ลองใหม่อีกครั้ง', msg: String(q.body.msg || ''), checkpoints: [], at: new Date().toISOString() });
+        } else if (!q.ok) {
+          finish({ state: 'error', label: 'เชื่อมต่อระบบติดตามไม่ได้ ลองใหม่อีกครั้ง', checkpoints: [], at: new Date().toISOString() });
+        } else {
+          finish({ state: 'not_found', label: 'ยังไม่พบข้อมูลพัสดุ (อาจยังไม่เข้าระบบขนส่ง)', checkpoints: [], at: new Date().toISOString() });
+        }
+      });
+    });
+  });
+}
+// ลูกค้า(เจ้าของ) หรือ ทีมงาน: ตรวจสอบสถานะพัสดุส่งคืน
+app.post('/api/returns/:rid/track', function (req, res) {
+  var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  var staff = false; try { staff = !!currentStaff(req); } catch (e) {}
+  if (!staff) {
+    var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(), nm = String(b.name || '');
+    if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  }
+  if (!r.returnTracking) return res.json({ ok: true, track: null, configured: track123Configured() });
+  var force = b.force === true || b.force === '1' || b.force === 1;
+  refreshTrack(r, force).then(function (t) { res.json({ ok: true, track: t, configured: track123Configured() }); });
+});
+
 // ---- ADMIN: delete an order (guarded by ADMIN_KEY) ----
 app.delete("/api/orders/:id", (req, res) => {
   const list = read();

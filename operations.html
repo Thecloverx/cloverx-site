@@ -3043,7 +3043,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +sec('👤 ข้อมูลลูกค้า')+row('ชื่อลูกค้า',poEsc(r.name||'-'))+row('เบอร์โทรศัพท์',poEsc(r.phone||'-'))+row('อีเมล',poEsc(r.email||'-'))+row('ช่องทางที่ชำระ',r.channel==='bank'?'โอนบัญชีธนาคาร':'บัตรเครดิต')
       +sec('📦 รายการสินค้า')+itemsHtml
       +sec('💬 เหตุผล / ข้อความจากลูกค้า')+row('เหตุผล',poEsc(r.reason||'-'))+(r.note?('<div style="font-size:.85rem;color:var(--muted);margin-top:4px">“'+poEsc(r.note)+'”</div>'):'')+ev
-      +sec('🚚 การส่งคืน & บัญชีรับเงินคืน')+row('เลขพัสดุ',poEsc(r.returnTracking||'-'))+row('ขนส่ง',poEsc(r.returnCarrier||'-'))+(r.returnSlip?row('สลิปการคืน','<a href="'+poEsc(r.returnSlip)+'" target="_blank" style="color:var(--brand)">ดูสลิป</a>'):'')+(acct.no?row('บัญชีรับเงินคืน',poEsc(acct.bank||'')+' '+poEsc(acct.no)+'<br>'+poEsc(acct.name||'')):'')
+      +sec('🚚 การส่งคืน & บัญชีรับเงินคืน')+row('เลขพัสดุ',poEsc(r.returnTracking||'-'))+row('ขนส่ง',poEsc(r.returnCarrier||'-'))+retTrackBlock(r)+(r.returnSlip?row('สลิปการคืน','<a href="'+poEsc(r.returnSlip)+'" target="_blank" style="color:var(--brand)">ดูสลิป</a>'):'')+(acct.no?row('บัญชีรับเงินคืน',poEsc(acct.bank||'')+' '+poEsc(acct.no)+'<br>'+poEsc(acct.name||'')):'')
       +(r.inspection?(sec('🔍 ผลตรวจรับ')+row('ผล',({good:'สมบูรณ์ 100%',damaged:'ชำรุด/เสียหาย',incomplete:'สินค้าไม่ครบ',reject:'ปฏิเสธ'}[r.inspection.result]||r.inspection.result))+(r.inspection.reason?row('เหตุผล',poEsc(r.inspection.reason)):'')):'')
       +(r.refund?(sec('💰 การคืนเงิน')+row('ประเภท',r.refund.type==='full'?'เต็มจำนวน':'บางส่วน')+row('ยอดคืน',retBaht(r.refund.amount))):'')
       +sec('🧾 สรุปการชำระเงิน')+row('ยอดขอคืนโดยประมาณ','<b style="color:var(--brand)">'+retBaht(r.amount)+'</b>')
@@ -3052,8 +3052,42 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<button data-act="delete" data-rid="'+r.rid+'" style="'+rdbtn+'border:1px solid #fecaca;color:#dc2626;margin-top:8px">'+retTrashIcon()+' ลบคำขอนี้</button>'
       +'</div>';
     retModal(html);
+    if(r.returnTracking&&r.status==='in_transit')retTrack(r.rid,false);
     var card=document.getElementById('retModalCard');
     card.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
+  }
+  function retTrackFmt(s){if(!s)return '';var d=new Date(String(s).replace(' ','T'));if(isNaN(d.getTime()))return String(s);var M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];function p(n){return('0'+n).slice(-2);}return d.getDate()+' '+M[d.getMonth()]+' '+p(d.getHours())+':'+p(d.getMinutes());}
+  function retTrackBlock(r){
+    if(!r.returnTracking)return '';
+    var t=r.trackStatus;
+    var CMAP={delivered:'#1E9E6A',out_for_delivery:'#1E9E6A',in_transit:'var(--brand)',info:'var(--brand)',pending:'#B07A1E',not_found:'#B07A1E',error:'#B07A1E',unconfigured:'#B07A1E',returned:'#dc2626',problem:'#dc2626'};
+    var col=t?(CMAP[t.state]||'#B07A1E'):'#B07A1E';
+    var label=t?(t.label||'-'):'กำลังตรวจสอบ';
+    var chip='<span style="display:inline-block;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;color:'+col+';background:color-mix(in srgb,'+col+' 14%,#fff);white-space:nowrap">'+poEsc(label)+'</span>';
+    var body;
+    if(t&&t.checkpoints&&t.checkpoints.length){
+      body='<div style="border-left:2px solid var(--line);margin-left:5px;padding-left:12px;margin-top:9px">'+t.checkpoints.map(function(c,i){
+        var sub=[];if(c.place)sub.push(poEsc(c.place));if(c.time)sub.push(retTrackFmt(c.time));
+        return '<div style="position:relative;padding-bottom:11px"><span style="position:absolute;left:-17px;top:3px;width:9px;height:9px;border-radius:50%;background:'+(i===0?'var(--brand)':'var(--line)')+'"></span><div style="font-size:.8rem;font-weight:600;line-height:1.5;word-break:keep-all">'+poEsc(c.text||'-')+'</div>'+(sub.length?'<div style="font-size:.72rem;color:var(--muted);margin-top:1px;word-break:keep-all">'+sub.join('&nbsp;&nbsp;&nbsp;')+'</div>':'')+'</div>';
+      }).join('')+'</div>';
+    } else {
+      body='<div style="font-size:.8rem;color:var(--muted);margin-top:7px;line-height:1.55;word-break:keep-all">'+poEsc(t?(t.label||'ยังไม่มีข้อมูลการเคลื่อนไหวของพัสดุ'):'กำลังดึงสถานะจากขนส่ง')+'</div>';
+    }
+    var upd=(t&&t.at)?('อัปเดต '+poTime(t.at)):'';
+    return '<div id="rettk_'+r.rid+'" style="border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-top:9px;background:var(--soft)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-weight:700;font-size:.82rem;word-break:keep-all">สถานะจัดส่งพัสดุ (อัตโนมัติ)</span>'+chip+'</div>'
+      +body
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding-top:8px;border-top:1px dashed var(--line)"><span style="font-size:.7rem;color:var(--muted)">'+poEsc(upd)+'</span><button onclick="retTrack(\''+r.rid+'\',true)" id="rettkb_'+r.rid+'" style="border:1px solid var(--brand);background:#fff;color:var(--brand);border-radius:8px;padding:6px 12px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;white-space:nowrap">ตรวจสอบล่าสุด</button></div>'
+      +'</div>';
+  }
+  function retTrack(rid,force){
+    var r=RET_ALL.find(function(x){return x.rid===rid;});if(!r||!r.returnTracking)return;
+    var b=document.getElementById('rettkb_'+rid);if(b){b.disabled=true;b.textContent='กำลังตรวจสอบ';}
+    fetch('/api/returns/'+encodeURIComponent(rid)+'/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({force:!!force})})
+      .then(function(x){return x.json();}).then(function(j){
+        if(j&&j.ok&&j.track)r.trackStatus=j.track;
+        var box=document.getElementById('rettk_'+rid);if(box)box.outerHTML=retTrackBlock(r);
+      }).catch(function(){var b2=document.getElementById('rettkb_'+rid);if(b2){b2.disabled=false;b2.textContent='ตรวจสอบล่าสุด';}});
   }
   function retManageCard(r){
     var sel=RET_SEL[r.rid]?'checked':'';

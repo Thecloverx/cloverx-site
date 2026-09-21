@@ -257,6 +257,33 @@ input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay
 .shipcard .flm{display:block;font-size:12px;font-weight:600;margin:10px 0 5px;color:var(--ink)}
 .acctbox{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
 .acctnote{font-size:12px;color:var(--blue-deep);background:var(--blue-soft);border-radius:9px;padding:9px 11px;margin-bottom:4px;line-height:1.5}
+.tkbox{border:1px solid color-mix(in srgb,var(--blue) 30%,var(--line));border-radius:14px;padding:14px 15px;margin-top:14px;background:var(--surface2)}
+.tkhd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.tkttl{display:flex;align-items:center;gap:7px;font-weight:700;font-size:.92rem;word-break:keep-all}
+.tkttl .ic{color:var(--blue);font-size:17px}
+.tkbadge{flex:0 0 auto;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px;white-space:nowrap;word-break:keep-all}
+.tk-ok{background:var(--ok-soft);color:var(--ok)}
+.tk-go{background:var(--blue-soft);color:var(--blue-deep)}
+.tk-pend{background:var(--warn-soft);color:var(--warn)}
+.tk-bad{background:var(--danger-soft);color:var(--danger)}
+.tktl{position:relative}
+.tkev{display:flex;gap:10px;padding-bottom:14px;position:relative}
+.tkev:last-child{padding-bottom:0}
+.tkev::before{content:"";position:absolute;left:5px;top:15px;bottom:0;width:2px;background:var(--line)}
+.tkev:last-child::before{display:none}
+.tkdot{flex:0 0 auto;width:12px;height:12px;border-radius:50%;margin-top:2px;background:var(--line);border:2px solid var(--surface2);position:relative;z-index:1}
+.tkev.cur .tkdot{background:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+.tkevb{flex:1;min-width:0}
+.tket{font-size:13px;font-weight:600;line-height:1.5;word-break:keep-all;text-wrap:pretty}
+.tkev.cur .tket{color:var(--blue-deep)}
+.tkem{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45;word-break:keep-all}
+.tkem .tkt{margin-left:9px}
+.tkempty{font-size:12.5px;color:var(--muted);line-height:1.55;padding:2px 0;word-break:keep-all;text-wrap:pretty}
+.tkft{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
+.tkupd{font-size:11px;color:var(--muted);word-break:keep-all}
+.tkrf{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--blue-deep);background:var(--blue-soft);border:none;border-radius:9px;padding:7px 11px;cursor:pointer;white-space:nowrap}
+.tkrf .ic{font-size:14px}
+.tkrf:disabled{opacity:.55;cursor:default}
 @media (max-width:400px){.app{padding:16px 11px 56px}.card{padding:17px}h1{font-size:19px}}
 @media (max-width:340px){.card{padding:14px}.btnrow{flex-direction:column}.btnrow .btn{width:100%}}
 </style>
@@ -615,12 +642,14 @@ function renderTrack(){
   var newBtn='<button class="btn primary" onclick="trackRefresh()" style="margin-top:6px">'+icon('search')+' ติดตามสถานะการคืนสินค้า / คืนเงิน</button>'
     +(canCancel?'<button class="btn ghost" onclick="cancelReturns()" style="margin-top:10px;color:var(--danger);border-color:color-mix(in srgb,var(--danger) 32%,var(--line))">ยกเลิกการคืนสินค้า / คืนเงิน</button>':(ORDERS.length?'<button class="btn ghost" onclick="goOrders()" style="margin-top:10px">'+icon('plus')+' ยื่นคำขอคืนใหม่ / ดูคำสั่งซื้อ</button>':''));
   box.innerHTML='<div style="display:flex;align-items:flex-start;margin-bottom:14px;gap:10px"><div style="flex:1;min-width:0"><h1 style="margin:0">ติดตามการคืนสินค้า / คืนเงิน</h1><p class="lead" style="margin:5px 0 0"><b>คำขอของคุณ ('+MYRET.length+')</b><br>ตรวจสอบสถานะและแนบหลักฐานการคืน</p></div><button class="btn ghost sm" style="flex:0 0 auto" onclick="logout()">ออกจากระบบ</button></div>'+cards+newBtn;
+  MYRET.forEach(function(r){if(r.returnTracking&&r.status==='in_transit'){checkTrack(r.rid,false);}});
 }
 function trackCard(r){
   var st=RET_ST_C[r.status]||{l:r.status,c:'pend'};var isWait=(r.choice==='wait');
   var head='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px"><div><div style="font-weight:700" class="num">'+esc(r.rid)+'</div><div style="font-size:.76rem;color:var(--muted)">คำสั่งซื้อ '+esc(r.orderId)+'</div></div><span class="pill '+st.c+'">'+st.l+'</span></div>';
   if(isWait){return '<div class="card" style="margin-bottom:14px;padding:18px">'+head+'<div class="banner info" style="margin:10px 0 0">'+icon('clock')+'<div>ท่านเลือกรอการปรับปรุง Application — บริษัทจะพัฒนาระบบให้เสร็จภายใน <b>31 ต.ค. 2569</b> และแจ้งความคืบหน้าให้ทราบ</div></div>'+histBlock(r)+'</div>';}
   var prog='<div class="tprog">'+trackDots(r.status)+'</div>';
+  var live=trackLiveBlock(r);
   var deadline='';
   var refundBox=r.refund?('<div style="background:var(--ok-soft);border-radius:12px;padding:14px;margin-top:12px"><div style="font-size:.8rem;color:var(--muted)">คืนเงิน'+(r.refund.type==='full'?'เต็มจำนวน':'บางส่วน')+'สำเร็จ</div><div style="font-size:1.5rem;font-weight:700;color:var(--ok);margin-top:2px" class="num">'+baht(r.refund.amount)+'</div><div style="font-size:.72rem;color:var(--muted);margin-top:4px">ช่องทาง: '+(r.channel==='bank'?'บัญชีธนาคาร':'บัตรเครดิต')+(r.refund.at?('&nbsp;&nbsp;'+new Date(r.refund.at).toLocaleDateString('th-TH')):'')+'</div>'+(r.refund.note?('<div style="font-size:.75rem;color:var(--muted);margin-top:4px">หมายเหตุ: '+esc(r.refund.note)+'</div>'):'')+'</div>'):'';
   var rejBox=(r.status==='rejected')?('<div style="background:var(--danger-soft);border-radius:12px;padding:13px;margin-top:12px;font-size:.85rem;color:var(--danger)">ปฏิเสธการรับคืน'+(r.inspection&&r.inspection.reason?(' — '+esc(r.inspection.reason)):'')+' สินค้าจะถูกส่งกลับคืนท่าน</div>'):'';
@@ -663,7 +692,40 @@ function trackCard(r){
     +'<div class="rrow"><span class="rk">หมายเลขคำขอ</span><span class="rv"><span class="trkval">'+esc(r.rid)+'</span></span></div>'
     +'<div class="rrow"><span class="rk">วันที่ส่งคำขอ</span><span class="rv" style="font-weight:500">'+new Date(r.at).toLocaleString('th-TH')+'</span></div>'
     +'<div class="rrow"><span class="rk">หมายเลขคำสั่งซื้อ</span><span class="rv"><span class="trkval">'+esc(r.orderId)+'</span></span></div>';
-  return '<div class="card" style="margin-bottom:14px;padding:18px">'+head+crumbs(r.status)+prog+deadline+refundBox+rejBox+shipForm+'<div class="detbox">'+shipDet+reqDet+'</div>'+histBlock(r)+'</div>';
+  return '<div class="card" style="margin-bottom:14px;padding:18px">'+head+crumbs(r.status)+prog+live+deadline+refundBox+rejBox+shipForm+'<div class="detbox">'+shipDet+reqDet+'</div>'+histBlock(r)+'</div>';
+}
+function fmtT(s){if(!s)return '';var d=new Date(String(s).replace(' ','T'));if(isNaN(d.getTime()))return String(s);var M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];function p(n){return('0'+n).slice(-2);}return d.getDate()+' '+M[d.getMonth()]+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function trackLiveBlock(r){
+  if(!r.returnTracking||['in_transit','refund_review','refunded'].indexOf(r.status)<0)return '';
+  var t=r.trackStatus,badge,body;
+  var CMAP={delivered:'tk-ok',out_for_delivery:'tk-ok',in_transit:'tk-go',info:'tk-go',pending:'tk-pend',not_found:'tk-pend',error:'tk-pend',unconfigured:'tk-pend',returned:'tk-bad',problem:'tk-bad'};
+  if(!t){badge='<span class="tkbadge tk-pend">กำลังตรวจสอบ</span>';body='<div class="tkempty">กำลังดึงสถานะจากขนส่ง กรุณารอสักครู่</div>';}
+  else if(t.state==='unconfigured'){badge='<span class="tkbadge tk-pend">รอทีมงานตรวจสอบ</span>';body='<div class="tkempty">ระบบติดตามอัตโนมัติยังไม่เปิดใช้งาน ทีมงานจะตรวจรับพัสดุและดำเนินการให้</div>';}
+  else{
+    badge='<span class="tkbadge '+(CMAP[t.state]||'tk-pend')+'">'+esc(t.label||'')+'</span>';
+    var cps=(t.checkpoints||[]);
+    if(cps.length){
+      body='<div class="tktl">'+cps.map(function(c,i){
+        var subm=[];if(c.place)subm.push('<span class="nb">'+esc(c.place)+'</span>');if(c.time)subm.push('<span class="tkt">'+esc(fmtT(c.time))+'</span>');
+        return '<div class="tkev'+(i===0?' cur':'')+'"><div class="tkdot"></div><div class="tkevb"><div class="tket">'+esc(c.text||'-')+'</div>'+(subm.length?'<div class="tkem">'+subm.join('')+'</div>':'')+'</div></div>';
+      }).join('')+'</div>';
+    }else{body='<div class="tkempty">'+esc(t.label||'ยังไม่มีข้อมูลการเคลื่อนไหวของพัสดุ')+'</div>';}
+  }
+  var upd=(t&&t.at)?('อัปเดตล่าสุด '+new Date(t.at).toLocaleString('th-TH')):'';
+  return '<div class="tkbox" id="tkbox_'+r.rid+'">'
+    +'<div class="tkhd"><span class="tkttl">'+icon('box')+'สถานะการจัดส่งพัสดุคืน</span>'+badge+'</div>'
+    +'<div class="tkbody">'+body+'</div>'
+    +'<div class="tkft"><span class="tkupd">'+esc(upd)+'</span><button class="tkrf" id="tkrf_'+r.rid+'" onclick="checkTrack(\''+r.rid+'\',true)">'+icon('search')+'ตรวจสอบล่าสุด</button></div>'
+    +'</div>';
+}
+function checkTrack(rid,force){
+  var r=MYRET.filter(function(x){return x.rid===rid;})[0];if(!r||!r.returnTracking)return;
+  var btn=document.getElementById('tkrf_'+rid);if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลังตรวจสอบ';}
+  fetch('/api/returns/'+encodeURIComponent(rid)+'/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email,name:ME.name,force:!!force})})
+    .then(function(x){return x.json();}).then(function(j){
+      if(j&&j.ok&&j.track)r.trackStatus=j.track;
+      var box=document.getElementById('tkbox_'+rid);if(box)box.outerHTML=trackLiveBlock(r);
+    }).catch(function(){var b=document.getElementById('tkrf_'+rid);if(b){b.disabled=false;b.innerHTML=icon('search')+'ตรวจสอบล่าสุด';}});
 }
 function histBlock(r){return (r.history&&r.history.length)?('<details style="margin-top:12px"><summary style="cursor:pointer;font-size:.82rem;color:var(--blue-deep);font-weight:600">ประวัติสถานะ ('+r.history.length+')</summary><div style="margin-top:8px;border-left:2px solid var(--line);padding-left:12px">'+r.history.map(function(h){return '<div style="font-size:.78rem;margin-bottom:7px"><span style="color:var(--muted)">'+new Date(h.at).toLocaleString('th-TH')+'</span><br>'+esc(h.text)+'</div>';}).join('')+'</div></details>'):'';}
 function copyTxt(t){try{navigator.clipboard.writeText(t);}catch(e){}}
