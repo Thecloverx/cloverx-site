@@ -232,6 +232,34 @@ function write(d) {
   }
 }
 
+// ================= SEED: นำเข้าออเดอร์ประวัติ (ครั้งเดียว) =================
+// นำเข้าออเดอร์เก่าจากไฟล์ imported-orders-full.json เข้าฐานข้อมูลจริงตอนเริ่มระบบ
+// - ทำครั้งเดียว (มี marker กันทำซ้ำ) จึงเคารพการลบของแอดมินภายหลัง
+// - idempotent: เพิ่มเฉพาะ id ที่ยังไม่มี ไม่แตะออเดอร์เดิม (ออเดอร์จริงคนละรูปแบบ id)
+(function seedImportedOrders() {
+  try {
+    var marker = path.join(DATA, '.seed-imported-v1');
+    if (fs.existsSync(marker)) return;                       // เคยนำเข้าแล้ว
+    var f = path.join(__dirname, 'imported-orders-full.json');
+    if (!fs.existsSync(f)) return;
+    var incoming = JSON.parse(fs.readFileSync(f, 'utf8'));
+    if (!Array.isArray(incoming) || !incoming.length) return;
+    var list = read();
+    var have = {}; list.forEach(function (o) { if (o && o.id) have[o.id] = 1; });
+    var baseSeq = list.length ? Math.max.apply(null, list.map(function (x) { return x.seq || 0; })) : 0;
+    var added = 0;
+    incoming.forEach(function (o) {
+      if (!o || !o.id || have[o.id]) return;
+      baseSeq++;
+      list.push(Object.assign({}, o, { seq: o.seq || baseSeq, imported: true, at: o.at || new Date().toISOString() }));
+      have[o.id] = 1; added++;
+    });
+    if (added) write(list);
+    try { fs.writeFileSync(marker, new Date().toISOString()); } catch (e) {}
+    console.log('[seed] historical orders: added ' + added + ' (total ' + list.length + ')');
+  } catch (e) { console.log('[seed] import skipped:', e.message); }
+})();
+
 // ================= AUTO-EMAIL RECEIPT (ฟรี ผ่าน Resend/Brevo) =================
 // เปิดใช้งานเมื่อกำหนด ENV ใน Railway: EMAIL_API_KEY (จำเป็น), EMAIL_PROVIDER=resend|brevo (ค่าเริ่มต้น resend),
 // EMAIL_FROM=CloverX <receipt@cloverxth.com>, PUBLIC_BASE_URL=https://<โดเมนจริง> (ถ้าไม่ตั้งจะเดาจาก request)
@@ -543,8 +571,10 @@ function sweepExpiredCard(list) {
 }
 
 app.get('/api/orders', (req, res) => {
-  const full = true; // admin key removed (temporary)
   const data = sweepExpiredCard(read());
+  // PDPA: เห็นข้อมูลลูกค้าแบบเต็มเฉพาะสตาฟที่ล็อกอิน (cookie cx_staff) หรือมี ADMIN_KEY; บุคคลทั่วไปเห็นแบบปิดบัง
+  const k = req.query && req.query.key;
+  const full = !!currentStaff(req) || (process.env.ADMIN_KEY && String(k) === process.env.ADMIN_KEY);
   res.json(full ? data : data.map(maskOrder));
 });
 

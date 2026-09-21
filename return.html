@@ -246,10 +246,10 @@ input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay
   <div class="scr on" id="s1">
     <div class="card">
       <h1>เข้าสู่ระบบคืนสินค้า</h1>
-      <p class="lead">กรอกเบอร์โทร/อีเมลที่ใช้สั่งซื้อ เพื่อ<b>ยื่นคำขอคืนสินค้า</b> หรือเข้ามา<b>ติดตามสถานะ · แนบหลักฐานการส่งคืน · ตรวจสอบการคืนเงิน</b> ได้ตลอดเวลา</p>
+      <p class="lead">กรอกชื่อ เบอร์โทรศัพท์ และอีเมลที่ท่านใช้ในการสั่งซื้อสินค้า เพื่อ<b>ยืนยันการคืนสินค้า</b> หรือ<b>ติดตามสถานะการคืน</b></p>
       <div class="field"><label class="fl" for="f_name">ชื่อ-นามสกุล</label><input type="text" id="f_name" placeholder="เช่น สมชาย ใจดี" autocomplete="name"></div>
       <div class="field"><label class="fl" for="f_phone">เบอร์โทรติดต่อ</label><input type="tel" id="f_phone" placeholder="08X-XXX-XXXX" autocomplete="tel" inputmode="tel"></div>
-      <div class="field"><label class="fl" for="f_email">อีเมล</label><input type="email" id="f_email" placeholder="you@email.com" autocomplete="email" inputmode="email"></div>
+      <div class="field"><label class="fl" for="f_email">อีเมล <span style="font-weight:500;color:var(--muted)">(ไม่บังคับ — แนะนำให้กรอกเพื่อการติดตามที่แม่นยำขึ้น)</span></label><input type="email" id="f_email" placeholder="you@email.com" autocomplete="email" inputmode="email"></div>
       <div class="err" id="e_lookup"></div>
       <button class="btn primary" id="btnLookup">เข้าสู่ระบบ / ค้นหา</button>
     </div>
@@ -362,14 +362,14 @@ document.getElementById('btnLookup').addEventListener('click',lookup);
 function lookup(){
   var ph=digits(document.getElementById('f_phone').value),em=document.getElementById('f_email').value.trim().toLowerCase(),nm=document.getElementById('f_name').value.trim();
   var err=document.getElementById('e_lookup');err.classList.remove('on');
-  if(!ph&&!em){err.textContent='กรุณากรอกเบอร์โทรหรืออีเมล';err.classList.add('on');return;}
   if(!nm){err.textContent='กรุณากรอกชื่อ-นามสกุล เพื่อยืนยันตัวตนของคุณ';err.classList.add('on');return;}
+  if(!ph){err.textContent='กรุณากรอกเบอร์โทรติดต่อที่ใช้สั่งซื้อ';err.classList.add('on');return;}
   var btn=document.getElementById('btnLookup');btn.innerHTML='<span class="spin"></span> กำลังค้นหา...';btn.disabled=true;
   fetch('/api/returns/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,email:em,name:nm})})
     .then(function(r){return r.json();}).then(function(j){
       btn.innerHTML='เข้าสู่ระบบ / ค้นหา';btn.disabled=false;
       ME={phone:ph,email:em,name:nm};ORDERS=(j&&j.orders)||[];MYRET=(j&&j.myReturns)||[];
-      if(!ORDERS.length&&!MYRET.length){err.textContent='ไม่พบคำสั่งซื้อ/คำขอคืนจากข้อมูลนี้ — กรุณาตรวจเบอร์โทร/อีเมลอีกครั้ง หรือติดต่อเจ้าหน้าที่ 065 514 6576';err.classList.add('on');return;}
+      if(!ORDERS.length&&!MYRET.length){err.innerHTML='ข้อมูลของท่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง<br>หากไม่สามารถดำเนินการได้ รบกวนติดต่อ <b>@cloverx</b> (10.30-19.30 น.)';err.classList.add('on');return;}
       renderOrders();
     }).catch(function(){btn.innerHTML='เข้าสู่ระบบ / ค้นหา';btn.disabled=false;err.textContent='เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';err.classList.add('on');});
 }
