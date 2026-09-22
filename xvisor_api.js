@@ -276,6 +276,15 @@ module.exports = function (app, DATA) {
   const setTotal = (s) => [1, 2, 3, 4, 5].reduce((a, p) => a + (((s.bank && (s.bank[p] || s.bank[String(p)])) || []).length), 0);
   const setReady = (s) => { const c = setCounts(s); return [1, 2, 3, 4, 5].every(p => (c[p] || 0) > 0); };
   const pubSet = (s) => ({ id: s.id, no: s.no, name: s.name, names: s.names || {}, counts: setCounts(s), total: setTotal(s), ready: setReady(s), createdAt: s.createdAt });
+  // ประเภทข้อสอบ: X-Lead (สอบเลื่อนระดับ) หรือ X-Visor — ดูจากหัวข้อรอบ + ชื่อชุดข้อสอบ (ตรรกะเดียวกับหลังบ้าน)
+  const examTypeOf = (round) => {
+    if (!round) return 'X-Visor';
+    let setName = '';
+    try { if (round.setId) { const st = getSet(round.setId); setName = (st && st.name) || ''; } } catch (e) {}
+    const t = ((round.topic || '') + ' ' + setName).toLowerCase();
+    return /x[\s-]?lead/.test(t) ? 'X-Lead' : 'X-Visor';
+  };
+  const sessExamType = (s) => (s && s.examType) || (s && examTypeOf(findR(s.roundId))) || 'X-Visor';
 
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function buildPaper(B, parts) {
@@ -396,7 +405,8 @@ module.exports = function (app, DATA) {
           return res.json({
             ok: true, resumed: true, sessionId: prev.id, token: prev.token, code: prev.code,
             mode: prev.candidate.mode, phase: prev.phase, parts: rp, durationSec: TOTAL,
-            remaining: xvRemaining(prev), answers: prev.answers || {}, paper: clientPaper(prev.paper, rp)
+            remaining: xvRemaining(prev), answers: prev.answers || {}, paper: clientPaper(prev.paper, rp),
+            examType: sessExamType(prev)
           });
         }
         // สอบจบไปแล้ว (รอตรวจ/ผ่าน/ตก/ตัดสิทธิ์) → ห้ามสอบซ้ำในรอบเดิม
@@ -423,10 +433,11 @@ module.exports = function (app, DATA) {
       roundId: round ? round.id : null, roundNo: round ? round.no : null,
       phase: 'first', paper, answers: {}, results: [], status: 'in_progress',
       startedAt: now, deadlineAt: deadlineAt, roomClock: !!roomDeadline, paused: false, pausedAt: null,
-      remaining: remainSec, pauseUsed: 0, staffVerified: false, createdAt: now
+      remaining: remainSec, pauseUsed: 0, staffVerified: false, createdAt: now,
+      examType: round ? examTypeOf(round) : 'X-Visor'
     };
     all.push(s); writeS(all);
-    res.json({ ok: true, sessionId: s.id, token: s.token, code: s.code, mode: s.candidate.mode, phase: 'first', parts: PARTS, durationSec: remainSec, paper: clientPaper(paper, PARTS) });
+    res.json({ ok: true, sessionId: s.id, token: s.token, code: s.code, mode: s.candidate.mode, phase: 'first', parts: PARTS, durationSec: remainSec, paper: clientPaper(paper, PARTS), examType: s.examType });
   });
 
   app.post('/api/xv/answer', (req, res) => {
@@ -499,7 +510,7 @@ module.exports = function (app, DATA) {
       if (!expired) mergeAnswers(s, b.answers);
       score(s, expired); writeS(all);
     }
-    res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
+    res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0), examType: sessExamType(s) });
   });
 
   // ทีมงานบังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — ตรวจคำตอบที่มีตอนนี้เหมือนลูกค้ากดส่งเอง
@@ -538,7 +549,7 @@ module.exports = function (app, DATA) {
     s.phase = 'remedial'; s.remedialActive = sel; s.status = 'in_progress'; s.remaining = TOTAL;
     s.startedAt = now; s.deadlineAt = now + TOTAL * 1000; s.roomClock = false; s.paused = false; s.pausedAt = null;
     writeS(all);
-    res.json({ ok: true, parts: sel, durationSec: TOTAL, paper: clientPaper(s.paper, sel) });
+    res.json({ ok: true, parts: sel, durationSec: TOTAL, paper: clientPaper(s.paper, sel), examType: sessExamType(s) });
   });
 
   app.get('/api/xv/session/:id', (req, res) => {
@@ -547,7 +558,7 @@ module.exports = function (app, DATA) {
     // ถ้าหมดเวลาแต่ยังไม่ได้ส่ง (เช่นปิดแท็บทิ้งไว้) → ตัดข้อสอบอัตโนมัติเมื่อมีการเรียกดู
     if (xvAutoExpire(s)) writeS(all);
     const parts = activeParts(s);
-    res.json({ ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, answers: s.answers, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: s.staffVerified, paper: clientPaper(s.paper, parts) });
+    res.json({ ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, answers: s.answers, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: s.staffVerified, paper: clientPaper(s.paper, parts), examType: sessExamType(s) });
   });
 
   /* -------- feedback / bug reports (สาธารณะ: ผู้เทสต์แจ้งปัญหาได้โดยไม่ต้องล็อกอิน) -------- */
@@ -598,7 +609,7 @@ module.exports = function (app, DATA) {
   app.get('/api/xv/round/:code', (req, res) => {
     const r = findRByCode(req.params.code);
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open', mode: r.mode || 'online', venue: r.venue || '', timeslot: r.timeslot || '' } });
+    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open', mode: r.mode || 'online', venue: r.venue || '', timeslot: r.timeslot || '', examType: examTypeOf(r) } });
   });
 
   /* ---------------- roster: imported "paid registrants" for exam-entry autofill ----------------
