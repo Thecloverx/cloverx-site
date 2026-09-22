@@ -669,12 +669,22 @@ function createRefund(pi, amountSatang, meta) {
   });
 }
 
-// ---- ADMIN: refund an order (guarded by ADMIN_KEY) — full or partial via Stripe ----
+// อนุญาตเฉพาะพนักงานที่ล็อกอิน (cookie cx_staff) หรือมี ADMIN_KEY — ใช้กับ endpoint แอดมินคืนสินค้า/คืนเงิน (ไม่ให้บุคคลทั่วไปยิงตรง)
+function staffOrKey(req, res) {
+  try { if (currentStaff(req)) return true; } catch (e) {}
+  var k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key'];
+  if (process.env.ADMIN_KEY && String(k) === process.env.ADMIN_KEY) return true;
+  res.status(403).json({ ok: false, error: 'forbidden' });
+  return false;
+}
+// ---- ADMIN: refund an order (staff login หรือ ADMIN_KEY) — full or partial via Stripe ----
 app.post('/api/orders/:id/refund', (req, res) => {
+  if (!staffOrKey(req, res)) return;
   var body = req.body || {};
   const list = read();
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (o._refunding) return res.status(409).json({ ok: false, error: 'refund_in_progress' }); // กันกดคืนเงินซ้ำระหว่างรอ Stripe (double refund)
   const total = Number(o.total) || 0;
   const already = Number(o.refundedTotal) || 0;
   const full = !!body.full;
@@ -687,13 +697,15 @@ app.post('/api/orders/:id/refund', (req, res) => {
     o.refunds.push(rec); o.refund = rec;
     o.refundedTotal = already + amount;
     o.status = (o.refundedTotal >= total - 0.001) ? 'refunded' : 'partially_refunded';
+    delete o._refunding;
     write(list);
   }
   const pi = o.stripe && o.stripe.paymentIntent;
   if ((o.pay === 'card' || o.pay === 'promptpay') && pi) {
+    o._refunding = true; write(list); // ล็อกทันที (sync) ก่อนเรียก Stripe — คำขอที่สองจะอ่านเจอ flag แล้วโดน 409
     createRefund(pi, Math.round(amount * 100), { order_id: o.id, category: body.category || '', sub: body.subReason || '', note: body.note || '' }).then(function (r) {
       if (r.ok) { record('stripe', r.refund && r.refund.id); res.json({ ok: true, method: 'stripe', order: o }); }
-      else { res.status(502).json({ ok: false, error: r.error || 'stripe_refund_failed' }); }
+      else { delete o._refunding; write(list); res.status(502).json({ ok: false, error: r.error || 'stripe_refund_failed' }); }
     });
   } else {
     record('manual', null);
@@ -747,7 +759,7 @@ function nameFactorOk(storedName, enteredName) {
 }
 function phoneFactor(storedDigits, enteredDigits) {
   if (!storedDigits || !enteredDigits) return 'none';
-  if (storedDigits === enteredDigits) return 'exact';
+  if (storedDigits === enteredDigits) return storedDigits.length >= 9 ? 'exact' : 'suffix'; // เบอร์ที่เก็บแบบปิดบัง (4 ตัวท้าย) ห้ามนับเป็น exact — ต้องมีชื่อประกอบด้วย
   if (storedDigits.length >= 4 && storedDigits.length < enteredDigits.length && enteredDigits.slice(-storedDigits.length) === storedDigits) return 'suffix';
   if (enteredDigits.length >= 4 && enteredDigits.length < storedDigits.length && storedDigits.slice(-enteredDigits.length) === enteredDigits) return 'suffix';
   return 'none';
@@ -805,7 +817,7 @@ app.post('/api/returns', function (req, res) {
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns', function (req, res) { res.json({ ok: true, returns: readReturns() }); });
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returns: readReturns() }); });
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
@@ -838,6 +850,7 @@ app.post('/api/returns/:rid/cancel', function (req, res) {
 });
 // แอดมิน: ลบคำขอคืน (ถังขยะ)
 app.delete('/api/returns/:rid', function (req, res) {
+  if (!staffOrKey(req, res)) return;
   var rlist = readReturns(); var i = rlist.findIndex(function (x) { return x.rid === req.params.rid; });
   if (i < 0) return res.status(404).json({ ok: false, error: 'not_found' });
   var removed = rlist.splice(i, 1)[0]; writeReturns(rlist);
@@ -845,6 +858,7 @@ app.delete('/api/returns/:rid', function (req, res) {
 });
 // แอดมิน: ตรวจรับสินค้า + เลือกผล (good/damaged/incomplete/reject)
 app.post('/api/returns/:rid/inspect', function (req, res) {
+  if (!staffOrKey(req, res)) return;
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   var result = b.result;
@@ -860,6 +874,7 @@ app.post('/api/returns/:rid/inspect', function (req, res) {
 });
 // แอดมิน: อนุมัติคืนเงิน (บางส่วน/เต็มจำนวน)
 app.post('/api/returns/:rid/refund', function (req, res) {
+  if (!staffOrKey(req, res)) return;
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   var type = b.type === 'partial' ? 'partial' : 'full';
@@ -873,6 +888,7 @@ app.post('/api/returns/:rid/refund', function (req, res) {
 });
 // แอดมิน: ปรับสถานะทั่วไป (รับทราบ/ปฏิเสธ/ทำเครื่องหมายคืนเงินแล้ว)
 app.post('/api/returns/:rid/status', function (req, res) {
+  if (!staffOrKey(req, res)) return;
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   var to = b.status;
