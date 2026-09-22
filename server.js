@@ -721,6 +721,14 @@ function readReturns() { try { return JSON.parse(fs.readFileSync(RET, 'utf8')); 
 function writeReturns(d) { try { fs.mkdirSync(DATA, { recursive: true }); } catch (e) {} try { fs.writeFileSync(RET, JSON.stringify(d, null, 2)); } catch (e) {} }
 const RET_W = { 'band-cream': 4590, 'band-black': 4590, 'scale': 1290, 'routinex': 7490 };
 function digitsOnly(s) { return String(s || '').replace(/\D/g, ''); }
+// แปลงเบอร์ไทยให้เป็นรูปแบบมาตรฐาน (0XXXXXXXXX) — รองรับ +66 / 66 / เบอร์ที่ลืมเลข 0 นำหน้า เพื่อให้เทียบตรงกัน
+function thaiLocal(s) {
+  var d = digitsOnly(s);
+  if (d.length === 11 && d.slice(0, 2) === '66') d = '0' + d.slice(2);   // +66 61xxxxxxx -> 061xxxxxxx
+  else if (d.length === 12 && d.slice(0, 3) === '660') d = d.slice(2);   // 660XXXXXXXXX -> 0XXXXXXXXX
+  else if (d.length === 9) d = '0' + d;                                  // 61xxxxxxx (ลืม 0 นำหน้า) -> 061xxxxxxx
+  return d;
+}
 // แตกออเดอร์เป็นเซต/ชิ้น + ประมาณยอดคืนต่อชิ้น (เฉลี่ยจากยอดรวมตามน้ำหนักราคาอ้างอิง)
 function returnSets(o) {
   var comps = [];
@@ -758,6 +766,7 @@ function nameFactorOk(storedName, enteredName) {
   return !!(es && es.charAt(0) === ss.charAt(0));                   // อักษรแรกของนามสกุลตรงกัน
 }
 function phoneFactor(storedDigits, enteredDigits) {
+  storedDigits = thaiLocal(storedDigits); enteredDigits = thaiLocal(enteredDigits); // นอร์มัลไลซ์ +66/0 ก่อนเทียบ
   if (!storedDigits || !enteredDigits) return 'none';
   if (storedDigits === enteredDigits) return storedDigits.length >= 9 ? 'exact' : 'suffix'; // เบอร์ที่เก็บแบบปิดบัง (4 ตัวท้าย) ห้ามนับเป็น exact — ต้องมีชื่อประกอบด้วย
   if (storedDigits.length >= 4 && storedDigits.length < enteredDigits.length && enteredDigits.slice(-storedDigits.length) === storedDigits) return 'suffix';
