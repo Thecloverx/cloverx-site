@@ -1297,8 +1297,11 @@ app.get('/preorder', (req, res, next) => {
 // ---- block source & data files from being served publicly (PDPA / source protection) ----
 app.use(function (req, res, next) {
   var p = decodeURIComponent(req.path || '').toLowerCase().replace(/^\/+/, '');
-  var blocked = ['server.js', 'leanlab_api.js', 'xvisor_api.js', 'package.json', 'package-lock.json'];
-  if (blocked.indexOf(p) > -1 || p === 'data' || p.indexOf('data/') === 0 || p.indexOf('.') === 0 || p.indexOf('/.') > -1 || p.endsWith('.env') || p.endsWith('.map')) {
+  var blocked = ['server.js', 'leanlab_api.js', 'xvisor_api.js', 'live_server.js', 'build_exam_deck.js', 'package.json', 'package-lock.json'];
+  // ไฟล์ระดับ root ที่อ่อนไหว: เฉลยข้อสอบ (xvisor_questions*.json), รายชื่อ (roster/seed), ออเดอร์/นำเข้าลูกค้า (imported/order), และสคริปต์ .mjs
+  var rootFile = p.indexOf('/') === -1;
+  var sensitiveRoot = rootFile && (/\.mjs$/.test(p) || (/\.json$/.test(p) && /(question|roster|seed|order|import|audit|session|registration)/.test(p)));
+  if (blocked.indexOf(p) > -1 || sensitiveRoot || p === 'data' || p.indexOf('data/') === 0 || p.indexOf('.') === 0 || p.indexOf('/.') > -1 || p.endsWith('.env') || p.endsWith('.map')) {
     return res.status(404).send('Not found');
   }
   next();

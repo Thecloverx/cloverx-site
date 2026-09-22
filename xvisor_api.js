@@ -60,6 +60,8 @@ module.exports = function (app, DATA) {
     try { fs.writeFile(fileOf[coll], JSON.stringify(mem[coll], null, 2), () => {}); } catch (e) {}
   };
   const flushAllColls = () => { COLLS.forEach(c => { if (_fileTimer[c]) { clearTimeout(_fileTimer[c]); _fileTimer[c] = null; } if (_fileDirty[c]) { _fileDirty[c] = false; try { fs.writeFileSync(fileOf[c], JSON.stringify(mem[c], null, 2)); } catch (e) {} } }); };
+  // เขียนลงไฟล์ทันทีแบบ sync (ใช้ตอนต้องคงทนก่อนตอบ ok เช่น submit) — กันข้อมูลหายถ้า process ตายในหน้าต่าง debounce
+  const flushCollSync = (coll) => { if (_fileTimer[coll]) { clearTimeout(_fileTimer[coll]); _fileTimer[coll] = null; } _fileDirty[coll] = false; try { fs.writeFileSync(fileOf[coll], JSON.stringify(mem[coll], null, 2)); } catch (e) {} };
   const writeColl = (coll, all) => {
     mem[coll] = all;                           // authoritative in-memory (read-after-write stays consistent)
     if (pool && pgReady) pgPersist(coll);      // durable in Postgres (async, queued)
@@ -67,6 +69,11 @@ module.exports = function (app, DATA) {
     if (!_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, FILE_DEBOUNCE);
   };
   process.on('SIGTERM', flushAllColls); process.on('SIGINT', flushAllColls); process.on('beforeExit', flushAllColls); // กัน redeploy/restart แล้วข้อมูลค้างในคิวหาย
+  // กัน crash แบบไม่ graceful (uncaught/rejection) แล้วคำตอบที่ตอบรับไปหาย — เขียนลงไฟล์ก่อนออก แล้วให้ตัว supervisor รีสตาร์ท
+  process.on('uncaughtException', (e) => { try { flushAllColls(); } catch (_) {} console.error('[x-visor] uncaughtException:', e && (e.stack || e.message || e)); process.exit(1); });
+  process.on('unhandledRejection', (e) => { try { flushAllColls(); } catch (_) {} console.error('[x-visor] unhandledRejection:', e && (e.message || e)); });
+  // กวาดปิด session ที่หมดเวลาแต่ผู้สอบไม่ได้กดส่ง/ปิดแท็บไป — เดิมตัดเวลาเฉพาะตอนมี request จึงอาจค้าง in_progress ตลอดกาล
+  setInterval(() => { try { const all = readS(); let changed = false; for (const s of all) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s, true); s.autoExpired = true; changed = true; } } if (changed) writeS(all); } catch (e) {} }, 45000);
   if (USE_PG) {
     try {
       const { Pool } = require('pg');
@@ -246,7 +253,7 @@ module.exports = function (app, DATA) {
   };
   // ป้องกันทุก POST ใต้ /api/xv/admin (การแก้ไข/ยืนยัน/รอบสอบ/นำเข้าข้อสอบ ฯลฯ) — GET (อ่าน) ปล่อยผ่าน
   app.use('/api/xv/admin', (req, res, next) => {
-    if (req.method === 'POST' && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
+    if (req.method !== 'GET' && req.method !== 'HEAD' && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
     next();
   });
   const genId = () => crypto.randomBytes(9).toString('hex');
@@ -427,7 +434,8 @@ module.exports = function (app, DATA) {
     const remainSec = Math.max(0, Math.ceil((deadlineAt - now) / 1000));
     const s = {
       id: genId(), token: crypto.randomBytes(12).toString('hex'),
-      candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: b.mode === 'onsite' ? 'onsite' : 'online' },
+      // โหมดสอบยึดจาก "รอบ" ฝั่งเซิร์ฟเวอร์เสมอ (กันผู้สอบปลอม mode:onsite บนรอบออนไลน์ เพื่อข้ามการตรวจ/หยุดเวลา) — ถ้าไม่มีรอบจึงค่อย fallback body
+      candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: (round && (round.mode === 'onsite' || round.mode === 'online')) ? round.mode : (b.mode === 'onsite' ? 'onsite' : 'online') },
       code: 'XV' + (Date.now() % 1000000),
       setId: B.id || null,
       roundId: round ? round.id : null, roundNo: round ? round.no : null,
@@ -450,7 +458,11 @@ module.exports = function (app, DATA) {
     if (_onsite && typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
     // บังคับเวลาจากเซิร์ฟเวอร์: หมดเวลาแล้ว → ตัดข้อสอบทันที ไม่รับคำตอบเพิ่ม (ไม่เชื่อค่าเวลาจากลูกค้า)
     if (xvExpired(s)) { score(s, true); writeS(all); return res.json({ ok: true, expired: true, status: s.status, remaining: 0 }); }
-    if (b.part && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) s.answers[b.part + '-' + b.q] = b.choice;
+    // ตรวจขอบเขต part/q ให้ตรงกับตอน submit (mergeAnswers) — กันเขียนคีย์นอกพาร์ต/นอกช่วง และกันคำตอบ phase เก่ารั่วข้ามรอบ
+    if (b.part != null && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) {
+      const _p = +b.part, _q = +b.q;
+      if (activeParts(s).indexOf(_p) >= 0 && _q >= 0 && _q < QPP) s.answers[_p + '-' + _q] = b.choice;
+    }
     s.remaining = xvRemaining(s); // เวลาที่เหลือคิดจากเซิร์ฟเวอร์เท่านั้น
     writeS(all); res.json({ ok: true, remaining: s.remaining });
   });
@@ -505,10 +517,12 @@ module.exports = function (app, DATA) {
     if (!s) return res.status(404).json({ ok: false });
     // idempotent: ถ้าถูกตัด/ส่งไปแล้ว (เช่นเซิร์ฟเวอร์หมดเวลาก่อน) คืนผลเดิม ไม่ error
     if (s.status === 'in_progress') {
+      // รวมคำตอบชุดเต็ม "ก่อน" คิดเรื่องหมดเวลาเสมอ — เพื่อกู้ข้อที่ตอบแล้วแต่ยังซิงก์ไม่ทัน (เน็ตช้า+ใกล้หมดเวลา)
+      // การ merge ไม่ทำให้ได้เวลาเพิ่ม (แค่ยืนยันคำตอบที่เลือกไว้แล้ว) และ mergeAnswers ตรวจ scope/range อยู่แล้ว จึงปลอดภัยแม้หมดเวลา
+      mergeAnswers(s, b.answers);
       const expired = xvExpired(s);
-      // รวมคำตอบชุดเต็มก่อนตรวจ — ถ้ายังไม่หมดเวลา ให้เชื่อ snapshot จากลูกค้าเพื่อกันข้อที่ซิงก์ไม่ทัน
-      if (!expired) mergeAnswers(s, b.answers);
       score(s, expired); writeS(all);
+      flushCollSync('sessions'); // คงทนทันทีก่อนตอบ ok — กันผลสอบหายถ้า process ตายในหน้าต่าง debounce
     }
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0), examType: sessExamType(s) });
   });
@@ -656,7 +670,7 @@ module.exports = function (app, DATA) {
       const k = xvPhoneKey(phone);
       if (!name || !k) { skipped++; return; }
       const entry = { name: name, phone: phone, coach: String(r.coach || '').trim().slice(0, 80), team: String(r.team || '').trim().slice(0, 120), round: String(r.round || '').trim().slice(0, 160), source: String(b.source || 'excel').slice(0, 40), importedAt: now };
-      if (byKey[k]) { Object.assign(byKey[k], entry); updated++; } else { byKey[k] = entry; cur.push(entry); added++; }
+      if (byKey[k]) { Object.assign(byKey[k], entry); updated++; } else { entry.id = 'rst' + genId(); byKey[k] = entry; cur.push(entry); added++; } // มี id ให้ roster เพื่อให้ crash-recovery (file→PG) กู้แถวได้
     });
     writeColl('roster', cur);
     res.json({ ok: true, added: added, updated: updated, skipped: skipped, total: cur.length });
