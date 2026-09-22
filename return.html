@@ -115,6 +115,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 
 .oc-tot{text-align:right;font-size:13px;color:var(--muted);padding:11px 0 4px;border-top:1px solid var(--line2);margin-top:6px}
 .oc-tot b{color:var(--blue-deep);font-size:16px;margin-left:5px}
 .oc-act{display:flex;gap:9px;justify-content:flex-end;margin-top:12px}
+.oc-act.two{flex-direction:column;gap:8px;margin-top:14px}
+.oc-act.two .btn{width:100%;justify-content:center}
+.oc-act.two .btn.ghost{border-color:color-mix(in srgb,var(--blue) 30%,var(--line));color:var(--blue-deep)}
+.oc-actlbl{font-size:12px;color:var(--muted);font-weight:600;margin:14px 0 -2px;word-break:keep-all}
 .oc-ret{display:flex;align-items:center;gap:9px;background:var(--blue-soft);border:1px solid color-mix(in srgb,var(--blue) 22%,var(--line));border-radius:11px;padding:11px 13px;margin-top:12px;cursor:pointer}
 .oc-ret .rl{font-size:12.5px;font-weight:600;color:var(--blue-deep)}
 .oc-ret .rr{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--blue-deep);font-weight:600;white-space:nowrap}
@@ -459,7 +463,7 @@ function renderOrders(){
     }).join('');
     var foot;
     if(ret){var st=RET_ST_C[ret.status]||{l:ret.status,c:'pend'};foot='<div class="oc-ret" onclick="viewTrack()"><span class="rl">คำขอคืน '+esc(ret.rid)+'&nbsp;&nbsp;<span class="pill '+st.c+'">'+st.l+'</span></span><span class="rr">ติดตาม '+icon('chev')+'</span></div>';}
-    else{foot='<div class="oc-act"><button class="btn primary sm" onclick=\'startReturn("'+o.id+'")\'>ขอคืนสินค้า / คืนเงิน</button></div>';}
+    else{foot='<div class="oc-actlbl">ต้องการดำเนินการแบบใด?</div><div class="oc-act two"><button class="btn primary sm" onclick=\'startReturn("'+o.id+'","return")\'>ขอคืนสินค้า / คืนเงิน</button><button class="btn ghost sm" onclick=\'startReturn("'+o.id+'","wait")\'>รับสินค้าไว้ รอการปรับปรุงระบบ</button></div>';}
     return '<div class="oc"><div class="oc-hd"><span class="shop"><img class="mk" src="'+LOGO.xmark+'" alt="">Xircle Pre-Order</span><span class="ostat">'+icon('check')+' จัดส่งสำเร็จแล้ว</span></div>'
       +'<div class="oc-ship">'+icon('truck')+'<span class="oc-shiptx"><span class="nb">คำสั่งซื้อ</span> <b class="nb" style="color:var(--ink)">'+esc(o.id)+'</b>&nbsp;&nbsp;<span class="nb">จัดส่งเรียบร้อยแล้ว</span></span></div>'
       +itemsHtml+'<div class="oc-tot">ยอดรวม:<b class="num">'+baht(o.total)+'</b></div>'+foot+'</div>';
@@ -470,7 +474,10 @@ function renderOrders(){
 function goOrders(){renderOrders();}
 function logout(){location.reload();}
 
-function startReturn(oid){CUR=ORDERS.filter(function(o){return o.id===oid;})[0];if(!CUR)return;PATH=null;REASON=null;openSheet('sheetPath');}
+function startReturn(oid,path){CUR=ORDERS.filter(function(o){return o.id===oid;})[0];if(!CUR)return;REASON=null;
+  if(path==='wait'){PATH='2';renderWait();show('s3b');return;}
+  if(path==='return'){PATH='1';buildReasonList();openSheet('sheetReason');return;}
+  PATH=null;openSheet('sheetPath');}
 function openSheet(id){document.getElementById(id).classList.add('on');document.body.style.overflow='hidden';}
 function closeSheet(){document.querySelectorAll('.sheet-wrap').forEach(function(s){s.classList.remove('on');});document.body.style.overflow='';}
 function choosePath(v){PATH=v;if(v==='2'){closeSheet();renderWait();show('s3b');return;}document.getElementById('sheetPath').classList.remove('on');buildReasonList();document.getElementById('sheetReason').classList.add('on');}

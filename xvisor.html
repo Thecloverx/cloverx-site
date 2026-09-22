@@ -476,7 +476,13 @@ async function apiGet(p){const r=await fetch(p);if(!r.ok)throw new Error('http'+
 function freshSessionAPI(phase,dur){return {phase,remaining:dur||TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
 // ---- การซิงก์คำตอบแบบเชื่อถือได้: คิว + retry กันคำตอบตกหล่นจนจอผู้สอบกับหลังบ้านไม่ตรงกัน ----
 var _syncQ={}, _syncing=null, _syncingAt=0;
-function queueAnswer(p,q,choice){ if(!(S.api&&S.api.on))return; _syncQ[p+'-'+q]=choice; flushAnswers(); }
+function queueAnswer(p,q,choice){ if(!(S.api&&S.api.on))return; _syncQ[p+'-'+q]=choice; saveAnswersLocal(); flushAnswers(); }
+// เก็บคำตอบไว้ในเครื่อง (sessionStorage) ผูกกับ session id — รีเฟรชแล้วคำตอบไม่หาย แม้ซิงก์ขึ้นเซิร์ฟเวอร์ยังไม่ครบ
+function saveAnswersLocal(){ try{ var id=S.api&&S.api.id; if(!id)return; sessionStorage.setItem('xvAns_'+id, JSON.stringify(S.answers||{})); }catch(e){} }
+function loadAnswersLocal(id){ try{ var raw=sessionStorage.getItem('xvAns_'+id); return raw?(JSON.parse(raw)||{}):{}; }catch(e){ return {}; } }
+function clearAnswersLocal(id){ try{ id=id||(S.api&&S.api.id); if(id)sessionStorage.removeItem('xvAns_'+id); }catch(e){} }
+// รวมคำตอบที่เซิร์ฟเวอร์ส่งกลับกับที่เก็บไว้ในเครื่อง — ค่าที่ผู้สอบเลือกไว้ในเครื่องเป็นหลัก แล้ว re-sync ข้อที่เซิร์ฟเวอร์ยังไม่มี
+function mergeLocalAnswers(id,srv){ srv=srv||{}; var out={}; Object.keys(srv).forEach(function(k){out[k]=srv[k];}); var loc=loadAnswersLocal(id); Object.keys(loc).forEach(function(k){ var v=loc[k]; if(v===null||v===undefined)return; if(out[k]!==v){ out[k]=v; _syncQ[k]=v; } }); if(Object.keys(_syncQ).length){ try{flushAnswers();}catch(e){} } return out; }
 function pendingCount(){ return Object.keys(_syncQ).length; }
 function pendingForPart(p){ return Object.keys(_syncQ).filter(function(k){ return k.slice(0,k.indexOf('-'))===String(p); }).length; }
 function flushAnswers(){
@@ -679,7 +685,7 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
    if(res&&res.error==='already_taken'){_re();toast('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
    if(res&&res.error==='exam_time_ended'){_re();toast('หมดเวลาสอบของรอบนี้แล้ว');return;}
    if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
-     if(res.resumed){S.answers=res.answers||{};if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
+     if(res.resumed){S.answers=mergeLocalAnswers(res.sessionId,res.answers);if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
      else{S.session=freshSessionAPI('first',res.durationSec);}
      S.phase='active_exam';try{saveResume();}catch(e){}try{xvEnterFS();}catch(e){}render();startTimer();return;}
    // ไม่สำเร็จและไม่ทราบสาเหตุ (เช่น no_questions) — โหมดจริงแจ้ง error ไม่หลุดเข้าเดโม
@@ -789,17 +795,16 @@ async function openSubmit(){const ap=activeParts();
    document.getElementById('cxl').onclick=()=>{closeScrim();const fp=miss[0].p;const q=firstMissingQ(fp);S.session.currentPart=fp;S.session.currentQ=q<0?0:q;renderExam();toast('พาไปยังข้อที่ยังไม่ได้ทำ · พาร์ต '+fp);};
    return;
  }
- // ครบทุกข้อในเครื่อง → ยืนยันว่าเซิร์ฟเวอร์บันทึกครบก่อนจึงให้ส่ง (แสดงสถานะบันทึกพร้อมสปินเนอร์ ไม่ใช้ toast)
+ // ครบทุกข้อในเครื่อง → พยายามบันทึกขึ้นระบบให้ครบก่อน (แสดงสถานะสั้น ๆ) แต่ "ไม่บล็อกการส่ง"
+ // เพราะตอนกดส่งจริงจะแนบคำตอบชุดเต็มไปกับคำขอ submit ด้วย เซิร์ฟเวอร์จะรวมให้เอง — กันเคส "ทำครบแต่กดส่งไม่ได้"
  if(S.api&&S.api.on && pendingCount()>0){
-   var okAll=false;
-   for(var t=0;t<20 && !okAll;t++){
-     scrim(`<div class="modal"><div class="mstack"><div class="mic"><div class="spinner" style="margin:0 auto"></div></div><div class="mhead"><h3>กำลังบันทึกคำตอบขึ้นระบบ</h3><p class="msub">เหลืออีก <b style="color:var(--primary-600)">${pendingCount()}</b> ข้อ · กรุณาอย่าปิดหน้าจอ ระบบจะส่งต่อให้อัตโนมัติ</p></div></div></div>`);
+   for(var t=0;t<6 && pendingCount()>0;t++){
+     scrim(`<div class="modal"><div class="mstack"><div class="mic"><div class="spinner" style="margin:0 auto"></div></div><div class="mhead"><h3>กำลังบันทึกคำตอบขึ้นระบบ</h3><p class="msub">เหลืออีก <b style="color:var(--primary-600)">${pendingCount()}</b> ข้อ · อีกสักครู่…</p></div></div></div>`);
      try{ await flushAnswers(); }catch(e){}
-     okAll = pendingCount()===0;
-     if(!okAll) await new Promise(function(r){setTimeout(r,1200);});
+     if(pendingCount()>0) await new Promise(function(r){setTimeout(r,1000);});
    }
    closeScrim();
-   if(!okAll){ toast('เน็ตช้ามาก — คำตอบยังอยู่ครบไม่หาย · ลองกดส่งอีกครั้ง หรือย้ายไปจุดที่สัญญาณดีกว่า'); return; }
+   // ต่อให้ยังซิงก์ไม่ครบ ก็ให้ส่งได้ — คำตอบชุดเต็มจะถูกแนบไปกับคำขอส่งคะแนน
  }
  // ครบทุกข้อ → ยืนยันชั้นที่ 1
  scrim(`<div class="modal"><div class="mstack"><div class="mic ok">${I.checkc}</div><div class="mhead"><h3>ยืนยันการส่งข้อสอบ</h3><p class="msub">ตอบครบทั้ง ${activeTotal()} ข้อแล้ว — เมื่อส่งแล้วจะแก้ไขไม่ได้</p></div><div class="misslist"><div class="checkrow" style="justify-content:center"><span class="ci2" style="color:var(--success)">${I.checkc}</span>ตอบครบทุกพาร์ทเรียบร้อย</div></div><div class="mbtns"><button class="btn btn-ghost" id="cxl" style="flex:1">ตรวจอีกครั้ง</button><button class="btn btn-primary" id="ok" style="flex:1">ยืนยันการส่งคะแนน</button></div></div></div>`);
@@ -814,7 +819,7 @@ function confirmSubmit2(){
 }
 async function doSubmit(){clearInterval(examTimer);
  if(S.api&&S.api.on){try{await flushAnswers();}catch(e){}
-   apiPost('/api/xv/submit',{sessionId:S.api.id,token:S.api.token}).then(res=>{
+   apiPost('/api/xv/submit',{sessionId:S.api.id,token:S.api.token,answers:S.answers}).then(res=>{
    if(res&&res.ok){S.results=[1,2,3,4,5].map(p=>{const r=(res.results||[]).find(x=>x.part===p)||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';}
    S.phase='checking';render();}).catch(()=>{S.phase='checking';render();});return;}
  S.phase='checking';render();}
@@ -887,7 +892,7 @@ function renderRemedialPrep(){const q=S.remedialQueue.slice();
  $('#begin').onclick=async()=>{const parts=Array.from(sel).sort((a,b)=>a-b);if(!parts.length||!agreed)return;
    S.remedialAttempted=parts.slice();
    var _bb=document.getElementById('begin');
-   var enterRemedial=function(sp,dur,paper,answers){var pp2=(sp&&sp.length?sp:parts);pp2.forEach(function(pp){if(paper&&paper[pp])S.paper[pp]=paper[pp];});S.remedialQueue=pp2.slice();if(answers&&Object.keys(answers).length){S.answers=answers;}else{pp2.forEach(function(p){for(var i=0;i<QPP;i++)delete S.answers[key(p,i)];});}S._review=null;S.session=freshSessionAPI('remedial',dur!=null?dur:TOTAL);S.phase='active_exam';try{saveResume();}catch(e){}render();startTimer();};
+   var enterRemedial=function(sp,dur,paper,answers){var pp2=(sp&&sp.length?sp:parts);pp2.forEach(function(pp){if(paper&&paper[pp])S.paper[pp]=paper[pp];});S.remedialQueue=pp2.slice();if(answers&&Object.keys(answers).length){S.answers=answers;}else{pp2.forEach(function(p){for(var i=0;i<QPP;i++)delete S.answers[key(p,i)];});}S._review=null;S.session=freshSessionAPI('remedial',dur!=null?dur:TOTAL);S.phase='active_exam';try{saveResume();saveAnswersLocal();}catch(e){}render();startTimer();};
    if(S.api&&S.api.on){
      if(_bb){_bb.disabled=true;_bb.style.opacity=.7;}
      var _recover=async function(){try{var chk=await apiGet('/api/xv/session/'+S.api.id+'?token='+encodeURIComponent(S.api.token));if(chk&&chk.ok&&chk.status==='in_progress'&&(chk.phase||'')==='remedial'){enterRemedial(chk.parts,chk.remaining,chk.paper,chk.answers||{});return true;}}catch(e){}return false;};
@@ -1193,7 +1198,7 @@ function mountFeedback(){
 }
 /* ---------- กลับเข้าสอบอัตโนมัติหลังรีเฟรช/เผลอปิดแท็บ (จำ session ไว้ในเครื่องผู้สอบ · ล้างเมื่อออก) ---------- */
 function saveResume(){try{var c=S.candidate||{};sessionStorage.setItem('xvResume',JSON.stringify({id:S.api&&S.api.id,token:S.api&&S.api.token,code:S.api&&S.api.code,firstName:c.firstName||'',lastName:c.lastName||'',phone:c.phone||'',mode:c.mode||''}));}catch(e){}}
-function clearResume(){try{sessionStorage.removeItem('xvResume');}catch(e){}}
+function clearResume(){try{sessionStorage.removeItem('xvResume');}catch(e){}try{clearAnswersLocal();}catch(e){}}
 async function tryResume(){
   var raw;try{raw=sessionStorage.getItem('xvResume');}catch(e){}
   if(!raw)return false;var d;try{d=JSON.parse(raw);}catch(e){clearResume();return false;}
@@ -1204,7 +1209,7 @@ async function tryResume(){
     S.api={on:true,id:d.id,token:d.token,code:d.code};
     S.candidate={firstName:d.firstName||'',lastName:d.lastName||'',phone:d.phone||'',mode:d.mode||res.mode||'onsite',id:d.code||''};
     S.paper={};(res.parts||[]).forEach(function(pp){S.paper[pp]=res.paper[pp];});
-    S.answers=res.answers||{};
+    S.answers=mergeLocalAnswers(d.id,res.answers);
     var ph=res.phase||'first';
     // สอบซ่อม: ต้องขับด้วย "พาร์ตที่กำลังซ่อมรอบนี้" (res.parts ที่โหลดข้อสอบมา) ไม่ใช่ remedialQueue ทั้งหมด — กันจอว่างตอนเลือกซ่อมบางพาร์ตแล้ว refresh
     S.remedialQueue=(ph==='remedial')?((res.parts&&res.parts.length)?res.parts.slice():(res.remedialQueue||[]).slice()):(res.remedialQueue||[]);

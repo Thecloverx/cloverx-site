@@ -322,8 +322,8 @@ module.exports = function (app, DATA) {
     // บันทึกประวัติการส่งรายครั้ง (สำหรับรายงาน "ประวัติรายครั้ง") — 1 record ต่อการส่ง 1 ครั้ง
     try {
       s.attemptLog = s.attemptLog || [];
-      const ev = { at: Date.now(), kind: (s.phase === 'remedial' ? 'remedial' : 'first'), parts: parts.slice(), perPart: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: false, expired: !!expired };
-      let evTot = 0; parts.forEach(p => { const rr = s.results.find(x => x.part === p); const sc = rr ? (rr.score || 0) : 0; ev.perPart[p] = sc; evTot += sc; });
+      const ev = { at: Date.now(), kind: (s.phase === 'remedial' ? 'remedial' : 'first'), parts: parts.slice(), perPart: {}, wrong: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: false, expired: !!expired };
+      let evTot = 0; parts.forEach(p => { const rr = s.results.find(x => x.part === p); const sc = rr ? (rr.score || 0) : 0; ev.perPart[p] = sc; ev.wrong[p] = rr ? (rr.wrongIds || []).slice() : []; evTot += sc; });
       ev.total = evTot; ev.full = parts.length * QPP; ev.pass = parts.every(p => (ev.perPart[p] || 0) >= PASS);
       ev.remedialAfter = (s.remedialQueue || []).slice();
       s.attemptLog.push(ev);
@@ -474,11 +474,31 @@ module.exports = function (app, DATA) {
     writeS(all); res.json({ ok: true, count: s.proctorPhotos.length });
   });
 
+  // รวมคำตอบชุดเต็มจากลูกค้าเข้ากับที่เซิร์ฟเวอร์มี (กันข้อตกหล่นจากการซิงก์ระหว่างสอบ)
+  // รับเฉพาะพาร์ต/ข้อในขอบเขต + ค่าตัวเลือก 0..3 หรือ null · ไม่ทับข้อที่ตอบไว้แล้วด้วยค่าว่าง
+  function mergeAnswers(s, ans) {
+    if (!ans || typeof ans !== 'object') return 0;
+    const scope = activeParts(s); let merged = 0;
+    Object.keys(ans).forEach(k => {
+      const m = /^(\d+)-(\d+)$/.exec(k); if (!m) return;
+      const p = +m[1], q = +m[2];
+      if (scope.indexOf(p) < 0) return; if (!(q >= 0 && q < QPP)) return;
+      const v = ans[k];
+      if (v === null) { if (s.answers[k] === undefined) { s.answers[k] = null; merged++; } return; }
+      if (v >= 0 && v < 4) { if (s.answers[k] !== v) { s.answers[k] = v; merged++; } }
+    });
+    return merged;
+  }
   app.post('/api/xv/submit', (req, res) => {
     const b = req.body || {}; const all = readS(); const s = findS(all, b.sessionId, b.token);
     if (!s) return res.status(404).json({ ok: false });
     // idempotent: ถ้าถูกตัด/ส่งไปแล้ว (เช่นเซิร์ฟเวอร์หมดเวลาก่อน) คืนผลเดิม ไม่ error
-    if (s.status === 'in_progress') { score(s, xvExpired(s)); writeS(all); }
+    if (s.status === 'in_progress') {
+      const expired = xvExpired(s);
+      // รวมคำตอบชุดเต็มก่อนตรวจ — ถ้ายังไม่หมดเวลา ให้เชื่อ snapshot จากลูกค้าเพื่อกันข้อที่ซิงก์ไม่ทัน
+      if (!expired) mergeAnswers(s, b.answers);
+      score(s, expired); writeS(all);
+    }
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
   });
 
@@ -681,6 +701,20 @@ module.exports = function (app, DATA) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const s = readS().find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
     const out = Object.assign({}, s); delete out.token;
+    // ระหว่างสอบ (in_progress): คำนวณ "ข้อที่ตอบผิด/ตอบแล้ว" รายพาร์ทให้ทีมงานดูสด ๆ (ทำจากเฉลยฝั่งเซิร์ฟเวอร์
+    // ก่อน strip เฉลย) — ส่งเฉพาะเลขข้อ ไม่ส่งเฉลย · endpoint นี้เป็นของแอดมิน (ผ่าน adminOk แล้ว) จึงไม่รั่วถึงผู้สอบ
+    if (s.status === 'in_progress') {
+      const scope = activeParts(s); const lw = {}, la = {}, ld = {};
+      scope.forEach(p => {
+        const paper = s.paper && s.paper[p]; const wrong = []; let ans = 0;
+        for (let q = 0; q < QPP; q++) {
+          const a = s.answers ? s.answers[p + '-' + q] : undefined;
+          if (a !== undefined && a !== null) { ans++; if (paper && paper[q] && a !== paper[q].c) wrong.push(q + 1); }
+        }
+        lw[p] = wrong; la[p] = ans; ld[p] = ans >= QPP;
+      });
+      out.liveWrong = lw; out.liveAnswered = la; out.liveDone = ld; out.liveScope = scope.slice();
+    }
     // ห้ามส่งเฉลย (index คำตอบ c) ออกฝั่ง client เด็ดขาด — endpoint นี้ไม่มีการล็อก + ผู้สอบรู้ id ตัวเอง จึงต้อง strip เฉลยทิ้ง (กันข้อสอบรั่ว)
     if (out.paper) { const pp = {}; Object.keys(out.paper).forEach(p => { pp[p] = (out.paper[p] || []).map(x => ({ q: x.q, o: x.o })); }); out.paper = pp; }
     res.json({ ok: true, session: out });
