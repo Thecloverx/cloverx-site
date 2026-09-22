@@ -82,6 +82,28 @@ input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 
 .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55}
 .err{display:none;margin-top:8px;font-size:12.5px;color:var(--danger);font-weight:500;background:var(--danger-soft);padding:9px 12px;border-radius:10px}
 .err.on{display:block}
+/* ---- QR entry / login screen (matches CloverX Sign In design) ---- */
+.app:has(#s1.on) > .brand,.app:has(#s1.on) > .footnote{display:none}
+#s1.on{position:fixed;inset:0;z-index:20;background:var(--surface);display:flex;align-items:center;justify-content:center;padding:28px 22px calc(28px + env(safe-area-inset-bottom));overflow:auto}
+.lg-wrap{width:100%;display:flex;justify-content:center}
+.lg-card{width:100%;max-width:400px;background:transparent;border:none;border-radius:0;box-shadow:none;padding:0;text-align:center}
+.lg-logo{height:34px;width:auto;display:block;margin:4px auto 26px}
+.lg-title{font-size:19px;font-weight:700;color:var(--ink);margin:0 0 6px;letter-spacing:.2px}
+.lg-sub{font-size:13.5px;color:var(--muted);margin:0 0 22px}
+.lg-field{margin-bottom:12px;text-align:left}
+.lg-field input{width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink);transition:.15s}
+.lg-field input::placeholder{color:#9aa6b8}
+.lg-field input:focus{outline:none;border-color:var(--brandx);box-shadow:0 0 0 3px color-mix(in srgb,var(--brandx) 16%,transparent)}
+.lg-btn{width:100%;min-height:52px;margin-top:6px;border:none;border-radius:12px;background:#0b0f14;color:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.lg-btn:hover{background:#232b36}
+.lg-btn:disabled{opacity:.6;cursor:not-allowed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lg-btn{background:var(--brandx)}:root:not([data-theme="light"]) .lg-btn:hover{background:var(--blue-deep)}}
+:root[data-theme="dark"] .lg-btn{background:var(--brandx)}:root[data-theme="dark"] .lg-btn:hover{background:var(--blue-deep)}
+.lg-or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;margin:18px 2px}
+.lg-or::before,.lg-or::after{content:"";height:1px;flex:1;background:var(--line)}
+.lg-help{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0}
+.lg-help b{color:var(--ink);font-weight:600}
+@media (max-width:440px){.lg-card{padding:34px 20px 28px;border-radius:20px}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;padding:13px 18px;border-radius:12px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:.15s;-webkit-tap-highlight-color:transparent}
 .btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue-deep)}
 .btn.primary:disabled{opacity:.5;cursor:not-allowed}
@@ -304,14 +326,19 @@ input[name=pay]:checked + .payopt .radio{border-color:var(--blue)}input[name=pay
   </div>
 
   <div class="scr on" id="s1">
-    <div class="card">
-      <h1>เข้าสู่ระบบคืนสินค้า</h1>
-      <p class="lead">กรอกชื่อ เบอร์โทรศัพท์ และอีเมลที่ท่านใช้ในการสั่งซื้อสินค้า เพื่อ<b>ยืนยันการคืนสินค้า</b> หรือ<b>ติดตามสถานะการคืน</b></p>
-      <div class="field"><label class="fl" for="f_name">ชื่อ-นามสกุล</label><input type="text" id="f_name" placeholder="เช่น สมชาย ใจดี" autocomplete="name"></div>
-      <div class="field"><label class="fl" for="f_phone">เบอร์โทรติดต่อ</label><input type="tel" id="f_phone" placeholder="08X-XXX-XXXX" autocomplete="tel" inputmode="tel"></div>
-      <div class="field"><label class="fl" for="f_email">อีเมล <span style="font-weight:500;color:var(--muted)">(ไม่บังคับ — แนะนำให้กรอกเพื่อการติดตามที่แม่นยำขึ้น)</span></label><input type="email" id="f_email" placeholder="you@email.com" autocomplete="email" inputmode="email"></div>
-      <div class="err" id="e_lookup"></div>
-      <button class="btn primary" id="btnLookup">เข้าสู่ระบบ / ค้นหา</button>
+    <div class="lg-wrap">
+      <div class="lg-card">
+        <img id="lgLogo" class="lg-logo" alt="CloverX">
+        <h1 class="lg-title">Login Your Account</h1>
+        <p class="lg-sub">Enter your information for processing</p>
+        <div class="lg-field"><input type="text" id="f_name" placeholder="ชื่อ - นามสกุล" autocomplete="name"></div>
+        <div class="lg-field"><input type="tel" id="f_phone" placeholder="เบอร์โทรศัพท์" autocomplete="tel" inputmode="tel"></div>
+        <input type="hidden" id="f_email">
+        <div class="err" id="e_lookup"></div>
+        <button class="lg-btn" id="btnLookup">ล็อกอินเข้าสู่ระบบ</button>
+        <div class="lg-or"><span>or</span></div>
+        <p class="lg-help">กรณีไม่สามารถทำรายการล็อกอินเข้าสู่ระบบได้<br>รบกวนติดต่อ <b>@cloverxth</b></p>
+      </div>
     </div>
   </div>
 
@@ -405,7 +432,8 @@ var IC={
 };
 function icon(n){return '<span class="ic">'+(IC[n]||'')+'</span>';}
 function fillIcons(){var m={_bk1:'back',_clk1:'clock',_ok1:'check',_chk1:'check',_x1:'x',_x2:'x',_bk2:'back',_box1:'box',_clk2:'clock',_cv1:'chev',_cv2:'chev'};for(var id in m){var el=document.getElementById(id);if(el)el.innerHTML=IC[m[id]];}
-  try{var l=document.getElementById('clogoL'),d=document.getElementById('clogoD');if(l)l.src=LOGO.clogo_light;if(d)d.src=LOGO.clogo_dark;}catch(e){}}
+  try{var l=document.getElementById('clogoL'),d=document.getElementById('clogoD');if(l)l.src=LOGO.clogo_light;if(d)d.src=LOGO.clogo_dark;}catch(e){}
+  try{var lg=document.getElementById('lgLogo');if(lg){var dark=matchMedia('(prefers-color-scheme:dark)').matches&&document.documentElement.getAttribute('data-theme')!=='light';lg.src=(dark&&LOGO.clogo_dark)?LOGO.clogo_dark:LOGO.clogo_light;}}catch(e){}}
 var RETURN_ADDR={name:'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด',addr:'762/84 หมู่บ้าน เดอะปาล์ม (ภัสสร 37) ซอย พัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250',tel:'065 514 6576',map:'https://www.google.co.th/maps/search/762%2F84+%E0%B8%AB%E0%B8%A1%E0%B8%B9%E0%B9%88%E0%B8%9A%E0%B9%89%E0%B8%B2%E0%B8%99+%E0%B9%80%E0%B8%94%E0%B8%AD%E0%B8%B0%E0%B8%9B%E0%B8%B2%E0%B8%A5%E0%B9%8C%E0%B8%A1+%28%E0%B8%A0%E0%B8%B1%E0%B8%AA%E0%B8%AA%E0%B8%A3+37%29'};
 var REASONS=['คืนสินค้าตามเงื่อนไขบริษัทฯ','คืนสินค้าชำรุด เสียหาย','ได้รับสินค้าไม่ครบ','เปลี่ยนใจ ไม่ต้องการสินค้าแล้ว','อื่น ๆ (โปรดระบุ)'];
 var OTHER_R='อื่น ๆ (โปรดระบุ)';
@@ -439,11 +467,11 @@ function lookup(){
   var btn=document.getElementById('btnLookup');btn.innerHTML='<span class="spin"></span> กำลังค้นหา...';btn.disabled=true;
   fetch('/api/returns/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,email:em,name:nm})})
     .then(function(r){return r.json();}).then(function(j){
-      btn.innerHTML='เข้าสู่ระบบ / ค้นหา';btn.disabled=false;
+      btn.innerHTML='ล็อกอินเข้าสู่ระบบ';btn.disabled=false;
       ME={phone:ph,email:em,name:nm};ORDERS=(j&&j.orders)||[];MYRET=(j&&j.myReturns)||[];
       if(!ORDERS.length&&!MYRET.length){err.innerHTML='ข้อมูลของท่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง<br>หากไม่สามารถดำเนินการได้ รบกวนติดต่อ <b>@cloverx</b> (10.30-19.30 น.)';err.classList.add('on');return;}
       renderOrders();
-    }).catch(function(){btn.innerHTML='เข้าสู่ระบบ / ค้นหา';btn.disabled=false;err.textContent='เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';err.classList.add('on');});
+    }).catch(function(){btn.innerHTML='ล็อกอินเข้าสู่ระบบ';btn.disabled=false;err.textContent='เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';err.classList.add('on');});
 }
 function refreshThen(cb){fetch('/api/returns/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email,name:ME.name})}).then(function(r){return r.json();}).then(function(j){ORDERS=(j&&j.orders)||[];MYRET=(j&&j.myReturns)||[];cb&&cb();});}
 
