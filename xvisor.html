@@ -168,7 +168,7 @@ input{font-family:inherit}
 .cell.answered.justAns{animation:pop .34s var(--ease)}
 .cell.current{background:var(--surface-solid);border-color:var(--primary-500);color:var(--primary-600);box-shadow:var(--glow-primary)}
 .cell.answered.current{background:var(--grad-primary);color:#fff;box-shadow:0 0 0 2px #fff inset,var(--glow-primary)}
-.tabs,.mprogress{display:none}
+.tabs,.mprogress,.tabbar,.tabhint{display:none}
 
 /* ---------- centered/message screens ---------- */
 .wrap-narrow{max-width:760px;margin:0 auto;width:100%}
@@ -365,14 +365,19 @@ input{font-family:inherit}
 .demobar{position:fixed;right:14px;bottom:14px;z-index:70;font-size:12px;color:var(--text-secondary);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-pill);padding:7px 14px;backdrop-filter:blur(10px)}
 .demobar b{color:var(--primary-600);cursor:pointer}
 
-@media (max-width:1080px){.layout{grid-template-columns:minmax(0,1fr) 300px}.rail{display:none}.tabs{display:flex}.reg-grid{grid-template-columns:1fr}.rem-grid{grid-template-columns:1fr}.rsplit{grid-template-columns:1fr}}
+@media (max-width:1080px){.layout{grid-template-columns:minmax(0,1fr) 300px}.rail{display:none}
+  .tabbar{display:block;position:sticky;top:0;z-index:41;background:rgba(244,249,255,.82);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);margin:0 calc(-1*var(--space-5));padding:8px var(--space-5) 10px;box-shadow:0 10px 16px -14px rgba(7,60,140,.55)}
+  .tabhint{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--text-secondary);margin:0 0 7px;padding-left:2px}.tabhint svg{width:14px;height:14px;color:var(--primary-500)}
+  .tabs{display:flex}
+  .reg-grid{grid-template-columns:1fr}.rem-grid{grid-template-columns:1fr}.rsplit{grid-template-columns:1fr}}
 @media (max-width:760px){
   .app{padding:var(--space-3);gap:var(--space-3);padding-bottom:calc(198px + env(safe-area-inset-bottom))}
   .appbar{flex-wrap:wrap;gap:var(--space-3);padding:var(--space-3) var(--space-4)}
   .appbar .title,.appbar .divider,.appbar .info{display:none}.appbar .status{order:2}.timer{order:3;margin-left:auto}
   .layout{grid-template-columns:1fr;gap:var(--space-3);animation:none;transform:none}.side{gap:var(--space-3)}
   .qcard{min-height:0;padding:var(--space-4)}.qtext{font-size:17px}
-  .tabs{display:flex;gap:var(--space-2);overflow-x:auto;padding:var(--space-1);scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+  .tabbar{margin:0 calc(-1*var(--space-3));padding:8px var(--space-3) 10px}
+  .tabs{display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
   .tab{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:74px;padding:10px var(--space-3);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border);cursor:pointer}
   .tab b{font-family:var(--num);font-weight:800;font-size:15px;color:var(--text-secondary)}.tab span{font-size:11px;color:var(--text-secondary)}
   .tab.active{background:var(--grad-primary);border-color:transparent;box-shadow:var(--glow-primary)}.tab.active b,.tab.active span{color:#fff}
@@ -842,7 +847,7 @@ function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',
  let cells='';for(let i=0;i<QPP;i++){const a=S.answers[key(ss.currentPart,i)]!=null;cells+=`<button class="cell ${a?'answered':''} ${i===ss.currentQ?'current':''}" data-q="${i}">${i+1}</button>`;}
  app.innerHTML=`
  ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn btn-danger-ghost" id="pauseBtn" style="margin-left:var(--space-2);padding:9px 14px;font-size:13px">${I.pause} หยุดเวลา · เหลือ ${PAUSE_MAX-ss.pauseUsed}</button>`:''}`)}
- <nav class="tabs">${tabs}</nav>
+ <div class="tabbar"><div class="tabhint">${I.eye} แตะที่พาร์ตด้านบนเพื่อสลับ/ย้อนดูพาร์ตที่ทำแล้ว</div><nav class="tabs">${tabs}</nav></div>
  <div class="mprogress card"><span class="mpct num">${pct}%</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="mtime tv num">${fmt(ss.remaining)}</span></div>
  <div class="layout">
    <aside class="rail card"><div><div class="rail-title">${isRem?'ลำดับสอบซ่อม':'เส้นทางการสอบ'}</div><div class="rail-sub num">EXAM JOURNEY</div></div>${parts}</aside>
