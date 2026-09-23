@@ -3810,11 +3810,13 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     return '<div class="rdlog">'+h.slice(0,8).map(function(e,i){return '<div class="ev'+(i===0?' now':'')+'"><span class="dot"></span><div class="tx">'+poEsc(e.text||'-')+'</div><div class="tm">'+rdDate(e.at)+'</div></div>';}).join('')+'</div>';
   }
   function rdTrack(r){
-    if(!r.returnTracking)return '';
+    if(!r.returnTracking&&!r.returnSlip)return '';
+    var sa=r.refundAccount||{};
     return '<div class="rdcard"><h4>ข้อมูลการจัดส่งคืน (Tracking)</h4>'
       +rdKv('ขนส่งที่ใช้',poEsc(r.returnCarrier||'-'))
-      +rdKv('เลขพัสดุ','<span class="num" style="color:var(--brand)">'+poEsc(r.returnTracking)+'</span>')
-      +(r.returnSlip?rdKv('สลิปการส่งคืน','<a href="'+poEsc(r.returnSlip)+'" target="_blank" rel="noopener" style="color:var(--brand)">ดูสลิป</a>'):'')
+      +rdKv('เลขพัสดุ',r.returnTracking?('<span class="num" style="color:var(--brand)">'+poEsc(r.returnTracking)+'</span>'):'-')
+      +(r.returnSlip?rdKv('ใบเสร็จค่าจัดส่งคืน','<a href="'+poEsc(r.returnSlip)+'" target="_blank" rel="noopener" style="color:var(--brand)">ดูใบเสร็จ</a>'):'')
+      +(r.returnSlip&&r.channel!=='bank'&&sa.no?rdKv('บัญชีรับค่าส่งคืน',poEsc((sa.bank?sa.bank+' ':'')+sa.no)+(sa.name?(' · '+poEsc(sa.name)):'')):'')
       +retTrackBlock(r)+'</div>';
   }
   function rdSelectedItems(){

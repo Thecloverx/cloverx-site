@@ -262,6 +262,18 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
 .cancel-wrap{padding:20px 20px calc(24px + env(safe-area-inset-bottom));display:flex;justify-content:center}
 .cancel-link{color:var(--danger);font-weight:700;font-size:16px;line-height:24px;text-decoration:underline;text-underline-offset:3px;padding:6px 10px}
 .trk-sep{height:12px}
+.addr-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.addr-card .ah{display:flex;align-items:center;gap:12px}
+.addr-card .ah .pin{width:40px;height:40px;border-radius:20px;background:var(--pri-soft);color:var(--pri-ink);display:grid;place-items:center;flex:0 0 auto}
+.addr-card .ah .pin svg.i{width:22px;height:22px}
+.addr-card .ah b{font-size:16px;line-height:24px;font-weight:700}
+.addr-card .at{display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:21px;color:var(--sub);font-weight:500}
+.addr-card .at b{color:var(--ink);font-weight:600}
+.addr-card .at a{color:var(--pri-ink);font-weight:600;text-decoration:none}
+.btn.sm-btn{height:44px;font-size:15px}
+.btn.sm-btn svg.i{width:18px;height:18px}
+.acct-slip{display:none;flex-direction:column;gap:14px}
+.acct-slip.on{display:flex}
 </style>
 </head>
 <body>
@@ -350,6 +362,7 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
       <div class="evgrid" id="evGrid"></div>
       <h2 class="h-sec">วิธีส่งคืนสินค้า</h2>
       <div class="info-card"><span class="pin" data-ic="pin"></span><span class="tx"><b>นำส่งที่จุดรับพัสดุใกล้บ้าน</b><span>นำส่งด้วยตนเองที่ ปณ.ไทย, Kerry, Flash<br>(ภายในระยะเวลาที่บริษัทฯ กำหนด)</span></span></div>
+      <div id="shipAddr"></div>
       <div class="note" id="shipDead"></div>
     </div>
     <div class="cta"><button class="btn" id="btnShip" disabled onclick="submitReturn()">ยืนยันคำขอ</button></div>
@@ -413,10 +426,18 @@ var IP={
  pin:'<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+ copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
  receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>'
 };
 function ic(n){return IP[n]?'<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+IP[n]+'</svg>':'';}
-var RETURN_ADDR={name:'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด',addr:'762/84 หมู่บ้าน เดอะปาล์ม (ภัสสร 37) ซอย พัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250',tel:'065 514 6576'};
+var RETURN_ADDR={name:'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด',addr:'762/84 หมู่บ้าน เดอะปาล์ม (ภัสสร 37) ซอย พัฒนาการ 38 แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250',tel:'062-593-0641'};
+function addrText(){return RETURN_ADDR.name+'\n'+RETURN_ADDR.addr+'\nโทร '+RETURN_ADDR.tel;}
+function addrCard(){return '<div class="addr-card"><div class="ah"><span class="pin">'+ic('pin')+'</span><b>ที่อยู่สำหรับส่งคืนสินค้า</b></div>'
+  +'<div class="at"><b>'+esc(RETURN_ADDR.name)+'</b><span>'+esc(RETURN_ADDR.addr)+'</span><span>โทร <a class="num" href="tel:'+RETURN_ADDR.tel.replace(/\D/g,'')+'">'+esc(RETURN_ADDR.tel)+'</a></span></div>'
+  +'<button class="btn outline sm-btn" onclick="copyAddr(this)">'+ic('copy')+'<span>คัดลอกที่อยู่</span></button></div>';}
+function copyAddr(btn){var t=addrText();var done=function(){var sp=btn.querySelector('span');if(sp){sp.textContent='คัดลอกแล้ว';setTimeout(function(){sp.textContent='คัดลอกที่อยู่';},1800);}};
+  try{navigator.clipboard.writeText(t).then(done,function(){fb();});}catch(e){fb();}
+  function fb(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);}}
 /* ข้อความเหตุผลเก็บเหมือนเดิม (หลังบ้านจัดกลุ่มจากข้อความนี้) — เปลี่ยนเฉพาะป้ายของตัวเลือก "อื่น ๆ" */
 var REASONS=[{r:'คืนสินค้าตามเงื่อนไขบริษัทฯ',i:'shield'},{r:'คืนสินค้าชำรุด เสียหาย',i:'heartc'},{r:'ได้รับสินค้าไม่ครบ',i:'box'},{r:'เปลี่ยนใจ ไม่ต้องการสินค้าแล้ว',i:'refresh'},{r:'อื่น ๆ (โปรดระบุ)',i:'edit'}];
 var OTHER_R=REASONS[4].r;
@@ -589,6 +610,7 @@ function buildShip(){
   var dmg=isDamageReason();
   document.getElementById('evTitle').textContent=dmg?'ถ่ายภาพ/แนบหลักฐานความเสียหาย':'ถ่ายภาพ/แนบหลักฐานสินค้า';
   document.getElementById('evSub').textContent=dmg?'กรุณาแนบภาพถ่ายจุดที่ชำรุดอย่างน้อย 1 ภาพ (สูงสุด 10 ภาพ)':'กรุณาแนบภาพถ่ายสินค้าที่จะส่งคืนอย่างน้อย 1 ภาพ (สูงสุด 10 ภาพ)';
+  document.getElementById('shipAddr').innerHTML=addrCard();
   document.getElementById('shipDead').innerHTML=ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+'</span>';
   renderEv();
 }
@@ -683,15 +705,18 @@ function trackCard(r){
   var acct=r.refundAccount||{};
   var act='';
   if(r.status==='awaiting_shipment'){
-    var needAcct=(r.channel==='bank')&&!acct.no;
-    act='<div class="trk-act"><div class="ncard"><h2 class="h-sec">แจ้งการส่งคืนพัสดุ</h2>'
+    var bankNeed=(r.channel==='bank')&&!acct.no; /* โอนคืนยอดสินค้าเข้าบัญชี (ลูกค้าชำระด้วยการโอน) */
+    var acctF=(!acct.no)?('<div class="acct-slip'+(bankNeed?' on':'')+'" id="acw_'+r.rid+'">'
+        +(bankNeed?'':'<p class="p-sub">ค่าจัดส่งคืนจะโอนเข้าบัญชีธนาคารของท่านโดยตรง กรุณาระบุบัญชีรับเงิน</p>')
+        +'<div class="fld"><label for="an_'+r.rid+'">ชื่อบัญชีรับเงินคืน</label><input class="inp" type="text" id="an_'+r.rid+'" placeholder="ชื่อ-นามสกุล" value="'+esc(acct.name||ACCT.name||'')+'"></div>'
+        +'<div class="fld"><label for="bk_'+r.rid+'">ธนาคาร</label><input class="inp" type="text" id="bk_'+r.rid+'" placeholder="เช่น กสิกรไทย (KBANK)" value="'+esc(acct.bank||ACCT.bank||'')+'"></div>'
+        +'<div class="fld"><label for="ac_'+r.rid+'">เลขที่บัญชี</label><input class="inp" type="text" id="ac_'+r.rid+'" inputmode="numeric" placeholder="เลขที่บัญชี" value="'+esc(acct.no||ACCT.no||'')+'"></div></div>'):'';
+    act='<div class="trk-act">'+addrCard()+'<div class="ncard"><h2 class="h-sec">แจ้งการส่งคืนพัสดุ</h2>'
       +'<div class="fld"><label for="tk_'+r.rid+'">เลขพัสดุ (Tracking Number)</label><input class="inp" type="text" id="tk_'+r.rid+'" placeholder="กรอกเลขพัสดุคืน" autocapitalize="characters"></div>'
       +'<div class="fld"><label for="cr_'+r.rid+'">บริษัทขนส่ง</label><select class="inp" id="cr_'+r.rid+'">'+CARRIERS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div>'
-      +(needAcct?('<div class="fld"><label for="an_'+r.rid+'">ชื่อบัญชีรับเงินคืน</label><input class="inp" type="text" id="an_'+r.rid+'" placeholder="ชื่อ-นามสกุล" value="'+esc(acct.name||ACCT.name||'')+'"></div>'
-        +'<div class="fld"><label for="bk_'+r.rid+'">ธนาคาร</label><input class="inp" type="text" id="bk_'+r.rid+'" placeholder="เช่น กสิกรไทย (KBANK)" value="'+esc(acct.bank||ACCT.bank||'')+'"></div>'
-        +'<div class="fld"><label for="ac_'+r.rid+'">เลขที่บัญชี</label><input class="inp" type="text" id="ac_'+r.rid+'" inputmode="numeric" placeholder="เลขที่บัญชี" value="'+esc(acct.no||ACCT.no||'')+'"></div>'):'')
+      +'<label class="slip-link">'+ic('receipt')+'<span id="sln_'+r.rid+'">แนบใบเสร็จค่าจัดส่ง เพื่อรับค่าส่งคืน</span><input type="file" accept="image/*" data-rid="'+r.rid+'" onchange="trackSlip(this,\''+r.rid+'\')"></label>'
+      +acctF
       +'<button class="btn" id="shipbtn_'+r.rid+'" onclick="shipSubmit(\''+r.rid+'\')">แจ้งส่งคืนสินค้า</button>'
-      +'<label class="slip-link">'+ic('receipt')+'<span id="sln_'+r.rid+'">ไม่มีเลขพัสดุ? แนบใบเสร็จนำส่งแทน</span><input type="file" accept="image/*" data-rid="'+r.rid+'" onchange="trackSlip(this,\''+r.rid+'\')"></label>'
       +'</div><div class="note">'+ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+'</span></div></div>';
   }else if(acct.no||r.returnTracking){
     act='<div class="trk-act"><h2 class="h-sec">ข้อมูลการส่งคืน</h2><div class="kv">'
@@ -702,15 +727,16 @@ function trackCard(r){
   }
   return panel+act;
 }
-function trackSlip(inp,rid){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){inp.setAttribute('data-slip',rd.result);document.getElementById('sln_'+rid).textContent='✓ แนบแล้ว: '+f.name;};rd.readAsDataURL(f);}
+function trackSlip(inp,rid){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){inp.setAttribute('data-slip',rd.result);document.getElementById('sln_'+rid).textContent='✓ แนบใบเสร็จแล้ว: '+f.name;var w=document.getElementById('acw_'+rid);if(w)w.classList.add('on');};rd.readAsDataURL(f);}
 function shipSubmit(rid){
   function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
   var tk=gv('tk_'+rid),cr=gv('cr_'+rid),an=gv('an_'+rid),bk=gv('bk_'+rid),ac=gv('ac_'+rid);
   var fi=document.querySelector('input[type=file][data-rid="'+rid+'"]');var slip=fi?fi.getAttribute('data-slip'):null;
   if(!tk&&!slip){alert('กรุณากรอกเลขพัสดุ หรือแนบใบเสร็จนำส่งพัสดุ');return;}
   var r=MYRET.filter(function(x){return x.rid===rid;})[0]||{};var acctPrev=r.refundAccount||{};
-  var needAcct=(r.channel==='bank')&&!acctPrev.no;
-  if(needAcct&&(!an||!ac)){alert('กรุณาระบุบัญชีรับเงินคืน (ชื่อบัญชี + เลขที่บัญชี)');return;}
+  /* ช่องทางคืนเงินค่าสินค้าเป็นไปตามช่องทางที่ลูกค้าชำระ — ยกเว้นค่าจัดส่งคืน (แนบใบเสร็จ) ที่โอนเข้าบัญชีธนาคารลูกค้าโดยตรง */
+  var needAcct=!acctPrev.no&&((r.channel==='bank')||!!slip);
+  if(needAcct&&(!an||!ac)){alert(slip&&r.channel!=='bank'?'แนบใบเสร็จค่าจัดส่งแล้ว กรุณาระบุบัญชีธนาคารสำหรับรับค่าส่งคืน (ชื่อบัญชี + เลขที่บัญชี)':'กรุณาระบุบัญชีรับเงินคืน (ชื่อบัญชี + เลขที่บัญชี)');return;}
   var btn=document.getElementById('shipbtn_'+rid);btn.innerHTML='<span class="spin"></span> กำลังบันทึก...';btn.disabled=true;
   var reset=function(){btn.innerHTML='แจ้งส่งคืนสินค้า';btn.disabled=false;};
   fetch('/api/returns/'+encodeURIComponent(rid)+'/ship',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ME.phone,email:ME.email,name:ME.name,trackingNo:tk,carrier:cr,returnSlip:slip,acctName:an,bankName:bk,acctNo:ac})})
