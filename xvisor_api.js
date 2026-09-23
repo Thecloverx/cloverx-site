@@ -166,6 +166,7 @@ module.exports = function (app, DATA, opts) {
     id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, createdAt: r.createdAt,
     mode: r.mode || 'online', fee: r.fee != null ? r.fee : 500, capacity: parseInt(r.capacity, 10) || 0,
     waitlist: !!r.waitlist, venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || '',
+    examType: (typeof examTypeOf === 'function') ? examTypeOf(r) : 'X-Visor',
     setId: r.setId || '', setName: (function () { if (!r.setId) return ''; const s = (readColl('qsets') || []).find(x => x.id === r.setId); return s ? s.name : ''; })(),
     examOpenedAt: r.examOpenedAt || null, examDeadlineAt: r.examDeadlineAt || null,
     examRemaining: (r.status === 'open' && r.examDeadlineAt) ? Math.max(0, Math.ceil((r.examDeadlineAt - Date.now()) / 1000)) : null
@@ -1012,17 +1013,24 @@ module.exports = function (app, DATA, opts) {
   // public: create a registration
   app.post('/api/xv/register', (req, res) => {
     const b = req.body || {};
-    const need = ['nationalId', 'firstName', 'lastName', 'phone', 'email', 'roundId'];
+    const need = ['firstName', 'lastName', 'phone', 'email', 'roundId'];   // เลขบัตรไม่บังคับ (ฟอร์มใหม่ตาม Figma)
+    // X-Lead: ผู้ที่เคยสมัคร X-Visor ไม่ต้องกรอกซ้ำ — เติมชื่อ/อีเมลจากใบสมัครเดิมด้วยเบอร์โทร
+    if (!b.firstName || !b.lastName || !b.email) {
+      const prevReg = findPrevByPhone(b.phone);
+      if (prevReg) { const c = prevReg.candidate || {}; b.firstName = b.firstName || c.firstName; b.lastName = b.lastName || c.lastName; b.email = b.email || c.email;
+        if (!b.nationalId && c.nationalId) b.nationalId = c.nationalId; }
+    }
     for (const k of need) if (!b[k] || !String(b[k]).trim()) return res.status(400).json({ ok: false, error: 'missing_' + k });
-    if (!/^\d{13}$/.test(String(b.nationalId).replace(/\D/g, ''))) return res.status(400).json({ ok: false, error: 'bad_national_id' });
+    if (b.nationalId && !/^\d{13}$/.test(String(b.nationalId).replace(/\D/g, ''))) return res.status(400).json({ ok: false, error: 'bad_national_id' });
     if (!b.consentTerms || !b.consentPdpa) return res.status(400).json({ ok: false, error: 'consent_required' });
     const round = findR(b.roundId);
     if (!round) return res.status(404).json({ ok: false, error: 'round_not_found' });
     if (!regOpenForReg(round)) return res.status(403).json({ ok: false, error: 'round_closed' });
-    const nid = String(b.nationalId).replace(/\D/g, '');
+    const nid = String(b.nationalId || '').replace(/\D/g, '');
+    const ph = String(b.phone || '').replace(/\D/g, '');
     const all = readReg();
     // duplicate guard: same person + round, not cancelled
-    if (all.some(x => x.candidate && x.candidate.nationalId === nid && x.roundId === round.id && x.status !== 'CANCELLED' && x.status !== 'REJECTED'))
+    if (all.some(x => x.candidate && x.roundId === round.id && x.status !== 'CANCELLED' && x.status !== 'REJECTED' && (nid ? x.candidate.nationalId === nid : String(x.candidate.phone || '').replace(/\D/g, '') === ph)))
       return res.status(409).json({ ok: false, error: 'already_registered' });
     // capacity guard (re-read fresh)
     const seats = roundSeats(round);
@@ -1073,6 +1081,39 @@ module.exports = function (app, DATA, opts) {
     fs.readFile(p, (err, buf) => { if (err) return res.status(404).json({ ok: false, error: 'slip_missing' }); try { autoVerifyReg(r.id, buf.toString('base64')); } catch (e) {} res.json({ ok: true, message: 'reverifying' }); });
   });
   // public: check a registration's status (regNo + phone to verify identity)
+  // หาใบสมัครล่าสุดของเบอร์นี้ (ใช้เติมข้อมูลตอนสมัคร X-Lead)
+  function findPrevByPhone(phone) {
+    const ph = String(phone || '').replace(/\D/g, ''); if (ph.length < 9) return null;
+    const list = readReg().filter(x => String((x.candidate || {}).phone || '').replace(/\D/g, '') === ph && ['CANCELLED', 'REJECTED'].indexOf(x.status) < 0)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    return list[0] || null;
+  }
+  const maskEmail = (e) => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return ''; return e.slice(0, Math.min(2, i)) + '***' + e.slice(i); };
+  // ผู้สมัคร X-Lead: ตรวจสิทธิ์และดึงข้อมูลจากการสมัคร X-Visor เดิมด้วยเบอร์โทร
+  app.get('/api/xv/reg/xlead-lookup', (req, res) => {
+    const ph = String(req.query.phone || '').replace(/\D/g, '');
+    const prev = findPrevByPhone(ph);
+    if (!prev) return res.json({ ok: false, error: 'not_found' });
+    const c = prev.candidate || {};
+    const passed = readS().some(x => String((x.candidate || {}).phone || '').replace(/\D/g, '') === ph && x.status === 'verified' && sessExamType(x) === 'X-Visor');
+    res.json({ ok: true, firstName: c.firstName || '', lastName: c.lastName || '', emailMasked: maskEmail(c.email), coachTeam: prev.coachTeam || '', referrer: prev.referrer || '', passedXVisor: passed });
+  });
+  // ทีมงาน: แก้ไขข้อมูลผู้สมัคร (เพิ่ม/ลบ/เปลี่ยนได้ทุกช่อง) — บันทึกก่อน/หลังใน Audit
+  app.post('/api/xv/admin/registrations/:id/edit', (req, res) => {
+    const all = readReg(); const r = all.find(x => x.id === req.params.id); if (!r) return res.status(404).json({ ok: false });
+    const b = req.body || {}; r.candidate = r.candidate || {}; r.address = r.address || {};
+    const before = JSON.stringify({ c: r.candidate, a: r.address, coach: r.coachTeam, ref: r.referrer, tax: r.taxEmail });
+    const cf = { firstName: 60, lastName: 60, phone: 30, email: 120, nationalId: 13 };
+    Object.keys(cf).forEach(k => { if (b[k] != null) r.candidate[k] = String(b[k]).trim().slice(0, cf[k]); });
+    ['line1', 'subdistrict', 'district', 'province', 'postal'].forEach(k => { if (b[k] != null) r.address[k] = String(b[k]).trim().slice(0, 200); });
+    if (b.coachTeam != null) r.coachTeam = String(b.coachTeam).trim().slice(0, 80);
+    if (b.referrer != null) r.referrer = String(b.referrer).trim().slice(0, 80);
+    if (b.taxEmail != null) r.taxEmail = String(b.taxEmail).trim().slice(0, 120);
+    if (b.note != null) r.staffNote = String(b.note).slice(0, 500);
+    writeReg(all);
+    logAudit('reg_edit', 'registration', r.id, r.regNo, null, null, 'แก้ไขข้อมูลผู้สมัคร' + (b.reason ? (': ' + String(b.reason).slice(0, 120)) : ''), 'staff');
+    res.json({ ok: true, registration: r, before: before });
+  });
   app.get('/api/xv/reg/status', (req, res) => {
     const regNo = String(req.query.regNo || '').trim().toUpperCase();
     const phone = String(req.query.phone || '').replace(/\D/g, '');

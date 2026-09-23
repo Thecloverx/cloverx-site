@@ -648,6 +648,17 @@
   .xdb-today1.lead .xdb-kind{color:#92700C}
   .xdb-tnum small{color:#7290B5;font-size:.78rem}.xdb-tnum .xdb-tr-num{margin-top:0}.xdb-tnum .xdb-tr-num b{font-size:2rem}
   .xdb-wlist{max-height:150px;overflow:auto;padding-right:4px}
+
+  .rq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:1100px){.rq-grid{grid-template-columns:1fr 1fr}}@media(max-width:700px){.rq-grid{grid-template-columns:1fr}}
+  .rq-scan{display:grid;place-items:center;color:#1E40AF;background:#F1F5FF}.rq-scan svg{width:45%;height:45%}
+  .rq-note a{color:#1D46BE;font-weight:700}
+  .rq-card{display:flex;flex-direction:column;align-items:center;text-align:center;margin:0}
+  .rq-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin:-4px 0 14px;color:#5E7691;font-size:.88rem;word-break:keep-all}
+  .rq-qr{width:min(300px,100%);aspect-ratio:1;background:#fff;border:1px solid #E1EEFB;border-radius:18px;padding:10px;line-height:0}
+  .rq-qr canvas{width:100%;height:auto;image-rendering:pixelated}
+  .rq-url{margin-top:12px;font-size:.84rem;color:#1D46BE;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rq-act{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+  .rq-note{margin:12px 0 0;font-size:.8rem;color:#7290B5}
   .xkpi .kv .xdb-of{font-size:.9rem;font-weight:700;opacity:.6;margin-left:2px}
 </style>
 
@@ -736,9 +747,7 @@
         <button class="item ghead" data-toggle="g-examnew"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">E-Xam (New)</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="children">
           <button class="item" data-view="exam-dashboard"><span class="dot"></span><span class="lbl">Dashboard</span></button>
-          <button class="item" type="button" onclick="window.open('/xv-checkin','_blank','noopener')"><span class="dot"></span><span class="lbl">สแกน QR เช็กอิน ↗</span></button>
-          <button class="item" type="button" onclick="window.open('/xvisor_register_new','_blank','noopener')"><span class="dot"></span><span class="lbl">หน้าลงทะเบียน (ใหม่) ↗</span></button>
-          <button class="item" type="button" onclick="window.open('/xvisor_new','_blank','noopener')"><span class="dot"></span><span class="lbl">หน้าเข้าสอบ (ใหม่) ↗</span></button>
+          <button class="item" data-view="exam-regqr"><span class="dot"></span><span class="lbl">QR Management</span></button>
         </div>
       </div>
 
@@ -871,6 +880,7 @@
     'reg-payments':{t:'Payment Verification',th:'ตรวจสอบการชำระเงิน',d:'คิวตรวจสลิป (EasySlip) และการชำระเงิน',kind:'plain'},
     'reg-history':{t:'Registration History',th:'ประวัติการลงทะเบียน',d:'รอบที่ปิด/จบแล้ว — ค้นหาและดูย้อนหลัง',kind:'plain'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
+    'exam-regqr':{t:'QR Management',th:'QR Management',d:'QR สมัครสอบ บัตรเข้าสอบ และสแกนเช็กอิน',kind:'plain'},
     'exam-dashboard':{t:'E-xam Dashboard',th:'Dashboard ภาพรวม E-xam',d:'ผู้สมัคร การยืนยันเข้าร่วม และผลสอบ แยกตามหลักสูตรและทีมโค้ช',kind:'plain'},
     'exam-session':{t:'Exam Session',th:'รอบการสอบ',d:'จัดการรอบสอบ ตารางสอบ และผู้เข้าสอบ',kind:'plain'},
     'exam-tracker':{t:'Exam Tracker',th:'ติดตามการสอบ',d:'ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ',kind:'dash'},
@@ -1089,7 +1099,8 @@
   function examDispatch(v){
     EXAM_VIEW=v;
     gen.classList.add('xv');
-    if(v==='exam-dashboard')renderExamDashboard();
+    if(v==='exam-regqr')renderRegQr();
+    else if(v==='exam-dashboard')renderExamDashboard();
     else if(v==='exam-overview')renderExamOverview();
     else if(v==='exam-session')renderExamSession();
     else if(v==='reg-overview'){REG_MAINTAB='overview';renderExamRegister();}
@@ -1159,7 +1170,7 @@
           return '<option value="'+xdbE(x.id)+'"'+(x.id===r.id?' selected':'')+'>'+xdbE(x.examType)+' ครั้งที่ '+xdbE(x.no)+' ('+(x.mode==='onsite'?'On Site':'Online')+')</option>';}).join('')+'</select>':'';
       var byC={}; wait.forEach(function(p){(byC[p.coach]=byC[p.coach]||[]).push(p);});
       html+='<section class="xdb-card xdb-today1'+(lead?' lead':'')+'">'
-        +'<div class="xdb-ch"><h3 class="xdb-h">รอบสอบวันนี้ <small>'+xdbD(d.today)+'</small></h3><div class="xdb-tact">'+pick+'<a class="xbtn pri" href="/xv-checkin" target="_blank" rel="noopener">เปิดหน้าสแกน QR ↗</a></div></div>'
+        +'<div class="xdb-ch"><h3 class="xdb-h">รอบสอบวันนี้ <small>'+xdbD(d.today)+'</small></h3><div class="xdb-tact">'+pick+'<a class="xbtn pri" href="/xv-checkin" target="_blank" rel="noopener">เปิดหน้าสแกน QR</a></div></div>'
         +'<div class="xdb-tgrid">'
           +'<div class="xdb-tinfo"><span class="xdb-kind">'+xdbE(r.examType)+'</span><b>ครั้งที่ '+xdbE(r.no)+'</b>'
             +'<small>'+(r.mode==='onsite'?'สอบที่ศูนย์ (On Site)':'สอบออนไลน์ (Online)')+'</small>'
@@ -1215,6 +1226,53 @@
   }
   setInterval(function(){ try{ if(EXAM_VIEW!=='exam-dashboard'||!XDB.data||XDB.loading)return; var a=document.activeElement; if(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return;
     if(document.querySelector('.xdb-wait[open]'))return; xdbLoad(true); }catch(e){} },30000);
+  /* ================= QR ลงทะเบียน (ให้ลูกค้าสแกนสมัครสอบ / ดูบัตรเข้าสอบ) ================= */
+  var RQ_LIST=[
+    {k:'reg',title:'QR สมัครสอบ',sub:'ลูกค้าสแกนเพื่อสมัครสอบ',path:'/xvisor_register_new',poster:'สแกนเพื่อลงทะเบียนสอบ',note:'ติดหน้างาน โพสต์ หรือส่งทาง LINE'},
+    {k:'my',title:'QR การสมัครของฉัน',sub:'ลูกค้าสแกนเพื่อดูบัตรเข้าสอบและสแตมป์',path:'/xvisor_register_new#my',poster:'สแกนเพื่อดูบัตรเข้าสอบและสแตมป์',note:'ส่งทาง LINE ในเช้าวันสอบ'}];
+  function rqUrl(x){ return location.origin+x.path; }
+  function rqLib(cb){ if(window.qrcode)return cb(); var s=document.createElement('script'); s.src='/xv-qrgen.js'; s.onload=cb; document.head.appendChild(s); }
+  function rqCanvas(text,px){ var q=qrcode(0,'M'); q.addData(text); q.make(); var n=q.getModuleCount(), m=4, cell=Math.max(4,Math.floor(px/(n+m*2))), size=cell*(n+m*2);
+    var c=document.createElement('canvas'); c.width=size; c.height=size; var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,size,size); g.fillStyle='#0B1F45';
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))g.fillRect((k+m)*cell,(r+m)*cell,cell,cell); return c; }
+  function renderRegQr(){
+    var g=gen;
+    g.innerHTML=xvHead('QR Management','QR สำหรับลูกค้าสแกนสมัครสอบและดูบัตรเข้าสอบ และหน้าสแกน QR เช็กอินของทีมงาน')
+      +'<div class="rq-grid">'+RQ_LIST.map(function(x){ var u=rqUrl(x);
+        return '<section class="xdb-card rq-card"><h3 class="xdb-h">'+x.title+'</h3><p class="rq-sub">'+x.sub+'</p>'
+          +'<div class="rq-qr" id="rq_'+x.k+'"></div>'
+          +'<div class="rq-url" title="'+xdbE(u)+'">'+xdbE(u.replace(/^https?:\/\//,''))+'</div>'
+          +'<div class="rq-act"><button class="xbtn" onclick="rqCopy(\''+x.k+'\')">คัดลอกลิงก์</button><button class="xbtn pri" onclick="rqPoster(\''+x.k+'\')">ดาวน์โหลดรูป QR</button></div>'
+          +'<p class="rq-note">'+x.note+'  <a href="'+xdbE(x.path)+'" target="_blank" rel="noopener">เปิดหน้านี้</a></p></section>'; }).join('')
+      +'<section class="xdb-card rq-card"><h3 class="xdb-h">สแกน QR เช็กอิน</h3><p class="rq-sub">ทีมงานสแกนเช็กอินผู้เข้าสอบ On Site</p>'
+      +'<div class="rq-qr rq-scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg></div>'
+      +'<div class="rq-url">ใช้บนมือถือหรือแท็บเล็ต</div>'
+      +'<div class="rq-act"><a class="xbtn pri" href="/xv-checkin" target="_blank" rel="noopener">เปิดหน้าสแกน QR</a></div>'
+      +'<p class="rq-note">ต้องล็อกอินพนักงานก่อน</p></section></div>';
+    rqLib(function(){ RQ_LIST.forEach(function(x){ var el=document.getElementById('rq_'+x.k); if(el){ el.innerHTML=''; el.appendChild(rqCanvas(rqUrl(x),520)); } }); });
+  }
+  function rqCopy(k){ var x=RQ_LIST.find(function(z){return z.k===k;}), u=rqUrl(x);
+    var ok=function(){xvToast('คัดลอกลิงก์แล้ว','ok');};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(ok,function(){prompt('คัดลอกลิงก์นี้',u);}); else prompt('คัดลอกลิงก์นี้',u); }
+  function rqPoster(k){
+    var x=RQ_LIST.find(function(z){return z.k===k;}), u=rqUrl(x);
+    rqLib(function(){
+      var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d');
+      var F='"Sarabun","Noto Sans Thai",Tahoma,sans-serif';
+      var gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,'#1E40AF'); gr.addColorStop(1,'#2F6BE8'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+      g.fillStyle='#fff'; g.textAlign='center';
+      g.font='800 40px '+F; g.fillText('CloverX E-xam',W/2,110);
+      g.font='800 64px '+F; g.fillText(x.poster,W/2,210);
+      g.font='500 34px '+F; g.globalAlpha=.9; g.fillText('X-Visor และ X-Lead',W/2,270); g.globalAlpha=1;
+      var box=700, bx=(W-box)/2, by=330;
+      g.fillStyle='#fff'; if(g.roundRect){g.beginPath();g.roundRect(bx,by,box,box,40);g.fill();} else g.fillRect(bx,by,box,box);
+      var qc=rqCanvas(u,640); g.imageSmoothingEnabled=false; g.drawImage(qc,bx+30,by+30,box-60,box-60);
+      g.fillStyle='#fff'; g.font='700 34px '+F; g.fillText('เปิดกล้องมือถือ แล้วสแกน QR นี้',W/2,by+box+90);
+      g.font='500 26px '+F; g.globalAlpha=.85; g.fillText(u.replace(/^https?:\/\//,''),W/2,by+box+145); g.globalAlpha=1;
+      g.font='600 26px '+F; g.fillText('สอบถามทาง LINE @cloverxth',W/2,H-60);
+      c.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=(k==='reg'?'QR-สมัครสอบ':'QR-การสมัครของฉัน')+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},4000); },'image/png');
+    });
+  }
   function renderExamOverview(){
     var all=EXAM_CACHE||[];
     var cnt=function(f){return all.filter(f).length;};
@@ -2674,6 +2732,7 @@
       if(slip)mi.push(rgI('🔄 ตรวจสลิปอีกครั้ง (EasySlip)',"regReverify('"+r.id+"')",'brand'));
       if(esResult!=='confirmed')mi.push(rgI('✓ ยืนยันการชำระด้วยตนเอง',"regAct('"+r.id+"','CONFIRMED','"+nmA+"',1)",'good'));
     }
+    mi.push(rgI('✎ แก้ไขข้อมูลผู้สมัคร',"regEditOpen('"+r.id+"')",'brand'));
     if(r.status!=='CANCELLED'&&r.status!=='REFUNDED'&&r.status!=='CHECKED_IN')mi.push(rgI('🔀 ย้ายรอบ / เปลี่ยนรูปแบบ',"regMoveOpen('"+r.id+"','"+nmA+"','"+r.roundId+"')",'brand'));
     if((settled||r.status==='PARTIALLY_REFUNDED')&&(fee-refunded>0.001))mi.push(rgI('↩ คืนเงิน',"regRefundOpen('"+r.id+"',"+fee+","+refunded+",'"+nmA+"')",'bad'));
     if(r.status!=='CANCELLED'&&r.status!=='CHECKED_IN'&&r.status!=='REFUNDED')mi.push(rgI('✕ ยกเลิกการสมัคร',"regAct('"+r.id+"','CANCELLED','"+nmA+"',1)",'bad'));
@@ -2880,6 +2939,39 @@
       +'<div id="mvErr" style="color:var(--bad);font-size:.82rem;margin-top:8px"></div>'
       +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="mvGo" onclick="regMove(\''+id+'\')" style="'+btnPri()+'">ยืนยันการย้าย</button></div>');
     regMoveFee(curFee);
+  }
+  // ---- แก้ไขข้อมูลผู้สมัคร (ทีมงานแก้/เพิ่ม/ลบได้ทุกช่อง) ----
+  var RE_F=[['firstName','ชื่อจริง','c',1],['lastName','นามสกุล','c',1],['phone','เบอร์โทรศัพท์','c',1],['email','อีเมล','c'],
+    ['taxEmail','อีเมลสำหรับจัดส่งใบกำกับภาษี','r'],['nationalId','เลขบัตรประชาชน','c'],['coachTeam','โค้ชทีม','r'],['referrer','ผู้แนะนำ','r'],
+    ['line1','ที่อยู่','a',0,1],['subdistrict','แขวง / ตำบล','a'],['district','เขต / อำเภอ','a'],['province','จังหวัด','a'],['postal','รหัสไปรษณีย์','a']];
+  function regEditOpen(id){
+    var r=(REG_CACHE||[]).find(function(x){return x.id===id;});if(!r){xvToast('ไม่พบรายการ','bad');return;}
+    var c=r.candidate||{},ad=r.address||{};
+    function v(f){var x=f[2]==='c'?c[f[0]]:(f[2]==='a'?ad[f[0]]:r[f[0]]);return String(x==null?'':x).replace(/"/g,'&quot;');}
+    var lab='font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:5px';
+    var grid=RE_F.map(function(f){return '<div'+(f[4]?' style="grid-column:1/-1"':'')+'><label style="'+lab+'">'+f[1]+(f[3]?' <span style="color:var(--bad)">*</span>':'')+'</label><input id="re_'+f[0]+'" value="'+v(f)+'" style="'+fieldCss()+'"></div>';}).join('');
+    xvSheet('<h3 style="font-size:1.12rem">แก้ไขข้อมูลผู้สมัคร</h3>'
+      +'<p style="color:var(--muted);font-size:.86rem;margin:4px 0 14px"><span style="display:block">'+(r.regNo||'')+' '+regName(r)+'</span><span style="display:block">ลบข้อความในช่องเพื่อล้างข้อมูลนั้น</span><span style="display:block">ระบบบันทึกประวัติการแก้ไขทุกครั้ง</span></p>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">'+grid
+      +'<div style="grid-column:1/-1"><label style="'+lab+'">บันทึกของทีมงาน</label><textarea id="re_note" rows="2" style="'+fieldCss()+';resize:vertical">'+String(r.staffNote||'').replace(/</g,'&lt;')+'</textarea></div>'
+      +'<div style="grid-column:1/-1"><label style="'+lab+'">เหตุผลการแก้ไข <span style="color:var(--bad)">*</span></label><input id="re_reason" placeholder="เช่น ลูกค้าแจ้งเปลี่ยนอีเมล" style="'+fieldCss()+'"></div></div>'
+      +'<div id="reErr" style="color:var(--bad);font-size:.82rem;margin-top:8px"></div>'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="reGo" onclick="regEditSave(\''+id+'\')" style="'+btnPri()+'">บันทึกการแก้ไข</button></div>');
+  }
+  function regEditSave(id){
+    var body={key:OPS_KEY},miss=[];
+    RE_F.forEach(function(f){var val=(document.getElementById('re_'+f[0]).value||'').trim();if(f[3]&&!val)miss.push(f[1]);body[f[0]]=val;});
+    body.note=document.getElementById('re_note').value||'';body.reason=(document.getElementById('re_reason').value||'').trim();
+    var er=document.getElementById('reErr');
+    if(miss.length){er.textContent='กรุณากรอก '+miss.join(' / ');return;}
+    if(body.nationalId&&!/^\d{13}$/.test(body.nationalId.replace(/\D/g,''))){er.textContent='เลขบัตรประชาชนต้องมี 13 หลัก';return;}
+    if(!body.reason){er.textContent='กรุณาระบุเหตุผลการแก้ไข';return;}
+    if(body.nationalId)body.nationalId=body.nationalId.replace(/\D/g,'');
+    var btn=document.getElementById('reGo');btn.disabled=true;btn.textContent='กำลังบันทึก…';
+    fetch('/api/xv/admin/registrations/'+id+'/edit'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.ok){xvSheetClose();xvToast('บันทึกข้อมูลเรียบร้อย','ok');fetchRegs(paintRegister);}
+      else{btn.disabled=false;btn.textContent='บันทึกการแก้ไข';er.textContent='บันทึกไม่สำเร็จ';}
+    }).catch(function(){btn.disabled=false;btn.textContent='บันทึกการแก้ไข';er.textContent='เชื่อมต่อไม่สำเร็จ';});
   }
   function regMoveFee(curFee){var s=document.getElementById('mvRound');if(!s)return;var opt=s.options[s.selectedIndex];var nf=Number(opt.getAttribute('data-fee'))||0;var d=nf-curFee;var el=document.getElementById('mvFeeNote');if(el)el.innerHTML=d===0?('ค่าสมัครเท่าเดิม ('+nf+' บาท)'):('ค่าสมัครใหม่ '+nf+' บาท<span class=mdiv></span>ส่วนต่าง <b style="color:'+(d>0?'var(--bad)':'var(--good)')+'">'+(d>0?'+':'')+d+' บาท</b>'+(d>0?' (เก็บเพิ่ม)':' (คืนส่วนต่าง)'));}
   function regMove(id){
