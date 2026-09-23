@@ -245,7 +245,7 @@ module.exports = function (app, DATA, opts) {
   const _xvFail = {};
   const adminWrite = (req) => {
     const need = process.env.ADMIN_KEY || '';
-    if (!need) return true;   // ยังไม่ตั้งคีย์ → คงพฤติกรรมเดิม (เปิด) กันระบบล็อกตัวเองในenv ที่ไม่ได้ตั้งคีย์
+    if (!need) return isStaff(req);   // ยังไม่ตั้งคีย์ → อนุญาตเฉพาะพนักงานที่ล็อกอิน (หน้า Operations) ไม่เปิดให้คนนอก
     const ip = xvClientIp(req), now = Date.now(); let f = _xvFail[ip];
     if (f && f.until > now) return false;   // โดนล็อกชั่วคราวจากการเดาคีย์ผิดถี่
     const k = (req.query && req.query.key) || (req.body && req.body.key) || req.headers['x-admin-key'] || '';
@@ -262,7 +262,7 @@ module.exports = function (app, DATA, opts) {
   });
   function readOk(req) {
     if (isStaff(req)) return true;
-    const need = process.env.ADMIN_KEY || ''; if (!need) return true;
+    const need = process.env.ADMIN_KEY || ''; if (!need) return false;
     const k = (req.query && req.query.key) || req.headers['x-admin-key'] || '';
     return !!k && k === need;
   }
