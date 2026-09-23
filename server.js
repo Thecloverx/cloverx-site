@@ -278,6 +278,41 @@ function compressFileInPlace(fullPath, ext) {
   } catch (e) { console.log('[seed] import skipped:', e.message); }
 })();
 
+// ---- ออเดอร์ทดสอบสำหรับทีมงาน (Wanwadee Busaiyad) — เพิ่มครั้งเดียว, idempotent ด้วย id, ไม่แตะ seed หลัก ----
+// ใช้ทดสอบหน้า return/refund: TRIPLE SET สีดำ + Band ครอบครัว สีดำ (family)
+(function seedTestOrderWanwadee() {
+  try {
+    var marker = path.join(DATA, '.seed-test-wanwadee-v1');
+    if (fs.existsSync(marker)) return;                       // เพิ่มแล้ว
+    var TEST_ID = 'PO-TEST-0001';
+    var list = read();
+    if (!list.some(function (o) { return o && o.id === TEST_ID; })) {
+      var baseSeq = list.length ? Math.max.apply(null, list.map(function (x) { return x.seq || 0; })) : 0;
+      list.push({
+        id: TEST_ID,
+        at: '2026-08-09T10:00:00+07:00',
+        status: 'paid',
+        name: 'Wanwadee Busaiyad',
+        phone: '5961',                                       // 4 ตัวท้ายของ 0616625961 (ปิดบังตามชุดข้อมูลเดิม)
+        addr: 'กรุงเทพมหานคร',
+        email: '',
+        ref: '',
+        pay: 'card',
+        items: [
+          { nm: 'TRIPLE SET (Band+Scale+RoutineX) · สีดำ', price: 12480, fam: false },
+          { nm: 'Band ครอบครัว · สีดำ', price: 4360, fam: true }
+        ],
+        total: 16840,
+        seq: baseSeq + 1,
+        imported: true
+      });
+      write(list);
+      console.log('[seed] test order ' + TEST_ID + ' (Wanwadee Busaiyad) added');
+    }
+    try { fs.writeFileSync(marker, new Date().toISOString()); } catch (e) {}
+  } catch (e) { console.log('[seed] test order skipped:', e.message); }
+})();
+
 // ================= AUTO-EMAIL RECEIPT (ฟรี ผ่าน Resend/Brevo) =================
 // เปิดใช้งานเมื่อกำหนด ENV ใน Railway: EMAIL_API_KEY (จำเป็น), EMAIL_PROVIDER=resend|brevo (ค่าเริ่มต้น resend),
 // EMAIL_FROM=CloverX <receipt@cloverxth.com>, PUBLIC_BASE_URL=https://<โดเมนจริง> (ถ้าไม่ตั้งจะเดาจาก request)
@@ -807,7 +842,8 @@ app.post('/api/returns', function (req, res) {
   if (!ownsOrder(o, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   var choice = b.choice === 'wait' ? 'wait' : 'return';
   var opay = String(o.pay || '').toLowerCase();
-  var channel = opay === 'bank' ? 'bank' : (opay === 'card' ? 'card' : (b.channel === 'bank' ? 'bank' : 'card'));
+  var channel = (b.channel === 'bank' || b.channel === 'card') ? b.channel : (opay === 'bank' ? 'bank' : 'card'); // เคารพช่องทางที่ลูกค้าเลือก (บัตร/บัญชี) มิฉะนั้นอิงวิธีชำระเดิม
+  var refundAccount = (b.refundAccount && typeof b.refundAccount === 'object') ? { name: String(b.refundAccount.name || '').slice(0, 80), bank: String(b.refundAccount.bank || '').slice(0, 60), no: String(b.refundAccount.no || '').slice(0, 40) } : null;
   var items = (Array.isArray(b.selected) ? b.selected : []).map(function (s) { return { name: String(s.name || '').slice(0, 120), key: String(s.key || '').slice(0, 40), price: Number(s.price) || 0 }; });
   var amount = items.reduce(function (a, it) { return a + it.price; }, 0);
   var slip = (choice === 'return' && channel === 'bank') ? saveDataImage(b.slip, 'RSP-' + o.id) : null;
@@ -820,7 +856,7 @@ app.post('/api/returns', function (req, res) {
   var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
   var rid = (choice === 'wait' ? 'WAIT-' : 'RT-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
   var initStatus = choice === 'wait' ? 'wait' : 'awaiting_shipment';
-  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, status: initStatus, history: [] };
+  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, refundAccount: refundAccount, status: initStatus, history: [] };
   retLog(rec, choice === 'wait' ? 'ลูกค้าเลือกรอการปรับปรุง Application' : ('ลูกค้ายื่นคำขอคืนสินค้า' + (reason ? (' · เหตุผล: ' + reason) : '') + ' — รอจัดส่งสินค้าคืน'));
   rlist.unshift(rec); writeReturns(rlist);
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
