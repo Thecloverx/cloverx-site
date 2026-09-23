@@ -131,6 +131,17 @@
   .potbl{table-layout:fixed;width:100%;min-width:1060px}
   .potbl th,.potbl td{overflow-wrap:break-word;word-break:break-word}
   .potbl tbody td{vertical-align:top}
+  /* Return & Refund tables — auto column sizing, single-line key columns, even spacing (no overlap) */
+  .potbl.rettbl{table-layout:auto;min-width:0}
+  .potbl.rettbl th,.potbl.rettbl td{padding:14px 12px;word-break:normal;overflow-wrap:normal}
+  .potbl.rettbl th{padding-top:4px;padding-bottom:12px;white-space:nowrap}
+  .potbl.rettbl tbody td{vertical-align:middle}
+  .potbl.rettbl th:first-child,.potbl.rettbl td:first-child{padding-left:4px}
+  .potbl.rettbl th:last-child,.potbl.rettbl td:last-child{padding-right:4px}
+  .potbl.rettbl .nw{white-space:nowrap}
+  .potbl.rettbl .shrink{width:1%;white-space:nowrap}
+  .potbl.rettbl .ellip{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media (max-width:1340px){.potbl.rettbl th,.potbl.rettbl td{padding-left:7px;padding-right:7px}.potbl.rettbl .ellip{max-width:190px}}
   .pill{font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-block}
   .pill.ok{background:var(--good-tint);color:var(--good)}
   .pill.pend{background:var(--warn-tint);color:var(--warn)}
@@ -3212,6 +3223,37 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   function retOPager(pages){if(pages<=1)return '';var out='<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap">';for(var i=1;i<=pages;i++){out+='<button class="ret-opgbtn" data-pg="'+i+'" style="min-width:36px;height:36px;border:1px solid '+(i===RET_OPAGE?'var(--brand)':'var(--line)')+';background:'+(i===RET_OPAGE?'var(--brand)':'#fff')+';color:'+(i===RET_OPAGE?'#fff':'var(--ink)')+';border-radius:9px;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">'+i+'</button>';}return out+'</div>';}
   function retBulkDeleteO(){var ids=Object.keys(RET_OSEL);if(!ids.length)return;if(!confirm('ลบคำขอที่เลือก '+ids.length+' รายการ? การลบไม่สามารถกู้คืนได้'))return;var done=0,ok=0;ids.forEach(function(rid){fetch('/api/returns/'+encodeURIComponent(rid),{method:'DELETE'}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok)ok++;}).catch(function(){}).then(function(){done++;if(done>=ids.length){RET_OSEL={};xvToast('ลบแล้ว '+ok+' รายการ','ok');retRefresh();}});});}
+  function retBulkConfirmO(){
+    var ids=Object.keys(RET_OSEL);
+    var eligible=RET_ALL.filter(function(r){return RET_OSEL[r.rid]&&r.status==='refund_review';});
+    if(!ids.length){xvToast('เลือกคำขอที่ต้องการอนุมัติก่อน (ติ๊กช่องหน้ารายการ)','bad');return;}
+    if(!eligible.length){xvToast('ไม่มีรายการที่พร้อมอนุมัติ (ต้องอยู่สถานะ “รออนุมัติคืนเงิน”)','bad');return;}
+    var total=eligible.reduce(function(a,r){return a+(Number(r.amount)||0);},0);
+    if(!confirm('อนุมัติคืนเงินเต็มจำนวนให้ '+eligible.length+' รายการ รวม '+retBaht(total)+' ?\n(เฉพาะรายการที่รออนุมัติคืนเงินเท่านั้น)'))return;
+    var done=0,ok=0;
+    eligible.forEach(function(r){
+      fetch('/api/returns/'+encodeURIComponent(r.rid)+'/refund',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'full',actor:'staff'})})
+        .then(function(x){return x.json();}).then(function(j){if(j&&j.ok)ok++;}).catch(function(){})
+        .then(function(){done++;if(done>=eligible.length){RET_OSEL={};xvToast('อนุมัติคืนเงินแล้ว '+ok+' รายการ','ok');retRefresh();}});
+    });
+  }
+  function retExportReport(){
+    var rows=RET_ALL||[];
+    if(!rows.length){xvToast('ยังไม่มีข้อมูลให้ส่งออก','bad');return;}
+    var STL={awaiting_shipment:'รอลูกค้าส่งคืน',in_transit:'รอตรวจรับ',refund_review:'รออนุมัติคืนเงิน',refunded:'คืนเงินแล้ว',rejected:'ปฏิเสธ'};
+    var head=['เลขคำขอคืน','ออเดอร์','ลูกค้า','เบอร์','อีเมล','สินค้า','ยอดขอคืน','ช่องทาง','ธนาคาร','สถานะ','วันที่ยื่น'];
+    function esc(v){v=String(v==null?'':v).replace(/"/g,'""');return '"'+v+'"';}
+    var lines=[head.map(esc).join(',')];
+    rows.forEach(function(r){
+      lines.push([r.rid,r.orderId,r.name||'',r.phone||'',r.email||'',(r.items||[]).map(function(i){return i.name;}).join(' | '),r.amount||0,(RET_CHLBL[r.channel]||''),(r.refundAccount&&r.refundAccount.bank)||'',(STL[r.status]||r.status),poTime(r.at)].map(esc).join(','));
+    });
+    var csv='﻿'+lines.join('\r\n');
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+    var url=URL.createObjectURL(blob);var a=document.createElement('a');
+    a.href=url;a.download='cloverx-refund-report-'+new Date().toISOString().slice(0,10)+'.csv';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1500);
+    xvToast('ดาวน์โหลดรายงานแล้ว ('+rows.length+' รายการ)','ok');
+  }
   function retKebabIcon(){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>';}
   function retTrashIcon(){return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/></svg>';}
   var RET_QR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyCAIAAABnRsZeAAAHxElEQVR4nO3dwY0sNRRAURpNFqRAPsRIPqRAHMUWCckM+BrbxTnbr+6uruq58uLp/c/zPD8AdH7cfQHA28gKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9jXz4p9+/qW6jkP8/tuvg38df9/xa8dm7uTM546tu6ozfzm7nuCZZu6G0woQkxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJuash1bN/05Y9005I2TsjOfu2siecb4qnbdq13W/S04rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsYVTtmPrJvzWTTSeuZ/1zC2q6+7Vuune9z3BXdO9TitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGzblO2Ndu3BHc9K7poqHjtzs++Zn/s+TitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQMyU7T+waxPqronVXRtnd5mZdebPnFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgNi2KVszi5Vd86y7nuCZE7oz3ve34LQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQWTtm+bxpyZtfputfOWPe577tXM868qnWcVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2Od5nt3XcI1dk6Pr3Di/O3OvznwK7+O0AsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEpqZsd+0cfd/m13XznTduUX3fvPKuyeBdv0mnFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9rXrg9dNQ66baFz3uWNnbn6d+dx1s783PsFdz2gdpxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVIDa1y3bGjZOjY2fuK33fbtcZu+7z/22/stMKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCbmrI9c3bwxp2yZ25gHds1dbprnnVs14Turqc/5rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsS+Zl585jzrrnc+c/rzzN29Z84cv+8Z7ZrQdVoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJTU7ZjZ+4rXffON85orptJtdv1+86cz57htALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxD7P82z54HWzkrumTmesmzodO3PKduzMGdwzdwbv4rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQWTtmeuYNz15zlrtlQM7jff+czd8qeOVU85rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsS+Zl585jTk2JlTiWO79qTeeK/Gds3RznzumdPqY04rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0Bsasp2l/ftZ33fzPGuGdwbZ1JnnPn0nVaAmKwAMVkBYrICxGQFiMkKEJMVICYrQExWgNjneZ5//eIbp05v3L87tmuu9Ma7ceaM9diud57htALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxKZ22d44R7tusvDMyeAZZ17VOuu+0Y2TsjOcVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2NQu27EbpzB37Tqdceb21pl3nnHmBPaMG7cvO60AMVkBYrICxGQFiMkKEJMVICYrQExWgJisALGpXbbv21Y7885nfu66edYbdwaPnfmbHDtzMthpBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWITU3Z7trPuu6165w5hXnmvPKZT3DGjVuBZzitADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxqSnbsXX/0/0uN+6FPXMKc91VnfnLWTdVfOb3dVoBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJTU7a79rPOmLnmdXthd83C7tpWO/PO6167zq6r2vUX6rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQ+z/PsvoZrnDlHu2ue9X0TumPrZlLtsgX4G7ICxGQFiMkKEJMVICYrQExWgJisADFZAWILd9neaN3M4ro9uGM3zrPe+Ltad5/PfPpjTitATFaAmKwAMVkBYrICxGQFiMkKEJMVICYrQGxqynbszC2bN05wjs18o113Y9fkqE2333/nmW/ktALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxBZO2Y7dOO945mzortfOsGH3+2aekV22wEvIChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIbZuyvdHMzOLMROOZW4F3bW/dtZ91xrqr2jX5Pea0AsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLETNn+R2Y2od64rXaXXTO4N95Ju2yBa8gKEJMVICYrQExWgJisADFZAWKyAsRkBYh9nuf51y8+c2/o2I3XfKYz7+SuPbjrpmzP3Bk85rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsQW7rK9cbvn2K650l2TozNu3N07czd27cGd+UZ22QLXkBUgJitATFaAmKwAMVkBYrICxGQFiMkKEJvaZQvwV04rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsT8AEbnvU/dQlSMAAAAASUVORK5CYII=';
@@ -3275,7 +3317,8 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var sInT=rovDaysSeries(inTransit).map(function(d){return d.n;});
     var sRev=rovDaysSeries(review).map(function(d){return d.n;});
     var sRef=rovDaysSeries(refunded).map(function(d){return d.n;});
-    function card(lb,val,sub,spark,color){return '<div class="kpi rov-kpi"><div class="top"><div class="lb">'+lb+'</div></div><div class="v num">'+val+'</div>'+rovSpark(spark,color)+'<div class="delta" style="color:var(--muted);font-weight:600">'+sub+'</div></div>';}
+    function wowPct(vals){var n=vals.length,last=0,prev=0;for(var i=0;i<n;i++){if(i>=n-7)last+=vals[i];else if(i>=n-14)prev+=vals[i];}return prev?Math.round((last-prev)/prev*100):(last?100:0);}
+    function card(lb,val,sub,spark,color){var p=wowPct(spark);var badge='<span style="font-size:.72rem;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;background:color-mix(in srgb,'+color+' 15%,#fff);color:'+color+'">'+(p>=0?'▲ +':'▼ ')+p+'%</span>';return '<div class="kpi rov-kpi"><div class="top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div class="lb">'+lb+'</div>'+badge+'</div><div class="v num">'+val+'</div>'+rovSpark(spark,color)+'<div class="delta" style="color:var(--muted);font-weight:600">'+sub+'</div></div>';}
     document.getElementById('rovKpis').innerHTML='<div class="kpis">'
       +card('คำขอคืนทั้งหมด',all.length,'ทุกสถานะ',days.map(function(d){return d.n;}),'var(--brand)')
       +card('รอตรวจรับพัสดุ',inTransit.length,'สินค้ากำลังส่งกลับ',sInT,'var(--warn)')
@@ -3286,8 +3329,14 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var recent=all.slice().sort(function(a,b){return new Date(b.at)-new Date(a.at);}).slice(0,6);
     var rc=document.getElementById('rovRecent');
     if(!recent.length){rc.innerHTML='<div style="text-align:center;color:var(--muted);padding:34px 0">ยังไม่มีคำขอคืนเข้ามา</div>';}
-    else{rc.innerHTML='<table class="potbl" style="min-width:520px;width:100%"><thead><tr><th>เลขคำขอ</th><th>ลูกค้า</th><th>ยอดคืน</th><th>สถานะ</th><th>วันที่</th></tr></thead><tbody>'
-      +recent.map(function(r){var isWait=(r.choice==='wait');return '<tr><td style="font-weight:700">'+poEsc(r.rid)+'</td><td>'+poEsc(r.name||'-')+'</td><td class="num" style="font-weight:700">'+(isWait?'—':retBaht(r.amount))+'</td><td>'+retStPill(r.status)+'</td><td style="font-size:.78rem;color:var(--muted)">'+poTime(r.at)+'</td></tr>';}).join('')+'</tbody></table>';}
+    else{rc.innerHTML='<table class="potbl rettbl" style="width:100%"><thead><tr><th>เลขคำขอ</th><th>ลูกค้า</th><th>ยอดคืน</th><th>สถานะ</th><th>วันที่</th></tr></thead><tbody>'
+      +recent.map(function(r){var isWait=(r.choice==='wait');return '<tr>'
+        +'<td class="nw" data-label="เลขคำขอ"><span class="num" data-detail="'+poEsc(r.rid)+'" style="font-weight:700;color:var(--brand);cursor:pointer">'+poEsc(r.rid)+'</span></td>'
+        +'<td class="nw" data-label="ลูกค้า">'+poEsc(r.name||'-')+'</td>'
+        +'<td class="nw num" data-label="ยอดคืน" style="font-weight:700">'+(isWait?'—':retBaht(r.amount))+'</td>'
+        +'<td class="nw" data-label="สถานะ">'+retStPill(r.status)+'</td>'
+        +'<td class="nw num" data-label="วันที่" style="font-size:.8rem;color:var(--muted)">'+poTime(r.at)+'</td></tr>';}).join('')+'</tbody></table>';
+      rc.querySelectorAll('[data-detail]').forEach(function(el){el.addEventListener('click',function(){retDetail(el.getAttribute('data-detail'));});});}
     // reasons donut
     var cats=[{label:'ชำรุด / เสียหาย',color:'var(--bad)',test:/ชำรุด|เสียหาย/},{label:'ได้รับไม่ครบ',color:'var(--warn)',test:/ไม่ครบ/},{label:'เปลี่ยนใจ',color:'var(--info)',test:/เปลี่ยนใจ/},{label:'ตามเงื่อนไขบริษัท',color:'var(--brand)',test:/เงื่อนไข/},{label:'อื่น ๆ',color:'var(--muted)',test:/./}];
     var retOnly=all.filter(function(r){return r.choice!=='wait';});
@@ -3305,9 +3354,12 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function renderReturns(){
     RET_VIEW='orders';
     var gen=document.getElementById('view-generic'); if(!gen)return; gen.classList.remove('xv');
-    gen.innerHTML='<div class="head"><h1>Return &amp; Refund<span class=mdiv></span>Purchase Order</h1><p>รายการคำขอคืนสินค้า/คืนเงินทั้งหมดจากลูกค้า (ผ่านหน้า /return)</p></div>'
-      +'<div id="retKpis"></div>'
-      +'<div class="panel" style="margin-bottom:20px"><div class="ph"><h3>คำขอคืนเงิน <span id="retCount" style="font-size:.8rem;font-weight:500;color:var(--muted)"></span></h3><button onclick="retRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button></div>'
+    gen.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap"><div><h1>Return &amp; Refund<span class=mdiv></span>Refund Lists</h1><p>รายการขอคืนสินค้าและคืนเงินทั้งหมดจากลูกค้า CloverX</p></div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
+        +'<button onclick="retBulkConfirmO()" style="'+btnPri()+'">ยืนยันคืนเงินหลายรายการ</button>'
+        +'<button onclick="retExportReport()" style="border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:10px 16px;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">ดาวน์โหลดรายงานคืนเงิน</button>'
+      +'</div></div>'
+      +'<div class="panel"><div class="ph" style="margin-bottom:12px"><h3>รายการขอคืนเงิน <span id="retCount" style="font-size:.8rem;font-weight:500;color:var(--muted)"></span></h3><button onclick="retRefresh()" style="background:none;border:0;color:var(--brand);font-weight:600;font-size:.82rem;cursor:pointer">รีเฟรช ⟳</button></div>'
       +'<input id="retSearch" placeholder="ค้นหาเลข RMA / ออเดอร์ / ชื่อ / เบอร์" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:.9rem;margin-bottom:12px">'
       +'<div id="retFilters"></div><div id="retTableWrap" style="overflow-x:auto;margin-top:6px"></div></div>';
     var si=document.getElementById('retSearch'); if(si)si.addEventListener('input',function(){RET_Q=this.value.trim().toLowerCase();retDraw();});
@@ -3326,7 +3378,6 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'</div>';
   }
   function retDraw(){
-    var k=document.getElementById('retKpis'); if(k)k.innerHTML=retKpiRow();
     var fil=document.getElementById('retFilters');
     if(fil){fil.innerHTML=retDateBar()+retChip('all',RET_STAT,'ทั้งหมด','stat')+retChip('awaiting_shipment',RET_STAT,'รอลูกค้าส่งคืน','stat')+retChip('in_transit',RET_STAT,'รอตรวจรับ','stat')+retChip('refund_review',RET_STAT,'รออนุมัติคืนเงิน','stat')+retChip('refunded',RET_STAT,'คืนเงินแล้ว','stat')+retChip('rejected',RET_STAT,'ปฏิเสธ','stat')
       +'<span style="display:inline-block;width:14px"></span>'+retChip('all',RET_CH,'ทุกช่องทาง','ch')+retChip('card',RET_CH,'บัตรเครดิต','ch')+retChip('bank',RET_CH,'โอนธนาคาร','ch');
@@ -3346,27 +3397,31 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var pr=rows.slice((RET_OPAGE-1)*PER,RET_OPAGE*PER);
     var selN=Object.keys(RET_OSEL).length, allChk=pr.length>0&&pr.every(function(r){return RET_OSEL[r.rid];});
     var bulk=selN?('<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:8px 12px;background:var(--soft);border-radius:11px"><span style="font-size:.82rem;color:var(--muted)">เลือก '+selN+' รายการ</span><button onclick="retBulkDeleteO()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:9px;padding:8px 13px;font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer">'+retTrashIcon()+' ลบที่เลือก</button></div>'):'';
-    w.innerHTML=bulk+'<div style="overflow-x:auto"><table class="potbl" style="min-width:1120px"><colgroup><col style="width:4%"><col style="width:14%"><col style="width:9%"><col style="width:16%"><col style="width:11%"><col style="width:10%"><col style="width:10%"><col style="width:12%"><col style="width:14%"></colgroup>'
-      +'<thead><tr><th><input type="checkbox" id="retOAll" '+(allChk?'checked':'')+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer"></th><th>เลขคำขอ</th><th>วันที่</th><th>ลูกค้า</th><th>ออเดอร์</th><th>ช่องทาง</th><th>ยอดขอคืน</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>'
+    w.innerHTML=bulk+'<div style="overflow-x:auto"><table class="potbl rettbl">'
+      +'<thead><tr><th class="shrink"><input type="checkbox" id="retOAll" '+(allChk?'checked':'')+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer;vertical-align:middle"></th><th>เลขคำขอคืน</th><th>ลูกค้า</th><th>รายการสินค้าที่ขอคืน</th><th>ยอดขอคืน</th><th>ช่องทางคืนเงิน</th><th>สถานะการคืน</th><th>วันที่ยื่นขอ</th><th class="shrink" style="text-align:right">จัดการ</th></tr></thead><tbody>'
       +pr.map(function(r){var isWait=(r.choice==='wait');var sel=RET_OSEL[r.rid]?'checked':'';
         var omi='display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;font-family:inherit;font-weight:600;font-size:.85rem;cursor:pointer;';
         var omenu=retMenuActions(r).map(function(a){return '<button data-act="'+a.act+'" data-rid="'+r.rid+'" style="'+omi+'color:'+(a.color||'var(--ink)')+'">'+a.label+'</button>';}).join('');
         omenu+='<button data-act="detail" data-rid="'+r.rid+'" style="'+omi+'color:var(--ink)">ดูรายละเอียด</button>';
         omenu+='<div style="height:1px;background:var(--line);margin:4px 6px"></div><button data-act="delete" data-rid="'+r.rid+'" style="'+omi+'color:#dc2626">'+retTrashIcon()+' ลบคำขอ</button>';
+        var prod=(r.items||[]).map(function(it){return poEsc(it.name);}).join(', ')||'—';
+        var chDot=(r.channel==='bank'?'var(--good)':'var(--brand)');
+        var chTxt=isWait?'—':(RET_CHLBL[r.channel]||'-');
         return '<tr>'
-        +'<td><input type="checkbox" class="ret-ochk" data-rid="'+poEsc(r.rid)+'" '+sel+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer"></td>'
-        +'<td><div style="font-weight:700">'+poEsc(r.rid)+'</div></td>'
-        +'<td style="font-size:.78rem;color:var(--muted)">'+poTime(r.at)+'</td>'
-        +'<td><div style="font-weight:600">'+poEsc(r.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+poEsc(r.phone||'')+'</div></td>'
-        +'<td style="font-weight:600">'+poEsc(r.orderId)+'</td>'
-        +'<td>'+(isWait?'—':(RET_CHLBL[r.channel]||'-'))+'</td>'
-        +'<td>'+(isWait?'<span style="color:var(--muted);font-size:.8rem">รอปรับปรุง</span>':('<span class="num" style="font-weight:700">'+retBaht(r.amount)+'</span>'))+'</td>'
-        +'<td>'+retStPill(r.status)+'</td>'
-        +'<td><div style="display:flex;justify-content:flex-end"><button data-omenu="'+poEsc(r.rid)+'" title="จัดการ" style="width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted);display:grid;place-items:center">'+retKebabIcon()+'</button>'
+        +'<td class="shrink" data-label="เลือก"><input type="checkbox" class="ret-ochk" data-rid="'+poEsc(r.rid)+'" '+sel+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer;vertical-align:middle"></td>'
+        +'<td class="nw" data-label="เลขคำขอคืน"><span data-detail="'+poEsc(r.rid)+'" class="num" style="font-weight:700;color:var(--brand);cursor:pointer">'+poEsc(r.rid)+'</span></td>'
+        +'<td class="nw" data-label="ลูกค้า"><div style="font-weight:600">'+poEsc(r.name||'-')+'</div><div class="num" style="font-size:.74rem;color:var(--muted);margin-top:2px">'+poEsc(r.phone||'')+'</div></td>'
+        +'<td data-label="สินค้า"><div class="ellip" style="font-size:.84rem;color:var(--ink)" title="'+prod+'">'+prod+'</div></td>'
+        +'<td class="nw" data-label="ยอดขอคืน">'+(isWait?'<span style="color:var(--muted);font-size:.8rem">รอปรับปรุง</span>':('<span class="num" style="font-weight:700">'+retBaht(r.amount)+'</span>'))+'</td>'
+        +'<td class="nw" data-label="ช่องทางคืนเงิน"><span style="display:inline-flex;align-items:center;gap:7px;font-size:.84rem"><span style="width:7px;height:7px;border-radius:50%;background:'+chDot+';flex:none"></span>'+chTxt+'</span></td>'
+        +'<td class="nw" data-label="สถานะ">'+retStPill(r.status)+'</td>'
+        +'<td class="nw num" data-label="วันที่ยื่นขอ" style="font-size:.8rem;color:var(--muted)">'+poTime(r.at)+'</td>'
+        +'<td class="shrink" data-label=""><div style="display:flex;justify-content:flex-end"><button data-omenu="'+poEsc(r.rid)+'" title="จัดการ" style="width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--muted);display:grid;place-items:center">'+retKebabIcon()+'</button>'
           +'<div id="retomenu_'+poEsc(r.rid)+'" style="display:none;position:fixed;z-index:120;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(16,27,45,.16);padding:6px;min-width:210px">'+omenu+'</div></div></td></tr>';
       }).join('')+'</tbody></table></div>'+retOPager(pages);
     var oa=document.getElementById('retOAll'); if(oa)oa.addEventListener('change',function(e){pr.forEach(function(r){if(e.target.checked)RET_OSEL[r.rid]=1;else delete RET_OSEL[r.rid];});retDraw();});
     w.querySelectorAll('.ret-ochk').forEach(function(cb){cb.addEventListener('change',function(){var rid=cb.getAttribute('data-rid');if(cb.checked)RET_OSEL[rid]=1;else delete RET_OSEL[rid];retDraw();});});
+    w.querySelectorAll('[data-detail]').forEach(function(el){el.addEventListener('click',function(){retDetail(el.getAttribute('data-detail'));});});
     w.querySelectorAll('[data-omenu]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retToggleOMenu(b.getAttribute('data-omenu'),b);});});
     w.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();retAct(b.getAttribute('data-act'),b.getAttribute('data-rid'),b);});});
     w.querySelectorAll('.ret-opgbtn').forEach(function(b){b.addEventListener('click',function(){RET_OPAGE=+b.getAttribute('data-pg');retDraw();});});
@@ -3557,120 +3612,233 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     }
   }
 
-  /* ---------- Figma-style detail (inspect + approve) — overrides earlier retDetail ---------- */
-  function retTimeline(r){
-    var order=['submitted','shipped','received','refunded'];
-    var lab={submitted:'ยื่นคำขอ',shipped:'ส่งคืนสินค้า',received:'ตรวจรับสินค้า',refunded:'คืนเงินสำเร็จ'};
-    var cur={awaiting_shipment:1,in_transit:2,refund_review:3,refunded:4,rejected:2}[r.status]; if(cur==null)cur=1;
-    var refunded=(r.status==='refunded');
-    return '<div class="rtl">'+order.map(function(k,i){
-      var done=refunded?true:(i<cur); var now=(i===cur&&!refunded);
-      var cls=done?'done':(now?'now':'pend');
-      var sub=(k==='submitted')?poTime(r.at):(now?'กำลังดำเนินการ':'');
-      return '<div class="rtl-ev '+cls+'"><span class="rtl-dot">'+(done?'✓':'')+'</span><div class="rtl-tx"><b>'+lab[k]+'</b>'+(sub?'<span>'+poEsc(sub)+'</span>':'')+'</div></div>';
-    }).join('')+'</div>';
+  /* ---------- Figma-style detail: ตรวจรับพัสดุ (screen 3) + อนุมัติคืนเงิน (screen 4) — overrides earlier retDetail ---------- */
+  var RD_CSS='<style>'
+    +'.rdhead{position:sticky;top:0;z-index:3;background:#fff;padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;border-radius:18px 18px 0 0}'
+    +'.rdhead .bc{font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rdhead .bc b{color:var(--brand);font-weight:700}'
+    +'.rdhead h2{margin:4px 0 0;font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:10px;flex-wrap:wrap;line-height:1.3}'
+    +'.rdhead .upd{margin-left:auto;font-size:.76rem;color:var(--muted);white-space:nowrap}'
+    +'.rdhead .x{border:0;background:none;font-size:1.4rem;color:var(--muted);cursor:pointer;line-height:1;flex:none;padding:0 2px}'
+    +'.rdwrap{padding:18px 20px 22px}'
+    +'.rdgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}'
+    +'@media(max-width:880px){.rdgrid{grid-template-columns:minmax(0,1fr)}.rdhead .upd{display:none}}'
+    +'.rdcol{display:flex;flex-direction:column;gap:16px;min-width:0}'
+    +'.rdcard{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fff;min-width:0}'
+    +'.rdcard h4{margin:0 0 12px;font-size:.93rem;font-weight:800;line-height:1.35}'
+    +'.rdcard .hsub{font-size:.76rem;color:var(--muted);margin:-8px 0 12px;line-height:1.5}'
+    +'.rdh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}.rdh h4{margin:0}'
+    +'.rdtag{font-size:.74rem;font-weight:700;white-space:nowrap}'
+    +'.rdinfo{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px 16px}.rdinfo>div{flex:0 0 auto;min-width:0;max-width:100%}'
+    +'@media(max-width:1100px){.rdinfo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.rdinfo .v{white-space:normal;overflow-wrap:anywhere}}'
+    +'.rdinfo .k{font-size:.72rem;color:var(--muted);margin-bottom:4px;white-space:nowrap}.rdinfo .v{font-size:.84rem;font-weight:700;line-height:1.4;white-space:nowrap}'
+    +'.rdnote{background:var(--brand-tint);border-radius:10px;padding:11px 14px;font-size:.84rem;margin-bottom:14px;line-height:1.55}.rdnote .t{font-size:.74rem;font-weight:700;color:var(--brand);margin-bottom:3px}'
+    +'.rdlbl{font-size:.76rem;color:var(--muted);margin:0 0 8px}'
+    +'.rditem{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:9px;transition:.15s}'
+    +'.rditem.ed{cursor:pointer}.rditem.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 4%,#fff)}'
+    +'.rditem input{width:17px;height:17px;accent-color:var(--brand);flex:none;margin:0}'
+    +'.rditem .nm{flex:1;min-width:0;font-size:.86rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'.rditem .pr{font-weight:800;color:var(--brand);white-space:nowrap}.rditem .pr.z{color:var(--muted);font-weight:600}'
+    +'.rdtot{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:12px;margin-top:6px}.rdtot span{font-size:.8rem;color:var(--muted)}.rdtot b{font-size:1.2rem;color:var(--brand);white-space:nowrap}'
+    +'.rdev{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}.rdev a{display:block;text-decoration:none}.rdev img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block;background:var(--soft)}.rdev span{display:block;font-size:.72rem;color:var(--muted);margin-top:5px}'
+    +'.rdempty{font-size:.8rem;color:var(--muted);background:var(--soft);border-radius:10px;padding:16px;text-align:center}'
+    +'.rdopt{display:flex;align-items:center;gap:11px;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:.15s}'
+    +'.rdopt input{display:none}'
+    +'.rdo-rad{width:18px;height:18px;border-radius:50%;border:2px solid var(--c,var(--brand));flex:none;display:grid;place-items:center;box-sizing:border-box}'
+    +'.rdopt.on{border-color:var(--c,var(--brand));background:color-mix(in srgb,var(--c,var(--brand)) 8%,#fff)}'
+    +'.rdopt.on .rdo-rad::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--c,var(--brand))}'
+    +'.rdo-tx{flex:1;min-width:0}.rdo-tx b{display:block;font-size:.86rem;line-height:1.35}.rdo-tx span{display:block;font-size:.74rem;color:var(--muted);margin-top:2px}'
+    +'.rdta,.rdin{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.86rem;background:var(--soft);color:var(--ink)}'
+    +'.rdta{resize:vertical;min-height:76px;line-height:1.5}.rdin:disabled{opacity:.7}'
+    +'.rdta:focus,.rdin:focus{outline:none;border-color:var(--brand);background:#fff}'
+    +'.rdcta{width:100%;border:0;border-radius:11px;background:var(--brand);color:#fff;font-family:inherit;font-weight:800;font-size:.9rem;padding:13px;cursor:pointer;margin-top:14px}'
+    +'.rdcta:hover{background:var(--brand-ink)}'
+    +'.rdghost{width:100%;border:0;background:none;color:var(--muted);font-family:inherit;font-weight:700;font-size:.84rem;padding:10px;cursor:pointer;margin-top:4px}.rdghost:hover{color:var(--ink)}'
+    +'.rdlog .ev{position:relative;padding:0 0 14px 20px}.rdlog .ev:last-child{padding-bottom:0}'
+    +'.rdlog .ev::before{content:"";position:absolute;left:4px;top:15px;bottom:-1px;width:2px;background:var(--line)}.rdlog .ev:last-child::before{display:none}'
+    +'.rdlog .dot{position:absolute;left:0;top:4px;width:10px;height:10px;border-radius:50%;background:var(--line)}.rdlog .ev.now .dot{background:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}'
+    +'.rdlog .tx{font-size:.83rem;font-weight:600;line-height:1.45;overflow-wrap:anywhere}.rdlog .ev.now .tx{color:var(--brand)}.rdlog .tm{font-size:.72rem;color:var(--muted);margin-top:2px}'
+    +'.rdkv{display:flex;justify-content:space-between;align-items:baseline;gap:14px;font-size:.84rem;padding:6px 0}.rdkv .k{color:var(--muted);white-space:nowrap}.rdkv .v{font-weight:700;text-align:right;overflow-wrap:anywhere;min-width:0}'
+    +'.rdok{display:flex;gap:12px;align-items:center;background:var(--good-tint);border:1px solid color-mix(in srgb,var(--good) 30%,#fff);border-radius:12px;padding:13px 16px}'
+    +'.rdok .ic{width:30px;height:30px;border-radius:50%;background:var(--good);color:#fff;display:grid;place-items:center;flex:none;font-weight:800}'
+    +'.rdok b{display:block;color:var(--good);font-size:.88rem;line-height:1.35}.rdok span{display:block;font-size:.76rem;color:var(--muted);margin-top:2px;line-height:1.45}'
+    +'.rdok.bad{background:var(--bad-tint);border-color:color-mix(in srgb,var(--bad) 30%,#fff)}.rdok.bad .ic{background:var(--bad)}.rdok.bad b{color:var(--bad)}'
+    +'.rdpair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}@media(max-width:560px){.rdpair{grid-template-columns:minmax(0,1fr)}}.rdpair .rdopt{margin-bottom:0}'
+    +'.rdamt{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.rdamt .rdin{flex:1;min-width:160px;font-weight:800;font-size:1rem}.rdamt small{font-size:.72rem;color:var(--muted)}'
+    +'.rddest{background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:14px}.rddest .t{font-size:.84rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px}.rddest .t i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block;flex:none}'
+    +'.rdup{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#fff;transition:.15s}'
+    +'.rdup:hover{border-color:var(--brand)}.rdup b{font-size:.83rem;color:var(--brand)}.rdup span{font-size:.72rem;color:var(--muted)}.rdup img{max-height:130px;max-width:100%;border-radius:8px}'
+    +'.rdsum .ln{display:flex;justify-content:space-between;gap:12px;font-size:.84rem;padding:6px 0}.rdsum .ln .n{color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rdsum .ln .p{font-weight:700;white-space:nowrap}'
+    +'.rdsum .tt{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);margin-top:8px;padding-top:12px}.rdsum .tt span{font-weight:800;font-size:.88rem}.rdsum .tt b{font-size:1.3rem;color:var(--brand);white-space:nowrap}'
+    +'.rdwarn{background:var(--warn-tint);border-radius:12px;padding:12px 14px;font-size:.78rem;color:var(--ink);line-height:1.55}.rdwarn b{display:block;color:var(--warn);margin-bottom:3px;font-size:.82rem}'
+    +'</style>';
+  var RD_SLIP=null;
+  function rdRadio(name,val,label,sub,checked,color){return '<label class="rdopt'+(checked?' on':'')+'" data-rd="'+name+'"'+(color?(' style="--c:'+color+'"'):'')+'><input type="radio" name="'+name+'" value="'+val+'"'+(checked?' checked':'')+'><span class="rdo-rad"></span><span class="rdo-tx"><b>'+label+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</span></label>';}
+  function rdKv(k,v){return '<div class="rdkv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+  function rdDate(iso){var d=new Date(iso);if(isNaN(d))return '';var M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];function p(n){return('0'+n).slice(-2);}return d.getDate()+' '+M[d.getMonth()]+' '+(d.getFullYear()+543)+' '+p(d.getHours())+':'+p(d.getMinutes());}
+  function rdPrice(n){n=Number(n)||0;return n>0?retBaht(n):'—';}
+  function rdLog(r){
+    var h=(r.history&&r.history.length)?r.history:[{text:'ลูกค้ายื่นคำขอคืนสินค้า',at:r.at}]; // history เก็บแบบใหม่สุดก่อน
+    return '<div class="rdlog">'+h.slice(0,8).map(function(e,i){return '<div class="ev'+(i===0?' now':'')+'"><span class="dot"></span><div class="tx">'+poEsc(e.text||'-')+'</div><div class="tm">'+rdDate(e.at)+'</div></div>';}).join('')+'</div>';
   }
-  function rdRadio(name,val,label,sub,checked,extra){return '<label class="rdopt'+(checked?' on':'')+'" data-rd="'+name+'"><input type="radio" name="'+name+'" value="'+val+'" '+(checked?'checked':'')+' style="display:none"><span class="rdo-rad"></span><span class="rdo-tx"><b>'+label+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</span>'+(extra||'')+'</label>';}
+  function rdTrack(r){
+    if(!r.returnTracking)return '';
+    return '<div class="rdcard"><h4>ข้อมูลการจัดส่งคืน (Tracking)</h4>'
+      +rdKv('ขนส่งที่ใช้',poEsc(r.returnCarrier||'-'))
+      +rdKv('เลขพัสดุ','<span class="num" style="color:var(--brand)">'+poEsc(r.returnTracking)+'</span>')
+      +(r.returnSlip?rdKv('สลิปการส่งคืน','<a href="'+poEsc(r.returnSlip)+'" target="_blank" rel="noopener" style="color:var(--brand)">ดูสลิป</a>'):'')
+      +retTrackBlock(r)+'</div>';
+  }
+  function rdSelectedItems(){
+    var out=[],sum=0;
+    document.querySelectorAll('#retModalCard .rdItemChk').forEach(function(c){if(c.checked){out.push(c.getAttribute('data-name'));sum+=Number(c.getAttribute('data-price'))||0;}});
+    return {names:out,sum:sum};
+  }
   function retDetail(rid){
     var r=RET_ALL.find(function(x){return x.rid===rid;}); if(!r)return;
-    var css='<style>'
-      +'.rdgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;padding:18px}@media(max-width:820px){.rdgrid{grid-template-columns:1fr}}'
-      +'.rdcard{border:1px solid var(--line);border-radius:14px;padding:16px 17px;margin-bottom:16px;background:#fff}'
-      +'.rdcard h4{margin:0 0 12px;font-size:.95rem}'
-      +'.rdrow{display:flex;justify-content:space-between;gap:12px;font-size:.86rem;padding:6px 0;border-bottom:1px solid var(--soft)}.rdrow:last-child{border-bottom:0}.rdrow .k{color:var(--muted)}.rdrow .v{font-weight:600;text-align:right}'
-      +'.rdopt{display:flex;align-items:flex-start;gap:11px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:.15s}'
-      +'.rdopt.on{border-color:var(--brand);background:var(--brand-tint)}'
-      +'.rdo-rad{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;margin-top:1px;display:grid;place-items:center}'
-      +'.rdopt.on .rdo-rad{border-color:var(--brand)}.rdopt.on .rdo-rad::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--brand)}'
-      +'.rdo-tx{flex:1;min-width:0}.rdo-tx b{display:block;font-size:.9rem}.rdo-tx span{display:block;font-size:.78rem;color:var(--muted);margin-top:2px}'
-      +'.rdcta{width:100%;border:0;border-radius:12px;background:var(--brand);color:#fff;font-family:inherit;font-weight:800;font-size:.95rem;padding:14px;cursor:pointer;margin-top:6px}'
-      +'.rdcta:hover{background:var(--brand-ink)}'
-      +'.rdta,.rdin{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.88rem;margin-top:8px;background:var(--soft)}'
-      +'.rdgreen{display:flex;gap:10px;align-items:center;background:var(--good-tint);color:var(--good);border-radius:12px;padding:13px 15px;font-size:.86rem;font-weight:700;margin-bottom:16px}'
-      +'.rtl{position:relative}.rtl-ev{display:flex;gap:12px;padding-bottom:18px;position:relative}.rtl-ev:last-child{padding-bottom:0}'
-      +'.rtl-ev::before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--line)}.rtl-ev.done::before{background:var(--good)}.rtl-ev:last-child::before{display:none}'
-      +'.rtl-dot{width:24px;height:24px;border-radius:50%;flex:none;border:2px solid var(--line);background:#fff;display:grid;place-items:center;font-size:.7rem;color:#fff;font-weight:800;z-index:1}'
-      +'.rtl-ev.done .rtl-dot{background:var(--good);border-color:var(--good)}.rtl-ev.now .rtl-dot{background:var(--brand);border-color:var(--brand)}'
-      +'.rtl-tx b{font-size:.88rem;display:block}.rtl-ev.pend .rtl-tx b{color:var(--muted)}.rtl-tx span{font-size:.76rem;color:var(--muted)}'
-      +'.rdbc{font-size:.78rem;color:var(--muted)}.rdbc b{color:var(--ink)}'
-      +'</style>';
-    var STL={good:'สินค้าสภาพสมบูรณ์ 100%',damaged:'สินค้าชำรุด/เสียหาย',incomplete:'สินค้าไม่ครบ',reject:'ปฏิเสธการรับคืน'};
-    var itemsHtml=(r.items||[]).map(function(it){return '<div class="rdrow"><span class="k">'+poEsc(it.name)+'</span><span class="v num">'+retBaht(it.price)+'</span></div>';}).join('')||'<div class="rdrow"><span class="k">—</span></div>';
-    var acct=r.refundAccount||{};
-    // ----- action panel by status -----
-    var action='';
-    if(r.status==='awaiting_shipment'){
-      action='<div class="rdcard"><h4>บันทึกการส่งคืน (แทนลูกค้า)</h4><div class="rdbc">ลูกค้ายังไม่แจ้งเลขพัสดุ — กรอกเพื่อเปลี่ยนสถานะเป็น “รอตรวจรับ”</div>'
-        +'<input id="rdShipTk" class="rdin" placeholder="เลขพัสดุการส่งคืน"><button class="rdcta" onclick="retDoShipAdmin(\''+r.rid+'\')">บันทึกเลขพัสดุ</button></div>';
-    } else if(r.status==='in_transit'){
-      action='<div class="rdcard"><h4>ผลการตรวจรับสินค้า</h4>'
-        +rdRadio('rdInsp','good','สมบูรณ์ · สภาพสมบูรณ์ 100%','',true)
-        +rdRadio('rdInsp','damaged','ชำรุด / เสียหาย','')
-        +rdRadio('rdInsp','incomplete','ได้รับสินค้าไม่ครบ','')
-        +rdRadio('rdInsp','reject','ปฏิเสธการรับคืน (ส่งกลับลูกค้า)','')
-        +'<textarea id="rdInspReason" class="rdta" rows="2" placeholder="เหตุผลการตรวจรับ (จำเป็นกรณีชำรุด/ไม่ครบ/ปฏิเสธ)"></textarea>'
-        +'<button class="rdcta" onclick="retDoInspect(\''+r.rid+'\')">ยืนยันผลการตรวจรับสินค้า</button></div>';
-    } else if(r.status==='refund_review'){
-      action='<div class="rdcard"><div class="rdgreen">✓ ตรวจรับสินค้าเรียบร้อย'+(r.inspection?(' · '+(STL[r.inspection.result]||'')):'')+'</div><h4>อนุมัติคืนเงิน</h4>'
-        +'<div class="rdrow"><span class="k">ยอดขอคืนสุทธิ</span><span class="v num" style="color:var(--brand);font-size:1.05rem">'+retBaht(r.amount)+'</span></div>'
-        +'<div style="margin-top:12px">'+rdRadio('rdRef','full','คืนเต็มจำนวน (Full Refund)',retBaht(r.amount),true)
-        +rdRadio('rdRef','partial','คืนบางส่วน (Partial Refund)','ระบุยอดด้านล่าง')+'</div>'
-        +'<input id="rdRefAmt" class="rdin" inputmode="numeric" placeholder="ยอดคืนบางส่วน (บาท)" value="'+(Number(r.amount)||0)+'">'
-        +(acct.no?('<div class="rdcard" style="margin:12px 0 0;background:var(--soft)"><h4 style="font-size:.85rem">ข้อมูลบัญชีลูกค้า (Bank Transfer)</h4><div class="rdrow"><span class="k">ชื่อบัญชี</span><span class="v">'+poEsc(acct.name||'-')+'</span></div><div class="rdrow"><span class="k">ธนาคาร</span><span class="v">'+poEsc(acct.bank||'-')+'</span></div><div class="rdrow"><span class="k">เลขที่บัญชี</span><span class="v num">'+poEsc(acct.no)+'</span></div></div>'):'')
-        +'<button class="rdcta" onclick="retDoRefund(\''+r.rid+'\')">ยืนยันการอนุมัติคืนเงิน</button></div>';
-    } else if(r.status==='refunded'){
-      action='<div class="rdcard"><div class="rdgreen">✓ คืนเงินสำเร็จ '+retBaht((r.refund&&r.refund.amount)||r.amount)+(r.refund&&r.refund.type==='partial'?' (บางส่วน)':'')+'</div><div class="rdbc">คำขอนี้ดำเนินการเสร็จสิ้นแล้ว</div></div>';
-    } else if(r.status==='rejected'){
-      action='<div class="rdcard"><div class="rdgreen" style="background:var(--bad-tint);color:var(--bad)">✕ ปฏิเสธการรับคืน</div>'+(r.inspection&&r.inspection.reason?('<div class="rdbc">เหตุผล: '+poEsc(r.inspection.reason)+'</div>'):'')+'</div>';
+    RD_SLIP=null;
+    var st=r.status, ins=r.inspection||{}, acct=r.refundAccount||{}, items=r.items||[];
+    var isReview=(st==='refund_review'), canPick=(st==='in_transit');
+    var received=(ins.receivedItems&&ins.receivedItems.length)?ins.receivedItems:null;
+    var STL={good:'สภาพสมบูรณ์ (ได้มาตรฐาน)',damaged:'ชำรุด / เสียหายบางส่วน',incomplete:'สินค้าได้รับไม่ครบถ้วน',reject:'ปฏิเสธ / ตรวจไม่ผ่าน'};
+    var last=(r.history&&r.history[0]&&r.history[0].at)||r.at;
+    var partialReq=(Number(r.orderTotal)>0&&Number(r.amount)<Number(r.orderTotal));
+    // ---------- header ----------
+    var title=isReview?'ขั้นตอนการทำเรื่องอนุมัติคืนเงิน':(st==='in_transit'?'รายละเอียดและตรวจรับพัสดุคืน':'รายละเอียดคำขอคืนสินค้า');
+    var head='<div class="rdhead"><div style="flex:1;min-width:0"><div class="bc">คำขอคืน › <b>'+poEsc(r.rid)+'</b>'+(isReview?' › อนุมัติคืนเงิน':'')+'</div>'
+      +'<h2>'+title+' '+retStPill(st)+'</h2></div>'
+      +'<span class="upd">อัปเดตล่าสุด '+rdDate(last)+'</span>'
+      +'<button class="x" onclick="retModalClose()" aria-label="ปิด">×</button></div>';
+    // ---------- shared left cards ----------
+    var info='<div class="rdcard"><h4>ข้อมูลการสั่งซื้อและลูกค้า</h4><div class="rdinfo">'
+      +'<div><div class="k">ชื่อ-นามสกุลลูกค้า</div><div class="v" title="'+poEsc(r.name||'')+'">'+poEsc(r.name||'-')+'</div></div>'
+      +'<div><div class="k">เบอร์โทรศัพท์</div><div class="v num">'+poEsc(r.phone||'-')+'</div></div>'
+      +'<div><div class="k">อีเมล</div><div class="v" title="'+poEsc(r.email||'')+'">'+poEsc(r.email||'-')+'</div></div>'
+      +'<div><div class="k">หมายเลขคำสั่งซื้อ</div><div class="v num" style="color:var(--brand)" title="'+poEsc(r.orderId||'')+'">'+poEsc(r.orderId||'-')+'</div></div>'
+      +'</div></div>';
+    var itemRows=items.map(function(it,i){
+      var on=received?(received.indexOf(it.name)>=0):true;
+      return '<label class="rditem'+(canPick?' ed':'')+(on?' on':'')+'"><input type="checkbox" class="rdItemChk" data-name="'+poEsc(it.name)+'" data-price="'+(Number(it.price)||0)+'"'+(on?' checked':'')+(canPick?'':' disabled')+'>'
+        +'<span class="nm" title="'+poEsc(it.name)+'">'+poEsc(it.name)+'</span><span class="pr num'+((Number(it.price)||0)>0?'':' z')+'">'+rdPrice(it.price)+'</span></label>';
+    }).join('')||'<div class="rdempty">ไม่มีรายการสินค้า</div>';
+    var estInit=received?items.filter(function(it){return received.indexOf(it.name)>=0;}).reduce(function(a,it){return a+(Number(it.price)||0);},0):(Number(r.amount)||0);
+    var reasonCard='<div class="rdcard"><div class="rdh"><h4>เหตุผลและรายการขอคืนสินค้า</h4><span class="rdtag" style="color:'+(partialReq?'var(--warn)':'var(--bad)')+'">'+(partialReq?'ขอคืนบางรายการ':'ขอคืนทั้งคำสั่งซื้อ')+'</span></div>'
+      +'<div class="rdnote"><div class="t">สาเหตุที่ลูกค้าระบุ</div>'+poEsc(r.reason||'-')+(r.note?('<div style="color:var(--muted);margin-top:4px">“'+poEsc(r.note)+'”</div>'):'')+'</div>'
+      +'<p class="rdlbl">'+(canPick?'เลือกสินค้าที่ได้รับคืนจริง ตามรายการที่ลูกค้าขอคืน':'รายการสินค้าที่ขอคืน')+'</p>'+itemRows
+      +'<div class="rdtot"><span>ยอดเงินคืนที่ลูกค้าจะได้รับโดยประมาณ</span><b class="num" id="rdEst">'+retBaht(estInit)+'</b></div></div>';
+    var ev=r.evidence||[];
+    var evCard='<div class="rdcard"><h4>ภาพถ่ายหลักฐานสภาพสินค้าที่ลูกค้าส่งมา</h4>'
+      +(ev.length?('<div class="rdev">'+ev.map(function(u,i){return '<a href="'+poEsc(u)+'" target="_blank" rel="noopener"><img src="'+poEsc(u)+'" alt="รูปหลักฐานที่ '+(i+1)+'" loading="lazy"><span>รูปที่ '+(i+1)+'</span></a>';}).join('')+'</div>')
+        :'<div class="rdempty">ลูกค้าไม่ได้แนบรูปภาพหลักฐาน</div>')+'</div>';
+    var logCard='<div class="rdcard"><h4>บันทึกสถานะการทำเรื่อง (Status Timeline)</h4>'+rdLog(r)+'</div>';
+    var left='',right='';
+    if(isReview){
+      // ---------- screen 4: อนุมัติคืนเงิน ----------
+      var recvItems=received?items.filter(function(it){return received.indexOf(it.name)>=0;}):items;
+      var sugg=(ins.suggestedAmount!=null&&ins.suggestedAmount>0)?Number(ins.suggestedAmount):recvItems.reduce(function(a,it){return a+(Number(it.price)||0);},0);
+      if(!(sugg>0))sugg=Number(r.amount)||0;
+      var full=Number(r.amount)||0, prePartial=(sugg<full-0.001);
+      var partRecv=(received&&received.length<items.length);
+      var okTxt=ins.result==='good'?(partRecv?'สภาพสินค้าที่ได้รับสมบูรณ์ (ได้มาตรฐาน)':'สภาพสมบูรณ์ ครบถ้วนทุกรายการ'):('ตรวจรับแล้ว — '+(STL[ins.result]||'-'));
+      left='<div class="rdok"><span class="ic">✓</span><div><b>ผลการตรวจสอบผ่าน: '+okTxt+'</b><span>'+(ins.reason?poEsc(ins.reason)+' · ':'')+'ตรวจเมื่อ '+rdDate(ins.at||last)+(received?(' · รับคืน '+received.length+'/'+items.length+' รายการ'):'')+'</span></div></div>'
+        +'<div class="rdcard"><h4>ตัวเลือกจำนวนเงินคืน</h4><div class="rdpair">'
+          +rdRadio('rdRef','full','คืนเต็มจำนวน (Full Refund)','ตามยอดที่ลูกค้าขอ '+retBaht(full),!prePartial)
+          +rdRadio('rdRef','partial','คืนบางส่วน (Partial Refund)','ระบุยอดเงินคืนเอง',prePartial)
+        +'</div><p class="rdlbl">ระบุยอดเงินคืนสุทธิ (บาท)</p>'
+        +'<div class="rdamt"><input id="rdRefAmt" class="rdin num" inputmode="decimal" value="'+(prePartial?sugg:full)+'"'+(prePartial?'':' disabled')+'><small>ต้องไม่เกินยอดที่ลูกค้าขอคืน '+retBaht(full)+'</small></div></div>'
+        +'<div class="rdcard"><h4>ข้อมูลช่องทางการรับเงินคืน (Destination)</h4>'
+          +(r.channel==='bank'
+            ?('<div class="rddest"><div class="t"><i></i>โอนผ่านบัญชีธนาคาร (Bank Transfer)</div>'+rdKv('ชื่อบัญชี',poEsc(acct.name||'-'))+rdKv('ธนาคาร',poEsc(acct.bank||'-'))+rdKv('เลขที่บัญชี','<span class="num" style="color:var(--brand)">'+poEsc(acct.no||'-')+'</span>')+'</div>')
+            :('<div class="rddest"><div class="t"><i style="background:var(--brand)"></i>คืนเข้าบัตรเครดิตที่ใช้ชำระ (Card Refund)</div><div style="font-size:.8rem;color:var(--muted);line-height:1.5">คืนเงินผ่านช่องทางบัตรเดิมของลูกค้า — ดำเนินการในระบบรับชำระเงิน แล้วแนบหลักฐานด้านล่าง</div></div>'))
+          +'<p class="rdlbl">แนบหลักฐานการโอนเงินคืน (Transfer Slip)</p>'
+          +'<label class="rdup" id="rdUpBox"><input type="file" id="rdSlipIn" accept="image/*" style="display:none"><b>คลิกเพื่ออัปโหลดสลิปการโอนเงิน</b><span>รองรับ JPG / PNG ไม่เกิน 8 MB · ไม่บังคับ</span></label>'
+        +'</div>';
+      right='<div class="rdcard rdsum"><h4>สรุปยอดเงินที่คืน</h4>'
+          +recvItems.map(function(it){return '<div class="ln"><span class="n" title="'+poEsc(it.name)+'">'+poEsc(it.name)+'</span><span class="p num">'+rdPrice(it.price)+'</span></div>';}).join('')
+          +'<div class="ln"><span class="n">ค่าธรรมเนียมการคืนเงิน</span><span class="p" style="color:var(--good)">ฟรี (CloverX Support)</span></div>'
+          +'<div class="tt"><span>ยอดคืนสุทธิที่จะโอน</span><b class="num" id="rdSumTot">'+retBaht(prePartial?sugg:full)+'</b></div>'
+          +'<button class="rdcta" onclick="retDoRefund(\''+r.rid+'\')">ยืนยันและอนุมัติการโอนเงิน</button>'
+          +'<button class="rdghost" onclick="retModalClose()">ย้อนกลับ</button></div>'
+        +'<div class="rdwarn"><b>ข้อควรทราบก่อนอนุมัติ</b>ระบบจะบันทึกการอนุมัติและหลักฐานเท่านั้น ไม่ได้โอนเงินให้อัตโนมัติ — การโอนจริงทำโดยฝ่ายการเงินผ่านบัญชีบริษัท ตรวจสอบชื่อบัญชีให้ตรงกับชื่อลูกค้าทุกครั้ง</div>'
+        +logCard;
+    } else {
+      // ---------- screen 3 (+ other statuses) ----------
+      left=info+reasonCard+evCard;
+      var act='';
+      if(st==='in_transit'){
+        act='<div class="rdcard"><h4>ตรวจสอบสภาพสินค้าพัสดุรับคืน</h4><p class="hsub">ระบุผลตรวจสินค้าที่ได้รับคืน ก่อนส่งเรื่องอนุมัติคืนเงิน</p>'
+          +rdRadio('rdInsp','good','สภาพสมบูรณ์ (ได้มาตรฐาน)','สินค้าครบ ใช้งานได้ปกติ',true,'var(--good)')
+          +rdRadio('rdInsp','damaged','ชำรุด / เสียหายบางส่วน','',false,'var(--warn)')
+          +rdRadio('rdInsp','incomplete','สินค้าได้รับไม่ครบถ้วน','',false,'var(--bad)')
+          +rdRadio('rdInsp','reject','ปฏิเสธ / ตรวจไม่ผ่าน','ส่งสินค้ากลับคืนลูกค้า',false,'var(--muted)')
+          +'<p class="rdlbl" style="margin-top:14px">หมายเหตุเพิ่มเติมจากเจ้าหน้าที่ตรวจสอบ</p><textarea id="rdInspReason" class="rdta" placeholder="จำเป็นต้องระบุ กรณีชำรุด / ไม่ครบ / ปฏิเสธ"></textarea>'
+          +'<button class="rdcta" onclick="retDoInspect(\''+r.rid+'\')">ยืนยันผลตรวจและส่งเรื่องอนุมัติ</button></div>';
+      } else if(st==='awaiting_shipment'){
+        act='<div class="rdcard"><h4>บันทึกการส่งคืน (แทนลูกค้า)</h4><p class="hsub">ลูกค้ายังไม่แจ้งเลขพัสดุ — กรอกเพื่อเปลี่ยนสถานะเป็น “รอตรวจรับสินค้า”</p>'
+          +'<input id="rdShipTk" class="rdin" placeholder="เลขพัสดุการส่งคืน"><button class="rdcta" onclick="retDoShipAdmin(\''+r.rid+'\')">บันทึกเลขพัสดุ</button></div>';
+      } else if(st==='refunded'){
+        var rf=r.refund||{};
+        act='<div class="rdok"><span class="ic">✓</span><div><b>คืนเงินสำเร็จ '+retBaht(rf.amount||r.approvedAmount||r.amount)+(rf.type==='partial'?' (บางส่วน)':'')+'</b><span>อนุมัติเมื่อ '+rdDate(rf.at||last)+'</span></div></div>'
+          +'<div class="rdcard"><h4>รายละเอียดการคืนเงิน</h4>'+rdKv('รูปแบบ',rf.type==='partial'?'คืนบางส่วน':'คืนเต็มจำนวน')+rdKv('ยอดคืน','<span class="num">'+retBaht(rf.amount||r.amount)+'</span>')+rdKv('ช่องทาง',RET_CHLBL[r.channel]||'-')
+          +(rf.slip?rdKv('หลักฐานการโอน','<a href="'+poEsc(rf.slip)+'" target="_blank" rel="noopener" style="color:var(--brand)">ดูสลิป</a>'):'')+'</div>';
+      } else if(st==='rejected'){
+        act='<div class="rdok bad"><span class="ic">✕</span><div><b>ปฏิเสธการรับคืน</b><span>'+poEsc(ins.reason||'ส่งสินค้ากลับคืนลูกค้า')+'</span></div></div>';
+      }
+      right=act+logCard+rdTrack(r);
     }
-    // ----- right column -----
-    var ev=(r.evidence&&r.evidence.length)?('<div class="rdcard"><h4>หลักฐานจากลูกค้า</h4><div style="display:flex;gap:8px;flex-wrap:wrap">'+r.evidence.map(function(u){return '<a href="'+poEsc(u)+'" target="_blank"><img src="'+poEsc(u)+'" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"></a>';}).join('')+'</div></div>'):'';
-    var shipInfo=(r.returnTracking||acct.no)?('<div class="rdcard"><h4>ข้อมูลการจัดส่งคืน (Tracking)</h4>'+(r.returnTracking?'<div class="rdrow"><span class="k">เลขพัสดุ</span><span class="v num">'+poEsc(r.returnTracking)+'</span></div>':'')+(r.returnCarrier?'<div class="rdrow"><span class="k">ขนส่ง</span><span class="v">'+poEsc(r.returnCarrier)+'</span></div>':'')+retTrackBlock(r)+'</div>'):'';
-    var html=css
-      +'<div style="position:sticky;top:0;background:#fff;padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;border-radius:18px 18px 0 0;z-index:3">'
-      +'<div style="flex:1;min-width:0"><div class="rdbc">รายการคำขอ › <b>'+poEsc(r.rid)+'</b></div><div style="font-weight:800;font-size:1.05rem;margin-top:2px">รายละเอียด &amp; ตรวจรับพัสดุ</div></div>'
-      +retStPill(r.status)
-      +'<button onclick="retModalClose()" style="border:0;background:none;font-size:1.4rem;color:var(--muted);cursor:pointer;line-height:1;flex:none;margin-left:4px">×</button></div>'
-      +'<div class="rdgrid">'
-        +'<div>'
-          +'<div class="rdcard"><h4>ข้อมูลลูกค้าเบื้องต้น</h4>'
-            +'<div class="rdrow"><span class="k">ชื่อลูกค้า</span><span class="v">'+poEsc(r.name||'-')+'</span></div>'
-            +'<div class="rdrow"><span class="k">เบอร์โทรศัพท์</span><span class="v num">'+poEsc(r.phone||'-')+'</span></div>'
-            +'<div class="rdrow"><span class="k">อีเมล</span><span class="v">'+poEsc(r.email||'-')+'</span></div>'
-            +'<div class="rdrow"><span class="k">คำสั่งซื้อ</span><span class="v num">'+poEsc(r.orderId)+'</span></div>'
-            +'<div class="rdrow"><span class="k">ช่องทางคืนเงิน</span><span class="v">'+(r.channel==='bank'?'โอนบัญชีธนาคาร':'บัตรเครดิต')+'</span></div>'
-            +'<div class="rdrow"><span class="k">เหตุผลการคืน</span><span class="v" style="max-width:60%">'+poEsc(r.reason||'-')+'</span></div>'
-          +'</div>'
-          +'<div class="rdcard"><h4>รายการสินค้าที่ขอคืน</h4>'+itemsHtml+'<div class="rdrow" style="border-top:1.5px dashed var(--line);border-bottom:0;margin-top:4px"><span class="k" style="font-weight:800;color:var(--ink)">ยอดรวมขอคืน</span><span class="v num" style="color:var(--brand);font-size:1.02rem">'+retBaht(r.amount)+'</span></div></div>'
-          +action
-        +'</div>'
-        +'<div>'
-          +'<div class="rdcard"><h4>สถานะคำขอ (Status Timeline)</h4>'+retTimeline(r)+'</div>'
-          +shipInfo+ev
-          +'<button onclick="retAct(\'delete\',\''+r.rid+'\')" style="width:100%;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:11px;padding:11px;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">ลบคำขอนี้</button>'
-        +'</div>'
-      +'</div>';
+    var html=RD_CSS+head+'<div class="rdwrap"><div class="rdgrid"><div class="rdcol">'+left+'</div><div class="rdcol">'+right+'</div></div></div>';
     retModal(html);
-    var card=document.getElementById('retModalCard'); if(card){card.style.width='min(960px,96vw)';}
-    // radio visual toggle
-    document.querySelectorAll('#retModalCard .rdopt').forEach(function(o){o.addEventListener('click',function(){var nm=o.getAttribute('data-rd');document.querySelectorAll('#retModalCard .rdopt[data-rd="'+nm+'"]').forEach(function(x){x.classList.remove('on');});o.classList.add('on');var ip=o.querySelector('input');if(ip)ip.checked=true;});});
-    if(r.returnTracking&&r.status==='in_transit')retTrack(r.rid,false);
+    var card=document.getElementById('retModalCard'); if(card){card.style.width='min(1180px,96vw)';}
+    // radio groups
+    document.querySelectorAll('#retModalCard .rdopt').forEach(function(o){o.addEventListener('click',function(){var nm=o.getAttribute('data-rd');document.querySelectorAll('#retModalCard .rdopt[data-rd="'+nm+'"]').forEach(function(x){x.classList.remove('on');});o.classList.add('on');var ip=o.querySelector('input');if(ip)ip.checked=true;if(nm==='rdRef')rdRefSync(r);});});
+    // item checkboxes → ยอดประมาณ
+    document.querySelectorAll('#retModalCard .rdItemChk').forEach(function(c){c.addEventListener('change',function(){var lb=c.closest('.rditem');if(lb)lb.classList.toggle('on',c.checked);var el=document.getElementById('rdEst');if(el)el.textContent=retBaht(rdSelectedItems().sum);});});
+    var amt=document.getElementById('rdRefAmt'); if(amt)amt.addEventListener('input',function(){rdRefSync(r);});
+    var si=document.getElementById('rdSlipIn'); if(si)si.addEventListener('change',function(){rdPickSlip(si);});
+    if(r.returnTracking&&st==='in_transit')retTrack(r.rid,false);
+  }
+  function rdRefAmount(r){
+    var type=(document.querySelector('#retModalCard input[name="rdRef"]:checked')||{}).value||'full';
+    if(type==='full')return {type:type,amount:Number(r.amount)||0};
+    var v=Number(String((document.getElementById('rdRefAmt')||{}).value||'').replace(/[^0-9.]/g,''));
+    return {type:type,amount:v};
+  }
+  function rdRefSync(r){
+    var type=(document.querySelector('#retModalCard input[name="rdRef"]:checked')||{}).value||'full';
+    var inp=document.getElementById('rdRefAmt');
+    if(inp){if(type==='full'){inp.value=Number(r.amount)||0;inp.disabled=true;}else{inp.disabled=false;}}
+    var t=document.getElementById('rdSumTot'); var a=rdRefAmount(r); if(t)t.textContent=retBaht(a.amount>0?a.amount:0);
+  }
+  function rdPickSlip(input){
+    var f=input.files&&input.files[0]; if(!f)return;
+    if(!/^image\//.test(f.type)){xvToast('รองรับเฉพาะไฟล์รูปภาพ','bad');input.value='';return;}
+    if(f.size>8*1024*1024){xvToast('ไฟล์ใหญ่เกิน 8 MB','bad');input.value='';return;}
+    var rd=new FileReader();
+    rd.onload=function(){var img=new Image();img.onload=function(){
+      var s=Math.min(1,1600/Math.max(img.width,img.height));var c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);RD_SLIP=c.toDataURL('image/jpeg',0.85);
+      var box=document.getElementById('rdUpBox'); if(box){box.querySelectorAll('img,b,span').forEach(function(n){n.remove();});box.insertAdjacentHTML('beforeend','<img src="'+RD_SLIP+'" alt="สลิปการโอน"><b>เปลี่ยนรูป</b><span>'+poEsc(f.name)+'</span>');}
+    };img.src=rd.result;};
+    rd.readAsDataURL(f);
   }
   function retDoInspect(rid){
+    var r=RET_ALL.find(function(x){return x.rid===rid;}); if(!r)return;
     var res=(document.querySelector('#retModalCard input[name="rdInsp"]:checked')||{}).value;
     if(!res){xvToast('เลือกผลการตรวจรับก่อน','bad');return;}
     var reason=((document.getElementById('rdInspReason')||{}).value||'').trim();
-    if(res!=='good'&&!reason){xvToast('กรุณาระบุเหตุผล','bad');return;}
-    if(res==='reject'&&!confirm('ยืนยันปฏิเสธการรับคืนและส่งกลับคืนลูกค้า?'))return;
+    if(res!=='good'&&!reason){xvToast('กรุณาระบุหมายเหตุ/เหตุผล','bad');return;}
+    var sel=rdSelectedItems();
+    if(res!=='reject'&&(r.items||[]).length&&!sel.names.length){xvToast('เลือกสินค้าที่ได้รับคืนอย่างน้อย 1 รายการ','bad');return;}
+    if(res==='reject'&&!confirm('ยืนยันปฏิเสธการรับคืนและส่งสินค้ากลับคืนลูกค้า?'))return;
     retModalClose();
-    retPost(rid,'inspect',{result:res,reason:reason,actor:'staff'}, res==='reject'?'ปฏิเสธการรับคืนแล้ว':'ตรวจรับแล้ว — เข้าสู่การอนุมัติคืนเงิน');
+    retPost(rid,'inspect',{result:res,reason:reason,actor:'staff',receivedItems:sel.names,suggestedAmount:sel.sum},res==='reject'?'ปฏิเสธการรับคืนแล้ว':'ตรวจรับแล้ว — ส่งเรื่องเข้าขั้นตอนอนุมัติคืนเงิน');
   }
   function retDoRefund(rid){
     var r=RET_ALL.find(function(x){return x.rid===rid;}); if(!r)return;
-    var type=(document.querySelector('#retModalCard input[name="rdRef"]:checked')||{}).value||'full';
-    var body={type:type,actor:'staff'};
-    if(type==='partial'){var amt=Number((document.getElementById('rdRefAmt')||{}).value); if(!(amt>0)){xvToast('ยอดไม่ถูกต้อง','bad');return;} if(amt>(Number(r.amount)||0)+0.001){xvToast('ยอดเกินยอดขอคืน','bad');return;} body.amount=amt;}
-    if(!confirm('ยืนยันอนุมัติคืนเงิน'+(type==='full'?'เต็มจำนวน':'บางส่วน')+' สำหรับ '+rid+' ?'))return;
+    var a=rdRefAmount(r);
+    if(!(a.amount>0)){xvToast('ยอดเงินคืนไม่ถูกต้อง','bad');return;}
+    if(a.amount>(Number(r.amount)||0)+0.001){xvToast('ยอดเงินคืนเกินยอดที่ลูกค้าขอคืน','bad');return;}
+    if(!confirm('ยืนยันอนุมัติคืนเงิน '+retBaht(a.amount)+(a.type==='full'?' (เต็มจำนวน)':' (บางส่วน)')+' สำหรับ '+rid+' ?\n\nระบบจะบันทึกการอนุมัติเท่านั้น — การโอนเงินจริงทำโดยฝ่ายการเงิน'))return;
+    var body={type:a.type,actor:'staff'}; if(a.type==='partial')body.amount=a.amount; if(RD_SLIP)body.slip=RD_SLIP;
     retModalClose();
     retPost(rid,'refund',body,'อนุมัติคืนเงินแล้ว');
   }
@@ -3681,7 +3849,6 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     retModalClose();
     retPost(rid,'ship',{phone:r.phone,email:r.email,trackingNo:tn},'บันทึกเลขพัสดุแล้ว — รอตรวจรับ');
   }
-
   /* ============ SALES ANALYTICS DASHBOARD ============ */
   var TH_PROVINCES=['กรุงเทพ','กทม','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา','ชลบุรี','ชัยนาท','ชัยภูมิ','ชุมพร','เชียงราย','เชียงใหม่','ตรัง','ตราด','ตาก','นครนายก','นครปฐม','นครพนม','นครราชสีมา','นครศรีธรรมราช','นครสวรรค์','นนทบุรี','นราธิวาส','น่าน','บึงกาฬ','บุรีรัมย์','ปทุมธานี','ประจวบคีรีขันธ์','ปราจีนบุรี','ปัตตานี','พระนครศรีอยุธยา','อยุธยา','พะเยา','พังงา','พัทลุง','พิจิตร','พิษณุโลก','เพชรบุรี','เพชรบูรณ์','แพร่','ภูเก็ต','มหาสารคาม','มุกดาหาร','แม่ฮ่องสอน','ยโสธร','ยะลา','ร้อยเอ็ด','ระนอง','ระยอง','ราชบุรี','ลพบุรี','ลำปาง','ลำพูน','เลย','ศรีสะเกษ','สกลนคร','สงขลา','สตูล','สมุทรปราการ','สมุทรสงคราม','สมุทรสาคร','สระแก้ว','สระบุรี','สิงห์บุรี','สุโขทัย','สุพรรณบุรี','สุราษฎร์ธานี','สุรินทร์','หนองคาย','หนองบัวลำภู','อ่างทอง','อำนาจเจริญ','อุดรธานี','อุตรดิตถ์','อุทัยธานี','อุบลราชธานี'];
   function pdProvince(addr){var a=String(addr||'');for(var i=0;i<TH_PROVINCES.length;i++){if(a.indexOf(TH_PROVINCES[i])>=0){var p=TH_PROVINCES[i];return (p==='กทม')?'กรุงเทพ':p;}}return 'ไม่ระบุ';}

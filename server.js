@@ -911,9 +911,14 @@ app.post('/api/returns/:rid/inspect', function (req, res) {
   var reason = String(b.reason || '').slice(0, 500);
   if ((result === 'damaged' || result === 'incomplete' || result === 'reject') && !reason) return res.status(400).json({ ok: false, error: 'reason_required' });
   var LBL = { good: 'สินค้าสภาพสมบูรณ์ 100%', damaged: 'สินค้าชำรุด/เสียหาย', incomplete: 'สินค้าไม่ครบ', reject: 'ปฏิเสธการรับคืน' };
-  r.inspection = { result: result, reason: reason, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60) };
+  // รายการที่ได้รับคืนจริง (จาก checkbox หน้าตรวจรับ) + ยอดคืนที่แนะนำ — ใช้เติมค่าเริ่มต้นหน้าอนุมัติ
+  var totalItems = Array.isArray(r.items) ? r.items.length : 0;
+  var received = Array.isArray(b.receivedItems) ? b.receivedItems.slice(0, 30).map(function (s) { return String(s || '').slice(0, 120); }).filter(Boolean) : null;
+  var sugg = Number(b.suggestedAmount); sugg = (isFinite(sugg) && sugg >= 0) ? Math.min(sugg, Number(r.amount) || 0) : null;
+  r.inspection = { result: result, reason: reason, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60), receivedItems: received, suggestedAmount: sugg };
+  var recvNote = (received && totalItems && received.length < totalItems) ? (' · รับคืน ' + received.length + '/' + totalItems + ' รายการ') : '';
   if (result === 'reject') { r.status = 'rejected'; retLog(r, 'ตรวจรับ: ปฏิเสธการรับคืน — ' + reason + ' · ส่งกลับคืนลูกค้า'); }
-  else { r.status = 'refund_review'; retLog(r, 'ตรวจรับสินค้าแล้ว: ' + LBL[result] + (reason ? (' — ' + reason) : '') + ' · เข้าสู่การอนุมัติคืนเงิน'); }
+  else { r.status = 'refund_review'; retLog(r, 'ตรวจรับสินค้าแล้ว: ' + LBL[result] + (reason ? (' — ' + reason) : '') + recvNote + ' · เข้าสู่การอนุมัติคืนเงิน'); }
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
 });
@@ -925,9 +930,12 @@ app.post('/api/returns/:rid/refund', function (req, res) {
   var type = b.type === 'partial' ? 'partial' : 'full';
   var amount = type === 'full' ? (Number(r.amount) || 0) : (Number(b.amount) || 0);
   if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'invalid_amount' });
-  r.refund = { type: type, amount: amount, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60), note: String(b.note || '').slice(0, 300) };
+  if (type === 'partial' && amount > (Number(r.amount) || 0) + 0.001) return res.status(400).json({ ok: false, error: 'amount_exceeds_request' });
+  // หลักฐานการโอนเงินคืน (ถ้าแนบ) — บันทึกเป็นหลักฐานเท่านั้น ระบบไม่ได้โอนเงินเอง
+  var rfSlip = saveDataImage(b.slip, 'RFD-' + r.rid + '-' + crypto.randomBytes(8).toString('hex')); // ชื่อไฟล์เดาไม่ได้ (สลิปมีเลขบัญชี)
+  r.refund = { type: type, amount: amount, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60), note: String(b.note || '').slice(0, 300), slip: rfSlip || null };
   r.approvedAmount = amount; r.status = 'refunded';
-  retLog(r, 'อนุมัติคืนเงิน' + (type === 'full' ? 'เต็มจำนวน' : 'บางส่วน') + ' ' + amount.toLocaleString('en-US') + ' บาท');
+  retLog(r, 'อนุมัติคืนเงิน' + (type === 'full' ? 'เต็มจำนวน' : 'บางส่วน') + ' ' + amount.toLocaleString('en-US') + ' บาท' + (rfSlip ? ' · แนบหลักฐานการโอน' : ''));
   writeReturns(rlist);
   res.json({ ok: true, ret: r });
 });
