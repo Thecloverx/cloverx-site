@@ -210,7 +210,8 @@ app.use(function (req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  // กล้องเปิดได้เฉพาะหน้าสแกน QR เช็กอินของทีมงาน (xv-checkin) — หน้าอื่นปิดกล้องทั้งหมด
+  res.setHeader('Permissions-Policy', /^\/xv-checkin(\.html)?\/?$/i.test(req.path) ? 'geolocation=(), microphone=(), camera=(self)' : 'geolocation=(), microphone=(), camera=()');
   res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
   next();
 });
@@ -218,7 +219,7 @@ app.use(function (req, res, next) {
 app.use(express.json({ limit: '10mb' }));
 
 // ---- X-VISOR exam backend (server-side shuffle + scoring) ----
-try { require('./xvisor_api')(app, DATA); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
+try { require('./xvisor_api')(app, DATA, { isStaff: function (req) { return !!currentStaff(req); }, staffName: function (req) { var c = currentStaff(req); return c ? (c.name || c.email) : ''; } }); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
 
 // ---- Lean Lab membership & auth (email + LINE + Google) ----
 try { require('./leanlab_api')(app, DATA, { currentStaff: function (req) { return currentStaff(req); } }); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
@@ -1433,7 +1434,7 @@ app.post('/api/staff/admin/delete', function (req, res) {
 // หน้า login (ต้องมาก่อน guard/static)
 app.get('/login', function (req, res) { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'login.html')); });
 // ประตูกั้น: หน้าหลังบ้านต้องล็อกอินพนักงานก่อน (เข้าตรงผ่าน URL ก็ถูกกั้น)
-var STAFF_GATED = /^\/(center|operations|support|exam)(\.html)?\/?$/i;
+var STAFF_GATED = /^\/(center|operations|support|exam|xv-checkin|xvisor_roster)(\.html)?\/?$/i;
 app.use(function (req, res, next) {
   if (req.method !== 'GET' || !STAFF_GATED.test(req.path)) return next();
   if (currentStaff(req)) return next();

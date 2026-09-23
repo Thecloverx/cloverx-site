@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>เช็กอินผู้เข้าสอบ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#F6F8FC; --card:#FFFFFF; --ink:#101C33; --muted:#5E6B84; --line:#E3E8F1; --soft:#F1F4F9;
+  --pri:#1E40AF; --pri-2:#2F5BD3; --pri-t:#E8EEFC; --on-pri:#FFFFFF;
+  --ok:#12804F; --ok-t:#E3F5EC; --warn:#B45309; --warn-t:#FEF3C7; --bad:#C62828; --bad-t:#FDECEC; --bad-l:#F4B5B5;
+  --lead:#92700C; --lead-t:#FBF3DC; --cam:#111A2E;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1220; --card:#131C2E; --ink:#E6ECF7; --muted:#96A3BB; --line:#24314A; --soft:#1A2438;
+  --pri:#7EA2FF; --pri-2:#9BB7FF; --pri-t:#1B2A4F; --on-pri:#0B1220;
+  --ok:#3BC98A; --ok-t:#0F2E21; --warn:#F2B14C; --warn-t:#33260C; --bad:#FF8080; --bad-t:#3A1717; --bad-l:#6B2A2A;
+  --lead:#E4BE55; --lead-t:#2F2610; --cam:#060A14;}}
+:root[data-theme="dark"]{
+  --bg:#0B1220; --card:#131C2E; --ink:#E6ECF7; --muted:#96A3BB; --line:#24314A; --soft:#1A2438;
+  --pri:#7EA2FF; --pri-2:#9BB7FF; --pri-t:#1B2A4F; --on-pri:#0B1220;
+  --ok:#3BC98A; --ok-t:#0F2E21; --warn:#F2B14C; --warn-t:#33260C; --bad:#FF8080; --bad-t:#3A1717; --bad-l:#6B2A2A;
+  --lead:#E4BE55; --lead-t:#2F2610; --cam:#060A14;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
+button,input{font-family:inherit;font-size:16px;color:inherit}
+.nb{white-space:nowrap}
+.app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
+@media(min-width:600px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 20px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.3rem;color:var(--pri)}
+.brand svg{width:26px;height:26px}
+.role{margin-left:auto;background:var(--pri-t);color:var(--pri);font-weight:700;font-size:.8rem;border-radius:8px;padding:5px 10px;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+main{flex:1;padding:16px 20px calc(96px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px}
+.round{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.round-t{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.round-t b{font-size:1.1rem;font-weight:800}
+.mode{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--ok);white-space:nowrap}
+.mode:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.mode.online{color:var(--pri)}
+.round-l{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.9rem;flex-wrap:wrap}
+.round-l svg{width:16px;height:16px;flex:none}
+.round-sw{align-self:flex-start;margin-top:4px;background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.84rem;font-weight:700;color:var(--pri);cursor:pointer;min-height:36px}
+.win{font-size:.84rem;font-weight:700;border-radius:8px;padding:5px 10px;align-self:flex-start;margin-top:2px}
+.win.open{background:var(--ok-t);color:var(--ok)} .win.not_yet{background:var(--soft);color:var(--muted)} .win.closed{background:var(--bad-t);color:var(--bad)}
+.cam{position:relative;background:var(--cam);border-radius:18px;overflow:hidden;aspect-ratio:1/0.87;width:100%}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.frame{position:absolute;left:50%;top:50%;width:64%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.frame i{position:absolute;width:26%;height:26%;border:4px solid #fff}
+.frame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-top-left-radius:22px}
+.frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-top-right-radius:22px}
+.frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-bottom-left-radius:22px}
+.frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-bottom-right-radius:22px}
+.frame .line{position:absolute;left:4%;right:4%;height:2px;background:#5B8CFF;box-shadow:0 0 12px #5B8CFF;top:10%;animation:scan 2.2s ease-in-out infinite alternate}
+@keyframes scan{to{top:88%}}
+@media (prefers-reduced-motion: reduce){.frame .line{animation:none;top:50%}}
+.cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;color:#E6ECF7;padding:24px}
+.cam-msg p{margin:0;max-width:28ch;color:#C3CCDD;font-size:.95rem}
+.cam-hint{text-align:center;color:var(--muted);font-size:.95rem;margin-top:-4px}
+.prog{display:flex;flex-direction:column;gap:8px}
+.prog-t{display:flex;justify-content:space-between;align-items:baseline;font-weight:700}
+.prog-t span:last-child{color:var(--pri);font-variant-numeric:tabular-nums}
+.prog-b{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.prog-b i{display:block;height:100%;background:var(--pri);border-radius:999px;width:0;transition:width .4s}
+@media (prefers-reduced-motion: reduce){.prog-b i{transition:none}}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;font-weight:600;font-size:.92rem;cursor:pointer;min-height:52px}
+.tg[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.sw{flex:none;width:48px;height:28px;border-radius:999px;background:var(--line);position:relative;transition:.2s}
+.sw:after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s}
+.tg[aria-checked="true"] .sw{background:var(--pri)} .tg[aria-checked="true"] .sw:after{left:23px}
+.manual-btn{background:none;border:0;color:var(--pri);font-weight:700;font-size:.95rem;cursor:pointer;padding:8px;align-self:center;text-decoration:underline;text-underline-offset:3px;min-height:44px}
+.manual{display:flex;gap:10px}
+.manual input{flex:1;min-width:0;height:52px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 14px;text-transform:uppercase;letter-spacing:.04em}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;border-radius:14px;border:0;font-weight:800;font-size:1.05rem;cursor:pointer;padding:0 18px;text-decoration:none}
+.btn.pri{background:var(--pri);color:var(--on-pri)}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{width:auto;min-height:52px;font-size:1rem}
+.btn:focus-visible,.tg:focus-visible,.chip:focus-visible,.nav button:focus-visible,.person:focus-visible,input:focus-visible,.round-sw:focus-visible,.opt:focus-visible,.link:focus-visible,.manual-btn:focus-visible{outline:3px solid var(--pri-2);outline-offset:2px}
+.link{background:none;border:0;color:var(--muted);font-weight:700;cursor:pointer;padding:8px;text-decoration:underline;text-underline-offset:3px;align-self:center;font-size:.92rem;min-height:44px}
+.res{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding-top:6px}
+.res-ic{width:76px;height:76px;border-radius:50%;display:grid;place-items:center}
+.res-ic svg{width:36px;height:36px}
+.res.ok .res-ic{background:var(--ok-t);color:var(--ok)} .res.bad .res-ic{background:var(--warn-t);color:var(--warn)}
+.res h2{margin:0;font-size:1.6rem;font-weight:800}
+.res.ok h2{color:var(--ok)} .res.bad h2{color:var(--warn)}
+.info{width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;text-align:left}
+.info-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:6px;border-bottom:1px solid var(--line);font-weight:700;color:var(--muted)}
+.tag{font-size:.8rem;font-weight:800;border-radius:8px;padding:4px 10px;background:var(--pri-t);color:var(--pri)} .tag.lead{background:var(--lead-t);color:var(--lead)}
+.info-r{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:7px 0;font-size:.98rem}
+.info-r span{color:var(--muted)} .info-r b{font-weight:800} .info-r b.time{color:var(--ok);font-variant-numeric:tabular-nums}
+.err{width:100%;background:var(--bad-t);border:1px solid var(--bad-l);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.err b{color:var(--bad);font-size:1.15rem;font-weight:800} .err span{color:var(--ink);opacity:.85}
+.res .prog{width:100%;text-align:left}
+.tg span:first-child{white-space:nowrap}
+.res .btns{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.auto{font-size:.85rem;color:var(--muted);min-height:1.3em}
+h1.h{margin:0;font-size:1.3rem;font-weight:800}
+.search{position:relative}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--muted)}
+.search input{width:100%;height:50px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 14px 0 44px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.9rem;cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--pri);border-color:var(--pri);color:var(--on-pri)}
+.people{display:flex;flex-direction:column;gap:10px}
+.person{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;width:100%;cursor:default}
+.person.in{box-shadow:inset 4px 0 0 var(--ok)}
+.person.out{cursor:pointer}
+.person .pm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.person .pm b{font-size:1.02rem;font-weight:800}
+.person .pm small{color:var(--muted);font-size:.86rem;display:flex;gap:12px;flex-wrap:wrap}
+.badge{flex:none;font-size:.82rem;font-weight:800;border-radius:8px;padding:5px 10px;white-space:nowrap}
+.badge.in{background:var(--ok-t);color:var(--ok)} .badge.out{background:var(--soft);color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:1.8rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{color:var(--muted);font-size:.86rem;font-weight:600}
+.stat.ok b{color:var(--ok)} .stat.out b{color:var(--warn)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.panel h3{margin:0 0 10px;font-size:1rem;font-weight:800}
+.crow{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:0}
+.crow .cb{grid-column:1/-1;height:6px;border-radius:999px;background:var(--line);overflow:hidden}.crow .cb i{display:block;height:100%;background:var(--ok)}
+.crow span:nth-child(2){font-weight:800;font-variant-numeric:tabular-nums}
+.recent{display:flex;flex-direction:column}
+.ri{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.ri:last-child{border-bottom:0}
+.ri small{color:var(--muted);white-space:nowrap}
+.ri .ok{color:var(--ok);font-weight:700}.ri .bad{color:var(--bad);font-weight:700}.ri .q{color:var(--warn);font-weight:700}
+.banner{border-radius:12px;padding:12px 14px;font-weight:700;font-size:.92rem}
+.banner.off{background:var(--warn-t);color:var(--warn)} .banner.auth{background:var(--bad-t);color:var(--bad)} .banner a{color:inherit}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.nav-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0 10px;color:var(--muted);font-weight:600;font-size:.85rem;cursor:pointer;min-height:64px}
+.nav button svg{width:26px;height:26px}
+.nav button[aria-current="page"]{color:var(--pri);font-weight:800}
+.sheet-bg{position:fixed;inset:0;background:rgba(8,14,28,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-size:1.15rem}
+.sheet p{margin:0;color:var(--muted)}
+.opt{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;width:100%}
+.opt[aria-pressed="true"]{border-color:var(--pri);background:var(--pri-t)}
+.opt small{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg>CloverX E-xam</div>
+    <span class="role" id="role">ทีมงาน</span>
+  </header>
+  <main id="main"></main>
+</div>
+<nav class="nav" aria-label="เมนูหลัก"><div class="nav-in">
+  <button data-tab="scan" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg>สแกน QR</button>
+  <button data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>รายชื่อ</button>
+  <button data-tab="sum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg>สรุป</button>
+</div></nav>
+
+<script>
+(function(){
+var $=function(s){return document.querySelector(s);};
+var TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var TH_D=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+function thD(iso){ if(!iso)return ''; var p=iso.split('-'); return (+p[2])+' '+TH_M[(+p[1])-1]+' '+((+p[0])+543); }
+function thDay(iso){ if(!iso)return ''; var d=new Date(iso+'T00:00:00Z'); return 'วัน'+TH_D[d.getUTCDay()]+'ที่ '+thD(iso); }
+function hm(ms){ return new Date(ms+7*3600000).toISOString().slice(11,16); }
+function hms(ms){ return new Date(ms+7*3600000).toISOString().slice(11,19); }
+function slot(s){ return String(s||'').replace(/\s*-\s*/,'–'); }
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function ls(k,v){ try{ if(v===undefined){ return JSON.parse(localStorage.getItem(k)||'null'); } localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
+function coachTxt(c){ c=String(c||'').trim(); if(!c||c==='-')return 'ไม่ระบุโค้ช'; return /^โค้ช/.test(c)?c:'โค้ช'+c; }
+var IC={ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'};
+
+var S={tab:'scan',view:'scan',rounds:[],cur:null,recent:[],queue:ls('xv_ck_queue')||[],sound:ls('xv_ck_sound')!==false,torch:false,torchOk:false,
+  filter:'all',q:'',res:null,auth:false,camOn:false,camErr:'',manual:false,loaded:false,wantCam:false};
+var main=$('#main');
+
+/* ---------- ข้อมูลรอบวันนี้ ---------- */
+function loadData(){
+  return fetch('/api/xv/attendance',{cache:'no-store',credentials:'same-origin'}).then(function(r){
+    if(r.status===403){ S.auth=true; render(); throw 0; } return r.json(); })
+  .then(function(j){
+    S.auth=false; S.loaded=true;
+    var rs=(j.rounds||[]).slice().sort(function(a,b){ return (a.round.mode==='onsite'?0:1)-(b.round.mode==='onsite'?0:1)||String(a.round.timeslot).localeCompare(String(b.round.timeslot)); });
+    S.rounds=rs; var keep=(S.cur&&S.cur.round.id)||ls('xv_ck_round')||'';
+    S.cur=rs.find(function(x){return x.round.id===keep;})||rs[0]||null;
+    if(S.view==='result'&&S.tab==='scan')paintProg();
+    else if(S.tab==='list'&&document.activeElement&&document.activeElement.id==='q'){}
+    else if(!(S.tab==='scan'&&S.view==='scan'&&S.camOn))render(); else { paintProg(); var rc=$('#roundCard'); if(rc)rc.outerHTML=roundCard(); bindRound(); }
+  }).catch(function(){ if(!S.loaded){ S.loaded=true; render(); } });
+}
+function counts(){ var x=S.cur; if(!x)return {c:0,t:0,p:0}; return {c:x.confirmed,t:x.paid,p:x.paid?Math.round(x.confirmed/x.paid*100):0}; }
+
+/* ---------- ส่วนประกอบ ---------- */
+function roundCard(){
+  var x=S.cur; if(!x)return '<div class="round" id="roundCard"><div class="round-t"><b>วันนี้ไม่มีรอบสอบ</b></div><div class="round-l">ยังพิมพ์เลขที่ผู้สมัครเพื่อตรวจสอบได้ ระบบจะแจ้งว่าเป็นรอบวันไหน</div></div>';
+  var r=x.round, w=x.window||{};
+  var wt={open:'เปิดเช็กอินอยู่ ถึงเวลา '+w.startsAt+' น.',not_yet:'เปิดเช็กอินเวลา '+w.opensAt+' น.',closed:'ปิดเช็กอินแล้ว (เริ่มสอบ '+w.startsAt+' น.)'}[w.state]||'';
+  return '<div class="round" id="roundCard"><div class="round-t"><b>รอบสอบ '+esc(r.examType||'X-Visor')+' ครั้งที่ '+esc(r.no)+'</b><span class="mode'+(r.mode==='onsite'?'':' online')+'">'+(r.mode==='onsite'?'On Site':'Online')+'</span></div>'
+    +'<div class="round-l"><span>'+esc(thDay(r.date))+'</span>'+(r.timeslot?'<span class="nb">เวลา '+esc(slot(r.timeslot))+' น.</span>':'')+'</div>'
+    +(r.venue?'<div class="round-l">'+IC.pin+'<span>สถานที่: '+esc(r.venue)+'</span></div>':'')
+    +(wt?'<span class="win '+w.state+'">'+wt+'</span>':'')
+    +(S.rounds.length>1?'<button class="round-sw" id="swRound">เปลี่ยนรอบสอบ (วันนี้มี '+S.rounds.length+' รอบ)</button>':'')+'</div>';
+}
+function bindRound(){ var sw=$('#swRound'); if(sw)sw.onclick=roundSheet; }
+function progInner(){ var k=counts(); return '<div class="prog-t"><span>เช็กอินแล้ว <span class="nb">'+k.c+'/'+k.t+' คน</span></span><span>'+k.p+'%</span></div><div class="prog-b"><i style="width:'+k.p+'%"></i></div>'; }
+function progHtml(){ return '<div class="prog" id="prog">'+progInner()+'</div>'; }
+function paintProg(){ var p=$('#prog'); if(p)p.innerHTML=progInner(); }
+function banners(){
+  return (S.auth?'<div class="banner auth">หมดเวลาการล็อกอินพนักงาน <a href="/login?next=/xv-checkin">ล็อกอินใหม่</a></div>':'')
+    +(S.queue.length?'<div class="banner off">ออฟไลน์ รอส่ง '+S.queue.length+' รายการ<br><span style="font-weight:500">ระบบจะส่งขึ้นอัตโนมัติเมื่อสัญญาณกลับมา</span></div>':'');
+}
+
+/* ---------- หน้าจอ ---------- */
+function render(){
+  document.querySelectorAll('.nav button').forEach(function(b){ if(b.dataset.tab===S.tab)b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  if(!(S.tab==='scan'&&S.view==='scan'))running=false;
+  if(S.tab==='list')return renderList();
+  if(S.tab==='sum')return renderSum();
+  if(S.view==='result')return renderResult();
+  renderScan();
+}
+function renderScan(){
+  main.innerHTML=banners()+roundCard()
+    +'<div class="cam" id="cam"><video id="video" playsinline muted autoplay></video>'
+      +'<div class="frame"'+(S.camOn?'':' hidden')+'><i></i><i></i><i></i><i></i><span class="line"></span></div>'
+      +'<div class="cam-msg"'+(S.camOn?' hidden':'')+'><p>'+esc(S.camErr||'แตะปุ่มด้านล่างเพื่อเปิดกล้อง แล้วสแกนต่อเนื่องได้เลย')+'</p><button class="btn pri sm" id="camStart">'+(S.camErr?'ลองเปิดกล้องอีกครั้ง':'เปิดกล้องสแกน QR')+'</button></div></div>'
+    +'<div class="cam-hint">วาง QR Code ของผู้เข้าสอบให้อยู่ในกรอบ</div>'
+    +progHtml()
+    +'<div class="toggles"><div class="tg" id="tgTorch" role="switch" tabindex="0" aria-checked="'+(S.torch?'true':'false')+'" aria-disabled="'+(S.torchOk?'false':'true')+'"><span>ไฟแฟลช</span><span class="sw"></span></div>'
+      +'<div class="tg" id="tgSound" role="switch" tabindex="0" aria-checked="'+(S.sound?'true':'false')+'"><span>เปิดเสียง</span><span class="sw"></span></div></div>'
+    +(S.manual?'<form class="manual" id="manual" autocomplete="off"><input id="manualNo" placeholder="เลขที่ผู้สมัคร เช่น RG261015001" aria-label="เลขที่ผู้สมัคร" enterkeyhint="go"><button class="btn pri sm" type="submit">เช็กอิน</button></form>'
+      :'<button class="manual-btn" id="manualBtn">สแกนไม่ติด? พิมพ์เลขที่ผู้สมัครแทน</button>');
+  var st=$('#camStart'); if(st)st.onclick=startCam;
+  if(S.camOn&&stream){ var v=$('#video'); v.srcObject=stream; v.play().catch(function(){}); running=true; loop(); }
+  bindRound();
+  toggle($('#tgTorch'),function(){ if(!S.torchOk||!stream)return; S.torch=!S.torch; try{ stream.getVideoTracks()[0].applyConstraints({advanced:[{torch:S.torch}]}); }catch(e){} return S.torch; });
+  toggle($('#tgSound'),function(){ S.sound=!S.sound; ls('xv_ck_sound',S.sound); return S.sound; });
+  var mb=$('#manualBtn'); if(mb)mb.onclick=function(){ S.manual=true; renderScan(); var i=$('#manualNo'); if(i)i.focus(); };
+  var mf=$('#manual'); if(mf)mf.onsubmit=function(e){ e.preventDefault(); var v=$('#manualNo').value.trim().toUpperCase(); if(v)submit(v); };
+}
+function toggle(el,fn){ if(!el)return; var go=function(){ var r=fn(); if(r!==undefined)el.setAttribute('aria-checked',r?'true':'false'); };
+  el.onclick=go; el.onkeydown=function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); go(); } }; }
+
+var autoT=null;
+function renderResult(){
+  var r=S.res||{}, j=r.j||{}, ok=r.kind==='ok';
+  var lead=/lead/i.test((S.cur&&S.cur.round.examType)||'');
+  var html=banners()+roundCard()+'<div class="res '+(ok?'ok':'bad')+'"><div class="res-ic">'+(ok?IC.ok:IC.warn)+'</div><h2>'+(ok?'เช็กอินสำเร็จ':'เช็กอินไม่สำเร็จ')+'</h2>';
+  if(ok){
+    html+='<div class="info"><div class="info-h"><span>ข้อมูลผู้เข้าสอบ</span><span class="tag'+(lead?' lead':'')+'">'+(lead?'X-Lead':'X-Visor')+'</span></div>'
+      +'<div class="info-r"><span>ชื่อผู้เข้าสอบ</span><b>'+esc(j.name||'-')+'</b></div>'
+      +'<div class="info-r"><span>เลขที่ผู้สมัคร</span><b>'+esc(j.regNo||'-')+'</b></div>'
+      +'<div class="info-r"><span>ทีมโค้ช</span><b>'+esc(coachTxt(j.coachTeam))+'</b></div>'
+      +'<div class="info-r"><span>เวลาเช็กอิน</span><b class="time">'+hms(j.attendance.at)+' น.</b></div></div>'
+      +progHtml()
+      +'<div class="btns"><button class="btn pri" id="next">สแกนคนถัดไป</button>'
+      +(j.regNo?'<button class="link" id="undo">สแกนผิดคน? ยกเลิกรายการนี้ภายใน 1 นาที</button>':'')
+      +'<div class="auto" id="auto"></div></div>';
+  } else {
+    html+='<div class="err"><b>'+esc(r.title)+'</b>'+(r.detail?'<span>'+r.detail+'</span>':'')+'</div>'
+      +'<div class="btns"><button class="btn pri" id="next">สแกนใหม่</button><button class="btn ghost" id="toList">ดูรายชื่อเช็กอิน</button></div>';
+  }
+  main.innerHTML=html+'</div>';
+  bindRound();
+  $('#next').onclick=backToScan;
+  var tl=$('#toList'); if(tl)tl.onclick=function(){ S.view='scan'; S.tab='list'; render(); };
+  var un=$('#undo'); if(un)un.onclick=function(){ undo(j.regNo); };
+  clearInterval(autoT);
+  if(ok){ var n=5, a=$('#auto'); var tick=function(){ if(!a||!document.body.contains(a)||S.view!=='result'){clearInterval(autoT);return;} a.textContent='กลับไปหน้าสแกนอัตโนมัติใน '+n+' วินาที'; if(n--<=0){clearInterval(autoT);backToScan();} };
+    tick(); autoT=setInterval(tick,1000); }
+}
+function backToScan(){ clearInterval(autoT); S.view='scan'; S.res=null; render(); if(S.wantCam&&!S.camOn)startCam(); }
+
+function renderList(){
+  var x=S.cur, ppl=(x&&x.people)||[];
+  var inN=ppl.filter(function(p){return p.attendance;}).length, outN=ppl.length-inN;
+  var q=S.q.trim().toLowerCase();
+  var list=ppl.filter(function(p){ if(S.filter==='in'&&!p.attendance)return false; if(S.filter==='out'&&p.attendance)return false;
+    return !q||(p.name||'').toLowerCase().indexOf(q)>=0||(p.regNo||'').toLowerCase().indexOf(q)>=0; })
+    .sort(function(a,b){ return (a.attendance?0:1)-(b.attendance?0:1)||((a.attendance&&b.attendance)?(a.attendance.at-b.attendance.at):String(a.name).localeCompare(String(b.name),'th')); });
+  main.innerHTML=banners()+'<h1 class="h">รายชื่อผู้เข้าสอบ</h1>'
+    +(x?'<div class="round-l" style="margin-top:-8px"><span>รอบ '+esc(x.round.examType||'X-Visor')+' ครั้งที่ '+esc(x.round.no)+'</span><span class="nb">'+esc(thD(x.round.date))+'</span></div>':'')
+    +'<div class="search">'+IC.search+'<input id="q" type="search" placeholder="ค้นหาชื่อหรือเลขที่ผู้สมัคร" value="'+esc(S.q)+'" aria-label="ค้นหา"></div>'
+    +'<div class="chips" role="group" aria-label="ตัวกรอง">'
+      +[['all','ทั้งหมด ('+ppl.length+')'],['in','เช็กอินแล้ว ('+inN+')'],['out','ยังไม่มา ('+outN+')']].map(function(c){return '<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(S.filter===c[0])+'">'+c[1]+'</button>';}).join('')+'</div>'
+    +'<div class="people">'+(list.length?list.map(function(p){
+        return '<button class="person '+(p.attendance?'in':'out')+'" data-reg="'+esc(p.regNo)+'"'+(p.attendance?' tabindex="-1" aria-disabled="true"':'')+'><span class="pm"><b>'+esc(p.name)+'</b><small><span>'+esc(p.regNo)+'</span><span>'+esc(coachTxt(p.coachTeam))+'</span></small></span>'
+          +(p.attendance?'<span class="badge in">เช็กอิน '+hm(p.attendance.at)+'</span>':'<span class="badge out">ยังไม่มา</span>')+'</button>';}).join('')
+      :'<div class="empty">'+(ppl.length?'ไม่พบรายชื่อที่ค้นหา':(x?'ยังไม่มีผู้ชำระเงินในรอบนี้':'วันนี้ไม่มีรอบสอบ'))+'</div>')+'</div>';
+  var qi=$('#q'); qi.oninput=function(){ S.q=qi.value; var pos=qi.selectionStart; renderList(); var n=$('#q'); n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){} };
+  document.querySelectorAll('.chip').forEach(function(b){ b.onclick=function(){ S.filter=b.dataset.f; renderList(); }; });
+  document.querySelectorAll('.person.out').forEach(function(b){ b.onclick=function(){ var p=ppl.find(function(z){return z.regNo===b.dataset.reg;}); if(p)confirmSheet(p); }; });
+}
+function renderSum(){
+  var x=S.cur, k=counts();
+  var by=(x&&x.byCoach)||{}, ks=Object.keys(by).sort(function(a,b){return by[b].paid-by[a].paid;});
+  var rec=S.queue.map(function(q){return '<div class="ri"><span class="q">รอส่งขึ้นระบบ</span><small>'+hm(q.at)+' น.</small></div>';}).join('')
+    +S.recent.map(function(r){return '<div class="ri"><span><span class="'+r.kind+'">'+esc(r.label)+'</span> '+esc(r.name)+'</span><small>'+hm(r.at)+' น.</small></div>';}).join('');
+  main.innerHTML=banners()+roundCard()
+    +'<div class="stats"><div class="stat ok"><b>'+k.c+'</b><span>เช็กอินแล้ว</span></div><div class="stat out"><b>'+(k.t-k.c)+'</b><span>ยังไม่มา</span></div><div class="stat"><b>'+k.t+'</b><span>ชำระเงินแล้ว</span></div></div>'
+    +progHtml()
+    +'<div class="panel"><h3>แยกตามทีมโค้ช</h3>'+(ks.length?ks.map(function(c){var b=by[c];return '<div class="crow"><span>'+esc(coachTxt(c))+'</span><span>'+b.confirmed+'/'+b.paid+' คน</span><span class="cb"><i style="width:'+(b.paid?b.confirmed/b.paid*100:0)+'%"></i></span></div>';}).join(''):'<div class="empty">ยังไม่มีข้อมูล</div>')+'</div>'
+    +'<div class="panel"><h3>สแกนล่าสุดจากเครื่องนี้</h3><div class="recent">'+(rec||'<div class="empty">ยังไม่มีการสแกน</div>')+'</div></div>';
+  bindRound();
+}
+
+/* ---------- แผ่นเลือก ---------- */
+function sheet(html,bind){ var bg=document.createElement('div'); bg.className='sheet-bg'; bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true">'+html+'</div>';
+  bg.onclick=function(e){ if(e.target===bg)bg.remove(); }; document.body.appendChild(bg); bind(bg); var f=bg.querySelector('button'); if(f)f.focus(); return bg; }
+function roundSheet(){
+  sheet('<h3>เลือกรอบสอบวันนี้</h3>'+S.rounds.map(function(x){var r=x.round;return '<button class="opt" data-id="'+esc(r.id)+'" aria-pressed="'+(!!S.cur&&S.cur.round.id===r.id)+'"><b>'+esc(r.examType||'X-Visor')+' ครั้งที่ '+esc(r.no)+' ('+(r.mode==='onsite'?'On Site':'Online')+')</b><small>'+(r.timeslot?'เวลา '+esc(slot(r.timeslot))+' น.  ':'')+'เช็กอินแล้ว '+x.confirmed+'/'+x.paid+' คน</small></button>';}).join('')
+    +'<button class="btn ghost" data-close>ปิด</button>',function(bg){
+      bg.querySelectorAll('.opt').forEach(function(b){ b.onclick=function(){ S.cur=S.rounds.find(function(x){return x.round.id===b.dataset.id;}); ls('xv_ck_round',b.dataset.id); bg.remove(); render(); }; });
+      bg.querySelector('[data-close]').onclick=function(){bg.remove();}; });
+}
+function confirmSheet(p){
+  sheet('<h3>เช็กอินให้ '+esc(p.name)+'</h3><p>'+esc(p.regNo)+'  '+esc(coachTxt(p.coachTeam))+'</p><p>ใช้เมื่อผู้เข้าสอบสแกน QR ไม่ได้ และทีมงานตรวจบัตรประชาชนแล้ว</p>'
+    +'<button class="btn pri" data-ok>ยืนยันเช็กอิน</button><button class="btn ghost" data-close>ยกเลิก</button>',function(bg){
+      bg.querySelector('[data-ok]').onclick=function(){ bg.remove(); S.tab='scan'; submit(p.regNo); };
+      bg.querySelector('[data-close]').onclick=function(){bg.remove();}; });
+}
+
+/* ---------- ผลการสแกน ---------- */
+var actx=null;
+function feedback(ok){
+  try{ if(navigator.vibrate) navigator.vibrate(ok?60:[90,60,90]); }catch(e){}
+  if(!S.sound)return;
+  try{ var A=window.AudioContext||window.webkitAudioContext; if(!A)return; actx=actx||new A(); var o=actx.createOscillator(),g=actx.createGain();
+    o.frequency.value=ok?1320:360; g.gain.value=.09; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+(ok?.14:.3)); }catch(e){}
+}
+function roundTxt(r){ return r?('รอบวันที่ '+thD(r.date)+(r.timeslot?' เวลา '+slot(r.timeslot)+' น.':'')):''; }
+function showResult(j,code){
+  var who=esc(j.name||j.regNo||code), w=j.window||{}, res;
+  switch(j.result){
+    case 'checked_in': res={kind:'ok'}; break;
+    case 'duplicate': res={title:'ผู้เข้าสอบนี้เช็กอินแล้ว',detail:who+' เช็กอินเมื่อ <span class="nb">'+hm(j.attendance.at)+' น.</span>'}; break;
+    case 'wrong_round': case 'wrong_day': res={title:'QR นี้ไม่ใช่ของรอบนี้',detail:who+'<br>เป็นของ'+esc(roundTxt(j.round))}; break;
+    case 'late': res={title:'เลยเวลาเริ่มสอบแล้ว',detail:who+'<br>หมดสิทธิ์เข้าสอบรอบนี้ (เริ่มสอบ '+esc(w.startsAt||'')+' น.)'}; break;
+    case 'not_open_yet': res={title:'ยังไม่เปิดเช็กอิน',detail:'เปิดเช็กอินเวลา '+esc(w.opensAt||'06:00')+' น. ของวันสอบ<br>'+who}; break;
+    case 'not_paid': res={title:'ยังไม่พร้อมเข้าสอบ',detail:who+'<br>ยังไม่ชำระเงินหรือถูกยกเลิก กรุณาส่งต่อแอดมิน'}; break;
+    default: res={title:'ไม่พบ QR นี้ในระบบ',detail:'ลองสแกนอีกครั้ง หรือพิมพ์เลขที่ผู้สมัครแทน'};
+  }
+  res.kind=res.kind||'bad'; res.j=j; S.res=res; S.view='result'; S.tab='scan'; S.manual=false;
+  addRecent(res.kind==='ok'?'ok':'bad',res.kind==='ok'?'เช็กอินสำเร็จ':res.title,j.name||j.regNo||'ไม่พบข้อมูล',res.kind==='ok'?j.attendance.at:Date.now());
+  feedback(res.kind==='ok'); render();
+}
+function addRecent(kind,label,name,at){ S.recent.unshift({kind:kind,label:label,name:name,at:at}); S.recent=S.recent.slice(0,30); }
+function send(item){
+  return fetch('/api/xv/checkin',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)})
+    .then(function(r){ if(r.status===403){ S.auth=true; var e=new Error('auth'); e.auth=1; throw e; } return r.json(); });
+}
+var busy=false;
+function submit(code){
+  code=String(code||'').trim(); if(!code||busy)return; busy=true; running=false;
+  var item={code:code,roundId:S.cur?S.cur.round.id:'',at:Date.now()};
+  send(item).then(function(j){ busy=false; showResult(j,code); loadData(); })
+  .catch(function(e){ busy=false; S.tab='scan'; S.view='result';
+    if(e&&e.auth){ S.res={kind:'bad',title:'หมดเวลาการล็อกอินพนักงาน',detail:'กรุณาล็อกอินใหม่ แล้วสแกนอีกครั้ง'}; render(); return; }
+    S.queue.push(item); ls('xv_ck_queue',S.queue); feedback(false);
+    S.res={kind:'bad',title:'ออฟไลน์ บันทึกไว้ในเครื่องแล้ว',detail:'ระบบจะส่งขึ้นอัตโนมัติเมื่อสัญญาณกลับมา<br>ดูผลได้ที่เมนูสรุป'}; render(); });
+}
+var flushing=false;
+function flush(){
+  if(flushing||!S.queue.length)return; flushing=true;
+  var item=S.queue[0];
+  send(item).then(function(j){ S.queue.shift(); ls('xv_ck_queue',S.queue);
+      addRecent(j.result==='checked_in'?'ok':'bad',({checked_in:'เช็กอินสำเร็จ',duplicate:'เช็กอินไว้แล้ว',late:'มาหลังเวลาเริ่มสอบ',invalid:'QR ไม่ถูกต้อง',not_paid:'ยังไม่พร้อมเข้าสอบ',wrong_round:'ผิดรอบ',wrong_day:'ไม่ใช่วันนี้'}[j.result]||'ส่งแล้ว')+' (ส่งภายหลัง)',j.name||j.regNo||'',item.at);
+      flushing=false; if(S.queue.length)flush(); else loadData(); })
+    .catch(function(){ flushing=false; });
+}
+function undo(regNo){
+  fetch('/api/xv/checkin/undo',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({regNo:regNo})})
+    .then(function(r){return r.json();}).then(function(j){
+      if(j.ok){ clearInterval(autoT); S.res={kind:'bad',title:'ยกเลิกเช็กอินแล้ว',detail:esc(regNo)+'<br>สแกน QR ของผู้เข้าสอบที่ถูกต้องได้เลย'}; S.view='result'; addRecent('bad','ยกเลิกเช็กอิน',regNo,Date.now()); render(); loadData(); }
+      else { clearInterval(autoT); var a=$('#auto'); if(a)a.textContent=j.error==='too_late'?'ยกเลิกไม่ได้ เกิน 1 นาทีแล้ว กรุณาแจ้งแอดมิน':'ยกเลิกไม่ได้ ไม่พบรายการ'; }
+    }).catch(function(){ var a=$('#auto'); if(a)a.textContent='ยกเลิกไม่สำเร็จ อินเทอร์เน็ตขัดข้อง'; });
+}
+
+/* ---------- กล้อง ---------- */
+var stream=null, detector=null, lastCode='', lastAt=0, canvas=document.createElement('canvas'), ctx=canvas.getContext('2d',{willReadFrequently:true}), running=false;
+function loadJsQR(){ return new Promise(function(ok,no){ if(window.jsQR)return ok(); var s=document.createElement('script'); s.src='/xv-jsqr.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
+function releaseCam(){ running=false; if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; } S.camOn=false; S.torch=false; }
+function camFail(msg){ releaseCam(); S.camErr=msg; if(S.tab==='scan'&&S.view==='scan')renderScan(); }
+function startCam(){
+  S.wantCam=true;
+  if(stream){ S.camOn=true; renderScan(); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ camFail('เครื่องนี้เปิดกล้องจากเบราว์เซอร์ไม่ได้ ใช้ปุ่มพิมพ์เลขที่ผู้สมัครแทน'); return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false}).then(function(s){
+    stream=s; S.camErr='';
+    var tr=s.getVideoTracks()[0]; try{ var cap=tr.getCapabilities&&tr.getCapabilities(); S.torchOk=!!(cap&&cap.torch); }catch(e){ S.torchOk=false; }
+    var useNative=('BarcodeDetector' in window);
+    return (useNative?window.BarcodeDetector.getSupportedFormats().then(function(f){ if(f.indexOf('qr_code')>=0){ detector=new window.BarcodeDetector({formats:['qr_code']}); } else return loadJsQR(); }):loadJsQR())
+      .then(function(){ S.camOn=true; if(S.tab==='scan'&&S.view==='scan')renderScan(); }).catch(function(){ camFail('โหลดตัวอ่าน QR ไม่สำเร็จ ใช้ปุ่มพิมพ์เลขที่ผู้สมัครแทน'); });
+  }).catch(function(e){
+    camFail(e&&e.name==='NotAllowedError'?'ยังไม่ได้อนุญาตให้ใช้กล้อง กรุณาอนุญาตกล้องในการตั้งค่าเบราว์เซอร์ แล้วลองอีกครั้ง':'เปิดกล้องไม่สำเร็จ ใช้ปุ่มพิมพ์เลขที่ผู้สมัครแทน');
+  });
+}
+function got(code){ var now=Date.now(); if(code===lastCode&&now-lastAt<5000)return; lastCode=code; lastAt=now; submit(code); }
+var lastTick=0, pend=false, looping=false;
+function loop(){ if(looping)return; looping=true; requestAnimationFrame(tickScan); }
+function tickScan(){
+  if(!running){ looping=false; return; } requestAnimationFrame(tickScan);
+  var v=$('#video'); if(!v||busy||v.readyState<2)return; var now=performance.now(); if(now-lastTick<180)return; lastTick=now;
+  if(detector){ if(pend)return; pend=true; detector.detect(v).then(function(c){ pend=false; if(running&&c&&c[0]&&c[0].rawValue)got(c[0].rawValue); }).catch(function(){pend=false;}); return; }
+  if(!window.jsQR)return;
+  var vw=v.videoWidth, vh=v.videoHeight; if(!vw)return; var side=Math.min(vw,vh)*0.8, sc=Math.min(1,640/side);
+  canvas.width=Math.round(side*sc); canvas.height=canvas.width;
+  ctx.drawImage(v,(vw-side)/2,(vh-side)/2,side,side,0,0,canvas.width,canvas.height);
+  var img=ctx.getImageData(0,0,canvas.width,canvas.height), q=window.jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+  if(q&&q.data)got(q.data);
+}
+document.addEventListener('visibilitychange',function(){ if(document.hidden&&stream){ releaseCam(); if(S.tab==='scan'&&S.view==='scan')renderScan(); } });
+
+document.querySelectorAll('.nav button').forEach(function(b){ b.onclick=function(){ S.tab=b.dataset.tab; if(S.tab==='scan'&&S.view==='result'){ S.view='scan'; S.res=null; }
+  render(); if(S.tab==='scan'&&S.wantCam&&!stream)startCam(); }; });
+fetch('/api/staff/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){ if(j&&j.name)$('#role').textContent=j.name; }).catch(function(){});
+window.addEventListener('online',flush);
+setInterval(flush,10000); setInterval(loadData,15000);
+render(); loadData(); flush();
+})();
+</script>
+</body>
+</html>

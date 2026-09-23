@@ -529,6 +529,126 @@
     .nav .item{padding:11px 12px}
     .topbar{height:58px}
   }
+
+  /* ================= E-xam Dashboard (xdb) ================= */
+  .xdb-filter{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid #E1EEFB;border-radius:16px;padding:10px 12px;margin-bottom:12px}
+  .xdb-sel{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .xdb-sel label{display:flex;align-items:center;gap:6px;font-size:.8rem;color:#5E7691;font-weight:600}
+  .xdb-sel input,.xdb-sel select{height:36px;border:1px solid #D6E5F8;border-radius:10px;padding:0 10px;font:inherit;font-size:.84rem;background:#fff;color:#172236}
+  .xdb-scope{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.86rem;font-weight:700;color:#1D46BE;margin:0 2px 12px}
+  .xdb-scope span{color:#7290B5;font-weight:500}
+  .xdb-card{background:#fff;border:1px solid #E1EEFB;border-radius:18px;padding:18px 20px;box-shadow:0 10px 26px rgba(20,90,180,.06);min-width:0;margin-bottom:14px;position:relative}
+  .xdb-h{margin:0 0 12px;font-size:1rem;font-weight:800;color:#0B1F45;word-break:keep-all}
+  .xdb-h small{font-weight:500;color:#7290B5;font-size:.8rem}
+  .xdb-empty{color:#7290B5;font-size:.9rem;padding:18px 4px;text-align:center}
+  .xdb-row{display:grid;grid-template-columns:repeat(10,1fr);gap:14px}
+  .xdb-row>.w6{grid-column:span 6}.xdb-row>.w4{grid-column:span 4}.xdb-row>.w5{grid-column:span 5}
+  @media(max-width:1100px){.xdb-row>.w6,.xdb-row>.w4,.xdb-row>.w5{grid-column:span 10}}
+  .xdb-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+  @media(max-width:1100px){.xdb-kpis{grid-template-columns:1fr 1fr}}@media(max-width:560px){.xdb-kpis{grid-template-columns:1fr}}
+  .xdb-kpi{background:#fff;border:1px solid #E1EEFB;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;box-shadow:0 10px 26px rgba(20,90,180,.06)}
+  .xdb-kl{font-size:.84rem;color:#5E7691;font-weight:700;word-break:keep-all}
+  .xdb-kv{font-size:2rem;font-weight:800;color:#061F4D;line-height:1;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:6px}
+  .xdb-kv small{font-size:.86rem;font-weight:600;color:#5E7691}
+  .xdb-ks{font-size:.76rem;color:#7290B5}
+  .xdb-chip{display:inline-flex;border-radius:8px;padding:3px 9px;font-size:.74rem;font-weight:800;background:#EEF3FA;color:#5E7691}
+  .xdb-chip.up{background:#E4F7EE;color:#0B8F5E}.xdb-chip.down{background:#FDECEC;color:#C62E2E}.xdb-chip.v{background:#E7EDFB;color:#1E40AF}.xdb-chip.l{background:#FBF3DC;color:#92700C}
+  .xdb-ksub{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:#3E5677;font-variant-numeric:tabular-nums}
+  .xdb-ksub i,.xdb-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  i.dv{background:#1E40AF}i.dl{background:#D4A21A}
+  .xdb-legend{display:flex;gap:16px;font-size:.78rem;color:#5E7691;margin:-4px 0 12px;flex-wrap:wrap}
+  .xdb-legend i.b1{background:#A9C7FF;border-radius:3px}.xdb-legend i.b2{background:#1E40AF;border-radius:3px}
+  .xdb-crow{display:grid;grid-template-columns:120px 1fr 150px;gap:14px;align-items:center;padding:9px 0}
+  .xdb-cn{display:flex;flex-direction:column}.xdb-cn b{font-size:.92rem;color:#0B1F45}.xdb-cn small{color:#7290B5;font-size:.76rem}
+  .xdb-cbar{height:12px;background:#EEF3FA;border-radius:999px;overflow:hidden;display:flex}
+  .xdb-cbar i{display:block;height:100%}.xdb-cbar i.v{background:#1E40AF}.xdb-cbar i.l{background:#D4A21A}
+  .xdb-cv{display:flex;flex-direction:column;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums}.xdb-cv .v{color:#1E40AF}.xdb-cv .l{color:#92700C}
+  @media(max-width:560px){.xdb-crow{grid-template-columns:1fr}}
+  .xdb-m{border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid}
+  .xdb-m.on{background:#F1F5FF;border-color:#9DB4F2}.xdb-m.os{background:#EAFBF6;border-color:#8FDCC5}
+  .xdb-mh{display:flex;justify-content:space-between;font-weight:800;font-size:.95rem}.xdb-m.on .xdb-mh{color:#1E40AF}.xdb-m.os .xdb-mh{color:#0B8F6E}
+  .xdb-mv{margin-top:6px;font-size:.84rem;color:#3E5677;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}.xdb-mv b{font-size:1.6rem;color:#061F4D;font-variant-numeric:tabular-nums}.xdb-mv small{color:#5E7691;font-size:.8rem;margin-left:4px}
+  .xdb-match{margin-top:6px}.xdb-sub{font-size:.8rem;font-weight:700;color:#3E5677;margin-bottom:6px}
+  .xdb-mr{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:.86rem;color:#5E7691}.xdb-mr b{font-variant-numeric:tabular-nums}.xdb-mr b.ok{color:#0B8F5E}.xdb-mr b.warn{color:#B86A00}
+  .xdb-chart{width:100%;height:auto;display:block}.xdb-chart .gl{stroke:#EEF3FA}.xdb-chart .ax{fill:#7290B5;font-size:11px;font-family:inherit}
+  .xdb-chart .b1{fill:#A9C7FF}.xdb-chart .b2{fill:#1E40AF}
+  .xdb-tw{overflow-x:auto}.xdb-card table{width:100%;border-collapse:collapse;font-size:.86rem}
+  .xdb-card thead th{background:#F5F8FD;color:#5E7691;font-weight:700;text-align:left;padding:10px 12px;font-size:.78rem;white-space:nowrap}
+  .xdb-card tbody td{padding:11px 12px;border-bottom:1px solid #EEF3FA;color:#172236;vertical-align:middle}
+  .xdb-card tbody td small{color:#7290B5}
+  .xdb-card tr.tot td{font-weight:800;background:#FAFCFF}
+  .xdb-rate{display:inline-flex;border-radius:8px;padding:3px 9px;font-weight:800;font-size:.76rem;background:#EEF3FA;color:#5E7691}.xdb-rate.ok{background:#E4F7EE;color:#0B8F5E}.xdb-rate.warn{background:#FFF3DF;color:#B86A00}
+  .xdb-tag{display:inline-flex;border-radius:7px;padding:3px 8px;font-size:.74rem;font-weight:800}.xdb-tag.v{background:#E7EDFB;color:#1E40AF}.xdb-tag.l{background:#FBF3DC;color:#92700C}
+  .xdb-card-act{position:absolute;right:18px;top:14px;display:flex;gap:8px}
+  @media(max-width:700px){.xdb-card-act{position:static;margin-bottom:10px}}
+  .xdb-res{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}@media(max-width:1100px){.xdb-res{grid-template-columns:repeat(2,1fr)}}
+  .xdb-ri{border-radius:14px;padding:12px 14px;background:#F5F8FD;display:flex;flex-direction:column;gap:2px}
+  .xdb-ri b{font-size:1.5rem;color:#061F4D}.xdb-ri span{font-size:.78rem;color:#5E7691;font-weight:600;word-break:keep-all}
+  .xdb-ri.ok{background:#E4F7EE}.xdb-ri.ok b{color:#0B8F5E}.xdb-ri.bad{background:#FDECEC}.xdb-ri.bad b{color:#C62E2E}.xdb-ri.pend{background:#FFF6E6}.xdb-ri.pend b{color:#B86A00}.xdb-ri.new{background:#EEF3FF}.xdb-ri.new b{color:#1E40AF}
+  .xdb-tasks{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .xdb-tasks-l{font-size:.84rem;font-weight:800;color:#0B1F45;margin-right:4px}
+  .xdb-task{display:inline-flex;align-items:center;gap:8px;border:1px solid #F3D9A8;background:#FFF8EA;color:#8A5A00;border-radius:999px;padding:6px 12px 6px 6px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer}
+  .xdb-task b{background:#B86A00;color:#fff;border-radius:999px;min-width:26px;height:26px;display:grid;place-items:center;padding:0 7px;font-size:.8rem}
+  .xdb-none{font-size:.82rem;color:#0B8F5E;font-weight:700}
+  .xdb-today{background:linear-gradient(135deg,#1E40AF,#2F6BE8);border-radius:20px;padding:16px;margin-bottom:14px;color:#fff}
+  .xdb-today-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.xdb-today-h h3{margin:0;font-size:1.05rem}
+  .xdb-today-h .xbtn{background:#fff;color:#1E40AF}
+  .xdb-trs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .xdb-tr{background:#fff;color:#172236;border-radius:16px;padding:14px 16px}
+  .xdb-tr.lead{box-shadow:inset 4px 0 0 #D4A21A}
+  .xdb-tr-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.xdb-tr-top .xdb-st{flex:none}
+  .xdb-tr-top>div{display:flex;flex-direction:column;gap:2px}.xdb-tr-top small{color:#5E7691;font-size:.78rem}
+  .xdb-kind{font-size:.7rem;font-weight:800;letter-spacing:.12em;color:#1E40AF}.xdb-tr.lead .xdb-kind{color:#92700C}
+  .xdb-st{font-size:.72rem;font-weight:800;border-radius:999px;padding:4px 10px;white-space:nowrap}.xdb-st.open{background:#E4F7EE;color:#0B8F5E}.xdb-st.wait{background:#EEF3FA;color:#5E7691}.xdb-st.closed{background:#FDECEC;color:#C62E2E}
+  .xdb-tr-num{display:flex;align-items:baseline;gap:6px;margin-top:10px}.xdb-tr-num b{font-size:1.8rem;color:#061F4D}.xdb-tr-num span{font-size:.82rem;color:#5E7691}
+  .xdb-bar{height:8px;background:#EEF3FA;border-radius:999px;overflow:hidden;margin:8px 0 10px}.xdb-bar i{display:block;height:100%;background:#12A67C;border-radius:999px}
+  .xdb-wait summary{cursor:pointer;font-size:.84rem;font-weight:800;color:#B86A00}
+  .xdb-wc{margin-top:8px}.xdb-wc b{font-size:.8rem;color:#0B1F45}
+  .xdb-wp{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;color:#3E5677;padding:3px 0;border-bottom:1px dashed #EEF3FA}
+  .xdb-allok{font-size:.84rem;font-weight:800;color:#0B8F5E}
+  .xdb-foot{font-size:.78rem;color:#7290B5;line-height:1.7;margin:4px 2px 20px}
+  .nb{white-space:nowrap}
+
+  .xdb-scope{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 2px 14px}
+  .xdb-sc{font-size:.9rem;font-weight:800;color:#0B1F45;margin-right:6px}
+  .xdb-at{margin-left:auto;font-size:.78rem;color:#7290B5}
+  .xdb-sel span{font-size:.8rem;color:#5E7691}
+  .xdb-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+  .xdb-two>.xdb-card{margin:0;display:flex;flex-direction:column}
+  @media(max-width:1000px){.xdb-two{grid-template-columns:1fr}}
+  .xdb-ch{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.xdb-ch .xdb-h{margin:0}
+  .xdb-t{width:100%;border-collapse:collapse;font-size:.88rem}
+  .xdb-t th{background:#F5F8FD;color:#5E7691;font-weight:700;text-align:left;padding:9px 10px;font-size:.78rem;white-space:nowrap}
+  .xdb-t td{padding:10px;border-bottom:1px solid #EEF3FA}.xdb-t .r{text-align:right}.xdb-t td.v{color:#1E40AF;font-weight:700}.xdb-t td.l{color:#92700C;font-weight:700}
+  .xdb-t tr.tot td{font-weight:800;background:#FAFCFF;border-bottom:0}
+  .xdb-att{display:flex;align-items:center;gap:8px}.xdb-att .xdb-bar{flex:1;margin:0;min-width:50px}.xdb-att span{font-size:.8rem;font-weight:700;min-width:44px;text-align:right}
+  .xdb-bar.sm{height:6px}
+  .xdb-ms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .xdb-ms .xdb-m{margin:0;display:flex;flex-direction:column;gap:2px}
+  .xdb-ml{font-size:.8rem;font-weight:800}.xdb-m.on .xdb-ml{color:#1E40AF}.xdb-m.os .xdb-ml{color:#0B8F6E}
+  .xdb-m b{font-size:1.7rem;color:#061F4D;line-height:1.15}.xdb-m small{font-size:.76rem;color:#5E7691}
+  .xdb-sub{font-size:.84rem;font-weight:800;color:#0B1F45;margin-bottom:8px}.xdb-sub span{font-weight:500;color:#7290B5}
+  .xdb-two .xdb-res{grid-template-columns:repeat(3,1fr)}
+  .xdb-two .xdb-ri b{font-size:1.3rem}
+  .xdb-trs{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:14px}
+  .xdb-tr{border:1px solid #E1EEFB;box-shadow:0 10px 26px rgba(20,90,180,.06)}
+  .xdb-tr-num b{font-size:1.5rem}
+  .xdb-scan{display:flex;flex-direction:column;justify-content:center;gap:4px;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,#1E40AF,#2F6BE8);color:#fff;text-decoration:none}
+  .xdb-scan b{font-size:1rem}.xdb-scan span{font-size:.8rem;opacity:.85}
+  .xdb-wp{font-size:.8rem}
+  .xdb-th{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 10px}.xdb-th .xdb-h{margin:0}
+  .xdb-t th{text-transform:none;letter-spacing:0}
+
+  .xdb-today1{margin-bottom:14px}.xdb-today1.lead{box-shadow:inset 4px 0 0 #D4A21A,0 10px 26px rgba(20,90,180,.06)}
+  .xdb-tact{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .xdb-tsel{height:36px;border:1px solid #D6E5F8;border-radius:10px;padding:0 10px;font:inherit;font-size:.84rem;background:#fff;color:#172236}
+  .xdb-tgrid{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:18px;align-items:start}
+  @media(max-width:1000px){.xdb-tgrid{grid-template-columns:1fr}}
+  .xdb-tinfo{display:flex;flex-direction:column;gap:3px;align-items:flex-start}.xdb-tinfo b{font-size:1.2rem;color:#061F4D}.xdb-tinfo small{color:#5E7691;font-size:.82rem}.xdb-tinfo .xdb-st{margin-top:6px}
+  .xdb-today1.lead .xdb-kind{color:#92700C}
+  .xdb-tnum small{color:#7290B5;font-size:.78rem}.xdb-tnum .xdb-tr-num{margin-top:0}.xdb-tnum .xdb-tr-num b{font-size:2rem}
+  .xdb-wlist{max-height:150px;overflow:auto;padding-right:4px}
+  .xkpi .kv .xdb-of{font-size:.9rem;font-weight:700;opacity:.6;margin-left:2px}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -608,6 +728,17 @@
               <button class="item lvl3" data-view="reg-history"><span class="dot"></span><span class="lbl">History</span></button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- E-Xam (New) — ระบบใหม่ แยกจากของเดิม ไม่ทับกัน -->
+      <div class="group" id="g-examnew">
+        <button class="item ghead" data-toggle="g-examnew"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">E-Xam (New)</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="exam-dashboard"><span class="dot"></span><span class="lbl">Dashboard</span></button>
+          <button class="item" type="button" onclick="window.open('/xv-checkin','_blank','noopener')"><span class="dot"></span><span class="lbl">สแกน QR เช็กอิน ↗</span></button>
+          <button class="item" type="button" onclick="window.open('/xvisor_register_new','_blank','noopener')"><span class="dot"></span><span class="lbl">หน้าลงทะเบียน (ใหม่) ↗</span></button>
+          <button class="item" type="button" onclick="window.open('/xvisor_new','_blank','noopener')"><span class="dot"></span><span class="lbl">หน้าเข้าสอบ (ใหม่) ↗</span></button>
         </div>
       </div>
 
@@ -740,6 +871,7 @@
     'reg-payments':{t:'Payment Verification',th:'ตรวจสอบการชำระเงิน',d:'คิวตรวจสลิป (EasySlip) และการชำระเงิน',kind:'plain'},
     'reg-history':{t:'Registration History',th:'ประวัติการลงทะเบียน',d:'รอบที่ปิด/จบแล้ว — ค้นหาและดูย้อนหลัง',kind:'plain'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
+    'exam-dashboard':{t:'E-xam Dashboard',th:'Dashboard ภาพรวม E-xam',d:'ผู้สมัคร การยืนยันเข้าร่วม และผลสอบ แยกตามหลักสูตรและทีมโค้ช',kind:'plain'},
     'exam-session':{t:'Exam Session',th:'รอบการสอบ',d:'จัดการรอบสอบ ตารางสอบ และผู้เข้าสอบ',kind:'plain'},
     'exam-tracker':{t:'Exam Tracker',th:'ติดตามการสอบ',d:'ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ',kind:'dash'},
     'exam-result':{t:'Exam Result',th:'ผลการสอบ',d:'ผลสอบ คะแนน และการออกใบรับรอง',kind:'dash'},
@@ -957,7 +1089,8 @@
   function examDispatch(v){
     EXAM_VIEW=v;
     gen.classList.add('xv');
-    if(v==='exam-overview')renderExamOverview();
+    if(v==='exam-dashboard')renderExamDashboard();
+    else if(v==='exam-overview')renderExamOverview();
     else if(v==='exam-session')renderExamSession();
     else if(v==='reg-overview'){REG_MAINTAB='overview';renderExamRegister();}
     else if(v==='reg-schedules'){REG_MAINTAB='schedules';renderExamRegister();}
@@ -975,6 +1108,113 @@
   }
 
   /* ---------- 1) EXAM OVERVIEW ---------- */
+  /* ================= Dashboard ภาพรวม E-xam (ต่อยอดจากแบบ Figma · ข้อมูลจริงจาก /api/xv/admin/dashboard) ================= */
+  var XDB={range:'all',from:'',to:'',type:'',mode:'',data:null,loading:false,err:''};
+  var XDB_TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  function xdbD(iso){ if(!iso)return ''; var p=String(iso).split('-'); return (+p[2])+' '+XDB_TH_M[(+p[1])-1]+' '+((+p[0])+543); }
+  function xdbM(ym){ var p=String(ym).split('-'); return XDB_TH_M[(+p[1])-1]+' '+String((+p[0])+543).slice(-2); }
+  function xdbE(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function xdbN(n){ return (Number(n)||0).toLocaleString('en-US'); }
+  function xdbP(a,b){ return b?Math.round(a/b*1000)/10:0; }
+  function xdbPct(a,b){ return b?(xdbP(a,b).toFixed(1)+'%'):'–'; }
+  function xdbToday(){ return new Date(Date.now()+7*3600000).toISOString().slice(0,10); }
+  function xdbAdd(iso,d){ var t=new Date(iso+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+d); return t.toISOString().slice(0,10); }
+  function xdbLoad(silent){
+    if(!silent){XDB.loading=true;paintExamDashboard();}
+    var q='?from='+encodeURIComponent(XDB.from)+'&to='+encodeURIComponent(XDB.to)+'&type='+encodeURIComponent(XDB.type)+'&mode='+encodeURIComponent(XDB.mode);
+    fetch('/api/xv/admin/dashboard'+q+(xvKeyQ()?('&'+xvKeyQ().slice(1)):''),{cache:'no-store',credentials:'same-origin'})
+      .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+      .then(function(o){ XDB.loading=false; if(o.s!==200||!o.j.ok){XDB.err=o.s===403?'ต้องล็อกอินพนักงานก่อนจึงจะดูข้อมูลได้':'โหลดข้อมูลไม่สำเร็จ';XDB.data=null;} else {XDB.err='';XDB.data=o.j;XDB.at=Date.now();} paintExamDashboard(); })
+      .catch(function(){ XDB.loading=false; XDB.err='เชื่อมต่อระบบไม่สำเร็จ ลองกดรีเฟรชอีกครั้ง'; paintExamDashboard(); });
+  }
+  function renderExamDashboard(){ if(XDB.data){ paintExamDashboard(); xdbLoad(true); } else if(!XDB.loading) xdbLoad(); else paintExamDashboard(); }
+  function xdbCard(title,body,extra){ return '<section class="xdb-card'+(extra?' '+extra:'')+'"><h3 class="xdb-h">'+title+'</h3>'+body+'</section>'; }
+  function paintExamDashboard(){
+    var g=gen, d=XDB.data;
+    DRP_CB.xdb=function(){ var r=drpRange(drpSt('xdb')); XDB.from=r?drpYmd(r.f):''; XDB.to=r?drpYmd(r.t):''; xdbLoad(); };
+    var filt='<div class="xdb-filter">'+drpTrigger('xdb')
+      +'<div class="xdb-sel"><select id="xdbType" aria-label="หลักสูตร"><option value="">ทุกหลักสูตร</option><option value="X-Visor"'+(XDB.type==='X-Visor'?' selected':'')+'>X-Visor</option><option value="X-Lead"'+(XDB.type==='X-Lead'?' selected':'')+'>X-Lead</option></select>'
+      +'<select id="xdbMode" aria-label="รูปแบบการสอบ"><option value="">ทุกรูปแบบ</option><option value="online"'+(XDB.mode==='online'?' selected':'')+'>Online</option><option value="onsite"'+(XDB.mode==='onsite'?' selected':'')+'>On Site</option></select></div></div>';
+    var head=xvHead('Dashboard ภาพรวม E-xam','ผู้สมัคร การยืนยันเข้าร่วม และผลสอบ แยกตามหลักสูตรและทีมโค้ช');
+    if(XDB.loading&&!d){ g.innerHTML=head+filt+xvSpinner('กำลังโหลด Dashboard…'); xdbBind(); return; }
+    if(XDB.err){ g.innerHTML=head+filt+'<div class="xdb-card xdb-empty"><b>'+xdbE(XDB.err)+'</b></div>'; xdbBind(); return; }
+    if(!d){ g.innerHTML=head+filt; xdbBind(); return; }
+    var P=d.paid||{}, H=d.held||{}, tk=d.tasks||{};
+    var scope=d.from?(d.from===d.to?xdbD(d.from):(xdbD(d.from)+' ถึง '+xdbD(d.to))):'ทุกรอบสอบ';
+    var tasks=[];
+    if(tk.slips)tasks.push(['สลิปรอตรวจ',tk.slips,'reg-payments']);
+    if(tk.verify)tasks.push(['ผลสอบรอยืนยัน',tk.verify,'exam-result']);
+    if(tk.closing)tasks.push(['รอบใกล้ปิดรับ',tk.closing,'reg-schedules']);
+    var html=head+filt
+      +'<div class="xdb-scope"><span class="xdb-sc">'+xdbE(scope)+'</span>'
+      +(tasks.length?tasks.map(function(t){return '<button class="xdb-task" onclick="go(\''+t[2]+'\')"><b class="num">'+t[1]+'</b>'+t[0]+'</button>';}).join(''):'<span class="xdb-none">ไม่มีงานค้าง</span>')
+      +'<span class="xdb-at">อัปเดต '+new Date((XDB.at||Date.now())+7*3600000).toISOString().slice(11,16)+' น.</span></div>';
+    /* วันนี้ */
+    if(d.todayRounds&&d.todayRounds.length){
+      var TR=d.todayRounds, sel=TR.find(function(t){return t.round.id===XDB.todayId;})||TR.find(function(t){return (t.window||{}).state==='open';})||TR[0];
+      XDB.todayId=sel.round.id;
+      var r=sel.round, w=sel.window||{}, lead=/lead/i.test(r.examType), wait=sel.waiting||[];
+      var st={open:['open','เปิดยืนยันถึง '+w.startsAt+' น.'],not_yet:['wait','เปิดยืนยัน '+w.opensAt+' น.'],closed:['closed','ปิดยืนยันแล้ว']}[w.state]||['wait',''];
+      var pick=TR.length>1?'<select id="xdbToday" class="xdb-tsel" aria-label="เลือกรอบสอบวันนี้">'+TR.map(function(t){var x=t.round;
+          return '<option value="'+xdbE(x.id)+'"'+(x.id===r.id?' selected':'')+'>'+xdbE(x.examType)+' ครั้งที่ '+xdbE(x.no)+' ('+(x.mode==='onsite'?'On Site':'Online')+')</option>';}).join('')+'</select>':'';
+      var byC={}; wait.forEach(function(p){(byC[p.coach]=byC[p.coach]||[]).push(p);});
+      html+='<section class="xdb-card xdb-today1'+(lead?' lead':'')+'">'
+        +'<div class="xdb-ch"><h3 class="xdb-h">รอบสอบวันนี้ <small>'+xdbD(d.today)+'</small></h3><div class="xdb-tact">'+pick+'<a class="xbtn pri" href="/xv-checkin" target="_blank" rel="noopener">เปิดหน้าสแกน QR ↗</a></div></div>'
+        +'<div class="xdb-tgrid">'
+          +'<div class="xdb-tinfo"><span class="xdb-kind">'+xdbE(r.examType)+'</span><b>ครั้งที่ '+xdbE(r.no)+'</b>'
+            +'<small>'+(r.mode==='onsite'?'สอบที่ศูนย์ (On Site)':'สอบออนไลน์ (Online)')+'</small>'
+            +(r.timeslot?'<small class="nb">เวลา '+xdbE(r.timeslot)+' น.</small>':'')+'<span class="xdb-st '+st[0]+'">'+st[1]+'</span></div>'
+          +'<div class="xdb-tnum"><div class="xdb-tr-num"><b class="num">'+xdbN(sel.confirmed)+'/'+xdbN(sel.paid)+'</b><span>ยืนยันเข้าร่วม</span></div>'
+            +'<div class="xdb-bar"><i style="width:'+xdbP(sel.confirmed,sel.paid)+'%"></i></div><small>'+xdbPct(sel.confirmed,sel.paid)+' ของผู้ชำระเงินแล้ว</small></div>'
+          +'<div class="xdb-twait"><div class="xdb-sub">ยังไม่ยืนยัน <span>('+wait.length+' คน)</span></div>'
+            +(wait.length?'<div class="xdb-wlist">'+Object.keys(byC).sort().map(function(c){
+                return '<div class="xdb-wc"><b>'+(c==='อื่น ๆ'?'โค้ชอื่น ๆ':'โค้ช'+xdbE(c))+' ('+byC[c].length+')</b>'+byC[c].map(function(p){return '<div class="xdb-wp"><span>'+xdbE(p.name)+'</span><span class="num">'+xdbE(p.regNo)+'</span></div>';}).join('')+'</div>';}).join('')+'</div>'
+              :'<div class="xdb-allok">ยืนยันครบทุกคนแล้ว</div>')+'</div>'
+        +'</div></section>';
+    }
+    /* KPI 4 ช่อง (สไตล์เดียวกับหน้าอื่นในระบบสอบ) */
+    html+=xvKstrip([
+      xvKpi('ผู้สมัคร (ชำระแล้ว)',xdbN(P.total),'#ffffff',d.prev?(d.prev.paid?((P.total>=d.prev.paid?'+':'')+Math.round((P.total-d.prev.paid)/d.prev.paid*100)+'% จากช่วงก่อนหน้า'):'ช่วงก่อนหน้าไม่มีผู้สมัคร'):'นับตามวันสอบของรอบ',100,true),
+      xvKpi('X-Visor',xdbN(P.xvisor),'#1E40AF',xdbPct(P.xvisor,P.total)+' ของผู้สมัคร',xdbP(P.xvisor,P.total)),
+      xvKpi('X-Lead',xdbN(P.xlead),'#D4A21A',xdbPct(P.xlead,P.total)+' ของผู้สมัคร',xdbP(P.xlead,P.total)),
+      xvKpi('ยืนยันเข้าร่วม',xdbN(H.confirmed)+'<small class="xdb-of">/'+xdbN(H.total)+'</small>','#12A67C',xdbPct(H.confirmed,H.total)+' ของรอบที่สอบแล้ว',xdbP(H.confirmed,H.total))
+    ]);
+    /* 2 คอลัมน์เท่ากัน */
+    var C=d.byCoach||{}, keys=['ซิง','นุ่น','จา','ต๊ะ','อื่น ๆ'].filter(function(k){return C[k]&&(C[k].paid||k!=='อื่น ๆ');});
+    var coachTbl='<table class="xdb-t"><thead><tr><th>ทีมโค้ช</th><th class="r">ผู้สมัคร</th><th class="r">X-Visor</th><th class="r">X-Lead</th><th>ยืนยันเข้าร่วม</th></tr></thead><tbody>'
+      +keys.map(function(k){var c=C[k], p=xdbP(c.confirmed,c.held);
+        return '<tr><td><b>'+(k==='อื่น ๆ'?'อื่น ๆ':'โค้ช'+k)+'</b></td><td class="r num">'+xdbN(c.paid)+'</td><td class="r num v">'+xdbN(c.xvisor)+'</td><td class="r num l">'+xdbN(c.xlead)+'</td>'
+          +'<td><div class="xdb-att"><div class="xdb-bar sm"><i style="width:'+p+'%"></i></div><span class="num">'+(c.held?(xdbN(c.confirmed)+'/'+xdbN(c.held)):'–')+'</span></div></td></tr>';}).join('')
+      +'<tr class="tot"><td>รวม</td><td class="r num">'+xdbN(P.total)+'</td><td class="r num v">'+xdbN(P.xvisor)+'</td><td class="r num l">'+xdbN(P.xlead)+'</td><td><div class="xdb-att"><div class="xdb-bar sm"><i style="width:'+xdbP(H.confirmed,H.total)+'%"></i></div><span class="num">'+(H.total?(xdbN(H.confirmed)+'/'+xdbN(H.total)):'–')+'</span></div></td></tr></tbody></table>';
+    var M=d.byMode||{}, on=M.online||{}, os=M.onsite||{}, R=d.results||{};
+    var mt=function(m,cls,title,how){return '<div class="xdb-m '+cls+'"><span class="xdb-ml">'+title+'</span><b class="num">'+xdbN(m.total)+'</b><small>X-Visor '+xdbN(m.xvisor)+'  X-Lead '+xdbN(m.xlead)+'</small><small>'+how+' '+(m.held?(xdbN(m.confirmed)+'/'+xdbN(m.held)+' ('+xdbPct(m.confirmed,m.held)+')'):'–')+'</small></div>';};
+    var rs=[['ผ่าน',R.verified,'ok'],['รอยืนยันผล',R.awaiting_verify,'pend'],['ต้องสอบซ่อม',R.remedial_required,'pend'],['ไม่ผ่าน',R.ended_failed,'bad'],['On Site ส่งแล้ว',R.submitted,'new'],['หมดสิทธิ์สอบ',R.disqualified,'bad']];
+    var right='<div class="xdb-ms">'+mt(on,'on','Online','สแตมป์')+mt(os,'os','On Site','สแกน QR')+'</div>'
+      +'<div class="xdb-sub">ผลสอบ <span>(เข้าสอบ '+xdbN(R.total)+' คน'+(R.in_progress?(' กำลังสอบ '+xdbN(R.in_progress)+' คน'):'')+')</span></div>'
+      +'<div class="xdb-res">'+rs.map(function(x){return '<div class="xdb-ri '+x[2]+'"><b class="num">'+xdbN(x[1])+'</b><span>'+x[0]+'</span></div>';}).join('')+'</div>';
+    html+='<div class="xdb-two">'
+      +'<section class="xdb-card"><div class="xdb-ch"><h3 class="xdb-h">ทีมโค้ช</h3><button class="xbtn" onclick="xdbExport()">ส่งออก CSV</button></div>'+(P.total?coachTbl:'<div class="xdb-empty">ยังไม่มีผู้สมัครในช่วงนี้</div>')+'</section>'
+      +'<section class="xdb-card"><div class="xdb-ch"><h3 class="xdb-h">รูปแบบการสอบและผลสอบ</h3><button class="xbtn" onclick="go(\'exam-result\')">ดูผลสอบ →</button></div>'+right+'</section>'
+      +'</div>';
+    html+='<p class="xdb-foot">นับตามวันสอบของรอบ เฉพาะผู้ที่ชำระเงินแล้ว ส่วนการยืนยันเข้าร่วมนับเฉพาะรอบที่ถึงเวลาเริ่มสอบแล้ว</p>';
+    g.innerHTML=html; xdbBind();
+  }
+  function xdbBind(){
+    try{drpSync('xdb');}catch(e){}
+    var f=document.getElementById('xdbFrom'),t=document.getElementById('xdbTo'),ty=document.getElementById('xdbType'),mo=document.getElementById('xdbMode');
+    if(f)f.onchange=function(){XDB.from=f.value;XDB.range='custom';if(XDB.to&&XDB.from>XDB.to)XDB.to=XDB.from;xdbLoad();};
+    if(t)t.onchange=function(){XDB.to=t.value;XDB.range='custom';if(XDB.from&&XDB.to<XDB.from)XDB.from=XDB.to;xdbLoad();};
+    if(ty)ty.onchange=function(){XDB.type=ty.value;xdbLoad();};
+    var tsel=document.getElementById('xdbToday'); if(tsel)tsel.onchange=function(){XDB.todayId=tsel.value;paintExamDashboard();};
+    if(mo)mo.onchange=function(){XDB.mode=mo.value;xdbLoad();};
+  }
+  function xdbExport(){
+    var d=XDB.data; if(!d)return;
+    var C=d.byCoach||{}, rows=Object.keys(C).map(function(k){var c=C[k];return [k,c.paid,c.xvisor,c.xlead,c.held,c.confirmed,c.sat];});
+    xvDownloadCSV('exam-dashboard-'+xdbToday()+'.csv',['ทีมโค้ช','ผู้สมัคร (ชำระแล้ว)','X-Visor','X-Lead','ผู้สมัครในรอบที่สอบแล้ว','ยืนยันเข้าร่วม','เข้าห้องสอบ'],rows);
+  }
+  setInterval(function(){ try{ if(EXAM_VIEW!=='exam-dashboard'||!XDB.data||XDB.loading)return; var a=document.activeElement; if(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return;
+    if(document.querySelector('.xdb-wait[open]'))return; xdbLoad(true); }catch(e){} },30000);
   function renderExamOverview(){
     var all=EXAM_CACHE||[];
     var cnt=function(f){return all.filter(f).length;};
@@ -1234,7 +1474,11 @@
     if(!demoGuard())return;
     roundForm('create');
   }
-  function roundEditOpen(d){ if(!demoGuard())return; roundForm('edit',d); }
+  function roundEditOpen(d){ if(!demoGuard())return;
+    // ใช้ข้อมูลรอบเต็มจากเซิร์ฟเวอร์ (มีช่วงเวลาสอบ / ชุดข้อสอบ) — กันชุดข้อสอบถูกเปลี่ยนเองเมื่อแก้จากหน้ารอบสอบ
+    var full=(EXAM_ROUNDS||[]).find(function(x){return x.id===d.id;});
+    if(full)d={id:full.id,no:full.no,date:full.date,topic:full.topic,mode:full.mode,venue:full.venue,fee:full.fee,regCloseAt:full.regCloseAt,setId:full.setId,timeslot:full.timeslot};
+    roundForm('edit',d); }
   // shared create/edit round form
   function roundForm(mode,d){
     d=d||{}; var isEdit=mode==='edit';
@@ -1248,6 +1492,8 @@
       +'<label style="'+lblCss()+'">วันที่สอบ</label><input id="rcDate" type="date" value="'+(d.date||today)+'" style="'+fieldCss()+'">'
       +'<div id="rcVenueWrap" style="display:'+(mval==='onsite'?'block':'none')+'"><label style="'+lblCss()+'">สถานที่สอบ (ศูนย์)</label><input id="rcVenue" type="text" value="'+String(venue).replace(/"/g,'&quot;')+'" placeholder="เช่น Udomsuk Hub" style="'+fieldCss()+'"></div>'
       +'<div style="display:flex;gap:10px"><div style="flex:1"><label style="'+lblCss()+'">ค่าสมัคร (บาท)</label><input id="rcFee" type="number" min="0" value="'+fee+'" style="'+fieldCss()+'"></div><div style="flex:1"><label style="'+lblCss()+'">ครั้งที่</label><input id="rcNo" type="number" min="1" value="'+(d.no||nextRoundNo())+'" style="'+fieldCss()+'"></div></div>'
+      +'<label style="'+lblCss()+'">ช่วงเวลาสอบ</label><input id="rcTime" type="text" inputmode="numeric" value="'+String(d.timeslot||'').replace(/"/g,'&quot;')+'" placeholder="เช่น 09:30-11:30" style="'+fieldCss()+'">'
+      +'<p style="color:var(--muted);font-size:.76rem;margin:-4px 0 2px">เวลาเริ่มสอบใช้ปิดการเช็กอิน QR / สแตมป์ยืนยันเข้าร่วม (เปิด 06:00 น.) — ไม่กรอก = 09:30 น.</p>'
       +'<label style="'+lblCss()+'">ปิดรับสมัคร (วันที่)</label><input id="rcClose" type="date" value="'+(d.regCloseAt||'')+'" style="'+fieldCss()+'">'
       +'<label style="'+lblCss()+'">Topic</label><input id="rcTopic" type="text" value="'+String(d.topic||'Certification').replace(/"/g,'&quot;')+'" style="'+fieldCss()+'">'
       +'<label style="'+lblCss()+'">ชุดข้อสอบที่ใช้ในรอบนี้</label><select id="rcSet" style="'+fieldCss()+'">'+setOpts+'</select>'
@@ -1257,7 +1503,8 @@
     document.getElementById('rcMode').onchange=function(){document.getElementById('rcVenueWrap').style.display=this.value==='onsite'?'block':'none';};
     document.getElementById('rcSave').onclick=function(){
       var setEl=document.getElementById('rcSet');
-      var body={key:OPS_KEY,mode:document.getElementById('rcMode').value,date:document.getElementById('rcDate').value,venue:document.getElementById('rcVenue').value,fee:document.getElementById('rcFee').value,regCloseAt:document.getElementById('rcClose').value,no:document.getElementById('rcNo').value,topic:document.getElementById('rcTopic').value,setId:setEl?setEl.value:''};
+      var body={key:OPS_KEY,mode:document.getElementById('rcMode').value,date:document.getElementById('rcDate').value,venue:document.getElementById('rcVenue').value,fee:document.getElementById('rcFee').value,regCloseAt:document.getElementById('rcClose').value,timeslot:(document.getElementById('rcTime').value||'').trim(),no:document.getElementById('rcNo').value,topic:document.getElementById('rcTopic').value,setId:setEl?setEl.value:''};
+      if(body.timeslot&&!/^\s*\d{1,2}[:.]\d{2}/.test(body.timeslot)){xvToast('ช่วงเวลาสอบต้องขึ้นต้นด้วยเวลาเริ่ม เช่น 09:30-11:30','bad');return;}
       if(!isEdit)body.status=document.getElementById('rcOpen').checked?'open':'closed';
       this.disabled=true;this.textContent=isEdit?'กำลังบันทึก…':'กำลังสร้าง…';
       var url=isEdit?('/api/xv/admin/rounds/'+d.id+xvKeyQ()):('/api/xv/admin/rounds'+xvKeyQ());

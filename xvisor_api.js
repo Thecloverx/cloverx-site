@@ -4,7 +4,9 @@ const path = require('path');
 const crypto = require('crypto');
 const https = require('https');
 
-module.exports = function (app, DATA) {
+module.exports = function (app, DATA, opts) {
+  opts = opts || {};
+  const isStaff = (req) => { try { return !!(opts.isStaff && opts.isStaff(req)); } catch (e) { return false; } };
   const XV = path.join(DATA, 'xvisor');
   if (!fs.existsSync(XV)) fs.mkdirSync(XV, { recursive: true });
   const QF = path.join(XV, 'questions.json');
@@ -254,8 +256,16 @@ module.exports = function (app, DATA) {
   // ป้องกันทุก POST ใต้ /api/xv/admin (การแก้ไข/ยืนยัน/รอบสอบ/นำเข้าข้อสอบ ฯลฯ) — GET (อ่าน) ปล่อยผ่าน
   app.use('/api/xv/admin', (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD' && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
+    // การอ่านข้อมูลหลังบ้าน (มีเลขบัตร ปชช. / สลิป / รูปบัตร) ต้องเป็นพนักงานที่ล็อกอิน หรือมี ADMIN_KEY (PDPA)
+    if ((req.method === 'GET' || req.method === 'HEAD') && !readOk(req)) return res.status(403).json({ ok: false, error: 'staff_login_required' });
     next();
   });
+  function readOk(req) {
+    if (isStaff(req)) return true;
+    const need = process.env.ADMIN_KEY || ''; if (!need) return true;
+    const k = (req.query && req.query.key) || req.headers['x-admin-key'] || '';
+    return !!k && k === need;
+  }
   const genId = () => crypto.randomBytes(9).toString('hex');
 
   /* ---------------- question SETS (each round picks one; keys stay server-side) ---------------- */
@@ -992,6 +1002,8 @@ module.exports = function (app, DATA) {
   });
   // serve an uploaded slip / id-card image
   app.get('/api/xv/reg/file/:fn', (req, res) => {
+    if (!readOk(req)) return res.status(403).end();
+    res.set('Cache-Control', 'private, no-store');
     const fn = path.basename(String(req.params.fn));
     const p = path.join(REGUP, fn);
     if (!fs.existsSync(p)) return res.status(404).end();
@@ -1076,6 +1088,179 @@ module.exports = function (app, DATA) {
       createdAt: r.createdAt
     });
   });
+  /* ================= ยืนยันการเข้าร่วมสอบ: QR ส่วนบุคคล (On Site) + สแตมป์ (Online) =================
+     - QR ออกหลังชำระเงินผ่านเท่านั้น · ข้างในเป็นรหัสสุ่ม (ไม่มีข้อมูลส่วนบุคคล)
+     - เปิดสแกน/สแตมป์ 06:00 น. ของวันสอบ ถึงเวลาเริ่มสอบ (อ่านจาก timeslot, ไม่มีใช้ 09:30) — เวลาไทยจากเซิร์ฟเวอร์
+     - On Site มาหลังเวลาเริ่มสอบ = หมดสิทธิ์ · ลิงก์ Zoom แอดมินส่งทาง LINE */
+  const PAID_ST = ['CONFIRMED', 'CHECKED_IN', 'EXAM_STARTED', 'COMPLETED', 'TRANSFERRED_TO_EXAM'];
+  const ATTEND_OPEN_MIN = 6 * 60;
+  const bkkNow = (ms) => { const d = new Date((ms || Date.now()) + 7 * 3600 * 1000); return { date: d.toISOString().slice(0, 10), min: d.getUTCHours() * 60 + d.getUTCMinutes(), hhmm: d.toISOString().slice(11, 19) }; };
+  const roundStartMin = (round) => { const m = String((round && round.timeslot) || '').match(/(\d{1,2})[:.](\d{2})/); if (m) { const v = (+m[1]) * 60 + (+m[2]); if (v > 0 && v < 1440) return v; } return 9 * 60 + 30; };
+  const minToHHMM = (v) => ('0' + Math.floor(v / 60)).slice(-2) + ':' + ('0' + (v % 60)).slice(-2);
+  const regName = (r) => (((r.candidate || {}).firstName || '') + ' ' + ((r.candidate || {}).lastName || '')).trim();
+  const ensureTicket = (r) => { if (!r.ticket) { r.ticket = crypto.randomBytes(12).toString('base64url'); r.ticketAt = Date.now(); return true; } return false; };
+  const ticketPayload = (r) => 'XV1.' + r.ticket;
+  // ช่วงเวลาที่ยืนยันเข้าร่วมได้ของรอบ (เทียบเวลาไทยตอนนี้)
+  const attendWindow = (round, atMs) => {
+    const now = bkkNow(atMs); const start = roundStartMin(round); const day = String((round && round.date) || '');
+    let state = 'open';
+    if (!day || now.date < day || (now.date === day && now.min < ATTEND_OPEN_MIN)) state = 'not_yet';
+    else if (now.date > day || now.min >= start) state = 'closed';
+    return { state: state, date: day, opensAt: minToHHMM(ATTEND_OPEN_MIN), startsAt: minToHHMM(start), now: now.hhmm, minutesLeft: state === 'open' ? (start - now.min) : 0 };
+  };
+  const findRegOwned = (regNo, phone) => {
+    regNo = String(regNo || '').trim().toUpperCase(); phone = String(phone || '').replace(/\D/g, '');
+    if (!regNo || !phone) return null;
+    const all = readReg(); const r = all.find(x => (x.regNo || '').toUpperCase() === regNo);
+    if (!r || String((r.candidate || {}).phone || '').replace(/\D/g, '') !== phone) return null;
+    return { all: all, r: r };
+  };
+  // ถ้าแอดมินกดเช็กอินเองจากหลังบ้าน (ระบบเดิม) ก็นับว่ายืนยันเข้าร่วมแล้ว
+  const attendPub = (r) => r.attendance ? { at: r.attendance.at, method: r.attendance.method } : (r.status === 'CHECKED_IN' && r.checkedInAt ? { at: r.checkedInAt, method: 'manual' } : null);
+  // ผู้สมัคร: ขอบัตร QR ของตัวเอง (ต้องชำระเงินผ่านแล้ว)
+  app.get('/api/xv/reg/ticket', (req, res) => {
+    const f = findRegOwned(req.query.regNo, req.query.phone);
+    if (!f) return res.status(404).json({ ok: false, error: 'not_found' });
+    const r = f.r;
+    if (PAID_ST.indexOf(r.status) < 0) return res.json({ ok: false, error: 'not_paid', status: r.status });
+    if (ensureTicket(r)) writeReg(f.all);
+    const round = findR(r.roundId) || {};
+    res.json({ ok: true, regNo: r.regNo, status: r.status, payload: ticketPayload(r), name: regName(r), coachTeam: r.coachTeam || '', mode: r.mode,
+      examType: examTypeOf(round), round: { no: round.no, date: round.date, mode: round.mode, venue: round.venue, timeslot: round.timeslot, topic: round.topic },
+      attendance: attendPub(r), window: attendWindow(round), serverNow: Date.now() });
+  });
+  // ผู้สมัคร Online: สแตมป์ยืนยันการเข้าร่วม (06:00 ถึงเวลาเริ่มสอบของวันสอบ) — ไม่ใช่การเข้าห้องสอบ
+  app.post('/api/xv/reg/attend', (req, res) => {
+    const b = req.body || {}; const f = findRegOwned(b.regNo, b.phone);
+    if (!f) return res.status(404).json({ ok: false, error: 'not_found' });
+    const r = f.r; const round = findR(r.roundId) || {};
+    if (PAID_ST.indexOf(r.status) < 0) return res.status(403).json({ ok: false, error: 'not_paid' });
+    if ((r.mode || round.mode) === 'onsite') return res.status(400).json({ ok: false, error: 'onsite_use_qr' });
+    if (attendPub(r)) return res.json({ ok: true, already: true, attendance: attendPub(r) });
+    const w = attendWindow(round);
+    if (w.state !== 'open') return res.status(403).json({ ok: false, error: w.state === 'not_yet' ? 'not_open_yet' : 'closed', window: w, serverNow: Date.now() });
+    r.attendance = { at: Date.now(), method: 'stamp' };
+    writeReg(f.all);
+    logAudit('attend_stamp', 'registration', r.id, r.regNo, null, 'ATTENDING', 'ผู้สมัครสแตมป์ยืนยันการเข้าร่วม (Online) เวลา ' + bkkNow().hhmm, 'customer');
+    res.json({ ok: true, attendance: attendPub(r) });
+  });
+  // ทีมงาน: สแกน QR / พิมพ์เลขที่ผู้สมัคร เพื่อเช็กอิน On Site (ต้องล็อกอินพนักงาน หรือ ADMIN_KEY)
+  app.post('/api/xv/checkin', (req, res) => {
+    if (!isStaff(req) && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
+    const b = req.body || {}; const code = String(b.code || '').trim();
+    if (!code) return res.status(400).json({ ok: false, error: 'missing_code' });
+    const all = readReg();
+    let r = null;
+    if (/^XV1\./.test(code)) r = all.find(x => x.ticket && ('XV1.' + x.ticket) === code);
+    else r = all.find(x => (x.regNo || '').toUpperCase() === code.toUpperCase());
+    if (!r) return res.json({ ok: false, result: 'invalid' });
+    const round = findR(r.roundId) || {};
+    const info = { regNo: r.regNo, name: regName(r), coachTeam: r.coachTeam || '', mode: r.mode, round: { id: round.id, no: round.no, date: round.date, timeslot: round.timeslot, venue: round.venue } };
+    if (PAID_ST.indexOf(r.status) < 0) return res.json(Object.assign({ ok: false, result: 'not_paid', status: r.status }, info));
+    if (b.roundId && b.roundId !== r.roundId) return res.json(Object.assign({ ok: false, result: 'wrong_round' }, info));
+    if (attendPub(r)) return res.json(Object.assign({ ok: true, result: 'duplicate', attendance: attendPub(r) }, info));
+    // สแกนตอนเน็ตหลุด: เครื่องทีมงานส่งเวลาที่สแกนจริงมาด้วย (ยอมรับย้อนหลังไม่เกิน 3 ชม.)
+    const nowMs = Date.now(); let atMs = Number(b.at) || 0;
+    if (!(atMs > nowMs - 3 * 3600 * 1000 && atMs <= nowMs + 60000)) atMs = nowMs;
+    atMs = Math.min(atMs, nowMs);
+    const w = attendWindow(round, atMs);
+    if (w.date !== bkkNow(atMs).date) return res.json(Object.assign({ ok: false, result: 'wrong_day', window: w }, info));
+    if (w.state === 'not_yet') return res.json(Object.assign({ ok: false, result: 'not_open_yet', window: w }, info));
+    if (w.state === 'closed') return res.json(Object.assign({ ok: false, result: 'late', window: w }, info));
+    r.attendance = { at: atMs, recvAt: nowMs, method: 'scan', by: String((opts.staffName && opts.staffName(req)) || b.by || 'admin-key').slice(0, 60), queued: atMs < nowMs - 30000 || undefined };
+    if (r.status === 'CONFIRMED') { r.status = 'CHECKED_IN'; r.checkedInAt = atMs; }
+    writeReg(all);
+    logAudit('checkin_scan', 'registration', r.id, r.regNo, 'CONFIRMED', r.status, 'เช็กอิน On Site ด้วย QR เวลา ' + bkkNow(atMs).hhmm, 'staff');
+    res.json(Object.assign({ ok: true, result: 'checked_in', attendance: attendPub(r) }, info));
+  });
+  // ทีมงาน: ยกเลิกเช็กอินที่สแกนผิด (ภายใน 1 นาที)
+  app.post('/api/xv/checkin/undo', (req, res) => {
+    if (!isStaff(req) && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
+    const regNo = String((req.body || {}).regNo || '').toUpperCase(); const all = readReg();
+    const r = all.find(x => (x.regNo || '').toUpperCase() === regNo);
+    if (!r || !r.attendance || r.attendance.method !== 'scan') return res.status(404).json({ ok: false });
+    if (Date.now() - (r.attendance.recvAt || r.attendance.at) > 60000) return res.status(400).json({ ok: false, error: 'too_late' });
+    r.attendance = null; if (r.status === 'CHECKED_IN') { r.status = 'CONFIRMED'; delete r.checkedInAt; } writeReg(all);
+    logAudit('checkin_undo', 'registration', r.id, r.regNo, 'CHECKED_IN', r.status, 'ยกเลิกเช็กอินที่สแกนผิด', 'staff');
+    res.json({ ok: true });
+  });
+  // ทีมงาน: สรุปการยืนยันเข้าร่วม (ลงทะเบียน / ชำระแล้ว / ยืนยันแล้ว แยกตามทีมโค้ช) — ใช้กับ Dashboard ภายหลัง
+  app.get('/api/xv/attendance', (req, res) => {
+    if (!isStaff(req) && !adminWrite(req)) return res.status(403).json({ ok: false, error: 'forbidden' });
+    const today = bkkNow().date;
+    const rounds = readR().filter(x => req.query.roundId ? x.id === req.query.roundId : x.date === today);
+    const regs = readReg();
+    const out = rounds.map(round => {
+      const list = regs.filter(x => x.roundId === round.id && ['CANCELLED', 'REJECTED', 'REFUNDED'].indexOf(x.status) < 0);
+      const paid = list.filter(x => PAID_ST.indexOf(x.status) >= 0);
+      const byCoach = {};
+      paid.forEach(x => { const k = x.coachTeam || '-'; byCoach[k] = byCoach[k] || { paid: 0, confirmed: 0 }; byCoach[k].paid++; if (attendPub(x)) byCoach[k].confirmed++; });
+      return { round: { id: round.id, no: round.no, date: round.date, mode: round.mode, timeslot: round.timeslot, venue: round.venue || '', examType: examTypeOf(round) }, window: attendWindow(round),
+        registered: list.length, paid: paid.length, confirmed: paid.filter(x => attendPub(x)).length, byCoach: byCoach,
+        people: paid.map(x => ({ regNo: x.regNo, name: regName(x), coachTeam: x.coachTeam || '', attendance: attendPub(x) })) };
+    });
+    res.json({ ok: true, today: today, rounds: out });
+  });
+
+  // ทีมงาน/ผู้บริหาร: Dashboard ภาพรวม E-xam (นับตาม "วันสอบของรอบ") — ?from=YYYY-MM-DD&to=&type=X-Visor|X-Lead&mode=online|onsite
+  const COACHES = ['ซิง', 'นุ่น', 'จา', 'ต๊ะ'];
+  const coachOf = (r) => { const c = String(r.coachTeam || '').replace(/^(ทีม)?\s*(โค้ช)?\s*/, '').trim(); return COACHES.indexOf(c) >= 0 ? c : 'อื่น ๆ'; };
+  const maskPhone = (p) => { p = String(p || '').replace(/\D/g, ''); return p.length >= 7 ? p.slice(0, 3) + '-XXX-' + p.slice(-4) : p; };
+  app.get('/api/xv/admin/dashboard', (req, res) => {
+    const q = req.query || {}; const today = bkkNow().date;
+    const okDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
+    const from = okDate(q.from) ? q.from : ''; const to = okDate(q.to) ? q.to : '';
+    const type = q.type === 'X-Lead' || q.type === 'X-Visor' ? q.type : ''; const mode = q.mode === 'online' || q.mode === 'onsite' ? q.mode : '';
+    const rounds = readR(); const rById = {}; rounds.forEach(r => { rById[r.id] = r; });
+    const regs = readReg(); const sess = readS();
+    const satKey = {}; sess.forEach(x => { if (x.roundId) satKey[x.roundId + '|' + String((x.candidate || {}).phone || '').replace(/\D/g, '')] = x; });
+    const inScope = (r, f, t) => { const rd = rById[r.roundId]; if (!rd) return false; const d = rd.date || '';
+      if (f && d < f) return false; if (t && d > t) return false;
+      if (type && examTypeOf(rd) !== type) return false; if (mode && (r.mode || rd.mode) !== mode) return false; return true; };
+    const isPaid = (r) => PAID_ST.indexOf(r.status) >= 0 || r.status === 'PARTIALLY_REFUNDED';
+    const heldRound = (rd) => rd && rd.date && (rd.date < today || (rd.date === today && attendWindow(rd).state === 'closed'));
+    const sat = (r) => !!satKey[r.roundId + '|' + String((r.candidate || {}).phone || '').replace(/\D/g, '')];
+    const paid = regs.filter(r => isPaid(r) && inScope(r, from, to));
+    const tOf = (r) => examTypeOf(rById[r.roundId]);
+    const held = paid.filter(r => heldRound(rById[r.roundId]));
+    const cnt = (list, fn) => list.filter(fn).length;
+    // เทียบช่วงก่อนหน้า (ความยาวเท่ากัน) — เฉพาะเมื่อเลือกช่วงวันที่
+    let prev = null;
+    if (from && to) { const d0 = new Date(from + 'T00:00:00Z'), d1 = new Date(to + 'T00:00:00Z'); const len = Math.round((d1 - d0) / 86400000) + 1;
+      const pf = new Date(d0 - len * 86400000).toISOString().slice(0, 10), pt = new Date(d0 - 86400000).toISOString().slice(0, 10);
+      prev = { from: pf, to: pt, paid: regs.filter(r => isPaid(r) && inScope(r, pf, pt)).length }; }
+    const split = (list) => ({ total: list.length, xvisor: cnt(list, r => tOf(r) === 'X-Visor'), xlead: cnt(list, r => tOf(r) === 'X-Lead') });
+    const byMode = {}; ['online', 'onsite'].forEach(m => { const l = paid.filter(r => (r.mode || (rById[r.roundId] || {}).mode) === m); const h = l.filter(r => heldRound(rById[r.roundId]));
+      byMode[m] = Object.assign(split(l), { held: h.length, confirmed: cnt(h, r => !!attendPub(r)), sat: cnt(h, sat) }); });
+    const byCoach = {}; COACHES.concat(['อื่น ๆ']).forEach(c => { byCoach[c] = { xvisor: 0, xlead: 0, paid: 0, held: 0, confirmed: 0, sat: 0 }; });
+    paid.forEach(r => { const b = byCoach[coachOf(r)]; b.paid++; if (tOf(r) === 'X-Lead') b.xlead++; else b.xvisor++;
+      if (heldRound(rById[r.roundId])) { b.held++; if (attendPub(r)) b.confirmed++; if (sat(r)) b.sat++; } });
+    // 6 เดือนล่าสุด (ถึงเดือนของ to หรือเดือนนี้)
+    const endM = (to || today).slice(0, 7); const months = [];
+    for (let i = 5; i >= 0; i--) { const d = new Date(endM + '-01T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() - i); months.push(d.toISOString().slice(0, 7)); }
+    const monthly = months.map(m => { const l = regs.filter(r => isPaid(r) && inScope(r, m + '-01', m + '-31')); const h = l.filter(r => heldRound(rById[r.roundId]));
+      return { month: m, paid: l.length, held: h.length, confirmed: cnt(h, r => !!attendPub(r)), sat: cnt(h, sat) }; });
+    // ผลสอบ (session ของรอบในช่วง)
+    const sIn = sess.filter(x => { const rd = rById[x.roundId]; if (!rd) return false; if (from && rd.date < from) return false; if (to && rd.date > to) return false;
+      if (type && examTypeOf(rd) !== type) return false; if (mode && rd.mode !== mode) return false; return true; });
+    const results = { total: sIn.length }; ['verified', 'awaiting_verify', 'submitted', 'remedial_required', 'ended_failed', 'disqualified', 'in_progress'].forEach(k => { results[k] = cnt(sIn, x => x.status === k); });
+    // วันนี้
+    const todayRounds = rounds.filter(r => r.date === today).map(rd => { const l = regs.filter(r => r.roundId === rd.id && isPaid(r));
+      return { round: { id: rd.id, no: rd.no, mode: rd.mode, timeslot: rd.timeslot, venue: rd.venue, examType: examTypeOf(rd) }, window: attendWindow(rd),
+        paid: l.length, confirmed: cnt(l, r => !!attendPub(r)), sat: cnt(l, sat),
+        waiting: l.filter(r => !attendPub(r)).map(r => ({ regNo: r.regNo, name: regName(r), coach: coachOf(r), phone: maskPhone((r.candidate || {}).phone) })) }; });
+    const in3 = new Date(Date.now() + 7 * 3600000 + 3 * 86400000).toISOString().slice(0, 10);
+    const tasks = { slips: cnt(regs, r => r.status === 'PAYMENT_REVIEW'), unpaid: cnt(regs, r => r.status === 'PENDING_PAYMENT'),
+      verify: cnt(sess, x => x.status === 'awaiting_verify'), closing: rounds.filter(r => r.status === 'open' && r.regCloseAt && r.regCloseAt >= today && r.regCloseAt <= in3).length };
+    const recent = paid.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10).map(r => { const rd = rById[r.roundId] || {};
+      return { regNo: r.regNo, name: regName(r), examType: examTypeOf(rd), mode: r.mode || rd.mode, coach: coachOf(r), coachRaw: r.coachTeam || '', referrer: r.referrer || '',
+        createdAt: r.createdAt, roundNo: rd.no, roundDate: rd.date, status: r.status, attendance: attendPub(r) }; });
+    res.json({ ok: true, today, from, to, type, mode, prev,
+      paid: split(paid), held: Object.assign(split(held), { confirmed: cnt(held, r => !!attendPub(r)), sat: cnt(held, sat),
+        confirmedX: cnt(held, r => !!attendPub(r) && tOf(r) === 'X-Visor'), confirmedL: cnt(held, r => !!attendPub(r) && tOf(r) === 'X-Lead') }),
+      byMode, byCoach, monthly, results, todayRounds, tasks, recent, recentTotal: paid.length });
+  });
+
   // admin: list registrations (optionally by mode / round)
   app.get('/api/xv/admin/registrations', (req, res) => {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
@@ -1156,6 +1341,7 @@ module.exports = function (app, DATA) {
     r.changes = Array.isArray(r.changes) ? r.changes : [];
     r.changes.push({ at: Date.now(), from: fromSnap, to: { roundId: toRound.id, roundNo: toRound.no, date: toRound.date, mode: toRound.mode || 'online' }, reason: String(b.reason).trim(), feeDiff: feeDiff });
     r.movedAt = Date.now();
+    if (r.ticket) { r.ticket = null; ensureTicket(r); } r.attendance = null; // ย้ายรอบ = ออก QR ใหม่ ของเก่าใช้ไม่ได้
     writeReg(all);
     logAudit('move', 'registration', r.id, r.regNo, 'ครั้งที่ ' + fromSnap.roundNo + ' (' + fromSnap.mode + ')', 'ครั้งที่ ' + toRound.no + ' (' + (toRound.mode || 'online') + ')', String(b.reason).trim() + (feeDiff ? (' · ส่วนต่างค่าสมัคร ' + (feeDiff > 0 ? '+' : '') + feeDiff + ' บาท') : ''), 'staff');
     if (holdsSeat) promoteWaitlist(fromRoundId); // source seat may have freed up

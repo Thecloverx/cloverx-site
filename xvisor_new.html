@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>X-VISOR — ระบบสอบ</title>
+<script>/* เปิดจากในแอป LINE → เด้งออกเบราว์เซอร์จริง (กันลิงก์หาย/ต้องสแกนใหม่) */(function(){try{var u=navigator.userAgent||'';if(/Line\//i.test(u)&&location.href.indexOf('openExternalBrowser=1')<0){location.replace(location.href+(location.href.indexOf('?')>=0?'&':'?')+'openExternalBrowser=1');}}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap">
+<style>
+:root{
+  --background:#F4F9FF;--surface:rgba(255,255,255,0.76);--surface-solid:#FFFFFF;
+  --primary-500:#1478FF;--primary-600:#075BFF;--primary-700:#0649D8;--cyan-400:#27C8FF;
+  --text-primary:#092A64;--text-secondary:#526987;--border:rgba(45,136,255,0.18);
+  --success:#14A66D;--warning:#F59E0B;--danger:#E5484D;
+  --radius-card:24px;--radius-control:14px;--radius-pill:999px;
+  --shadow-card:0 12px 35px rgba(45,109,190,0.10),inset 0 1px 0 rgba(255,255,255,0.90);
+  --glow-primary:0 0 0 1px rgba(39,200,255,0.22),0 0 24px rgba(20,120,255,0.14);
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;
+  --font:"IBM Plex Sans Thai","Manrope",system-ui,sans-serif;--num:"Manrope","IBM Plex Sans Thai",sans-serif;
+  --grad-primary:linear-gradient(135deg,var(--cyan-400) -30%,var(--primary-500) 42%,var(--primary-600) 108%);
+  --grad-danger:linear-gradient(135deg,#ff8a8d -10%,var(--danger) 60%,#c93b40 120%);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background:radial-gradient(1100px 520px at 88% -12%,rgba(39,200,255,0.12),transparent 60%),radial-gradient(820px 480px at -5% -8%,rgba(20,120,255,0.10),transparent 58%),var(--background);
+  background-attachment:fixed;min-height:100%}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+button{font-family:inherit}svg{display:block}
+input{font-family:inherit}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.7);opacity:.4}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes sweep{0%{transform:translateX(-140%) skewX(-18deg)}100%{transform:translateX(260%) skewX(-18deg)}}
+@keyframes orbit{to{stroke-dashoffset:-402.1}}
+@keyframes orbitSm{to{stroke-dashoffset:-289.0}}
+@keyframes bloom{0%,100%{opacity:.5}50%{opacity:.95}}
+@keyframes neonBreath{0%,100%{opacity:.92}50%{opacity:1}}
+@keyframes cometPulse{0%,100%{transform:scale(.75);opacity:.85}50%{transform:scale(1.3);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes livedot{0%{box-shadow:0 0 0 0 rgba(20,166,109,.45)}70%,100%{box-shadow:0 0 0 7px rgba(20,166,109,0)}}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes shine{0%{transform:translateX(-170%) skewX(-20deg)}20%,100%{transform:translateX(360%) skewX(-20deg)}}
+@keyframes shineOnce{0%{transform:translateX(-170%) skewX(-20deg)}100%{transform:translateX(360%) skewX(-20deg)}}
+@keyframes glowPulseP{0%,100%{box-shadow:0 0 0 1px rgba(39,200,255,.32),0 0 18px rgba(39,200,255,.22),0 12px 24px -12px rgba(7,91,255,.55)}50%{box-shadow:0 0 0 1px rgba(39,200,255,.5),0 0 26px rgba(39,200,255,.4),0 12px 26px -12px rgba(7,91,255,.62)}}
+@keyframes miPulse{0%,100%{box-shadow:0 8px 18px -8px rgba(7,91,255,.6),0 0 0 0 rgba(39,200,255,.5)}50%{box-shadow:0 8px 18px -8px rgba(7,91,255,.6),0 0 0 8px rgba(39,200,255,0)}}
+@keyframes scan{0%{top:16%;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:80%;opacity:0}}
+
+/* ---------- primitives ---------- */
+.card{position:relative;background:var(--surface);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);
+  border:1px solid var(--border);border-radius:var(--radius-card);box-shadow:var(--shadow-card)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);border:0;border-radius:var(--radius-pill);cursor:pointer;
+  font-family:inherit;font-weight:600;font-size:15px;padding:13px var(--space-5);transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .2s;white-space:nowrap;position:relative;overflow:hidden}
+.btn svg{width:18px;height:18px}
+.btn-primary{color:#fff;background:var(--grad-primary);background-size:220% 220%;animation:gradShift 7s ease infinite,glowPulseP 3.4s ease-in-out infinite;text-shadow:0 1px 2px rgba(6,45,120,.35)}
+.btn-primary::before{content:"";position:absolute;left:8%;right:8%;top:3px;height:42%;border-radius:var(--radius-pill);background:linear-gradient(180deg,rgba(255,255,255,.42),transparent);pointer-events:none;z-index:1}
+.btn-primary::after{content:"";position:absolute;top:-25%;bottom:-25%;left:0;width:26%;pointer-events:none;z-index:1;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-170%) skewX(-20deg);animation:shine 4.2s ease-in-out infinite}
+.btn-primary>*{position:relative;z-index:2}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(39,200,255,.55),0 0 30px rgba(39,200,255,.5),0 16px 34px -12px rgba(7,91,255,.75)}
+.btn-primary:hover::after{animation:shineOnce .75s var(--ease)}
+.btn-primary:active{transform:translateY(0) scale(.985)}
+.btn-primary:disabled{background:linear-gradient(180deg,#a6c8f4,#8fb6ee);color:#fff;box-shadow:0 0 0 1px rgba(39,200,255,.18),inset 0 1px 0 rgba(255,255,255,.45),0 8px 18px -12px rgba(45,109,190,.45);cursor:not-allowed;animation:none;text-shadow:none}
+.btn-primary:disabled::after{display:none}
+.btn-ghost{color:var(--text-primary);background:linear-gradient(180deg,#fff,#f3f8ff);border:1.5px solid rgba(45,136,255,.5);box-shadow:0 6px 18px -12px rgba(45,109,190,.4)}
+.btn-ghost::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;background:linear-gradient(135deg,var(--cyan-400),var(--primary-500) 55%,var(--primary-600));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.85;transition:opacity .25s}
+.btn-ghost::after{content:"";position:absolute;top:-25%;bottom:-25%;left:0;width:24%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(39,200,255,.4),transparent);transform:translateX(-170%) skewX(-20deg);opacity:0}
+.btn-ghost>*{position:relative;z-index:1}
+.btn-ghost:hover{transform:translateY(-1px);box-shadow:0 10px 24px -12px rgba(45,109,190,.5),0 0 20px rgba(39,200,255,.28)}
+.btn-ghost:hover::before{opacity:1}
+.btn-ghost:hover::after{opacity:1;animation:shineOnce .7s var(--ease)}
+.btn-danger-ghost{color:var(--danger);background:linear-gradient(180deg,#fff,#fff4f4);border:1px solid transparent}
+.btn-danger-ghost::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.3px;pointer-events:none;background:linear-gradient(135deg,#ff9a9d,var(--danger));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.5;transition:opacity .25s}
+.btn-danger-ghost:hover{transform:translateY(-1px);box-shadow:0 8px 20px -12px rgba(229,72,77,.5),0 0 16px rgba(229,72,77,.25)}
+.btn-danger-ghost:hover::before{opacity:1}
+.btn.lg{font-size:16px;padding:15px var(--space-6)}
+.btn.block{width:100%}
+.chip{width:26px;height:26px;border-radius:var(--radius-pill);display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.85)}
+.slabel{font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--text-secondary);text-transform:uppercase;display:flex;align-items:center;gap:var(--space-2)}
+.slabel svg{width:16px;height:16px;color:var(--primary-500)}
+
+/* neon ring (progress + score) */
+.ringwrap{position:relative}
+.ringwrap::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,transparent 56%,rgba(39,200,255,0.20) 74%,rgba(20,120,255,0.05) 84%,transparent 94%);filter:blur(5px);animation:bloom 2.8s ease-in-out infinite}
+.ringwrap.danger::before{background:radial-gradient(circle,transparent 56%,rgba(229,72,77,0.20) 74%,rgba(229,72,77,0.05) 84%,transparent 94%)}
+.ringwrap svg.ring{position:relative;z-index:1;transform:rotate(-90deg)}
+.ringwrap .arc{transition:stroke-dashoffset .8s var(--ease);animation:neonBreath 2.8s ease-in-out infinite}
+.ringwrap .spark{animation:orbit 2.6s linear infinite}
+.ringwrap .spark.sm{animation:orbitSm 2.4s linear infinite}
+.ringwrap .comet{transform-box:fill-box;transform-origin:center;transition:cx .8s var(--ease),cy .8s var(--ease);animation:cometPulse 1.5s ease-in-out infinite}
+.ringwrap .rc{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringwrap .rc b{font-family:var(--num);font-weight:800;line-height:1;color:var(--text-primary)}
+.ringwrap .rc span{font-size:12px;color:var(--text-secondary);margin-top:3px}
+
+/* ---------- app shell ---------- */
+.app{max-width:1440px;margin:0 auto;padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-5);min-height:100vh}
+.app>*{animation:fadeUp .5s var(--ease) both}
+.app>*:nth-child(2){animation-delay:.06s}.app>*:nth-child(3){animation-delay:.12s}.app>*:nth-child(4){animation-delay:.18s}
+
+.appbar{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-5)}
+.brand{font-family:var(--num);font-weight:800;letter-spacing:.14em;font-size:20px;background:var(--grad-primary);-webkit-background-clip:text;background-clip:text;color:transparent}
+.appbar .title{font-weight:600;font-size:16px;color:var(--text-primary)}
+.appbar .divider{width:1px;height:26px;background:var(--border)}
+.appbar .spacer{flex:1}
+.appbar .info{display:flex;align-items:center;gap:var(--space-2);font-size:12.5px;color:var(--text-secondary)}
+.appbar .info .ii{width:32px;height:32px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center;background:#EAF2FF;color:var(--primary-500)}
+.appbar .info .ii svg{width:17px;height:17px}
+.appbar .info b{display:block;color:var(--text-primary);font-size:13px}
+.status{display:inline-flex;align-items:center;gap:var(--space-2);padding:7px var(--space-3);border-radius:var(--radius-pill);background:rgba(20,166,109,0.10);color:var(--success);font-weight:600;font-size:13px}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:livedot 2s var(--ease) infinite}
+.pill-rem{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--radius-pill);background:var(--grad-danger);color:#fff;font-weight:700;font-size:12px;box-shadow:0 8px 18px -10px rgba(229,72,77,.6)}
+.timer{display:inline-flex;align-items:center;gap:var(--space-3);padding:8px var(--space-4);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border)}
+.timer .clk{width:22px;height:22px;color:var(--primary-500)}
+.timer .tlab{font-size:11px;color:var(--text-secondary);line-height:1.15}
+.timer .tval{font-family:var(--num);font-weight:800;font-size:20px;color:var(--primary-600)}
+
+/* ---------- exam layout ---------- */
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr) 328px;gap:var(--space-5);align-items:center;flex:1}
+.rail{padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)}
+.rail .rail-title{font-size:13px;font-weight:700}.rail .rail-sub{font-size:11px;letter-spacing:.14em;color:var(--text-secondary);font-weight:600;margin-top:-6px}
+.part{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border-radius:var(--radius-control);cursor:pointer;border:1px solid transparent;
+  transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .25s,border-color .25s;background:var(--surface-solid)}
+.part:hover{border-color:var(--border);transform:translateX(2px)}
+.part .pn{width:38px;height:38px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:800;font-size:15px;background:#EAF2FF;color:var(--text-secondary);transition:.25s var(--ease)}
+.part .pinfo{flex:1;min-width:0}.part .pinfo b{font-size:14px;font-weight:600;display:block}.part .pinfo span{font-size:12px;color:var(--text-secondary)}
+.part.active{background:linear-gradient(135deg,rgba(39,200,255,0.10),rgba(20,120,255,0.10));border-color:rgba(45,136,255,0.28);box-shadow:var(--glow-primary)}
+.part.active .pn{background:var(--grad-primary);color:#fff;box-shadow:0 6px 14px -6px rgba(7,91,255,.6)}
+.part.active .pinfo b{color:var(--primary-700)}
+.part.done .pn{background:rgba(20,166,109,0.14);color:var(--success)}
+.part.locked{opacity:.5}
+.center{display:flex;flex-direction:column;gap:var(--space-4);min-width:0}
+.qcard{padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-4);min-height:440px}
+.qmeta{display:flex;align-items:center;gap:var(--space-2);font-size:13px;color:var(--text-secondary);font-weight:600}
+.qmeta b{color:var(--primary-600)}.qmeta .sep{width:4px;height:4px;border-radius:50%;background:var(--border)}
+.qtext{font-size:19px;font-weight:600;line-height:1.55}
+.qbody.swap{animation:fadeUp .32s var(--ease)}
+.options{display:flex;flex-direction:column;gap:var(--space-3);margin-top:var(--space-1)}
+.option{display:flex;align-items:center;gap:var(--space-3);padding:14px var(--space-4);border-radius:var(--radius-control);cursor:pointer;background:var(--surface-solid);border:1px solid var(--border);
+  transition:transform .18s var(--ease),box-shadow .25s var(--ease),border-color .2s,background .2s;text-align:left;font-family:inherit;width:100%;position:relative;overflow:hidden}
+.option:hover{border-color:rgba(45,136,255,0.45);transform:translateX(3px)}
+.option .ol{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:800;font-size:15px;background:#EAF2FF;color:var(--text-secondary);transition:.22s var(--ease)}
+.option .otx{flex:1;font-size:15.5px;font-weight:500;transition:color .2s}
+.option .ock{width:24px;height:24px;flex:none;color:#fff;opacity:0;transform:scale(.5);transition:.28s var(--ease)}
+.option.selected{background:var(--grad-primary);background-size:160% 160%;border-color:transparent;box-shadow:var(--glow-primary),0 14px 28px -14px rgba(7,91,255,0.62)}
+.option.selected .otx{color:#fff}.option.selected .ol{background:rgba(255,255,255,0.2);color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6);transform:scale(1.05)}
+.option.selected .ock{opacity:1;transform:scale(1)}
+.option.selected::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-140%) skewX(-18deg);animation:sweep .7s var(--ease)}
+.navrow{display:flex;align-items:center;gap:var(--space-3)}.navrow .spacer{flex:1}
+.navrow.exam .qnav{min-width:132px;min-height:50px;padding-left:var(--space-4);padding-right:var(--space-4)}
+.side{display:flex;flex-direction:column;gap:var(--space-5)}
+.progress-card{padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);align-items:center}
+.progress-card .slabel{align-self:flex-start}
+.progress-card .ringwrap{width:150px;height:150px}
+.progress-card .rc b{font-size:34px}
+.timeleft{width:100%;display:flex;align-items:center;justify-content:space-between;padding-top:var(--space-3);border-top:1px solid var(--border)}
+.timeleft .tl-l{font-size:12.5px;color:var(--text-secondary);font-weight:600}.timeleft .tl-v{font-family:var(--num);font-weight:800;font-size:18px;color:var(--primary-600)}
+.sheet-card{padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)}
+.legend{display:flex;gap:var(--space-3);flex-wrap:wrap;font-size:11.5px;color:var(--text-secondary)}
+.legend i{display:inline-flex;align-items:center;gap:6px;font-style:normal}.legend .ld{width:12px;height:12px;border-radius:4px}
+.answer-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-2)}
+/* ยังไม่ตอบ = สีเทา / กำลังทำ = ขอบน้ำเงินพื้นขาว / ตอบแล้ว = น้ำเงินทึบ */
+.cell{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--num);font-weight:700;font-size:14px;background:#E4EAF3;border:1px solid transparent;color:#93a1b8;transition:transform .16s var(--ease),box-shadow .2s,border-color .2s,background .25s,color .2s}
+.cell:hover{border-color:rgba(45,136,255,0.4);color:var(--text-secondary);transform:translateY(-1px)}
+.cell.answered{background:var(--grad-primary);color:#fff;border-color:transparent;box-shadow:0 6px 14px -8px rgba(7,91,255,.6)}
+.cell.answered.justAns{animation:pop .34s var(--ease)}
+.cell.current{background:var(--surface-solid);border-color:var(--primary-500);color:var(--primary-600);box-shadow:var(--glow-primary)}
+.cell.answered.current{background:var(--grad-primary);color:#fff;box-shadow:0 0 0 2px #fff inset,var(--glow-primary)}
+.tabs,.mprogress,.tabbar,.tabhint{display:none}
+
+/* ---------- centered/message screens ---------- */
+.wrap-narrow{max-width:760px;margin:0 auto;width:100%}
+.wrap-mid{max-width:1080px;margin:0 auto;width:100%}
+.hero-h{font-size:clamp(24px,3vw,32px);font-weight:700;text-align:center}
+.hero-sub{color:var(--text-secondary);text-align:center;margin-top:6px}
+
+/* registration */
+.stepper{display:flex;align-items:center;justify-content:center;gap:var(--space-2);flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:var(--space-2);color:var(--text-secondary);font-weight:600;font-size:14px}
+.step .sn{width:34px;height:34px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:800;background:var(--surface-solid);border:1px solid var(--border);color:var(--text-secondary)}
+.step.on{color:var(--primary-700)}.step.on .sn{background:var(--grad-primary);color:#fff;border-color:transparent;box-shadow:var(--glow-primary)}
+.step .dash{width:40px;height:2px;background:var(--border);border-radius:2px}
+.reg-grid{display:grid;grid-template-columns:1fr 1.05fr .95fr;gap:var(--space-5);align-items:stretch}
+.reg-grid.reg-solo{grid-template-columns:1fr;max-width:480px}
+.onsite-note{background:var(--surface-2,#F3F7FC);border:1px solid var(--border,#E1E9F2);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-top:var(--space-3)}
+.onsite-note b{display:block;font-size:14px}
+.onsite-note small{color:var(--text-secondary,#5E7288);font-size:13px}
+.field-title{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--space-3)}
+/* ===== Login screens (Figma: E-xam — screen 0a/0b/0c, 1a–1d, desktop-1) ===== */
+body.xr-on{background:#FAFAFA!important}
+.app.xr-on{max-width:none;padding:0;gap:0;min-height:100vh}
+.xr{--xr-pri:#1E40AF;--xr-pri-soft:#EFF6FF;--xr-badge-bg:#EFF6FF;--xr-badge-fg:#1E40AF;--xr-bd:#CBD5E1;
+  font-family:"Sarabun","IBM Plex Sans Thai",system-ui,sans-serif;color:#1E293B;min-height:100vh;display:flex;flex-direction:column;background:#FAFAFA}
+.xr.lead{--xr-pri:#92700C;--xr-pri-soft:#FEF9E7;--xr-badge-bg:#FEF3C7;--xr-badge-fg:#92400E;--xr-bd:#E2E8F0}
+.xr svg.xi{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.xr-bar{height:60px;flex:none;background:#fff;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:16px;padding:0 20px}
+.xr-bar .xb{width:40px;height:40px;border-radius:100px;display:grid;place-items:center;color:#1E293B;background:none;border:0;cursor:pointer}
+.xr-bar .xb:active{background:#F1F5F9}.xr-bar .xb.ph{visibility:hidden}
+.xr-bar h1{flex:1;min-width:0;text-align:center;font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xr-banner{display:flex;align-items:center;gap:8px;padding:12px 20px;background:#DCFCE7;color:#15803D;font-size:14px;font-weight:600}
+.xr-banner svg.xi{width:20px;height:20px}
+.xr-body{flex:1;display:flex;flex-direction:column;gap:24px;padding:20px;width:100%}
+.xr-badge{align-self:flex-start;background:var(--xr-badge-bg);color:var(--xr-badge-fg);font-size:12px;font-weight:700;padding:6px 12px;border-radius:100px}
+.xr.lead .xr-badge{font-size:13px;padding:6px 16px}
+.xr-head{display:flex;flex-direction:column;gap:6px}
+.xr-head h2{font-size:22px;font-weight:700;line-height:1.3}
+.xr-head p{font-size:15px;color:#475569}
+.xr-fields{display:flex;flex-direction:column;gap:16px}
+.xr-fld{display:flex;flex-direction:column;gap:8px}
+.xr-fld label{font-size:14px;font-weight:600;color:#475569}
+.xr-fld input{height:54px;width:100%;border:1.5px solid var(--xr-bd);border-radius:12px;background:#fff;padding:0 16px;font:400 16px/1 "Sarabun","IBM Plex Sans Thai",sans-serif;color:#1E293B;outline:none;transition:border-color .15s,box-shadow .15s}
+.xr-fld input::placeholder{color:#94A3B8}
+.xr-fld input.filled,.xr-fld input:focus{border-color:var(--xr-pri)}
+.xr-fld input:focus{box-shadow:0 0 0 3px var(--xr-pri-soft)}
+.xr-found{display:flex;align-items:center;gap:8px;background:#DCFCE7;color:#15803D;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600}
+.xr-found svg.xi{width:16px;height:16px}.xr-found small{display:block;font-weight:500;color:#3F7A5E}
+.xr-mcard{display:flex;align-items:center;gap:12px;background:var(--xr-pri-soft);border:1px solid var(--xr-pri);border-radius:12px;padding:16px;color:var(--xr-pri)}
+.xr-mcard b{display:block;font-size:15px;font-weight:700}.xr-mcard span{display:block;font-size:13px;color:#475569}
+.xr-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.xr-modes button{display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px;border:1.5px solid var(--xr-bd);background:#fff;font:600 15px "Sarabun",sans-serif;color:#1E293B;cursor:pointer}
+.xr-modes button.on{border-color:var(--xr-pri);background:var(--xr-pri-soft);color:var(--xr-pri)}
+.xr-err{display:none;align-items:center;gap:8px;background:#FEF2F2;border:1px solid #991B1B;color:#991B1B;border-radius:8px;padding:12px;font-size:13px;font-weight:600}
+.xr-err.on{display:flex}.xr-err svg.xi{width:18px;height:18px}
+.xr-btn{height:54px;width:100%;border:0;border-radius:12px;background:var(--xr-pri);color:#fff;font:700 16px "Sarabun",sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;transition:opacity .15s}
+.xr-btn:disabled{background:#CBD5E1;color:#94A3B8;cursor:not-allowed}
+.xr-btn.out{background:#fff;color:var(--xr-pri);border:1.5px solid var(--xr-pri)}
+.xr-btn .xdot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.xr-foot{margin-top:auto;padding-top:24px}
+.xr-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}
+.xr-ring{width:120px;height:120px;border-radius:60px;background:var(--xr-pri-soft);display:grid;place-items:center}
+.xr-ring>span{width:80px;height:80px;border-radius:40px;background:#DBEAFE;display:grid;place-items:center;color:var(--xr-pri)}
+.xr-ring svg.xi{width:48px;height:48px;stroke-width:1.6}
+.xr-ring.bad{background:#FEF2F2}.xr-ring.bad>span{background:#FEE2E2;color:#B91C1C}
+.xr.lead .xr-ring>span{background:#FEF3C7}
+.xr-state h2{font-size:24px;font-weight:700}.xr-state p{font-size:16px;color:#475569}
+.xr-info{background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:20px;box-shadow:0 4px 6px rgba(0,0,0,.02)}
+.xr-info h2{font-size:22px;font-weight:700}.xr-info .meta{font-size:15px;color:#475569;margin-top:6px}
+.xr-info hr{border:0;border-top:1px solid #E2E8F0}
+.xr-info ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+.xr-info li{display:flex;align-items:center;gap:12px;font-size:16px}.xr-info li svg.xi{width:20px;height:20px;color:var(--xr-pri)}
+@media(min-width:768px){
+  .xr{align-items:center;justify-content:center;padding:40px}
+  .xr-bar{display:none}
+  .xr-banner{border-radius:12px;width:560px;margin-bottom:16px}
+  .xr-body{flex:none;width:560px;background:#fff;border:1px solid #E2E8F0;border-radius:24px;padding:48px;gap:32px;box-shadow:0 8px 12px rgba(0,0,0,.03)}
+  .xr-body.plain{background:none;border:0;box-shadow:none;padding:0}
+  .xr-badge{align-self:center;font-size:14px;padding:6px 16px}
+  .xr-head{align-items:center;text-align:center}.xr-head h2{font-size:28px;font-weight:800}.xr-head p{font-size:16px}
+  .xr-fields{gap:20px}.xr-fld label{font-weight:700}
+  .xr-btn{height:56px;font-size:18px}
+  .xr-foot{margin-top:0;padding-top:0}
+  .xr-state{flex:none;width:560px;background:#fff;border:1px solid #E2E8F0;border-radius:24px;padding:48px}
+}
+.rosterhit{display:flex;align-items:center;gap:9px;border-radius:var(--radius-control);padding:9px 12px;margin:-2px 0 var(--space-3);font-size:13px;animation:rhin .2s ease}
+.rosterhit.ok{background:#ECFDF5;border:1px solid #A7F3D0;color:#047857}
+.rosterhit .rk{width:22px;height:22px;border-radius:50%;background:#10B981;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none}
+.rosterhit .rt{display:flex;flex-direction:column;line-height:1.35;min-width:0}
+.rosterhit .rt b{font-weight:700}
+.rosterhit .rt .rs{font-size:11.5px;color:#3f7a5e;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@keyframes rhin{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.frow{display:flex;align-items:center;gap:var(--space-3);background:linear-gradient(180deg,#fff,#f6faff);border:1px solid var(--border);border-radius:var(--radius-control);padding:11px var(--space-4);margin-bottom:var(--space-3);transition:box-shadow .22s,border-color .22s}
+.frow:focus-within{border-color:rgba(45,136,255,.5);box-shadow:0 0 0 3px rgba(39,200,255,.14),0 0 18px rgba(39,200,255,.2)}
+.frow .fi{width:32px;height:32px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e9f3ff,#d4e7ff);color:var(--primary-500);box-shadow:inset 0 1px 0 rgba(255,255,255,.8);transition:.22s}
+.frow:focus-within .fi{background:var(--grad-primary);color:#fff;box-shadow:0 4px 12px -5px rgba(7,91,255,.6)}
+.frow .fi svg{width:16px;height:16px}
+.frow .fc{flex:1;min-width:0}.frow label{display:block;font-size:11.5px;color:var(--text-secondary);font-weight:500}
+.frow input{width:100%;border:0;outline:0;background:transparent;font-size:15px;font-weight:600;color:var(--text-primary)}
+.frow input::placeholder{color:#9fb0c8;font-weight:400}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);flex:1}
+.mode{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:var(--space-2);padding:var(--space-4) var(--space-3);
+  border-radius:var(--radius-control);cursor:pointer;background:var(--surface-solid);border:1.5px solid var(--border);transition:.2s var(--ease);min-height:150px}
+.mode:hover{border-color:rgba(45,136,255,.4);box-shadow:0 10px 24px -16px rgba(45,109,190,.55)}
+.mode .mi{width:56px;height:56px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#eaf3ff,#d6e8ff);color:var(--primary-500);transition:.25s var(--ease)}
+.mode .mi svg{width:26px;height:26px}
+.mode .mt{font-weight:700;font-size:16px}.mode .ms{font-size:12px;color:var(--text-secondary)}
+.mode .rc2{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:var(--radius-pill);border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;transition:.2s}
+.mode .rc2 svg{width:13px;height:13px;opacity:0;transform:scale(.5);transition:.2s var(--ease)}
+.mode.on .rc2 svg{opacity:1;transform:scale(1)}
+.mode.on{border-color:transparent;background:linear-gradient(135deg,rgba(39,200,255,0.10),rgba(20,120,255,0.10));box-shadow:var(--glow-primary)}
+.mode.on .mi{background:var(--grad-primary);color:#fff;box-shadow:0 8px 18px -8px rgba(7,91,255,.6);animation:miPulse 2.6s ease-in-out infinite}
+.mode.on .mt{color:var(--primary-700)}
+.mode.on .rc2{border-color:transparent;background:var(--grad-primary);color:#fff}.mode.on .rc2 svg{width:13px;height:13px}
+.campanel{flex:1;min-height:120px;border-radius:var(--radius-control);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-2);position:relative;overflow:hidden;
+  background:linear-gradient(160deg,rgba(234,243,255,.9),rgba(214,232,255,.6));box-shadow:inset 0 0 0 1.5px rgba(39,200,255,.35),0 0 18px rgba(39,200,255,.16)}
+.campanel::after{content:"";position:absolute;left:8%;right:8%;top:16%;height:2px;border-radius:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--cyan-400),transparent);box-shadow:0 0 12px var(--cyan-400);animation:scan 2.8s ease-in-out infinite}
+.campanel .cnr{position:absolute;width:20px;height:20px;border:2.5px solid rgba(39,200,255,.55)}
+.campanel .cnr.tl{top:12px;left:12px;border-right:0;border-bottom:0;border-top-left-radius:6px}
+.campanel .cnr.tr{top:12px;right:12px;border-left:0;border-bottom:0;border-top-right-radius:6px}
+.campanel .cnr.bl{bottom:12px;left:12px;border-right:0;border-top:0;border-bottom-left-radius:6px}
+.campanel .cnr.br{bottom:12px;right:12px;border-left:0;border-top:0;border-bottom-right-radius:6px}
+.campanel .camic{width:44px;height:44px;color:#5f86bd;position:relative;z-index:1}.campanel .camic svg{width:44px;height:44px}
+.camready{display:flex;align-items:center;justify-content:center;gap:var(--space-2);font-size:13px;font-weight:600;color:var(--success);margin-top:var(--space-2)}
+.camready::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px rgba(20,166,109,.7)}
+.consent{display:flex;align-items:center;gap:var(--space-3);background:var(--surface-solid);border:1px solid var(--border);border-radius:var(--radius-control);padding:var(--space-3) var(--space-4);cursor:pointer;max-width:640px;margin:var(--space-4) auto 0}
+.consent .box{width:24px;height:24px;border-radius:7px;border:2px solid var(--border);background:#fff;flex:none;display:flex;align-items:center;justify-content:center;transition:.2s}
+.consent .box svg{width:14px;height:14px;color:#fff;opacity:0;transform:scale(.5);transition:.2s var(--ease)}
+.consent.on .box{background:var(--grad-primary);border-color:transparent;box-shadow:0 0 14px rgba(39,200,255,.4)}
+.consent.on .box svg{opacity:1;transform:scale(1)}
+.consent b{font-size:14px;display:block}.consent span{font-size:12px;color:var(--text-secondary)}
+.reg-foot{display:flex;gap:var(--space-3);margin-top:var(--space-5)}
+.reg-foot .btn-primary{flex:1}
+
+/* checking / spinner */
+.spinner{width:88px;height:88px;border-radius:50%;border:6px solid rgba(20,120,255,.15);border-top-color:var(--primary-500);animation:spin 1s linear infinite;margin:var(--space-5) auto;box-shadow:0 0 26px rgba(39,200,255,.35)}
+.checklist{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-4)}
+.crow{display:flex;align-items:center;gap:var(--space-3);padding:13px var(--space-4);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border)}
+.crow .cnm{font-weight:600}.crow .cst{margin-left:auto;font-weight:600;font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:6px}
+.crow.done .cst{color:var(--success)}.mini-spin{width:15px;height:15px;border-radius:50%;border:2.4px solid rgba(20,120,255,.25);border-top-color:var(--primary-500);animation:spin .9s linear infinite}
+
+/* results */
+.pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-4)}
+.pcard{padding:var(--space-4) var(--space-3);text-align:center;display:flex;flex-direction:column;align-items:center;gap:var(--space-2)}
+.pcard .pp{font-weight:700;color:var(--text-secondary);font-size:14px}
+.pcard .ringwrap{width:104px;height:104px}.pcard .rc b{font-size:26px}.pcard .rc span{font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;padding:5px 14px;border-radius:var(--radius-pill)}
+.badge svg{width:15px;height:15px}
+.badge.pass{color:var(--success);background:rgba(20,166,109,.10)}.badge.fail{color:var(--danger);background:rgba(229,72,77,.10)}
+.rsplit{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
+.rpanel{padding:var(--space-5)}
+.rpt{font-weight:700;margin-bottom:var(--space-4)}
+.rsum{display:flex;align-items:center;gap:var(--space-4)}
+.rsum .ri{flex:1;display:flex;align-items:center;gap:var(--space-3)}
+.rsum .ri .ric{width:40px;height:40px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center}
+.rsum .ri.ok .ric{background:rgba(20,166,109,.12);color:var(--success)}.rsum .ri.no .ric{background:rgba(229,72,77,.12);color:var(--danger)}
+.rsum .ri b{font-family:var(--num);font-size:26px;font-weight:800}.rsum .ri span{font-size:12.5px;color:var(--text-secondary)}
+.rsum .rdiv{width:1px;height:40px;background:var(--border)}
+.lockp{display:flex;align-items:center;gap:var(--space-4)}
+.lockp .li{width:52px;height:52px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;background:#EDF2F9;color:#93a3ba}
+.lockp .li svg{width:24px;height:24px}
+.lockp b{display:block;font-size:15px}.lockp span{font-size:13px;color:var(--text-secondary)}
+.rfoot{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+.note{display:flex;align-items:center;gap:var(--space-2);color:var(--text-secondary);font-size:13px}
+.note svg{width:18px;height:18px;color:var(--primary-500)}
+
+/* remedial prep */
+.rem-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:var(--space-5);align-items:start}
+.orbwrap{padding:var(--space-6);display:flex;flex-direction:column;align-items:center;gap:var(--space-3)}
+.orb{width:200px;height:200px}.orb .rc b{font-size:44px;color:var(--primary-700)}.orb .rc span{font-size:14px;color:var(--primary-600);font-weight:600}
+.remq{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border)}
+.remq.act{border-color:transparent;background:linear-gradient(135deg,rgba(39,200,255,0.08),rgba(20,120,255,0.08));box-shadow:var(--glow-primary)}
+.remq.lock{opacity:.6}
+.remq .rqn{width:44px;height:44px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:800;font-size:18px;background:var(--grad-primary);color:#fff}
+.remq.lock .rqn{background:#D7DFEA;color:#8a99ad}
+.remq .rqm{flex:1}.remq .rqm b{font-size:15px;display:block}.remq .rqm span{font-size:12.5px;color:var(--text-secondary)}
+.remq .rqr{text-align:right}.remq .rqr .u{display:inline-block;background:var(--grad-primary);color:#fff;font-weight:700;font-size:12px;padding:4px 12px;border-radius:var(--radius-pill)}
+.remq.lock .rqr .u{background:#c3cede}.remq .rqr small{display:block;color:var(--text-secondary);margin-top:4px;font-size:11.5px}
+.remq.sel{cursor:pointer;transition:border-color .15s,box-shadow .15s,opacity .15s,background .15s}
+.remq.sel:not(.on){opacity:.5}
+.remq.sel:not(.on) .rqn{background:#D7DFEA;color:#8a99ad}
+.remq.sel:not(.on) .rqr .u{background:#c3cede}
+.remq.sel.on{border-color:transparent;background:linear-gradient(135deg,rgba(39,200,255,0.08),rgba(20,120,255,0.08));box-shadow:var(--glow-primary)}
+.rules{padding:var(--space-5);display:flex;gap:var(--space-4)}
+.rules .shield{width:44px;height:44px;color:var(--primary-500);flex:none}.rules .shield svg{width:44px;height:44px}
+.rules ul{margin:0;padding-left:18px;color:var(--text-secondary);font-size:13.5px;line-height:1.9}
+
+/* message screen */
+.msg{max-width:640px;margin:var(--space-6) auto;padding:var(--space-6) var(--space-5);text-align:center}
+.mic{width:84px;height:84px;border-radius:var(--radius-pill);margin:0 auto var(--space-4);display:flex;align-items:center;justify-content:center}
+.mic svg{width:42px;height:42px}
+/* submit modal: even vertical rhythm via one flex gap */
+.mstack{display:flex;flex-direction:column;gap:var(--space-4)}
+.mstack .mic{width:72px;height:72px;margin:0 auto}
+.mstack .mic svg{width:36px;height:36px}
+.mstack h3{margin:0}
+.mstack .msub{margin:var(--space-1) 0 0;color:var(--text-secondary);font-size:14px}
+.mstack .misslist{display:flex;flex-direction:column;gap:var(--space-2)}
+.mstack .misslist .checkrow{margin:0}
+.mstack .mbtns{margin-top:var(--space-1)}
+.mic.info{background:rgba(20,120,255,.10);color:var(--primary-500);box-shadow:0 0 24px rgba(39,200,255,.25)}
+.mic.warn{background:rgba(245,158,11,.12);color:var(--warning)}
+.mic.ok{background:rgba(20,166,109,.12);color:var(--success);box-shadow:0 0 24px rgba(20,166,109,.25)}
+.msg h2{font-size:22px;font-weight:700;line-height:1.4}.msg p{color:var(--text-secondary);margin-top:var(--space-3)}
+/* timeline */
+.tl{max-width:420px;margin:var(--space-5) auto 0;display:flex;flex-direction:column;gap:var(--space-1);text-align:left}
+.tli{display:flex;align-items:center;gap:var(--space-3);padding:11px var(--space-4);border-radius:var(--radius-control);font-weight:600;color:var(--text-secondary)}
+.tli .td{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center}.tli .td svg{width:24px;height:24px}
+.tli.done{color:var(--success)}.tli.doing{color:var(--primary-600);background:rgba(20,120,255,.06)}
+/* pass banner */
+.passbanner{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-5);border-radius:var(--radius-card);
+  background:linear-gradient(135deg,rgba(20,166,109,.12),rgba(39,200,255,.06));border:1px solid rgba(20,166,109,.28)}
+.passbanner .pbi{width:56px;height:56px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#38d29a,#14a66d);box-shadow:0 0 22px rgba(20,166,109,.5)}
+.passbanner .pbi svg{width:30px;height:30px}.passbanner b{font-size:20px;color:var(--success)}.passbanner span{color:var(--text-secondary);font-size:13.5px}
+.bars{display:flex;flex-direction:column;gap:var(--space-3)}
+.bar-row{display:flex;align-items:center;gap:var(--space-3)}.bar-row .bl{width:70px;font-size:13px;font-weight:600;color:var(--text-secondary)}
+.bar-row .bt{flex:1;height:10px;border-radius:var(--radius-pill);background:#E1ECFC;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:var(--radius-pill);background:var(--grad-primary);box-shadow:0 0 10px rgba(39,200,255,.5)}
+.bar-row .bv{width:56px;text-align:right;font-family:var(--num);font-weight:800;font-size:14px;color:var(--primary-600)}
+/* wrong review */
+.ptabs{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.ptab{flex:1;min-width:110px;padding:var(--space-3);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border);cursor:pointer;text-align:center;transition:.2s}
+.ptab b{display:block;font-size:14px}.ptab span{font-size:12px;color:var(--text-secondary)}
+.ptab.on{background:var(--grad-primary);border-color:transparent;box-shadow:var(--glow-primary)}.ptab.on b,.ptab.on span{color:#fff}
+.wq{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border);margin-bottom:var(--space-2)}
+.wq .wn{font-family:var(--num);font-weight:800;color:var(--danger);font-size:16px}.wq b{flex:1;font-weight:600;font-size:14.5px}
+.wq .wl{display:flex;align-items:center;gap:6px;color:var(--text-secondary);font-size:12px}.wq .wl svg{width:15px;height:15px}
+/* certificate */
+.cert{padding:var(--space-5) var(--space-6)}
+.cert-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:var(--space-4);border-bottom:1px solid var(--border)}
+.cert-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);padding:var(--space-4) 0;text-align:center}
+.cert-meta span{font-size:12px;color:var(--text-secondary)}.cert-meta b{display:block;font-size:15px;margin-top:4px}
+.ctbl{width:100%;border-collapse:collapse}
+.ctbl th{text-align:left;font-size:12px;color:var(--text-secondary);font-weight:600;padding:var(--space-2) var(--space-3)}
+.ctbl td{padding:12px var(--space-3);border-top:1px solid var(--border);font-size:14px}
+.ctbl .cn{width:26px;height:26px;border-radius:var(--radius-pill);background:var(--grad-primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:800;font-size:12px;margin-right:8px}
+.ctbl svg{width:17px;height:17px;vertical-align:-3px;display:inline-block}
+.ctbl td .res{display:inline-flex;align-items:center;gap:6px;color:var(--success);font-weight:600}
+.cert-bottom{display:grid;grid-template-columns:1fr 1.1fr .8fr;gap:var(--space-4);align-items:center;margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border)}
+.cert-total{font-family:var(--num);font-size:40px;font-weight:800;color:var(--primary-700)}.cert-total span{font-size:16px;color:var(--text-secondary)}
+.trophy{width:52px;height:52px;border-radius:var(--radius-pill);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--grad-primary);box-shadow:0 0 22px rgba(39,200,255,.45)}
+.trophy svg{width:28px;height:28px}
+.qr{display:flex;flex-direction:column;align-items:center;gap:6px}
+
+/* modal */
+.scrim{position:fixed;inset:0;z-index:80;background:rgba(9,42,100,.34);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:var(--space-5);opacity:0;pointer-events:none;transition:.2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.modal{width:min(460px,94vw);padding:var(--space-6) var(--space-5);text-align:center;border-radius:var(--radius-card);background:linear-gradient(180deg,#fff,#f2f7ff);border:1px solid #fff;box-shadow:0 40px 90px -30px rgba(9,42,100,.5)}
+.modal h3{font-size:22px;font-weight:700;margin-bottom:6px}
+.pause-orb{width:184px;height:184px;margin:var(--space-4) auto}.pause-orb .rc b{font-size:40px;color:var(--primary-700)}.pause-orb .rc span{font-size:13px;color:var(--primary-600);font-weight:600}
+.mnote{display:flex;gap:var(--space-2);align-items:flex-start;text-align:left;background:rgba(20,120,255,.06);border:1px solid rgba(20,120,255,.18);border-radius:var(--radius-control);padding:var(--space-3) var(--space-4);margin:var(--space-4) 0;color:var(--text-secondary);font-size:13.5px}
+.mnote svg{width:20px;height:20px;color:var(--primary-500);flex:none}
+.mbtns{display:flex;gap:var(--space-3)}.mbtns .btn{flex:1}
+.checkrow{display:flex;align-items:center;gap:var(--space-3);background:var(--surface-solid);border:1px solid var(--border);border-radius:var(--radius-control);padding:12px var(--space-4);margin-bottom:var(--space-2);text-align:left;font-weight:600;font-size:14px}
+.checkrow .ci2{width:28px;height:28px;flex:none;color:var(--primary-500)}.checkrow .ci2 svg{width:28px;height:28px}
+
+.toast{position:fixed;left:50%;bottom:var(--space-5);transform:translateX(-50%) translateY(14px);opacity:0;background:var(--text-primary);color:#fff;padding:11px var(--space-5);border-radius:var(--radius-pill);font-size:14px;font-weight:600;z-index:90;transition:.25s var(--ease);box-shadow:0 14px 30px -12px rgba(9,42,100,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.demobar{position:fixed;right:14px;bottom:14px;z-index:70;font-size:12px;color:var(--text-secondary);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-pill);padding:7px 14px;backdrop-filter:blur(10px)}
+.demobar b{color:var(--primary-600);cursor:pointer}
+
+@media (max-width:1080px){.layout{grid-template-columns:minmax(0,1fr) 300px}.rail{display:none}
+  .tabbar{display:block;position:sticky;top:0;z-index:41;background:rgba(244,249,255,.82);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);margin:0 calc(-1*var(--space-5));padding:8px var(--space-5) 10px;box-shadow:0 10px 16px -14px rgba(7,60,140,.55)}
+  .tabhint{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--text-secondary);margin:0 0 7px;padding-left:2px}.tabhint svg{width:14px;height:14px;color:var(--primary-500)}
+  .tabs{display:flex}
+  .reg-grid{grid-template-columns:1fr}.rem-grid{grid-template-columns:1fr}.rsplit{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .app{padding:var(--space-3);gap:var(--space-3);padding-bottom:calc(198px + env(safe-area-inset-bottom))}
+  .appbar{flex-wrap:wrap;gap:var(--space-3);padding:var(--space-3) var(--space-4)}
+  .appbar .title,.appbar .divider,.appbar .info{display:none}.appbar .status{order:2}.timer{order:3;margin-left:auto}
+  .layout{grid-template-columns:1fr;gap:var(--space-3);animation:none;transform:none}.side{gap:var(--space-3)}
+  .qcard{min-height:0;padding:var(--space-4)}.qtext{font-size:17px}
+  .tabbar{margin:0 calc(-1*var(--space-3));padding:8px var(--space-3) 10px}
+  .tabs{display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:74px;padding:10px var(--space-3);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border);cursor:pointer}
+  .tab b{font-family:var(--num);font-weight:800;font-size:15px;color:var(--text-secondary)}.tab span{font-size:11px;color:var(--text-secondary)}
+  .tab.active{background:var(--grad-primary);border-color:transparent;box-shadow:var(--glow-primary)}.tab.active b,.tab.active span{color:#fff}
+  .tab.done:not(.active){border-color:rgba(20,166,109,.45);background:rgba(20,166,109,.07)}.tab.done:not(.active) b,.tab.done:not(.active) span{color:var(--success)}
+  .tab.locked:not(.active){opacity:.45}
+  .mprogress{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4)}
+  .mprogress .track{flex:1;height:8px;border-radius:var(--radius-pill);background:#E1ECFC;overflow:hidden}
+  .mprogress .fill{position:relative;overflow:hidden;height:100%;border-radius:var(--radius-pill);transition:width .6s var(--ease);background:linear-gradient(90deg,var(--cyan-400),var(--primary-500));box-shadow:0 0 10px rgba(39,200,255,.6)}
+  .mprogress .fill::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);transform:translateX(-140%);animation:barShine 1.9s var(--ease) infinite}
+  @keyframes barShine{0%{transform:translateX(-140%)}55%,100%{transform:translateX(300%)}}
+  .mprogress .mpct,.mprogress .mtime{font-family:var(--num);font-weight:800;color:var(--primary-600);font-size:15px}
+  .answer-grid{grid-template-columns:repeat(10,1fr);gap:6px}.cell{aspect-ratio:auto;min-height:32px;border-radius:9px;font-size:13px}
+  .progress-card{display:none}
+  /* กระดานคำตอบ (เลข 1–20) ปักไว้เหนือแถบปุ่มล่าง — เห็นตลอด กดข้ามข้อได้ทันที ไม่ต้องเลื่อนหา */
+  .side .sheet-card{position:fixed;left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom));z-index:39;margin:0;border-radius:16px 16px 0 0;padding:8px 14px 10px;background:var(--surface);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--border);box-shadow:0 -10px 26px -18px rgba(7,60,140,.45)}
+  .side .sheet-card .slabel{display:none}
+  .side .sheet-card .legend{margin:0 0 7px;justify-content:center;gap:14px}
+  .navrow.exam{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:var(--space-3) var(--space-4);padding-bottom:calc(var(--space-3) + env(safe-area-inset-bottom));background:var(--surface);backdrop-filter:blur(18px);border-top:1px solid var(--border);margin:0}
+  .navrow.exam .btn{padding:13px var(--space-3);font-size:14px}
+  .navrow.exam .spacer{display:none}
+  .navrow.exam .qnav{flex:0 0 auto;min-width:54px;justify-content:center}.navrow.exam .qnav .txt-full{display:none}
+  .navrow.exam #mainbtn{margin-left:auto;flex:0 1 auto;min-width:0;white-space:nowrap}
+  .pgrid{grid-template-columns:1fr 1fr}.cert-meta,.cert-bottom{grid-template-columns:1fr}.reg-foot{flex-direction:column-reverse}.reg-foot .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.05ms!important}}
+
+/* ===== ใบรายงานผลคะแนน (redesign) ===== */
+.certwrap{display:flex;flex-direction:column;align-items:center;gap:var(--space-4);padding:var(--space-3) 0}
+.certcard{width:min(560px,100%);background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(9,42,100,.4),0 2px 0 rgba(255,255,255,.6) inset;border:1px solid #E3ECF9;position:relative}
+.certcard .cbar{height:7px;background:linear-gradient(90deg,#27C8FF,#075BFF 55%,#0A2A64)}
+.certhead{position:relative;padding:26px 28px 20px;text-align:center;background:radial-gradient(120% 90% at 50% -10%,rgba(39,200,255,.14),transparent 60%)}
+.certhead .cbrand{font-family:var(--num);font-weight:800;letter-spacing:.18em;font-size:14px;color:#075BFF}
+.certhead .cttl{font-size:19px;font-weight:800;color:#0A2A64;margin-top:2px}
+.certhead .cpass{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:8px 16px;border-radius:999px;background:linear-gradient(135deg,#12A9F5,#0E9F6E);color:#fff;font-weight:800;font-size:13.5px;box-shadow:0 10px 22px -10px rgba(14,159,110,.6)}
+.certhead .cpass svg{width:17px;height:17px}
+.certseal{width:66px;height:66px;margin:16px auto 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#27C8FF,#075BFF 60%,#0A2A64);box-shadow:0 0 0 6px rgba(7,91,255,.09),0 12px 26px -10px rgba(7,91,255,.5)}
+.certseal svg{width:34px;height:34px}
+.certname{font-size:23px;font-weight:800;color:#0A2A64;text-align:center;margin-top:2px;line-height:1.2}
+.certsub{text-align:center;color:#5E7691;font-size:12.5px;margin-top:4px}
+.certmeta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:16px 24px 4px}
+.certmeta .cm{flex:1;min-width:140px;background:#F4F8FE;border:1px solid #E6EEF9;border-radius:12px;padding:10px 14px;text-align:center}
+.certmeta .cm span{display:block;font-size:11px;color:#7290B5;font-weight:600}
+.certmeta .cm b{display:block;font-size:14.5px;color:#12203B;margin-top:3px}
+.certscore{margin:16px 22px 4px;background:linear-gradient(135deg,#0A2A64,#075BFF);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;color:#fff;gap:12px}
+.certscore .cs-l{font-size:12px;opacity:.85;font-weight:600}
+.certscore .cs-v{font-family:var(--num);font-weight:800;font-size:34px;line-height:1}.certscore .cs-v small{font-size:15px;opacity:.8;font-weight:700}
+.certscore .cs-badge{font-size:12px;font-weight:800;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);padding:7px 12px;border-radius:999px;white-space:nowrap}
+.certparts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 22px 4px}
+.certpart{background:#F4F8FE;border:1px solid #E6EEF9;border-radius:12px;padding:10px 4px;text-align:center}
+.certpart .pp{font-size:10.5px;color:#7290B5;font-weight:700}
+.certpart .pv{font-family:var(--num);font-weight:800;font-size:17px;color:#075BFF;margin:2px 0}
+.certpart .pk{color:#0E9F6E}.certpart .pk svg{width:14px;height:14px;vertical-align:-2px}
+.certfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px 22px;margin-top:10px;border-top:1px dashed #DCE7F5}
+.certfoot .cf-org{font-size:11px;color:#5E7691;line-height:1.5}
+.certfoot .cf-org b{color:#0A2A64;font-size:12.5px}
+.certfoot .cf-qr{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.certfoot .cf-qr span{font-size:9.5px;color:#9AAcc4}
+.certacts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:min(560px,100%)}
+.certacts .btn{flex:1;min-width:150px}
+@media (max-width:520px){
+  .certparts{grid-template-columns:repeat(5,1fr);gap:5px;padding:12px 14px 4px}
+  .certpart{padding:8px 2px}.certpart .pv{font-size:15px}.certpart .pp{font-size:9px}
+  .certmeta{padding:14px 16px 2px}.certscore{margin:14px 14px 2px;padding:14px 16px}
+  .certhead{padding:22px 18px 16px}.certname{font-size:20px}.certfoot{padding:14px 16px 20px}
+  .certacts .btn{flex:1 1 100%}
+}
+@media print{
+  body{background:#fff!important}
+  body *{visibility:hidden!important}
+  #certCard,#certCard *{visibility:visible!important}
+  #certCard{position:absolute;left:50%;top:16px;transform:translateX(-50%);box-shadow:none!important;border:1px solid #E3ECF9!important}
+  .appbar,.certacts,.celebrate-acts,#xvFsBtn,.toast{display:none!important}
+}
+/* ===================== Exam title badge (registration) ===================== */
+.exam-title-badge{display:inline-flex;flex-direction:column;gap:2px;align-items:flex-start;margin-bottom:14px;padding:10px 16px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(39,200,255,.12),rgba(7,91,255,.10));border:1px solid var(--border)}
+.exam-title-badge .etb-eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary-600)}
+.exam-title-badge .etb-name{font-family:var(--num);font-weight:800;font-size:18px;color:var(--text-primary);letter-spacing:.01em}
+[data-lead="1"] .exam-title-badge{background:linear-gradient(135deg,rgba(233,184,75,.18),rgba(201,150,46,.12));border-color:rgba(201,150,46,.4)}
+[data-lead="1"] .exam-title-badge .etb-eyebrow{color:#B47D14}
+
+/* ===================== Celebration (all passed) ===================== */
+.celebrate{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--space-4);
+  width:100%;max-width:600px;margin:0 auto;
+  padding:34px 22px 30px;border-radius:26px;overflow:hidden;
+  background:radial-gradient(130% 100% at 50% -20%,#EAF4FF 0%,#F7FBFF 46%,#fff 100%);
+  border:1px solid #E3ECF9;box-shadow:0 30px 70px -34px rgba(9,42,100,.42)}
+.celebrate-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;max-width:600px;margin:0 auto}
+.celebrate-acts .btn{flex:1;min-width:160px}
+[data-lead="1"] .celebrate{background:radial-gradient(130% 100% at 50% -20%,#FBF3DE 0%,#FEFBF3 48%,#fff 100%);border-color:#EFE0BE}
+.celebrate .cb-glow{position:absolute;top:-90px;left:50%;transform:translateX(-50%);width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,rgba(39,200,255,.30),transparent 66%);filter:blur(6px);pointer-events:none}
+[data-lead="1"] .celebrate .cb-glow{background:radial-gradient(circle,rgba(233,184,75,.42),transparent 66%)}
+.medal{position:relative;width:112px;height:112px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
+  background:conic-gradient(from 210deg,#27C8FF,#075BFF 45%,#0A2A64 75%,#27C8FF);
+  box-shadow:0 0 0 8px rgba(7,91,255,.10),0 18px 40px -14px rgba(7,91,255,.6);animation:medalPop .7s var(--ease) both}
+[data-lead="1"] .medal{background:conic-gradient(from 210deg,#F4D58D,#E8B84B 42%,#8A6314 74%,#F4D58D);
+  box-shadow:0 0 0 8px rgba(201,150,46,.14),0 18px 40px -14px rgba(138,99,20,.55)}
+.medal svg{width:54px;height:54px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.22))}
+.medal::after{content:"";position:absolute;inset:-16px;border-radius:50%;border:2px dashed rgba(7,91,255,.28);animation:spin 22s linear infinite}
+[data-lead="1"] .medal::after{border-color:rgba(201,150,46,.4)}
+@keyframes medalPop{0%{transform:scale(.4) rotate(-18deg);opacity:0}60%{transform:scale(1.08) rotate(4deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.celebrate .cg-title{font-family:var(--num);font-weight:800;font-size:27px;line-height:1.2;color:#0A2A64;letter-spacing:.005em}
+[data-lead="1"] .celebrate .cg-title{color:#5A3F0A}
+.celebrate .cg-name{font-family:"Playfair Display",var(--num),serif;font-weight:800;font-size:30px;line-height:1.15;color:#092A64;margin-top:2px}
+[data-lead="1"] .celebrate .cg-name{color:#6B4A0C}
+.celebrate .cg-step{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;font-weight:700;font-size:14px;
+  background:linear-gradient(135deg,#12A9F5,#0E9F6E);color:#fff;box-shadow:0 12px 26px -12px rgba(14,159,110,.6)}
+[data-lead="1"] .celebrate .cg-step{background:linear-gradient(135deg,#E8B84B,#C9962E);box-shadow:0 12px 26px -12px rgba(138,99,20,.55)}
+.celebrate .cg-step svg{width:17px;height:17px}
+.score-hero{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;margin-top:4px}
+.score-hero .sh-ring{position:relative;width:132px;height:132px;flex:none}
+.score-hero .sh-rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-hero .sh-rc b{font-family:var(--num);font-weight:800;font-size:38px;line-height:1;color:#092A64}
+[data-lead="1"] .score-hero .sh-rc b{color:#6B4A0C}
+.score-hero .sh-rc span{font-size:12px;color:var(--text-secondary);font-weight:700;margin-top:2px}
+.score-hero .sh-side{text-align:left}
+.score-hero .sh-side .shs-l{font-size:12px;color:var(--text-secondary);font-weight:600}
+.score-hero .sh-side .shs-v{font-family:var(--num);font-weight:800;font-size:22px;color:#0E9F6E}
+.pchips{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;width:100%;margin-top:6px}
+.pchip{background:#fff;border:1px solid #E6EEF9;border-radius:14px;padding:12px 6px;text-align:center;box-shadow:0 6px 16px -12px rgba(9,42,100,.3)}
+[data-lead="1"] .pchip{border-color:#EFE0BE}
+.pchip .pcl{font-size:11px;color:var(--text-secondary);font-weight:700}
+.pchip .pcv{font-family:var(--num);font-weight:800;font-size:20px;color:#092A64;margin-top:2px}
+.pchip .pcv small{font-size:11px;color:#9AAcc4;font-weight:700}
+.pchip .pck{color:#0E9F6E;margin-top:3px}.pchip .pck svg{width:15px;height:15px}
+[data-lead="1"] .pchip .pcv{color:#6B4A0C}[data-lead="1"] .pchip .pck{color:#C9962E}
+/* confetti */
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
+.confetti i{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;opacity:.9;animation:confFall linear forwards}
+@keyframes confFall{0%{transform:translateY(-10px) rotate(0);opacity:0}8%{opacity:1}100%{transform:translateY(112vh) rotate(720deg);opacity:.9}}
+
+/* ===================== Premium certificate ===================== */
+.xcert-wrap{display:flex;flex-direction:column;align-items:center;gap:var(--space-4);padding:var(--space-3) 0}
+.xcert{width:min(540px,100%);position:relative;border-radius:24px;overflow:hidden;background:
+  linear-gradient(#fff,#fff) padding-box,
+  linear-gradient(145deg,#27C8FF,#075BFF 45%,#0A2A64) border-box;border:2px solid transparent;
+  box-shadow:0 34px 80px -34px rgba(9,42,100,.5)}
+[data-lead="1"] .xcert{background:linear-gradient(#fffdf7,#fffdf7) padding-box,linear-gradient(145deg,#F4D58D,#E8B84B 45%,#8A6314) border-box;
+  box-shadow:0 34px 80px -34px rgba(138,99,20,.5)}
+.xcert .xc-frame{position:absolute;inset:12px;border:1px solid rgba(7,91,255,.22);border-radius:16px;pointer-events:none}
+[data-lead="1"] .xcert .xc-frame{border-color:rgba(201,150,46,.34)}
+.xcert .xc-top{position:relative;padding:26px 26px 8px;text-align:center;
+  background:radial-gradient(120% 100% at 50% -15%,rgba(39,200,255,.16),transparent 62%)}
+[data-lead="1"] .xcert .xc-top{background:radial-gradient(120% 100% at 50% -15%,rgba(233,184,75,.24),transparent 62%)}
+.xcert .xc-eyebrow{font-family:var(--num);font-weight:800;letter-spacing:.2em;font-size:12px;color:#075BFF}
+[data-lead="1"] .xcert .xc-eyebrow{color:#B47D14}
+.xcert .xc-kind{font-size:13px;color:var(--text-secondary);font-weight:600;margin-top:3px}
+.xc-seal{position:relative;width:88px;height:88px;margin:16px auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
+  background:conic-gradient(from 210deg,#27C8FF,#075BFF 45%,#0A2A64 75%,#27C8FF);box-shadow:0 0 0 6px rgba(7,91,255,.10),0 14px 30px -12px rgba(7,91,255,.55)}
+[data-lead="1"] .xc-seal{background:conic-gradient(from 210deg,#F4D58D,#E8B84B 42%,#8A6314 74%,#F4D58D);box-shadow:0 0 0 6px rgba(201,150,46,.14),0 14px 30px -12px rgba(138,99,20,.5)}
+.xc-seal svg{width:44px;height:44px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.22))}
+.xc-seal .xc-rays{position:absolute;inset:-22px;border-radius:50%;background:
+  repeating-conic-gradient(from 0deg,rgba(7,91,255,.16) 0deg 6deg,transparent 6deg 16deg);-webkit-mask:radial-gradient(closest-side,transparent 62%,#000 64%);mask:radial-gradient(closest-side,transparent 62%,#000 64%);z-index:-1}
+[data-lead="1"] .xc-seal .xc-rays{background:repeating-conic-gradient(from 0deg,rgba(201,150,46,.22) 0deg 6deg,transparent 6deg 16deg)}
+.xc-congrat{font-family:var(--num);font-weight:800;font-size:19px;color:#0A2A64;margin-top:2px}
+[data-lead="1"] .xc-congrat{color:#5A3F0A}
+.xc-name{font-family:"Playfair Display",var(--num),serif;font-weight:800;font-size:28px;line-height:1.14;color:#092A64;margin:6px 0 2px;padding:0 18px}
+[data-lead="1"] .xc-name{color:#6B4A0C}
+.xc-name-rule{width:74px;height:2px;margin:8px auto 0;border-radius:2px;background:linear-gradient(90deg,transparent,#075BFF,transparent)}
+[data-lead="1"] .xc-name-rule{background:linear-gradient(90deg,transparent,#C9962E,transparent)}
+.xc-step{font-size:13.5px;color:var(--text-secondary);font-weight:600;margin:10px 18px 2px;line-height:1.5}
+.xc-scorebox{margin:16px 20px 4px;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:18px;
+  background:linear-gradient(135deg,#0A2A64,#075BFF);color:#fff}
+[data-lead="1"] .xc-scorebox{background:linear-gradient(135deg,#6B4A0C,#C9962E)}
+.xc-scorebox .xcs-ring{position:relative;width:96px;height:96px;flex:none}
+.xc-scorebox .xcs-rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.xc-scorebox .xcs-rc b{font-family:var(--num);font-weight:800;font-size:30px;line-height:1;color:#fff}
+.xc-scorebox .xcs-rc span{font-size:11px;opacity:.85;font-weight:700;margin-top:1px}
+.xc-scorebox .xcs-side{flex:1}
+.xc-scorebox .xcs-side .xl{font-size:12px;opacity:.85;font-weight:600}
+.xc-scorebox .xcs-side .xbadge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4)}
+.xc-scorebox .xcs-side .xbadge svg{width:15px;height:15px}
+.xc-parts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 20px 4px}
+.xc-part{background:#F5F9FE;border:1px solid #E6EEF9;border-radius:12px;padding:10px 4px;text-align:center}
+[data-lead="1"] .xc-part{background:#FBF6E9;border-color:#EFE0BE}
+.xc-part .xpn{font-size:11px;color:#7290B5;font-weight:700}
+.xc-part .xpv{font-family:var(--num);font-weight:800;font-size:18px;color:#0A2A64;margin-top:1px}
+.xc-part .xpv small{font-size:10px;color:#9AAcc4;font-weight:700}
+[data-lead="1"] .xc-part .xpv{color:#6B4A0C}
+.xc-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px 20px;margin-top:10px;border-top:1px dashed #DCE7F5}
+[data-lead="1"] .xc-foot{border-color:#EFE0BE}
+.xc-foot .xcf-org{font-size:11px;color:#5E7691;line-height:1.5;text-align:left}
+.xc-foot .xcf-org b{color:#0A2A64;font-size:12.5px}
+[data-lead="1"] .xc-foot .xcf-org b{color:#6B4A0C}
+.xc-foot .xcf-meta{text-align:right;font-size:11px;color:#5E7691}
+.xc-foot .xcf-meta b{display:block;color:#0A2A64;font-size:12.5px;font-family:var(--num)}
+[data-lead="1"] .xc-foot .xcf-meta b{color:#6B4A0C}
+@media (max-width:520px){
+  .celebrate .cg-title{font-size:23px}.celebrate .cg-name{font-size:26px}
+  .xc-name{font-size:24px}.xc-parts{gap:5px;padding:12px 14px 4px}.xc-scorebox{margin:14px 14px 2px;padding:14px}
+  .score-hero{gap:14px}.pchips{gap:5px}
+}
+@media (prefers-reduced-motion:reduce){.medal,.medal::after,.confetti i{animation:none!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="demobar" id="demobar" style="display:none">เดโม: <b id="demoFill">สุ่มคำตอบ</b> / <b id="demoNext">ข้ามไปหน้าถัดไป</b></div>
+<script>
+/* ================= constants ================= */
+const PARTS=5,QPP=20,TOTAL=120*60,PASS=16,MAXATT=3,REMEDIAL_MAX=MAXATT-1,PAUSE_MAX=2,OPTL=['ก','ข','ค','ง'];
+/* DEMO tools (random-fill / skip) show only with ?demo=1 — hidden in production */
+const DEMO=(function(){try{return /[?&]demo=1/.test(location.search);}catch(e){return false;}})();
+const R=64,C=2*Math.PI*R,R2=46,C2=2*Math.PI*R2;
+const THMON=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const key=(p,q)=>p+'-'+q;
+// กัน XSS: escape ข้อความที่มาจากคลังข้อสอบ/รายชื่อ (ถ้ามีคนใส่ <img onerror> ในคำถาม/ชื่อ จะไม่รันสคริปต์)
+const esc=(s)=>String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+/* mock answer key */
+const QBANK={}; // ไม่ฝังข้อสอบ/เฉลยในหน้าเว็บ — ข้อสอบมาจากเซิร์ฟเวอร์ (/api/xv/start) เท่านั้น
+const PARTNAME={"1": "CloverX Ecosystem บทบาท X-VISOR และโครงสร้างรายได้", "2": "Xircle App, Band, Scale และการอ่านข้อมูล", "3": "Habix, RoutineX และ Product Knowledge", "4": "โภชนาการ พฤติกรรม และการโค้ช", "5": "จรรยาบรรณ Claim Policy และ PDPA"};
+let __seed;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildPaper(parts){parts.forEach(p=>{const src=QBANK[p];if(!src)throw new Error('no_local_bank');const order=shuffle(src.map((_,i)=>i));S.paper[p]=order.map(qi=>{const it=src[qi];const oi=shuffle([0,1,2,3]);return {q:it.q,o:oi.map(k=>it.o[k]),c:oi.indexOf(it.c)};});});}
+
+/* ================= state ================= */
+let S;
+/* ---- backend API layer (falls back to client demo if unreachable) ---- */
+async function apiPost(p,b){var _c=('AbortController'in window)?new AbortController():null;var _t=_c?setTimeout(function(){try{_c.abort();}catch(e){}},25000):null;try{const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{}),signal:_c?_c.signal:undefined});if(!r.ok)throw new Error('http'+r.status);return await r.json();}finally{if(_t)clearTimeout(_t);}}
+async function apiGet(p){const r=await fetch(p);if(!r.ok)throw new Error('http'+r.status);return r.json();}
+function freshSessionAPI(phase,dur){return {phase,remaining:dur||TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
+// ---- การซิงก์คำตอบแบบเชื่อถือได้: คิว + retry กันคำตอบตกหล่นจนจอผู้สอบกับหลังบ้านไม่ตรงกัน ----
+var _syncQ={}, _syncing=null, _syncingAt=0;
+function queueAnswer(p,q,choice){ if(!(S.api&&S.api.on))return; _syncQ[p+'-'+q]=choice; saveAnswersLocal(); flushAnswers(); }
+// เก็บคำตอบไว้ในเครื่อง (localStorage) ผูกกับ session id — รีเฟรช/ปิดแท็บ/มือถือเด้งแอปแล้วคำตอบไม่หาย แม้ซิงก์ขึ้นเซิร์ฟเวอร์ยังไม่ครบ
+function saveAnswersLocal(){ try{ var id=S.api&&S.api.id; if(!id)return; localStorage.setItem('xvAns_'+id, JSON.stringify(S.answers||{})); }catch(e){} }
+function loadAnswersLocal(id){ try{ var raw=localStorage.getItem('xvAns_'+id); return raw?(JSON.parse(raw)||{}):{}; }catch(e){ return {}; } }
+function clearAnswersLocal(id){ try{ id=id||(S.api&&S.api.id); if(id)localStorage.removeItem('xvAns_'+id); }catch(e){} }
+// รวมคำตอบที่เซิร์ฟเวอร์ส่งกลับกับที่เก็บไว้ในเครื่อง — ค่าที่ผู้สอบเลือกไว้ในเครื่องเป็นหลัก แล้ว re-sync ข้อที่เซิร์ฟเวอร์ยังไม่มี
+function mergeLocalAnswers(id,srv){ srv=srv||{}; var out={}; Object.keys(srv).forEach(function(k){out[k]=srv[k];}); var loc=loadAnswersLocal(id); Object.keys(loc).forEach(function(k){ var v=loc[k]; if(v===null||v===undefined)return; if(out[k]!==v){ out[k]=v; _syncQ[k]=v; } }); if(Object.keys(_syncQ).length){ try{flushAnswers();}catch(e){} } return out; }
+function pendingCount(){ return Object.keys(_syncQ).length; }
+function pendingForPart(p){ return Object.keys(_syncQ).filter(function(k){ return k.slice(0,k.indexOf('-'))===String(p); }).length; }
+function flushAnswers(){
+  if(_syncing){ if(Date.now()-_syncingAt < 45000) return _syncing; _syncing=null; } // กัน deadlock: ถ้าตัวล็อกค้างเกิน 45 วิ (เช่น fetch แขวนบนเน็ตหน่วง) บังคับปลดล็อกแล้วเริ่มส่งใหม่
+  if(!(S.api&&S.api.on)) return Promise.resolve();
+  _syncingAt=Date.now();
+  _syncing=(async function(){
+    try{
+      var guard=0;
+      while(Object.keys(_syncQ).length && guard++<40){
+        var keys=Object.keys(_syncQ);
+        // ยิงทุกข้อที่ค้างพร้อมกัน (ขนาน) — เร็วกว่าบนเน็ตหน่วงมาก
+        var results=await Promise.allSettled(keys.map(function(k){
+          var choice=_syncQ[k]; var pq=k.split('-');
+          return apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:+pq[0],q:+pq[1],choice:choice,remaining:S.session?S.session.remaining:0})
+            .then(function(){ if(_syncQ[k]===choice) delete _syncQ[k]; });
+        }));
+        try{ updateSyncUI(); }catch(e){}
+        if(results.some(function(r){return r.status==='rejected';})){ await new Promise(function(r){setTimeout(r,700);}); } // บางข้อล้มเหลว → พักสั้น ๆ แล้ววนส่งเฉพาะที่ยังค้าง
+        else break;                                                                                                       // ส่งครบแล้ว
+      }
+    } finally { _syncing=null; }
+    try{ updateSyncUI(); }catch(e){}
+  })();
+  return _syncing;
+}
+// true เฉพาะเมื่อทุกข้อของพาร์ต p ถูกบันทึกขึ้นเซิร์ฟเวอร์ครบแล้ว
+async function syncPartComplete(p){ try{ await flushAnswers(); }catch(e){} return pendingForPart(p)===0; }
+async function syncAll(){ try{ await flushAnswers(); }catch(e){} return pendingCount()===0; }
+// อัปเดตป้ายปุ่มหลักให้บอกสถานะการบันทึกแบบนุ่มนวล (แทน toast สีดำ)
+function updateSyncUI(){ var mb=document.getElementById('mainbtn'); if(!mb||!mb.dataset.saving)return; var n=pendingForPart(S.session&&S.session.currentPart); var lbl=mb.querySelector('.mainlbl'); if(lbl)lbl.textContent=n>0?('กำลังบันทึกคำตอบ… เหลือ '+n+' ข้อ'):'บันทึกครบแล้ว'; }
+// retry เบื้องหลัง: ความผิดพลาดชั่วคราวจะหายเองเมื่อเน็ตกลับมา (ถี่ขึ้น)
+setInterval(function(){ if(S.api&&S.api.on&&pendingCount()) flushAnswers(); },2500);
+// ส่งคำตอบค้างก่อนปิด/รีเฟรชแท็บ (best-effort)
+window.addEventListener('beforeunload',function(){ if(S.api&&S.api.on&&navigator.sendBeacon){ try{ Object.keys(_syncQ).forEach(function(k){ var pq=k.split('-'); navigator.sendBeacon('/api/xv/answer',new Blob([JSON.stringify({sessionId:S.api.id,token:S.api.token,part:+pq[0],q:+pq[1],choice:_syncQ[k],remaining:S.session?S.session.remaining:0})],{type:'application/json'})); }); }catch(e){} } });
+function initState(){S={phase:'registration',api:{on:false,id:null,token:null},
+  candidate:{firstName:'',lastName:'',phone:'',mode:'online',cameraConsent:false,id:'660110001'},
+  answers:{}, results:Array.from({length:PARTS},(_,i)=>({part:i+1,score:0,status:'pending',attempts:0,wrongIds:[]})),
+  remedialQueue:[], staffVerified:false, paper:{},
+  round:null, session:null, wrongTab:1, examType:'X-Visor'};}
+// ---- แบรนด์/สำเนาตามประเภทข้อสอบ: X-Lead (สอบเลื่อนระดับ) หรือ X-Visor ----
+function xvBrand(){
+  var lead=(S.examType==='X-Lead');
+  return {
+    lead:lead,
+    name:lead?'X-Lead':'X-Visor',
+    examTitle:lead?'สอบเลื่อนระดับการเป็น X-Lead':'สอบวัดระดับ X-Visor',
+    certBrand:lead?'X-LEAD การสอบเลื่อนระดับ':'X-VISOR',
+    congratsTitle:lead?'ยินดีด้วย คุณสอบผ่านแล้ว!':'ยินดีด้วย คุณสอบผ่านแล้ว!',
+    congratsSub:lead?'คุณสอบผ่านเพื่อก้าวสู่การเป็น X-Lead':'ผ่านเกณฑ์การรับรอง X-Visor ครบทุกพาร์ท',
+    stepLine:lead?'ผ่านการสอบเลื่อนระดับ เพื่อก้าวสู่การเป็น X-Lead':'ผ่านการทดสอบ X-Visor ครบทั้ง 5 พาร์ท'
+  };
+}
+/* resolve exam round from ?round=CODE (candidate share link) */
+async function resolveRound(){
+  let code=null; try{code=new URLSearchParams(location.search).get('round');}catch(e){}
+  if(!code)return;
+  try{const r=await fetch('/api/xv/round/'+encodeURIComponent(code));const j=await r.json();
+    if(j&&j.ok){S.round=j.round; if(j.round&&j.round.examType)S.examType=j.round.examType; if(j.round&&(j.round.mode==='onsite'||j.round.mode==='online')){S.candidate.mode=j.round.mode;}} else {S.round={code,notFound:true};}
+  }catch(e){S.round={code,offline:true};}
+  try{document.title=xvBrand().name+' — ระบบสอบ';}catch(e){}
+  if(S.phase==='registration')render();
+}
+function freshSession(phase){buildPaper(phase==='remedial'?S.remedialQueue:[1,2,3,4,5]);return {phase,remaining:TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
+function activeParts(){return S.session&&S.session.phase==='remedial'?S.remedialQueue.slice():[1,2,3,4,5];}
+function partAnswered(p){let n=0;for(let q=0;q<QPP;q++)if(S.answers[key(p,q)]!=null)n++;return n;}
+function partComplete(p){return partAnswered(p)>=QPP;}
+// index (ใน activeParts) ของพาร์ทที่ "เปิดให้ทำได้" ไกลสุด — พาร์ทก่อนหน้าที่ครบแล้วเข้าไปแก้ได้ พาร์ทถัดจากนี้ล็อก
+function unlockIdx(){const ap=activeParts();let i=0;while(i<ap.length-1&&partComplete(ap[i]))i++;return i;}
+function firstMissingQ(p){for(let q=0;q<QPP;q++)if(S.answers[key(p,q)]==null)return q;return -1;}
+function activeTotal(){return activeParts().length*QPP;}
+function answeredActive(){let n=0;activeParts().forEach(p=>n+=partAnswered(p));return n;}
+function pctActive(){return Math.round(answeredActive()/activeTotal()*100);}
+function fmt(s){const h=(s/3600|0),m=(s%3600/60|0),x=s%60;return[h,m,x].map(v=>String(v).padStart(2,'0')).join(':');}
+function thaiDate(){const d=new Date();return d.getDate()+' '+THMON[d.getMonth()+1]+' '+(d.getFullYear()+543);}
+
+/* ================= icons ================= */
+const I={
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 2"/></svg>',
+ grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>',
+ phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5c0 9 6 15 15 15l0-3.5-4-1.5-2 2c-3-1.5-5.5-4-7-7l2-2-1.5-4L4 4z"/></svg>',
+ shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+ monitor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+ bldg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>',
+ cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>',
+ checkc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-5"/></svg>',
+ xc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+ prev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>',
+ next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
+ pause:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>',
+ info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.4"/></svg>',
+ dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 20h14"/></svg>',
+ trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 4h8v5a4 4 0 01-8 0zM8 6H5v1a3 3 0 003 3M16 6h3v1a3 3 0 01-3 3M9 20h6M12 15v5"/></svg>',
+ send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg>',
+ clock2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.2 2"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+};
+const app=document.getElementById('app');
+const $=s=>app.querySelector(s),$$=s=>app.querySelectorAll(s);
+function ringSVG(pct,opt={}){const r=opt.r||R,c=2*Math.PI*r,off=c*(1-pct/100),dg=opt.danger,id='g'+Math.random().toString(36).slice(2,7);
+ const spClass=opt.r?'spark sm':'spark',spDash=opt.r?'12 277':'15 387';const w=opt.w||12;const track=opt.track||'#E1ECFC';
+ const anim=!opt.static;
+ return `<svg class="ring" width="${opt.size||150}" height="${opt.size||150}" viewBox="0 0 150 150">
+  <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">${dg?'<stop offset="0" stop-color="#ff9a9d"/><stop offset="1" stop-color="var(--danger)"/>':'<stop offset="0" stop-color="var(--cyan-400)"/><stop offset="1" stop-color="var(--primary-600)"/>'}</linearGradient>
+  <filter id="${id}f" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="${id}s" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <circle cx="75" cy="75" r="${r}" fill="none" stroke="${track}" stroke-width="${w}"/>
+  <circle class="arc" cx="75" cy="75" r="${r}" fill="none" stroke="url(#${id})" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" filter="url(#${id}f)"/>
+  ${anim?`<circle class="${spClass}" cx="75" cy="75" r="${r}" fill="none" stroke="${dg?'#ffe3e4':'#EAFBFF'}" stroke-width="${w*.38}" stroke-linecap="round" stroke-dasharray="${spDash}" filter="url(#${id}s)"/>
+  <circle class="comet" cx="${(75+r*Math.cos(2*Math.PI*pct/100)).toFixed(1)}" cy="${(75+r*Math.sin(2*Math.PI*pct/100)).toFixed(1)}" r="${w*.42}" fill="${dg?'#fff0f0':'#F2FEFF'}" filter="url(#${id}s)" opacity="${pct>0?1:0}"/>`:''}
+ </svg>`;}
+
+/* ================= render router ================= */
+function render(){
+ const r={registration:renderRegistration,active_exam:renderExam,checking:renderChecking,first_result:renderResult,
+   remedial_prep:renderRemedialPrep,remedial_result:renderResult,attempts_completed:renderAttempts,
+   waiting_verification:renderWaiting,all_passed:renderAllPassed,wrong_review:renderWrongReview,final_report:renderFinal}[S.phase];
+ try{var _xr=S.phase==='registration';document.body.classList.toggle('xr-on',_xr);app.classList.toggle('xr-on',_xr);}catch(e){}
+ if(r)r();
+ // ซิงก์ลายน้ำ + เว็บแคม proctoring ตามสถานะการสอบ
+ try{ xvWatermark(); if(window.XVCam)XVCam.stop(); /* ไม่เปิดกล้องระหว่างสอบแล้ว */ }catch(e){}
+ // ยกปุ่มแจ้งบั๊กขึ้นเหนือกระดานคำตอบตอนอยู่ในหน้าสอบ (กันทับเลขข้อ) · หน้าอื่นอยู่ตำแหน่งปกติ
+ try{var _fb=document.getElementById('fbFab');if(_fb)_fb.style.bottom='calc('+(S.phase==='active_exam'?'166px':'88px')+' + env(safe-area-inset-bottom))';}catch(e){}
+}
+function appbar(extra){const c=S.candidate;
+ return `<header class="appbar card"><span class="brand">${xvBrand().name}</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span>
+   ${extra||''}<span class="spacer"></span>
+   <span class="info"><span class="ii">${I.user}</span><span><b class="num">${c.id}</b>${c.firstName?c.firstName+' '+c.lastName:'ผู้เข้าสอบ'}</span></span>
+   <span class="status"><span class="dot"></span>ปลอดภัยและถูกต้อง</span></header>`;}
+
+/* ---------- 01 registration ---------- */
+const _THMON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thDate(iso){if(!iso)return '';const d=new Date(iso+'T00:00:00');if(isNaN(d))return iso;return d.getDate()+' '+_THMON[d.getMonth()]+' '+(d.getFullYear()+543);}
+function roundOpen(){return !(S.round&&(S.round.notFound||S.round.offline||S.round.open===false));}
+function roundOnsite(){return !!(S.round&&S.round.mode==='onsite');}
+function roundBanner(){const r=S.round;if(!r)return '';
+  if(r.notFound)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-weight:700;font-size:14px">ไม่พบรอบสอบนี้ — โปรดตรวจสอบลิงก์กับผู้จัดสอบอีกครั้ง</div>`;
+  const closed=r.open===false;
+  const meta=`ครั้งที่ ${r.no}${r.date?(' วันที่ '+thDate(r.date)):''}${r.topic?(' ('+r.topic+')'):''}`;
+  if(closed)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">รอบนี้ยังไม่เปิดสอบ / ปิดรับแล้ว — โปรดรอผู้จัดสอบเปิดรอบ</div></div>`;
+  return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">เปิดรับสมัคร — กรอกข้อมูลแล้วเริ่มสอบได้เลย</div></div>`;
+}
+const XRI={
+ back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',check:'<path d="M20 6 9 17l-5-5"/>',checkc:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+ file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+ hour:'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+ clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',searchx:'<path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+ wifi:'<path d="M12 20h.01"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"/><path d="M5 13a10 10 0 0 1 5.24-2.76"/><path d="m2 2 20 20"/>',
+ bldg:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
+ monitor:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+ alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'};
+function xri(n){return '<svg class="xi" viewBox="0 0 24 24" aria-hidden="true">'+(XRI[n]||'')+'</svg>';}
+function xrBar(title,back){return `<header class="xr-bar">${back?`<button class="xb" id="xrBack" aria-label="ย้อนกลับ">${xri('back')}</button>`:'<span class="xb ph"></span>'}<h1>${title}</h1><span class="xb ph"></span></header>`;}
+function xrGoBack(){try{if(history.length>1){history.back();return;}}catch(e){}location.href='/';}
+function xrState(kind){const lead=xvBrand().lead;
+  const cfg={notFound:{t:'ไม่พบรอบสอบ',ic:'searchx',bad:true,h:'ไม่พบรอบสอบนี้',p:'โปรดตรวจสอบลิงก์กับผู้จัดสอบอีกครั้ง',btn:'<button class="xr-btn out" id="xrHome">กลับหน้าหลัก</button>',back:false},
+    closed:{t:'รอบสอบยังไม่เปิด',ic:'clock',h:'รอบนี้ยังไม่เปิดสอบ',p:'โปรดรอผู้จัดสอบเปิดรอบ',btn:'<button class="xr-btn" id="xrRetry">ลองใหม่ <span class="xdot"></span></button>',back:true},
+    offline:{t:'เชื่อมต่อไม่สำเร็จ',ic:'wifi',bad:true,h:'เชื่อมต่อไม่สำเร็จ',p:'ตรวจสอบสัญญาณอินเทอร์เน็ต แล้วลองใหม่อีกครั้ง',btn:'<button class="xr-btn" id="xrRetry">ลองใหม่</button>',back:true}}[kind];
+  app.innerHTML=`<div class="xr${lead?' lead':''}">${xrBar(cfg.t,cfg.back)}
+    <div class="xr-state"><div class="xr-ring${cfg.bad?' bad':''}"><span>${xri(cfg.ic)}</span></div><div><h2>${cfg.h}</h2><p style="margin-top:12px">${cfg.p}</p></div><div style="width:100%;margin-top:auto;padding-top:48px">${cfg.btn}</div></div></div>`;
+  const b=document.getElementById('xrBack');if(b)b.onclick=xrGoBack;
+  const h=document.getElementById('xrHome');if(h)h.onclick=()=>{location.href='/';};
+  const r=document.getElementById('xrRetry');if(r)r.onclick=async()=>{r.disabled=true;r.textContent='กำลังตรวจสอบ...';await resolveRound();if(S.phase==='registration')render();};
+}
+function xrInfo(){const r=S.round,br=xvBrand();const meta=`ครั้งที่ ${r.no}${r.date?(' วันที่ '+thDate(r.date)):''} (${r.mode==='onsite'?'On Site':'Online'})`;
+  app.innerHTML=`<div class="xr${br.lead?' lead':''}">${xrBar('ข้อมูลรอบสอบ',true)}
+    <div class="xr-banner">${xri('check')}<span>เปิดรับสมัคร — กรอกข้อมูลแล้วเริ่มสอบได้เลย</span></div>
+    <div class="xr-body plain"><div class="xr-info"><div><h2>${br.examTitle}</h2><div class="meta">${meta}</div></div><hr>
+      <ul><li>${xri('file')}5 พาร์ต × 20 ข้อ = 100 ข้อ</li><li>${xri('hour')}เวลา 120 นาที</li></ul></div>
+      <div class="xr-foot"><button class="xr-btn" id="xrGo">เริ่มกรอกข้อมูล</button></div></div></div>`;
+  document.getElementById('xrBack').onclick=xrGoBack;
+  document.getElementById('xrGo').onclick=()=>{S.regStep='form';render();};
+}
+function regErr(msg){const e=document.getElementById('regErr');if(!e){toast(msg);return;}e.querySelector('span').textContent=msg;e.classList.add('on');}
+function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite();if(onsiteRound)c.mode='onsite';
+ try{document.body.classList.add('xr-on');app.classList.add('xr-on');}catch(e){}
+ const r=S.round;
+ if(r&&r.notFound)return xrState('notFound');
+ if(r&&r.offline)return xrState('offline');
+ if(r&&r.open===false)return xrState('closed');
+ if(r&&r.id&&S.regStep!=='form')return xrInfo();
+ const br=xvBrand(),lead=br.lead;
+ const L=lead?{fn:'ชื่อจริง (ภาษาไทย)',ln:'นามสกุล (ภาษาไทย)',ph:'เบอร์โทรศัพท์ติดต่อ',sub:'กรุณากรอกข้อมูลผู้สมัครเข้าสอบระดับผู้นำให้ครบถ้วน',btn:'ยืนยันเพื่อเข้าสู่ห้องสอบระดับผู้นำ'}
+            :{fn:'ชื่อ',ln:'นามสกุล',ph:'เบอร์โทรศัพท์',sub:'กรุณากรอกข้อมูลผู้เข้าสอบให้ครบถ้วน',btn:'ยืนยันและเริ่มทำข้อสอบ'};
+ const modeBox=r&&r.id
+   ?(onsiteRound?`<div class="xr-mcard">${xri('bldg')}<div><b>สอบที่ศูนย์ (On-Site)</b><span>คุมสอบโดยทีมงานหน้างาน</span></div></div>`
+                :`<div class="xr-mcard">${xri('monitor')}<div><b>สอบออนไลน์ (Online)</b><span>ทำข้อสอบผ่านอุปกรณ์ของคุณ</span></div></div>`)
+   :`<div class="xr-fld"><label>รูปแบบการสอบ</label><div class="xr-modes"><button type="button" class="${c.mode==='online'?'on':''}" data-mode="online">${xri('monitor')}Online</button><button type="button" class="${c.mode==='onsite'?'on':''}" data-mode="onsite">${xri('bldg')}On Site</button></div></div>`;
+ app.innerHTML=`<div class="xr${lead?' lead':''}">${xrBar('กรอกข้อมูลผู้เข้าสอบ',!!(r&&r.id))}
+  <div class="xr-body">
+   <span class="xr-badge">${br.examTitle}</span>
+   <div class="xr-head"><h2>เข้าสู่ระบบเพื่อเริ่มการสอบ</h2><p>${L.sub}</p></div>
+   <div class="xr-fields">
+     <div class="xr-fld"><label for="fn">${L.fn}</label><input id="fn" placeholder="เช่น สมชาย" autocomplete="given-name" value="${c.firstName}"></div>
+     <div class="xr-fld"><label for="ln">${L.ln}</label><input id="ln" placeholder="เช่น ใจดี" autocomplete="family-name" value="${c.lastName}"></div>
+     <div class="xr-fld"><label for="ph">${L.ph}</label><input id="ph" type="tel" inputmode="tel" placeholder="08X-XXX-XXXX" autocomplete="tel-national" value="${c.phone}"></div>
+   </div>
+   <div id="rosterHit" class="xr-found" style="display:none"></div>
+   ${modeBox}
+   <div class="xr-err" id="regErr" role="alert">${xri('alert')}<span></span></div>
+   <div class="xr-foot"><button class="xr-btn" id="start" disabled>${L.btn}</button></div>
+  </div></div>`;
+ {const bb=document.getElementById('xrBack');if(bb)bb.onclick=()=>{S.regStep='';render();};}
+ ['#fn','#ln','#ph'].forEach(function(sel){var el=$(sel);var f=function(){el.classList.toggle('filled',!!el.value.trim());var e=document.getElementById('regErr');if(e)e.classList.remove('on');};el.addEventListener('input',f);f();});
+ const upd=()=>{const fnE=$('#fn'),lnE=$('#ln'),phE=$('#ph'),stE=$('#start');if(!fnE||!lnE||!phE||!stE)return; // ออกจากหน้ากรอกข้อมูลแล้ว (เริ่มสอบ) → ไม่ต้องทำต่อ
+   c.firstName=fnE.value.trim();c.lastName=lnE.value.trim();c.phone=phE.value.trim();
+   stE.disabled=!(c.firstName&&c.lastName&&c.phone&&roundOpen());};
+ ['#fn','#ln','#ph'].forEach(s=>$(s).addEventListener('input',upd));
+ // ค้นรายชื่อที่ทีมนำเข้าไว้ → กรอกเบอร์แล้วชื่อขึ้นเอง (เป็นตัวช่วยกรอกเฉย ๆ ไม่บล็อกใคร)
+ (function(){
+   var box=$('#rosterHit'); if(!box)return; var last='', t=null, filled=false;
+   function showFound(n,extra){ box.style.display='flex'; box.className='xr-found';
+     box.innerHTML=xri('checkc')+'<span><span>พบในรายชื่อผู้ลงทะเบียน</span>'+(extra?'<small>'+esc(extra)+'</small>':'')+'</span>'; }
+   function clearBox(){ box.style.display='none'; box.innerHTML=''; }
+   function lookup(){ var phEl=$('#ph'); if(!phEl||!$('#rosterHit'))return; // หน้ากรอกข้อมูลถูกแทนที่แล้ว (เริ่มสอบ) → หยุด
+     var ph=(phEl.value||'').replace(/\D/g,''); if(ph.length<6){clearBox();return;} if(ph===last)return; last=ph;
+     apiGet('/api/xv/roster/lookup?phone='+encodeURIComponent(ph)).then(function(r){
+       var fnEl=$('#fn'), lnEl=$('#ln'); if(!fnEl||!lnEl||!$('#rosterHit'))return; // เริ่มสอบไปแล้วระหว่างรอผลค้นหา → ไม่แตะ DOM ที่หายไป
+       if(!r||!r.found){ if(filled){filled=false;} clearBox(); return; }
+       // เติมชื่อให้อัตโนมัติเฉพาะเมื่อช่องยังว่าง หรือเป็นค่าที่เราเติมไว้ก่อนหน้า (ไม่ทับที่ผู้ใช้พิมพ์เอง)
+       if(!fnEl.value.trim() && !lnEl.value.trim()){ var parts=String(r.name||'').trim().split(/\s+/); fnEl.value=parts.shift()||''; lnEl.value=parts.join(' '); filled=true; upd(); }
+       showFound(r.name, [r.round,r.coach].filter(Boolean).join('  /  '));
+     }).catch(function(){ clearBox(); });
+   }
+   $('#ph').addEventListener('input',function(){ if(t)clearTimeout(t); t=setTimeout(lookup,350); });
+   if(($('#ph').value||'').replace(/\D/g,'').length>=6) lookup();
+ })();
+ $$('.xr-modes button').forEach(m=>m.onclick=()=>{c.mode=m.dataset.mode;$$('.xr-modes button').forEach(x=>x.classList.toggle('on',x===m));
+   upd();});
+ 
+ 
+ $('#start').onclick=async()=>{if(!roundOpen()){regErr('รอบนี้ยังไม่เปิดสอบ');return;}const btn=$('#start');btn.disabled=true;btn.style.opacity=.7;
+   var _re=function(){btn.disabled=false;btn.style.opacity=1;};
+   var isLive=!!(S.round&&S.round.id);
+   var body={firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:c.mode,roundId:S.round&&S.round.id,roundCode:S.round&&S.round.code};
+   var res=null;
+   try{var r=await fetch('/api/xv/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});res=await r.json().catch(function(){return null;});}
+   catch(e){
+     // เน็ตล้มจริง — โหมดสอบจริง (มีรอบ) ห้ามหลุดเข้าโหมดในเครื่องที่บันทึกไม่ได้ ให้ลองใหม่ (เซิร์ฟเวอร์จะ resume ให้เองถ้าสร้าง session ไปแล้ว)
+     if(isLive){_re();regErr('เชื่อมต่อไม่สำเร็จ — กรุณากดยืนยันอีกครั้งเมื่อสัญญาณกลับมา');return;}
+     _re();regErr('เชื่อมต่อไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง');return;
+   }
+   if(res&&res.error==='round_closed'){_re();S.round&&(S.round.open=false);toast('รอบนี้เพิ่งถูกปิด — เข้าสอบไม่ได้');render();return;}
+   if(res&&res.error==='already_taken'){_re();regErr('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
+   if(res&&res.error==='exam_time_ended'){_re();regErr('หมดเวลาสอบของรอบนี้แล้ว');return;}
+   if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;if(res.examType)S.examType=res.examType;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
+     if(res.resumed){S.answers=mergeLocalAnswers(res.sessionId,res.answers);if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
+     else{S.session=freshSessionAPI('first',res.durationSec);}
+     S.phase='active_exam';try{saveResume();}catch(e){}try{xvEnterFS();}catch(e){}render();startTimer();return;}
+   // ไม่สำเร็จและไม่ทราบสาเหตุ (เช่น no_questions) — โหมดจริงแจ้ง error ไม่หลุดเข้าเดโม
+   if(isLive){_re();regErr('เริ่มสอบไม่สำเร็จ'+((res&&res.error)?(' ('+res.error+')'):'')+' — กรุณาลองใหม่');return;}
+   _re();regErr('เริ่มสอบไม่สำเร็จ'+((res&&res.error)?(' ('+res.error+')'):'')+' — กรุณาเปิดจากลิงก์/QR ของรอบสอบ');};
+ upd();
+}
+
+/* ---------- 02 exam ---------- */
+let examTimer=null;
+function renderExam(){const c=S.candidate,ss=S.session,onsite=c.mode==='onsite',isRem=ss.phase==='remedial',ap=activeParts();
+ const curIdx=ap.indexOf(ss.currentPart),pct=pctActive(),uIdx=unlockIdx();
+ let parts='';ap.forEach((p,ix)=>{const done=partComplete(p),lk=ix>uIdx;const cls=p===ss.currentPart?'active':(done?'done':(lk?'locked':''));
+   parts+=`<button class="part ${cls}" data-part="${p}"><span class="pn num">${(done&&p!==ss.currentPart)?'✓':p}</span><span class="pinfo"><b>พาร์ต ${p}</b><span class="pc num">${partAnswered(p)} / ${QPP}${lk?' 🔒':(done?' ครบแล้ว':'')}</span></span></button>`;});
+ let tabs='';ap.forEach((p,ix)=>{const done=partComplete(p),lk=ix>uIdx;tabs+=`<button class="tab ${p===ss.currentPart?'active':''} ${done?'done':''} ${lk?'locked':''}" data-part="${p}"><b class="num">${p}</b><span>${done?'✓ ':(lk?'🔒 ':'')}พาร์ต</span></button>`;});
+ let cells='';for(let i=0;i<QPP;i++){const a=S.answers[key(ss.currentPart,i)]!=null;cells+=`<button class="cell ${a?'answered':''} ${i===ss.currentQ?'current':''}" data-q="${i}">${i+1}</button>`;}
+ app.innerHTML=`
+ ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn btn-danger-ghost" id="pauseBtn" style="margin-left:var(--space-2);padding:9px 14px;font-size:13px">${I.pause} หยุดเวลา (เหลือ ${PAUSE_MAX-ss.pauseUsed} ครั้ง)</button>`:''}`)}
+ <div class="tabbar"><div class="tabhint">${I.eye} แตะที่พาร์ตด้านบนเพื่อสลับ/ย้อนดูพาร์ตที่ทำแล้ว</div><nav class="tabs">${tabs}</nav></div>
+ <div class="mprogress card"><span class="mpct num">${pct}%</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="mtime tv num">${fmt(ss.remaining)}</span></div>
+ <div class="layout">
+   <aside class="rail card"><div><div class="rail-title">${isRem?'ลำดับสอบซ่อม':'เส้นทางการสอบ'}</div><div class="rail-sub num">EXAM JOURNEY</div></div>${parts}</aside>
+   <section class="center"><div class="qcard card"><div class="qbody" id="qbody"></div></div>
+     <div class="navrow exam"><button class="btn btn-ghost qnav" id="prev" aria-label="ข้อก่อนหน้า">${I.prev}<span class="txt-full"> ย้อนกลับ</span></button>
+       <button class="btn btn-ghost qnav" id="next" aria-label="ข้อถัดไป"><span class="txt-full">ข้อถัดไป </span>${I.next}</button><span class="spacer"></span>
+       <button class="btn btn-primary" id="mainbtn">${(curIdx===ap.length-1)?`<span class="mainlbl">${isRem?'ส่งข้อสอบซ่อม':'ยืนยันการส่งคะแนน'}</span><span class="chip">${I.check}</span>`:`<span class="mainlbl">พาร์ตถัดไป </span>${I.next}`}</button></div></section>
+   <aside class="side"><div class="progress-card card"><div class="slabel">${I.chart} ความคืบหน้า</div>
+       <div class="ringwrap">${ringSVG(pct)}<div class="rc"><b class="pctv num">${pct}%</b><span class="num"><span class="ansc">${answeredActive()}</span> / ${activeTotal()}</span></div></div>
+       <div class="timeleft"><span class="tl-l">เวลาคงเหลือ</span><span class="tl-v tv num">${fmt(ss.remaining)}</span></div></div>
+     <div class="sheet-card card"><div class="slabel">${I.grid} กระดานคำตอบ</div>
+       <div class="legend"><i><span class="ld" style="background:var(--primary-600)"></span>ตอบแล้ว</i><i><span class="ld" style="border:2px solid var(--primary-500);background:#fff"></span>กำลังทำ</i><i><span class="ld" style="background:#E4EAF3"></span>ยังไม่ตอบ</i></div>
+       <div class="answer-grid" id="grid">${cells}</div></div></aside></div>`;
+ loadQuestion(false);S.session.shownPct=0;setProgress(pct);
+ $$('[data-part]').forEach(b=>b.onclick=()=>{const p=+b.dataset.part;if(b.classList.contains('locked')){toast('ต้องทำพาร์ทก่อนหน้าให้ครบก่อน จึงจะเปิดพาร์ทนี้ได้');return;}ss.currentPart=p;ss.currentQ=0;renderExam();});
+ $('#prev').onclick=()=>{if(ss.currentQ>0){ss.currentQ--;loadQuestion(true);syncGrid();}else toast('ข้อแรกของพาร์ทนี้แล้ว');};
+ $('#next').onclick=()=>{if(ss.currentQ<QPP-1){ss.currentQ++;loadQuestion(true);syncGrid();}else toast('ข้อสุดท้ายของพาร์ทนี้แล้ว');};
+ $('#mainbtn').onclick=mainAction;
+ $('#grid').onclick=e=>{const cc=e.target.closest('.cell');if(cc){ss.currentQ=+cc.dataset.q;loadQuestion(true);syncGrid();}};
+ const pb=$('#pauseBtn');if(pb)pb.onclick=openPause;
+}
+function loadQuestion(anim){const ss=S.session,p=ss.currentPart,q=ss.currentQ,idx=(p-1+q);
+ const item=(S.paper[p]&&S.paper[p][q])||{q:'',o:['','','','']};const qt=item.q,av=item.o,sel=S.answers[key(p,q)];
+ $('#qbody').innerHTML=`<div class="qmeta">พาร์ต <b>${p}</b><span class="sep"></span>ข้อ <b class="num">${q+1}</b> จาก <span class="num">${QPP}</span></div>
+   <h1 class="qtext">${esc(qt)}</h1><div class="options">${av.map((t,i)=>`<button class="option ${sel===i?'selected':''}" data-i="${i}"><span class="ol">${OPTL[i]}</span><span class="otx">${esc(t)}</span><span class="ock">${I.checkc}</span></button>`).join('')}</div>`;
+ if(anim){const b=$('#qbody');b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}
+ $('.options').onclick=e=>{const o=e.target.closest('.option');if(!o)return;const ci=+o.dataset.i;S.answers[key(p,q)]=ci;
+   $$('.option').forEach(x=>x.classList.toggle('selected',x===o));markAnswered(q);setProgress(pctActive());syncParts();
+   queueAnswer(p,q,ci);};
+   // เลือกช้อยแล้วอยู่กับที่ (ดู/เปลี่ยนคำตอบได้) · กด › เพื่อไปข้อถัดไปเมื่อพร้อม
+}
+function markAnswered(q){const c=app.querySelector('.cell[data-q="'+q+'"]');if(c){const was=c.classList.contains('answered');c.classList.add('answered');if(!was){c.classList.add('justAns');setTimeout(()=>c.classList.remove('justAns'),360);}}}
+function syncGrid(){$$('.cell').forEach(c=>{const q=+c.dataset.q;c.classList.toggle('answered',S.answers[key(S.session.currentPart,q)]!=null);c.classList.toggle('current',q===S.session.currentQ);});}
+function syncParts(){$$('[data-part]').forEach(el=>{const p=+el.dataset.part;const pc=el.querySelector('.pc');if(pc)pc.textContent=partAnswered(p)+' / '+QPP;});}
+function setProgress(pct){const arc=$('#qbody')?app.querySelector('.progress-card .arc'):null;
+ const a=app.querySelector('.progress-card .arc');if(a)a.style.strokeDashoffset=C*(1-pct/100);
+ const comet=app.querySelector('.progress-card .comet');if(comet){const ang=2*Math.PI*pct/100;comet.setAttribute('cx',(75+R*Math.cos(ang)).toFixed(1));comet.setAttribute('cy',(75+R*Math.sin(ang)).toFixed(1));comet.setAttribute('opacity',pct>0?1:0);}
+ const fill=$('.mprogress .fill');if(fill)fill.style.width=pct+'%';const mpct=$('.mpct');if(mpct)mpct.textContent=pct+'%';
+ const ansc=$('.ansc');if(ansc)ansc.textContent=answeredActive();
+ animateNum($('.pctv'),S.session?S.session.shownPct:0,pct);if(S.session)S.session.shownPct=pct;}
+function animateNum(el,from,to){if(!el)return;if(from===to){el.textContent=to+'%';return;}const t0=performance.now();
+ (function step(t){const k=Math.min(1,(t-t0)/560),v=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));el.textContent=v+'%';if(k<1)requestAnimationFrame(step);})(performance.now());}
+function tickExam(){$$('.tv').forEach(e=>e.textContent=fmt(S.session.remaining));}
+function startTimer(){clearInterval(examTimer);examTimer=setInterval(()=>{const ss=S.session;if(!ss||ss.paused)return;if(ss.remaining>0){ss.remaining--;tickExam();}else{clearInterval(examTimer);doSubmit();}},1000);}
+
+/* ---------- pause (onsite) ---------- */
+function openPause(){const ss=S.session;if(ss.pauseUsed>=PAUSE_MAX){toast('ใช้สิทธิ์หยุดเวลาครบแล้ว');return;}ss.paused=true;
+ if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:true,remaining:ss.remaining}).catch(()=>{});
+ scrim(`<div class="modal"><h3>หยุดเวลาชั่วคราว</h3><div class="ringwrap pause-orb">${ringSVG(100,{size:184})}<div class="rc"><b class="num" id="pv">05:00</b><span>นาที</span></div></div>
+   <div class="mnote">${I.info}<span>หยุดเวลาได้สูงสุด ${PAUSE_MAX} ครั้ง ครั้งละ 5 นาที<br>ระบบจะนับเวลาต่อเมื่อครบ 5 นาที หรือเมื่อกดทำต่อ</span></div>
+   <div class="mbtns"><button class="btn btn-primary block" id="resume">ทำข้อสอบต่อเลย</button></div></div>`);
+ let left=300;const iv=setInterval(()=>{left--;const m=(left/60|0),s=left%60;const pv=document.getElementById('pv');if(pv)pv.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(left<=0){clearInterval(iv);end();}},1000);
+ function end(){ss.pauseUsed++;ss.paused=false;if(S.api&&S.api.on)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,paused:false,pauseUsed:ss.pauseUsed,remaining:ss.remaining}).catch(()=>{});closeScrim();renderExam();toast('กลับเข้าห้องสอบแล้ว');}
+ document.getElementById('resume').onclick=()=>{clearInterval(iv);end();};
+}
+
+/* ---------- part flow + submit confirm ---------- */
+// ปุ่มหลัก: ทำทีละพาร์ท — ต้องทำพาร์ทปัจจุบันให้ครบก่อน จึงจะไปพาร์ทถัดไป/ยืนยันส่งได้
+var _savePoll=null;
+function mainBtnRestore(){var mb=document.getElementById('mainbtn');if(mb){mb.disabled=false;mb.style.opacity=1;delete mb.dataset.saving;var lbl=mb.querySelector('.mainlbl');if(lbl&&mb.dataset.lbl)lbl.textContent=mb.dataset.lbl;}}
+async function mainAction(){const ss=S.session,ap=activeParts(),cIdx=ap.indexOf(ss.currentPart),isLast=cIdx===ap.length-1;
+ const miss=QPP-partAnswered(ss.currentPart);
+ if(miss>0){const q=firstMissingQ(ss.currentPart);if(q>=0){ss.currentQ=q;loadQuestion(true);syncGrid();}
+   toast('ยังทำพาร์ท '+ss.currentPart+' ยังไม่ครบ เหลืออีก '+miss+' ข้อ กรุณาทำให้ครบก่อนไปต่อ');return;}
+ const advance=function(){ if(!isLast){ss.currentPart=ap[cIdx+1];ss.currentQ=0;renderExam();toast('เปิดพาร์ท '+ss.currentPart+' แล้ว');} else openSubmit(); };
+ // กันคำตอบตกหล่น: ต้องบันทึกครบขึ้นเซิร์ฟเวอร์ก่อน — แต่แสดงสถานะนุ่มนวลบนปุ่ม และเด้งไปต่อให้อัตโนมัติเมื่อครบ (ไม่ต้องกดซ้ำ)
+ if(S.api&&S.api.on && pendingForPart(ss.currentPart)>0){
+   var mb=document.getElementById('mainbtn');
+   if(mb){var lbl=mb.querySelector('.mainlbl');mb.dataset.lbl=lbl?lbl.textContent:'';mb.dataset.saving='1';mb.disabled=true;mb.style.opacity=.75;}
+   updateSyncUI();
+   if(_savePoll)clearInterval(_savePoll);
+   var tries=0;
+   _savePoll=setInterval(async function(){
+     tries++;
+     try{ await flushAnswers(); }catch(e){}
+     if(pendingForPart(ss.currentPart)===0){ clearInterval(_savePoll);_savePoll=null; mainBtnRestore(); advance(); }
+     else if(tries>=6){ clearInterval(_savePoll);_savePoll=null; mainBtnRestore(); advance(); toast('เน็ตช้า — คำตอบถูกเก็บไว้ในเครื่องแล้ว และจะส่งให้อัตโนมัติ ไปต่อได้เลย'); } // ไม่บล็อกการไปต่อตอนออฟไลน์ (คำตอบไม่หาย + แนบชุดเต็มตอนส่ง)
+   },1500);
+   return;
+ }
+ advance();
+}
+async function openSubmit(){const ap=activeParts();
+ const miss=ap.map(p=>({p,n:QPP-partAnswered(p)})).filter(x=>x.n>0);
+ const totalMiss=miss.reduce((a,x)=>a+x.n,0);
+ if(totalMiss){ // ทำไม่ครบ = ส่งคะแนนไม่ได้ทุกกรณี — มีแค่ปุ่มกลับไปทำต่อ
+   scrim(`<div class="modal"><div class="mstack"><div class="mic warn">${I.info}</div><div class="mhead"><h3>ยังทำข้อสอบไม่ครบ</h3><p class="msub">เหลืออีก <b style="color:var(--warning)">${totalMiss}</b> ข้อที่ยังไม่ได้ทำ — ต้องทำให้ครบทุกพาร์ทก่อนจึงจะส่งคะแนนได้</p></div><div class="misslist">${miss.map(x=>`<div class="checkrow"><span class="ci2" style="color:var(--warning)">${I.info}</span><span>พาร์ต <b>${x.p}</b> เหลือ <b style="color:var(--warning)">${x.n}</b> ข้อที่ยังไม่ได้ทำ</span></div>`).join('')}</div><div class="mbtns"><button class="btn btn-primary block" id="cxl">${I.prev} กลับไปทำต่อจนครบ</button></div></div></div>`);
+   document.getElementById('cxl').onclick=()=>{closeScrim();const fp=miss[0].p;const q=firstMissingQ(fp);S.session.currentPart=fp;S.session.currentQ=q<0?0:q;renderExam();toast('พาไปยังข้อที่ยังไม่ได้ทำในพาร์ต '+fp);};
+   return;
+ }
+ // ครบทุกข้อในเครื่อง → พยายามบันทึกขึ้นระบบให้ครบก่อน (แสดงสถานะสั้น ๆ) แต่ "ไม่บล็อกการส่ง"
+ // เพราะตอนกดส่งจริงจะแนบคำตอบชุดเต็มไปกับคำขอ submit ด้วย เซิร์ฟเวอร์จะรวมให้เอง — กันเคส "ทำครบแต่กดส่งไม่ได้"
+ if(S.api&&S.api.on && pendingCount()>0){
+   for(var t=0;t<6 && pendingCount()>0;t++){
+     scrim(`<div class="modal"><div class="mstack"><div class="mic"><div class="spinner" style="margin:0 auto"></div></div><div class="mhead"><h3>กำลังบันทึกคำตอบขึ้นระบบ</h3><p class="msub">เหลืออีก <b style="color:var(--primary-600)">${pendingCount()}</b> ข้อ อีกสักครู่…</p></div></div></div>`);
+     try{ await flushAnswers(); }catch(e){}
+     if(pendingCount()>0) await new Promise(function(r){setTimeout(r,1000);});
+   }
+   closeScrim();
+   // ต่อให้ยังซิงก์ไม่ครบ ก็ให้ส่งได้ — คำตอบชุดเต็มจะถูกแนบไปกับคำขอส่งคะแนน
+ }
+ // ครบทุกข้อ → ยืนยันครั้งเดียวจบ (กดส่งเลย ไม่ต้องยืนยันซ้ำหลายชั้น)
+ const isRem=(S.session&&S.session.phase==='remedial');
+ scrim(`<div class="modal"><div class="mstack"><div class="mic ok">${I.checkc}</div><div class="mhead"><h3>${isRem?'ส่งข้อสอบซ่อม':'ส่งคะแนน'}?</h3><p class="msub">ตอบครบทั้ง ${activeTotal()} ข้อแล้ว 🎉<br>เมื่อส่งแล้วจะแก้ไขคำตอบไม่ได้อีก</p></div><div class="mbtns"><button class="btn btn-ghost" id="cxl" style="flex:1">ยังไม่ส่ง</button><button class="btn btn-primary" id="ok" style="flex:1.4">${I.check} ส่งคะแนนเลย</button></div></div></div>`);
+ document.getElementById('cxl').onclick=closeScrim;
+ document.getElementById('ok').onclick=()=>{closeScrim();doSubmit();};
+}
+// ยืนยันชั้นที่ 2 (กันพลาด) — ต้องกดยืนยันซ้ำอีกครั้งจึงจะส่งจริง
+function confirmSubmit2(){
+ scrim(`<div class="modal"><div class="mstack"><div class="mic warn">${I.info}</div><div class="mhead"><h3>ยืนยันอีกครั้ง</h3><p class="msub">กดยืนยันเพื่อ<b> ส่งคะแนน </b>— หลังส่งแล้วจะกลับมาแก้ไขคำตอบไม่ได้อีก แน่ใจแล้วใช่ไหม?</p></div><div class="mbtns"><button class="btn btn-ghost" id="c2cxl" style="flex:1">ยังไม่ส่ง</button><button class="btn btn-primary" id="c2ok" style="flex:1">ยืนยันส่งคะแนน <span class="chip">${I.check}</span></button></div></div></div>`);
+ document.getElementById('c2cxl').onclick=closeScrim;
+ document.getElementById('c2ok').onclick=()=>{closeScrim();doSubmit();};
+}
+async function doSubmit(){
+ if(S.api&&S.api.on){
+   if(S._submitting)return; S._submitting=true; clearInterval(examTimer);
+   try{await flushAnswers();}catch(e){}
+   apiPost('/api/xv/submit',{sessionId:S.api.id,token:S.api.token,answers:S.answers}).then(res=>{
+     if(res&&res.ok){if(res.examType)S.examType=res.examType;S.results=[1,2,3,4,5].map(p=>{const r=(res.results||[]).find(x=>x.part===p)||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';S._submitting=false;S.phase='checking';render();}
+     else{S._submitting=false;submitFailed();} // ส่งไม่สำเร็จ (ok:false) — ห้ามเปลี่ยนเป็นผ่าน/รอตรวจปลอม
+   }).catch(()=>{S._submitting=false;submitFailed();});
+   return;}
+ S.phase='checking';render();}
+// ส่งคะแนนไม่สำเร็จ (เน็ตหลุด/เซิร์ฟเวอร์ไม่ ok) — คงอยู่ในห้องสอบ เดินนาฬิกาต่อ คำตอบยังอยู่ครบ ให้ลองส่งใหม่ (ไม่ทิ้งงาน ไม่ขึ้นผลปลอม)
+function submitFailed(){try{if(S.session&&!S.session.paused)startTimer();}catch(e){}
+ scrim(`<div class="modal"><div class="mstack"><div class="mic warn">${I.info}</div><div class="mhead"><h3>ส่งคะแนนไม่สำเร็จ</h3><p class="msub">การเชื่อมต่อมีปัญหาชั่วคราว — คำตอบของคุณยังอยู่ครบ ไม่ได้หายไป<br>กรุณากด “ลองส่งใหม่” อีกครั้ง</p></div><div class="mbtns"><button class="btn btn-ghost" id="sfCancel" style="flex:1">กลับไปที่ข้อสอบ</button><button class="btn btn-primary" id="sfRetry" style="flex:1.3">ลองส่งใหม่ <span class="chip">${I.check}</span></button></div></div></div>`);
+ var c=document.getElementById('sfCancel'),r=document.getElementById('sfRetry');
+ if(c)c.onclick=()=>{closeScrim();renderExam();};if(r)r.onclick=()=>{closeScrim();doSubmit();};}
+
+/* ---------- scoring ---------- */
+function scoreActive(){if(S.api&&S.api.on)return;const ap=activeParts();ap.forEach(p=>{let sc=0;const wrong=[];for(let q=0;q<QPP;q++){const ok=S.answers[key(p,q)]===S.paper[p][q].c;if(ok)sc++;else wrong.push(q+1);}
+   const r=S.results[p-1];r.score=sc;if(S.session.phase==='remedial')r.attempts++;r.status=sc>=PASS?'passed':'failed';r.wrongIds=wrong;});}
+function afterScore(){const failed=S.results.filter(r=>r.status==='failed');
+ // เซิร์ฟเวอร์ตัดจบการสอบแล้ว (หมดเวลา 120 นาที = ตก แม้สิทธิ์ซ่อมยังไม่ครบ) → ไปจอ "ไม่ผ่าน" เสมอ ไม่เสนอสอบซ่อม
+ if(S.api&&S.api.on&&S.serverStatus==='ended_failed'){S.phase='attempts_completed';return;}
+ const exhausted=failed.filter(r=>r.attempts>=MAXATT);
+ if(exhausted.length){S.phase='attempts_completed';return;}
+ if(failed.length===0){
+   // Onsite (On-Site) candidates are auto-verified — skip the "waiting for staff" screen.
+   const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';
+   if(onsite){S.staffVerified=true;S.phase='all_passed';}
+   else S.phase='waiting_verification';
+   return;}
+ S.remedialQueue=failed.map(r=>r.part).sort((a,b)=>a-b);S.phase=S.session.phase==='remedial'?'remedial_result':'first_result';
+}
+
+/* ---------- 05 checking ---------- */
+function renderChecking(){scoreActive();
+ app.innerHTML=`${appbar()}<div class="card wrap-narrow" style="padding:var(--space-6);text-align:center">
+   <div class="spinner"></div><h2 class="hero-h">กำลังตรวจคำตอบ…</h2><div class="hero-sub">ระบบกำลังประมวลผลคะแนนของคุณ</div>
+   <div class="checklist">${activeParts().map((p,i)=>`<div class="crow ${''}" data-i="${i}"><span class="cnm">พาร์ต ${p}</span><span class="cst"><span class="mini-spin"></span>กำลังตรวจ</span></div>`).join('')}</div></div>`;
+ const rows=$$('.crow');let i=0;const iv=setInterval(()=>{if(i<rows.length){rows[i].classList.add('done');rows[i].querySelector('.cst').innerHTML=I.checkc+' เรียบร้อย';i++;}
+   else{clearInterval(iv);setTimeout(()=>{afterScore();render();},450);}},420);
+}
+
+/* ---------- 06/08 results ---------- */
+function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRem?((S.remedialAttempted&&S.remedialAttempted.length?S.remedialAttempted:S.remedialQueue)||[]).slice():[1,2,3,4,5];
+ const passed=S.results.filter(r=>r.status==='passed').length,failed=S.results.filter(r=>r.status==='failed').length;
+ const allPass=S.results.every(r=>r.status==='passed');
+ app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-5)">
+   <div><h1 class="hero-h" style="text-align:left">${isRem?'ผลการสอบซ่อม':'ผลการสอบครั้งแรก'}</h1><div class="hero-sub" style="text-align:left">รหัสผู้เข้าสอบ ${S.candidate.id}</div></div>
+   <div class="pgrid">${shown.map(p=>{const r=S.results[p-1],pass=r.status==='passed';
+     return `<div class="card pcard"><div class="pp">พาร์ต ${p}</div><div class="ringwrap ${pass?'':'danger'}" style="width:104px;height:104px">${ringSVG(Math.round(r.score/QPP*100),{size:104,danger:!pass,static:true,track:'#DCE7F5',w:10})}<div class="rc"><b class="num">${r.score}</b><span>/ ${QPP}</span></div></div>
+       <span class="badge ${pass?'pass':'fail'}">${pass?I.checkc:I.xc} ${pass?'ผ่าน':'ไม่ผ่าน'}</span></div>`;}).join('')}</div>
+   <div class="rsplit">
+     <div class="card rpanel"><div class="rpt">สรุปผลการสอบ</div><div class="rsum">
+       <div class="ri ok"><span class="ric">${I.checkc}</span><span><b>${passed}</b><span>พาร์ทที่ผ่าน</span></span></div><span class="rdiv"></span>
+       <div class="ri no"><span class="ric">${I.xc}</span><span><b>${failed}</b><span>ต้องสอบซ่อม</span></span></div></div></div>
+     <div class="card rpanel"><div class="lockp"><span class="li">${I.lock}</span><span><b>ยังไม่สามารถดูข้อที่ตอบผิดได้</b><span>${(S.candidate&&S.candidate.mode==='onsite')?'ดูได้เมื่อผ่านครบทั้ง 5 พาร์ท':'ดูได้เมื่อผ่านครบทั้ง 5 พาร์ทและทีมงานยืนยันผลแล้ว'}</span></span></div></div></div>
+   <div class="rfoot"><span class="note">${I.info} ${allPass?'ผ่านครบทั้ง 5 พาร์ท':'สอบซ่อมเฉพาะพาร์ท '+S.remedialQueue.join(', ')}</span><span class="spacer" style="flex:1"></span>
+     ${allPass?`<button class="btn btn-primary lg" id="toVerify">ดำเนินการต่อ ${I.next}</button>`:`<button class="btn btn-ghost" id="exit">ออกจากระบบ</button><button class="btn btn-primary lg" id="toRem">เตรียมสอบซ่อม ${I.next}</button>`}</div></div>`;
+ if(allPass){$('#toVerify').onclick=()=>{const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';if(onsite){S.staffVerified=true;S.phase='all_passed';}else{S.phase='waiting_verification';}render();};}
+ else{$('#toRem').onclick=()=>{S.phase='remedial_prep';render();};$('#exit').onclick=()=>{clearResume();initState();render();};}
+}
+
+/* ---------- 07 remedial prep ---------- */
+function renderRemedialPrep(){const q=S.remedialQueue.slice();
+ const sel=new Set(q);
+ const refreshBegin=()=>{const b=$('#begin');if(b){b.disabled=!(sel.size>0);b.innerHTML=`เริ่มสอบซ่อม${sel.size?' '+sel.size+' พาร์ท':''} ${I.next}`;}};
+ app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-5)">
+   <h1 class="hero-h">เตรียมสอบซ่อม</h1>
+   <div class="rem-grid"><div class="card orbwrap"><div class="ringwrap orb">${ringSVG(100,{size:200})}<div class="rc"><b class="num">120:00</b><span>นาที</span></div></div>
+       <div class="hero-sub">เวลาเริ่มนับทันทีเมื่อกด<br>เริ่มสอบซ่อม</div></div>
+     <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+       <div class="field-title" style="text-align:center">เลือกพาร์ทที่จะสอบซ่อม — แตะเพื่อเลือก/ยกเลิก (เฉพาะพาร์ทที่ไม่ผ่าน)</div>
+       ${q.map(p=>{const r=S.results[p-1];const left=REMEDIAL_MAX-((r.attempts||1)-1);return `<div class="remq sel on" data-p="${p}"><span class="rqn">${p}</span><span class="rqm"><b>พาร์ต ${p}</b><span>คะแนนเดิม ${r.score}/${QPP}</span></span><span class="rqr"><span class="u">สอบซ่อมได้อีก ${left} ครั้ง</span><small class="selstat">จะสอบซ่อม</small></span></div>`;}).join('')}
+       <div class="card rules"><span class="shield">${I.shield}</span><ul><li>เลือกได้เองว่าจะซ่อมพาร์ทไหน — พาร์ทที่ยังไม่เลือก กลับมาซ่อมทีหลังได้</li><li>ในรอบนี้ระบบให้ทำเรียงพาร์ทจากน้อยไปมาก</li><li>สอบซ่อมได้สูงสุด ${REMEDIAL_MAX} ครั้งต่อพาร์ท — ครบแล้วยังไม่ผ่าน ระบบจะยุติการสอบ</li><li>หมดเวลา 120 นาทีก่อนส่ง ถือว่าไม่ผ่านทุกกรณี ต้องรอสอบรอบใหม่</li></ul></div></div></div>
+   <div class="rfoot"><span class="spacer" style="flex:1"></span><button class="btn btn-primary lg" id="begin" style="min-width:220px">เริ่มสอบซ่อม ${I.next}</button></div></div>`;
+ $$('.remq.sel').forEach(el=>{el.onclick=()=>{const p=+el.dataset.p;const st=el.querySelector('.selstat');
+   if(sel.has(p)){sel.delete(p);el.classList.remove('on');if(st)st.textContent='ข้ามไว้ก่อน';}
+   else{sel.add(p);el.classList.add('on');if(st)st.textContent='จะสอบซ่อม';}refreshBegin();};});
+ refreshBegin();
+ $('#begin').onclick=async()=>{const parts=Array.from(sel).sort((a,b)=>a-b);if(!parts.length)return;
+   S.remedialAttempted=parts.slice();
+   var _bb=document.getElementById('begin');
+   var enterRemedial=function(sp,dur,paper,answers){var pp2=(sp&&sp.length?sp:parts);pp2.forEach(function(pp){if(paper&&paper[pp])S.paper[pp]=paper[pp];});S.remedialQueue=pp2.slice();if(answers&&Object.keys(answers).length){S.answers=answers;}else{pp2.forEach(function(p){for(var i=0;i<QPP;i++)delete S.answers[key(p,i)];});}try{Object.keys(_syncQ).forEach(function(k){var kp=+k.slice(0,k.indexOf('-'));if(pp2.indexOf(kp)>=0)delete _syncQ[k];});}catch(e){} // ล้างคำตอบรอบก่อนที่ค้างคิว กันรั่วเข้ารอบสอบซ่อม (ชุดสับใหม่)
+   S._review=null;S.session=freshSessionAPI('remedial',dur!=null?dur:TOTAL);S.phase='active_exam';try{saveResume();saveAnswersLocal();}catch(e){}render();startTimer();};
+   if(S.api&&S.api.on){
+     if(_bb){_bb.disabled=true;_bb.style.opacity=.7;}
+     var _recover=async function(){try{var chk=await apiGet('/api/xv/session/'+S.api.id+'?token='+encodeURIComponent(S.api.token));if(chk&&chk.ok&&chk.status==='in_progress'&&(chk.phase||'')==='remedial'){enterRemedial(chk.parts,chk.remaining,chk.paper,chk.answers||{});return true;}}catch(e){}return false;};
+     try{var res=await apiPost('/api/xv/remedial/start',{sessionId:S.api.id,token:S.api.token,parts:parts});
+       if(res&&res.ok){enterRemedial(res.parts,res.durationSec,res.paper,null);return;}}catch(e){}
+     if(await _recover())return;                       // เผื่อเริ่มไปแล้ว (กดซ้ำ/เน็ตหน่วง) → เข้าต่อด้วยข้อมูลจริงจากเซิร์ฟเวอร์
+     if(_bb){_bb.disabled=false;_bb.style.opacity=1;}
+     toast('เริ่มสอบซ่อมไม่สำเร็จ — สัญญาณไม่เสถียร กรุณากด "เริ่มสอบซ่อม" อีกครั้ง (คำตอบเดิมยังอยู่ครบ)');
+     return;                                            // สำคัญ: ไม่หลุดเข้าโหมดในเครื่องที่บันทึกขึ้นเซิร์ฟเวอร์ไม่ได้ (กันคำตอบหายตอนสอบซ่อม)
+   }
+   // ไม่มี API จริง (เดโมเท่านั้น) → เล่นในเครื่องได้
+   S.remedialQueue=parts.slice();parts.forEach(function(p){for(var i=0;i<QPP;i++)delete S.answers[key(p,i)];});S.session=freshSession('remedial');S.phase='active_exam';render();startTimer();};
+}
+
+/* ---------- 09 attempts completed ---------- */
+function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
+   <h2>ไม่ผ่านการรับรองในรอบนี้</h2><p>การสอบรอบนี้สิ้นสุดลงแล้ว — ยังทำไม่ผ่านเกณฑ์ (หมดเวลา 120 นาที หรือใช้สิทธิ์สอบซ่อมครบ ${REMEDIAL_MAX} ครั้ง/พาร์ท)<br><br>อย่าเพิ่งเสียใจไป! หากต้องการสอบใหม่ กรุณา<b>สมัครและรอสอบในรอบถัดไป</b> — ทีมงานจะแจ้งลิงก์/QR ของรอบใหม่ให้ (สอบซ้ำในรอบเดิมไม่ได้)</p>
+   <div style="margin-top:var(--space-5)"><button class="btn btn-ghost lg" id="home">รับทราบ และปิดหน้าจอ</button></div></div>`;
+ $('#home').onclick=()=>{clearResume();app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ X-VISOR<br>แล้วพบกันใหม่ในรอบถัดไป</p></div>`;};
+}
+
+/* ---------- 10 waiting ---------- */
+function renderWaiting(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic info">${I.shield}</div>
+   <h2>รอทีมงานยืนยันผล</h2><p>คุณผ่านครบทั้ง 5 พาร์ทแล้ว ทีมงานกำลังตรวจสอบความถูกต้องของการสอบ</p>
+   <div class="tl"><div class="tli done"><span class="td">${I.checkc}</span>ทำข้อสอบครบทุกพาร์ท</div><div class="tli done"><span class="td">${I.checkc}</span>ระบบตรวจคะแนนแล้ว</div>
+     <div class="tli doing"><span class="td"><span class="mini-spin"></span></span>ทีมงานกำลังตรวจสอบและยืนยันผล</div><div class="tli"><span class="td">${I.eye}</span>เปิดสิทธิ์ดูข้อที่ตอบผิด</div></div>
+   <div style="margin-top:var(--space-5)"><button class="btn btn-primary lg" id="v">${DEMO?'ทีมงานยืนยันผลแล้ว (เดโม) ':'ตรวจสอบสถานะการยืนยัน '}${I.next}</button></div></div>`;
+ $('#v').onclick=async()=>{
+   if(S.api&&S.api.on){try{const res=await apiGet('/api/xv/session/'+S.api.id+'?token='+S.api.token);
+     if(res&&res.ok&&res.staffVerified){S.staffVerified=true;S.phase='all_passed';render();return;}
+     toast('ทีมงานยังไม่ยืนยันผล กรุณารอสักครู่');return;}catch(e){toast('เชื่อมต่อไม่สำเร็จ ลองอีกครั้ง');return;}}
+   if(DEMO){S.staffVerified=true;S.phase='all_passed';render();return;}
+   toast('ทีมงานยังไม่ยืนยันผล กรุณารอสักครู่');};
+}
+
+/* ---------- helpers: score ring + confetti ---------- */
+function xvScoreRing(pct,size,lead,onDark){
+  pct=Math.max(0,Math.min(100,pct||0));
+  var s=size||132,r=52,c=2*Math.PI*r,off=c*(1-pct/100),id='sr'+Math.random().toString(36).slice(2,7);
+  var g=lead?['#F4D58D','#C9962E']:['#27C8FF','#075BFF'];
+  if(onDark)g=lead?['#FFF1CE','#F4D58D']:['#7CE0FF','#B9DcFF'];
+  var track=onDark?'rgba(255,255,255,.24)':(lead?'#F0E4C4':'#E1ECFC');
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 120 120" style="display:block">'
+    +'<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+g[0]+'"/><stop offset="1" stop-color="'+g[1]+'"/></linearGradient></defs>'
+    +'<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+track+'" stroke-width="10"/>'
+    +'<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="url(#'+id+')" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 60 60)"/>'
+    +'</svg>';
+}
+function xvConfetti(){
+  var el=document.getElementById('confetti'); if(!el)return;
+  try{ if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches)return; }catch(e){}
+  var lead=(S.examType==='X-Lead');
+  var cols=lead?['#F4D58D','#E8B84B','#C9962E','#FFF1CE','#8A6314']:['#27C8FF','#075BFF','#12A9F5','#0E9F6E','#7CC8FF'];
+  var n=44,h='';
+  for(var i=0;i<n;i++){var x=(Math.random()*100).toFixed(1),d=(2.6+Math.random()*2.4).toFixed(2),delay=(Math.random()*2).toFixed(2),col=cols[i%cols.length],w=(6+Math.random()*6)|0;
+    h+='<i style="left:'+x+'%;background:'+col+';width:'+w+'px;height:'+((w*1.5)|0)+'px;animation-duration:'+d+'s;animation-delay:'+delay+'s"></i>';}
+  el.innerHTML=h;
+}
+/* ---------- 11 all passed (celebration) ---------- */
+function renderAllPassed(){const b=xvBrand();const total=S.results.reduce((a,r)=>a+r.score,0);
+ const name=((S.candidate&&S.candidate.firstName||'')+' '+(S.candidate&&S.candidate.lastName||'')).trim()||'ผู้เข้าสอบ';
+ const pct=Math.round(total/100*100);
+ app.innerHTML=`${appbar()}<div class="wrap-mid" data-lead="${b.lead?1:0}" style="display:flex;flex-direction:column;align-items:center;gap:var(--space-4)">
+   <div class="celebrate">
+     <div class="cb-glow"></div><div class="confetti" id="confetti"></div>
+     <div class="medal">${I.trophy}</div>
+     <div class="cg-title">${b.congratsTitle} 🎉</div>
+     <div class="cg-name">${name}</div>
+     <div class="cg-step">${I.checkc} ${b.congratsSub}</div>
+     <div class="score-hero">
+       <div class="sh-ring">${xvScoreRing(pct,132,b.lead)}<div class="sh-rc"><b>${total}</b><span>/ 100 คะแนน</span></div></div>
+       <div class="sh-side"><div class="shs-l">ผลการสอบ</div><div class="shs-v">ผ่านครบทั้ง 5 พาร์ท</div></div>
+     </div>
+     <div class="pchips">${[1,2,3,4,5].map(p=>{const r=S.results[p-1]||{score:0};return `<div class="pchip"><div class="pcl">พาร์ต ${p}</div><div class="pcv">${r.score}<small>/${QPP}</small></div><div class="pck">${I.checkc}</div></div>`;}).join('')}</div>
+   </div>
+   <div class="celebrate-acts"><button class="btn btn-ghost" id="wrong">${I.eye} ดูข้อที่ตอบผิด</button><button class="btn btn-primary lg" id="cert">ดูรายงานผลคะแนน ${I.next}</button></div></div>`;
+ xvConfetti();
+ $('#wrong').onclick=()=>{S.phase='wrong_review';render();};$('#cert').onclick=()=>{S.phase='final_report';render();};
+}
+
+/* ---------- 12 wrong review ---------- */
+function renderWrongReview(){
+ if(S.api&&S.api.on&&!S._review){S._review={};apiGet('/api/xv/review/'+S.api.id+'?token='+S.api.token).then(res=>{
+   if(res&&res.ok){res.results.forEach(rr=>{const t=S.results[rr.part-1];if(t){t.wrongIds=rr.wrongIds||[];t._q=rr.questions||[];}});}render();}).catch(()=>render());
+   app.innerHTML=`${appbar()}<div class="wrap-narrow card" style="padding:var(--space-6);text-align:center"><div class="spinner"></div><p class="hero-sub">กำลังโหลดข้อที่ตอบผิด…</p></div>`;return;}
+ const tab=S.wrongTab,r=S.results[tab-1];
+ app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-5)">
+   <div><h1 class="hero-h" style="text-align:left">ทบทวนข้อที่ตอบผิด</h1><div class="hero-sub" style="text-align:left">แสดงเฉพาะเลขข้อ ไม่แสดงคำตอบหรือเฉลย (ตามนโยบายความปลอดภัย)</div></div>
+   <div class="ptabs">${[1,2,3,4,5].map(p=>{const w=(S.results[p-1].wrongIds||[]);return `<button class="ptab ${p===tab?'on':''}" data-p="${p}"><b>พาร์ต ${p}</b><span>ผิด ${w.length} ข้อ</span></button>`;}).join('')}</div>
+   <div class="card" style="padding:var(--space-5)">${((r.wrongIds||[]).map((n,i)=>{const it=S.paper[tab]&&S.paper[tab][n-1];const qt=(r._q&&r._q[i])||(it&&it.q)||('คำถามพาร์ท '+tab+' ข้อที่ '+n);return `<div class="wq"><span class="wn num">ข้อ ${n}</span><b>${esc(qt)}</b><span class="wl">${I.lock} ไม่แสดงเฉลย</span></div>`;}).join(''))||'<div class="hero-sub">พาร์ทนี้ตอบถูกทุกข้อ 🎉</div>'}</div>
+   <div class="rfoot"><span class="spacer" style="flex:1"></span><button class="btn btn-primary lg" id="cert">ดูใบรายงานผลคะแนน ${I.next}</button></div></div>`;
+ $$('.ptab').forEach(b=>b.onclick=()=>{S.wrongTab=+b.dataset.p;render();});
+ $('#cert').onclick=()=>{S.phase='final_report';render();};
+}
+function demoWrong(p){const seed=[[3,14],[7],[],[2,9,17],[]][p-1];return seed;}
+
+/* ---------- 13 final report (premium certificate) ---------- */
+function renderFinal(){const b=xvBrand();const total=S.results.reduce((a,r)=>a+r.score,0);
+ const pct=Math.round(total/100*100);
+ const fullName=(((S.candidate&&S.candidate.firstName)||'')+' '+((S.candidate&&S.candidate.lastName)||'')).trim()||'ผู้เข้าสอบ';
+ const onsite=(S.candidate&&S.candidate.mode==='onsite');
+ app.innerHTML=`${appbar()}<div class="wrap-mid xcert-wrap" data-lead="${b.lead?1:0}">
+   <div class="xcert" id="xcertCard">
+     <div class="xc-frame"></div>
+     <div class="xc-top">
+       <div class="xc-eyebrow">${b.certBrand}</div>
+       <div class="xc-kind">แจ้งผลคะแนนสอบ (${onsite?'บันทึกคะแนนแล้ว':'ยืนยันผลแล้ว'})</div>
+       <div class="xc-seal"><span class="xc-rays"></span>${I.trophy}</div>
+       <div class="xc-congrat">${b.congratsTitle}</div>
+       <div class="xc-name">${fullName}</div>
+       <div class="xc-name-rule"></div>
+       <div class="xc-step">${b.stepLine}</div>
+     </div>
+     <div class="xc-scorebox">
+       <div class="xcs-ring">${xvScoreRing(pct,96,b.lead,true)}<div class="xcs-rc"><b>${total}</b><span>/ 100</span></div></div>
+       <div class="xcs-side"><div class="xl">คะแนนรวมทั้ง 5 พาร์ท</div><div class="xbadge">${I.checkc} ผ่านเกณฑ์ ${PASS}/20 ทุกพาร์ท</div></div>
+     </div>
+     <div class="xc-parts">${[1,2,3,4,5].map(p=>{const r=S.results[p-1]||{score:0};return `<div class="xc-part"><div class="xpn">พาร์ต ${p}</div><div class="xpv">${r.score}<small>/${QPP}</small></div></div>`;}).join('')}</div>
+     <div class="xc-foot">
+       <div class="xcf-org"><b>CloverX (Thailand) Co., Ltd.</b><br>ออกโดยระบบสอบ ${b.name}<br>www.cloverxth.com</div>
+       <div class="xcf-meta"><b>${(S.candidate&&S.candidate.id)||'—'}</b>${thaiDate()}</div>
+     </div>
+   </div>
+   <div class="certacts">
+     <button class="btn btn-primary lg" id="dl">${I.dl} ดาวน์โหลดผลคะแนน</button>
+     <button class="btn btn-ghost" id="prt">🖨 บันทึกเป็น PDF</button>
+     <button class="btn btn-ghost" id="again">เริ่มรอบใหม่</button>
+   </div></div>`;
+ $('#dl').onclick=certDownload;
+ $('#prt').onclick=function(){try{window.print();}catch(e){toast('อุปกรณ์ไม่รองรับการพิมพ์');}};
+ $('#again').onclick=()=>{clearResume();initState();render();};
+}
+// ดาวน์โหลดใบรับรองเป็นรูปภาพ (PNG) — ใช้ html2canvas ถ้ามี, ไม่มี/พลาด → ใช้พิมพ์เป็น PDF แทน
+function certDownload(){
+ var card=document.getElementById('xcertCard');if(!card)return;
+ var fn=(xvBrand().name.replace(/[^A-Za-z-]/g,'')||'result')+'_'+(((S.candidate&&S.candidate.id))||'result')+'.png';
+ if(typeof html2canvas==='function'){
+   toast('กำลังสร้างไฟล์ใบคะแนน…');
+   html2canvas(card,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false}).then(function(canvas){
+     canvas.toBlob(function(blob){
+       if(!blob){try{window.print();}catch(e){}return;}
+       var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();
+       setTimeout(function(){try{URL.revokeObjectURL(url);a.remove();}catch(e){}},1500);
+       toast('ดาวน์โหลดใบคะแนนแล้ว ✓');
+     },'image/png');
+   }).catch(function(){toast('บันทึกเป็นรูปไม่ได้ — เปิดหน้าพิมพ์ให้แทน');try{window.print();}catch(e){}});
+ } else { toast('เปิดหน้าพิมพ์ให้บันทึกเป็น PDF'); try{window.print();}catch(e){} }
+}
+function qrSVG(){let r='';for(let y=0;y<7;y++)for(let x=0;x<7;x++){if((x*3+y*5+x*y)%3===0)r+=`<rect x="${x*8}" y="${y*8}" width="8" height="8" fill="var(--primary-700)"/>`;}
+ return `<svg width="56" height="56" viewBox="0 0 56 56" style="border-radius:8px;background:#fff;padding:3px">${r}</svg>`;}
+
+/* ---------- modal helpers ---------- */
+let scrimEl;
+function scrim(html){if(!scrimEl){scrimEl=document.createElement('div');scrimEl.className='scrim';document.body.appendChild(scrimEl);scrimEl.onclick=e=>{if(e.target===scrimEl&&!S.session?.paused)closeScrim();};}
+ scrimEl.innerHTML=html;requestAnimationFrame(()=>scrimEl.classList.add('on'));}
+function closeScrim(){if(scrimEl)scrimEl.classList.remove('on');}
+
+let tT;function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>e.classList.remove('show'),2200);}
+
+/* ---------- demo controls ---------- */
+document.getElementById('demoFill').onclick=()=>{if(!S.session)return;const apiOn=S.api&&S.api.on;activeParts().forEach(p=>{for(let q=0;q<QPP;q++){const c=apiOn?(Math.random()*4|0):(Math.random()<0.82?S.paper[p][q].c:(S.paper[p][q].c+1)%4);S.answers[key(p,q)]=c;if(apiOn)apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:p,q,choice:c}).catch(()=>{});}});renderExam();toast('สุ่มคำตอบแล้ว (เดโม)');};
+document.getElementById('demoNext').onclick=()=>{const order=['registration','active_exam','checking','first_result','remedial_prep','remedial_result','waiting_verification','all_passed','wrong_review','final_report'];
+ let i=order.indexOf(S.phase);i=(i+1)%order.length;S.phase=order[i];if(S.phase==='active_exam'&&!S.session){S.session=freshSession('first');}render();};
+
+if(DEMO){document.getElementById('demobar').style.display='';}
+/* ---------- fullscreen (บังคับเต็มจอระหว่างสอบ — best-effort กันมือถือบางรุ่นที่ไม่รองรับ) ---------- */
+function xvInFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);}
+function xvEnterFS(){var el=document.documentElement;var fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;if(fn){try{var p=fn.call(el);if(p&&p.catch)p.catch(function(){});}catch(e){}}}
+window.xvEnterFS=xvEnterFS;
+/* ---------- proctor: บันทึกพฤติกรรมระหว่างสอบ (best-effort) ---------- */
+(function proctorInit(){
+  var last={};
+  var examing=function(){return S&&S.phase==='active_exam';};
+  /* หน้าที่ต้องปกป้องเนื้อหา (คำถาม/ทบทวนข้อผิด) — ห้ามแคป/คัดลอก/ลากรูป.
+     หน้าคะแนนรวมเมื่อผ่านเกณฑ์ (all_passed/final_report ฯลฯ) ไม่อยู่ในนี้ = แคปได้ */
+  var protectedPhase=function(){return S&&(S.phase==='active_exam'||S.phase==='wrong_review');};
+  window.xvProtectedPhase=protectedPhase;
+  // นับ "จำนวนครั้งที่ออกจากหน้าสอบ" (นับ 1 ครั้งต่อการออก 1 หน — รวม blur+hidden ที่มักยิงพร้อมกัน) แล้วโชว์ให้ผู้สอบเห็นเป็นตัวป้องปราม
+  var leftCount=0, away=false;
+  window.xvLeftCount=function(){return leftCount;};
+  function noteAway(){ if(!examing()||away)return; away=true; leftCount++; }
+  function noteBack(){ if(!away)return; away=false; if(examing()&&leftCount>0)toast('⚠ คุณออกจากหน้าสอบไปแล้ว '+leftCount+' ครั้ง ระบบบันทึกไว้ให้ทีมงานแล้ว'); }
+  function report(type){
+    if(!examing())return;
+    var now=Date.now(); if(last[type]&&now-last[type]<800)return; last[type]=now;
+    if(S.api&&S.api.on){try{fetch('/api/xv/proctor',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:S.api.id,token:S.api.token,type:type})});}catch(e){}}
+    if(type==='printscreen')toast('⚠ ระบบบันทึกการพยายามแคปหน้าจอ');
+    else if(type==='fullscreen_exit')toast('⚠ ออกจากโหมดเต็มจอ — ระบบบันทึกไว้ แตะปุ่ม "เข้าเต็มจอ" เพื่อกลับ');
+    else if(type==='paste'||type==='copy'||type==='cut')toast('⚠ ปิดการคัดลอก/วางระหว่างสอบ — ระบบบันทึกไว้');
+  }
+  window.xvProctorReport=report;
+  document.addEventListener('visibilitychange',function(){if(document.hidden){report('leave');noteAway();}else{noteBack();}});
+  window.addEventListener('blur',function(){if(!document.hidden){report('blur');noteAway();}});
+  window.addEventListener('focus',function(){noteBack();});
+  window.addEventListener('keyup',function(e){if(e.key==='PrintScreen')report('printscreen');});
+  window.addEventListener('keydown',function(e){
+    if(e.key==='PrintScreen'){report('printscreen');return;}
+    var k=(e.key||'').toLowerCase();
+    if((e.metaKey||e.ctrlKey)&&e.shiftKey&&(k==='s'||k==='3'||k==='4'||k==='5'))report('printscreen');
+  });
+  document.addEventListener('copy',function(e){if(protectedPhase()){e.preventDefault();report('copy');}});
+  document.addEventListener('cut',function(e){if(protectedPhase()){e.preventDefault();report('cut');}});
+  document.addEventListener('paste',function(e){if(protectedPhase()){e.preventDefault();report('paste');}});
+  document.addEventListener('selectstart',function(e){if(protectedPhase())e.preventDefault();});
+  document.addEventListener('contextmenu',function(e){if(protectedPhase()){e.preventDefault();report('contextmenu');}});
+  /* กันลาก/บันทึกรูปภาพในหน้าที่ปกป้อง */
+  document.addEventListener('dragstart',function(e){if(protectedPhase())e.preventDefault();});
+  function onFS(){if(examing()&&!xvInFS())report('fullscreen_exit');}
+  document.addEventListener('fullscreenchange',onFS);
+  document.addEventListener('webkitfullscreenchange',onFS);
+})();
+/* ปุ่มลอย "เข้าเต็มจอ" — โผล่เฉพาะเครื่องที่รองรับ fullscreen และกำลังสอบแต่ไม่ได้อยู่เต็มจอ */
+(function fsButton(){
+  var fsSupported=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+  if(!fsSupported)return;
+  var b=document.createElement('button');
+  b.id='xvFsBtn';b.textContent='⛶ เข้าโหมดเต็มจอ';
+  b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:200;display:none;padding:9px 18px;border:none;border-radius:999px;background:#E5484D;color:#fff;font-weight:700;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;font-family:inherit';
+  b.onclick=function(){xvEnterFS();};
+  var place=function(){if(document.body)document.body.appendChild(b);};
+  if(document.body)place();else document.addEventListener('DOMContentLoaded',place);
+  setInterval(function(){var show=(S&&S.phase==='active_exam'&&S.api&&S.api.on&&!xvInFS());b.style.display=show?'block':'none';},700);
+})();
+/* ---------- ทีมงานอาจ "บังคับตรวจคะแนน" จากหลังบ้าน (เผื่อลูกค้ากดส่งไม่ได้) ----------
+   ระหว่างสอบ เช็กสถานะทุก 6 วินาที ถ้าถูกตรวจแล้ว (สถานะไม่ใช่ in_progress) → เด้งไปหน้าผล+คะแนนทันที */
+(function forceGradeWatch(){
+  var busy=false;
+  setInterval(function(){
+    if(busy)return;
+    if(!(S&&S.phase==='active_exam'&&S.api&&S.api.on))return;
+    busy=true;
+    apiGet('/api/xv/session/'+S.api.id+'?token='+encodeURIComponent(S.api.token)).then(function(res){
+      busy=false;
+      if(!res||!res.ok)return;
+      if(res.status&&res.status!=='in_progress'){
+        clearInterval(examTimer);
+        S.results=[1,2,3,4,5].map(function(p){var r=(res.results||[]).find(function(x){return x.part===p;})||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});
+        S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';
+        try{clearResume();}catch(e){}
+        S.phase='checking';render();
+      }
+    },function(){busy=false;}).catch(function(){busy=false;});
+  },6000);
+})();
+/* ---------- กันแคปจอ: เบลอ/บังเนื้อหาเมื่อหน้าต่างไม่ได้โฟกัส (เฉพาะหน้าคำถาม/ทบทวนข้อผิด) ----------
+   ช่วยกันสกรีนช็อต/แชร์จอ: พอสลับหน้าต่างหรือเรียกเครื่องมือแคป หน้าจะถูกบังทันที
+   ไม่มีผลกับหน้าคะแนนรวมเมื่อผ่านเกณฑ์ (แคปได้ปกติ) */
+(function blurGuard(){
+  var ov=null;
+  function prot(){return typeof xvProtectedPhase==='function'&&xvProtectedPhase();}
+  function ensure(){
+    if(ov)return ov;
+    ov=document.createElement('div');ov.id='xvBlur';
+    ov.style.cssText='position:fixed;inset:0;z-index:9998;display:none;background:#0B1220;color:#E6EDF7;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:24px;font-family:inherit;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)';
+    ov.innerHTML='<div style="font-size:34px">🔒</div><div style="font-weight:800;font-size:17px">เนื้อหาถูกซ่อนชั่วคราว</div><div style="opacity:.8;font-size:13px;max-width:360px;line-height:1.6">กรุณากลับมาที่หน้าสอบเพื่อดูเนื้อหาต่อ<br>ระบบซ่อนคำถามอัตโนมัติเมื่อออกจากหน้าจอเพื่อป้องกันการบันทึกภาพ</div><div id="xvBlurCount" style="margin-top:8px;font-weight:800;font-size:14px;color:#FFB4A6"></div>';
+    var mount=function(){if(document.body&&!ov.parentNode)document.body.appendChild(ov);};
+    if(document.body)mount();else document.addEventListener('DOMContentLoaded',mount);
+    return ov;
+  }
+  function cover(){var o=ensure();var cc=document.getElementById('xvBlurCount');if(cc){var n=(window.xvLeftCount?window.xvLeftCount():0);cc.textContent=n>0?('นี่เป็นครั้งที่ '+n+' ที่คุณออกจากหน้าสอบ ระบบบันทึกไว้แล้ว'):'';}o.style.display=prot()?'flex':'none';}
+  function uncover(){if(ov)ov.style.display='none';}
+  window.addEventListener('blur',function(){if(prot())cover();});
+  window.addEventListener('focus',uncover);
+  document.addEventListener('visibilitychange',function(){if(document.hidden){if(prot())cover();}else uncover();});
+})();
+/* ---------- เว็บแคม proctoring: ถ่ายภาพหน้าผู้สอบเป็นระยะ (เฉพาะ Online) ---------- */
+var XVCam=(function(){
+  var stream=null,video=null,iv=null,started=false;
+  function onlineExam(){return S&&S.phase==='active_exam'&&S.candidate&&S.candidate.mode!=='onsite'&&S.api&&S.api.on;}
+  function snap(){
+    if(!video||!stream||!onlineExam())return;
+    try{
+      var c=document.createElement('canvas');c.width=320;c.height=240;
+      c.getContext('2d').drawImage(video,0,0,320,240);
+      var data=c.toDataURL('image/jpeg',0.5);
+      fetch('/api/xv/proctor-photo',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({sessionId:S.api.id,token:S.api.token,image:data})}).catch(function(){});
+    }catch(e){}
+  }
+  function start(){
+    if(started||!onlineExam())return;started=true;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){if(window.xvProctorReport)xvProctorReport('camera_denied');return;}
+    navigator.mediaDevices.getUserMedia({video:{width:{ideal:320},height:{ideal:240},facingMode:'user'},audio:false})
+      .then(function(st){stream=st;video=document.createElement('video');video.setAttribute('playsinline','');video.muted=true;video.srcObject=st;var p=video.play();if(p&&p.catch)p.catch(function(){});
+        setTimeout(snap,3500);iv=setInterval(snap,240000);})    // ภาพแรก ~3.5วิ แล้วทุก 4 นาที
+      .catch(function(){if(window.xvProctorReport)xvProctorReport('camera_denied');});
+  }
+  function stop(){if(iv){clearInterval(iv);iv=null;}if(stream){try{stream.getTracks().forEach(function(t){t.stop();});}catch(e){}stream=null;}video=null;started=false;}
+  return {start:start,stop:stop,snap:snap};
+})();
+/* ---------- ลายน้ำชื่อผู้สอบจาง ๆ (กันแคปหน้าจอไปแชร์ — รู้ว่ามาจากใคร) ---------- */
+function xvWatermark(){
+  var wm=document.getElementById('xvWM');
+  var show=S&&(S.phase==='active_exam'||S.phase==='wrong_review')&&S.candidate;
+  if(!show){if(wm)wm.remove();return;}
+  var name=((S.candidate.firstName||'')+' '+(S.candidate.lastName||'')).trim();
+  var code=S.candidate.id||(S.api&&S.api.code)||'';
+  var txt=(name+'  '+code).trim().replace(/[<>&]/g,'');
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="340" height="190"><text x="8" y="105" transform="rotate(-24 170 95)" font-family="sans-serif" font-weight="700" font-size="17" fill="#0A2A64">'+txt+'</text></svg>';
+  var uri='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
+  if(!wm){wm=document.createElement('div');wm.id='xvWM';document.body.appendChild(wm);}
+  wm.style.cssText='position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.08;background-image:url('+uri+');background-repeat:repeat';
+}
+/* ---------- ปุ่มแจ้งปัญหา/บั๊ก (ผู้เทสต์กดแจ้งได้จากทุกหน้า — แนบข้อมูลหน้าจออัตโนมัติ) ---------- */
+function fbContext(){try{return {screen:(typeof S!=='undefined'&&S&&S.phase)||'',
+  part:(S&&S.session&&S.session.currentPart)||null, q:(S&&S.session&&S.session.currentQ!=null)?(S.session.currentQ+1):null,
+  code:(S&&S.candidate&&S.candidate.id)||(S&&S.api&&S.api.code)||'',
+  name:(S&&S.candidate)?(((S.candidate.firstName||'')+' '+(S.candidate.lastName||'')).trim()):'',
+  phone:(S&&S.candidate&&S.candidate.phone)||'', roundNo:(S&&S.round&&S.round.no)||null, mode:(S&&S.candidate&&S.candidate.mode)||'',
+  ua:navigator.userAgent, vw:window.innerWidth, vh:window.innerHeight, url:location.href};}catch(e){return {ua:navigator.userAgent,url:location.href};}}
+function mountFeedback(){
+  if(document.getElementById('fbFab'))return;
+  var fab=document.createElement('button');fab.id='fbFab';fab.type='button';fab.setAttribute('aria-label','แจ้งปัญหา');fab.textContent='🐞';
+  fab.style.cssText='position:fixed;right:14px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:60;width:46px;height:46px;border-radius:50%;border:1px solid rgba(45,136,255,.35);background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 24px -10px rgba(7,60,140,.5);font-size:21px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .15s';
+  fab.onmouseenter=function(){fab.style.transform='scale(1.08)';};fab.onmouseleave=function(){fab.style.transform='scale(1)';};
+  document.body.appendChild(fab);
+  var ov=document.createElement('div');ov.id='fbOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(9,42,100,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center';
+  ov.innerHTML='<div style="background:#fff;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -18px 50px -20px rgba(0,0,0,.4)">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><span style="font-size:20px">🐞</span><h3 style="margin:0;font-size:1.1rem;color:#092A64">แจ้งปัญหา / ข้อเสนอแนะ</h3></div>'
+    +'<p style="color:#526987;font-size:.85rem;margin:4px 0 12px;line-height:1.5">เจอบั๊กหรืออะไรแปลก ๆ ตรงไหน พิมพ์บอกได้เลย ระบบจะแนบข้อมูลหน้าจอที่คุณอยู่ให้ทีมงานอัตโนมัติ</p>'
+    +'<textarea id="fbText" rows="4" placeholder="เช่น กดปุ่มถัดไปแล้วไม่ไปไหน / ตัวหนังสือล้นจอ / ปุ่มกดไม่ติด ..." style="width:100%;border:1.5px solid #d9e6f7;border-radius:12px;padding:12px;font-family:inherit;font-size:.95rem;color:#092A64;resize:vertical;box-sizing:border-box"></textarea>'
+    +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px"><button id="fbCancel" type="button" style="border:1px solid #d9e6f7;background:#fff;border-radius:11px;padding:11px 16px;font-family:inherit;font-weight:700;color:#526987;cursor:pointer">ยกเลิก</button>'
+    +'<button id="fbSend" type="button" style="border:0;border-radius:11px;padding:11px 20px;font-family:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,#27C8FF,#075BFF);cursor:pointer">ส่งรายงาน</button></div></div>';
+  document.body.appendChild(ov);
+  function close(){ov.style.display='none';}
+  fab.onclick=function(){document.getElementById('fbText').value='';ov.style.display='flex';setTimeout(function(){var t=document.getElementById('fbText');if(t)t.focus();},60);};
+  ov.addEventListener('click',function(e){if(e.target===ov)close();});
+  document.getElementById('fbCancel').onclick=close;
+  document.getElementById('fbSend').onclick=function(){
+    var txt=(document.getElementById('fbText').value||'').trim();if(!txt){toast('พิมพ์รายละเอียดปัญหาก่อนนะ');return;}
+    var btn=this;btn.disabled=true;btn.textContent='กำลังส่ง…';
+    apiPost('/api/xv/feedback',{text:txt,context:fbContext(),kind:'bug'}).then(function(){close();btn.disabled=false;btn.textContent='ส่งรายงาน';toast('ส่งรายงานแล้ว ขอบคุณมาก 🙏');}).catch(function(){btn.disabled=false;btn.textContent='ส่งรายงาน';toast('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง');});
+  };
+}
+/* ---------- กลับเข้าสอบอัตโนมัติหลังรีเฟรช/เผลอปิดแท็บ (จำ session ไว้ในเครื่องผู้สอบ · ล้างเมื่อออก) ---------- */
+function saveResume(){try{var c=S.candidate||{};localStorage.setItem('xvResume',JSON.stringify({id:S.api&&S.api.id,token:S.api&&S.api.token,code:S.api&&S.api.code,firstName:c.firstName||'',lastName:c.lastName||'',phone:c.phone||'',mode:c.mode||''}));}catch(e){}}
+function clearResume(){try{localStorage.removeItem('xvResume');}catch(e){}try{clearAnswersLocal();}catch(e){}}
+// โหลดสถานะสอบเดิมจากเซิร์ฟเวอร์ พร้อม retry — คืน 'ok' (กลับเข้าสอบแล้ว) / 'gone' (ไม่มี session จริง) / 'retry' (เน็ตล่มชั่วคราว)
+async function tryResumeCore(d){
+  var res=null, hardGone=false;
+  for(var a=0;a<3;a++){
+    try{
+      var r=await fetch('/api/xv/session/'+d.id+'?token='+encodeURIComponent(d.token),{cache:'no-store'});
+      if(r.status===404){ hardGone=true; break; }        // ไม่มี session นี้จริง ๆ → เลิก
+      if(!r.ok){ throw new Error('http'+r.status); }      // 5xx/ชั่วคราว → ลองใหม่
+      res=await r.json(); break;
+    }catch(e){ await new Promise(function(x){setTimeout(x,1000);}); } // เน็ตล่ม → หน่วงแล้วลองใหม่
+  }
+  if(hardGone) return 'gone';
+  if(!res) return 'retry';                                // ต่อเซิร์ฟเวอร์ไม่ติดหลังลองหลายครั้ง (แต่มี session เดิมอยู่)
+  if(!res.ok||res.status!=='in_progress') return 'gone';  // จบไปแล้ว/ไม่ได้กำลังสอบ
+  if(res.examType)S.examType=res.examType;
+  S.api={on:true,id:d.id,token:d.token,code:d.code};
+  S.candidate={firstName:d.firstName||'',lastName:d.lastName||'',phone:d.phone||'',mode:d.mode||res.mode||'onsite',id:d.code||''};
+  S.paper={};(res.parts||[]).forEach(function(pp){S.paper[pp]=res.paper[pp];});
+  S.answers=mergeLocalAnswers(d.id,res.answers);
+  var ph=res.phase||'first';
+  S.remedialQueue=(ph==='remedial')?((res.parts&&res.parts.length)?res.parts.slice():(res.remedialQueue||[]).slice()):(res.remedialQueue||[]);
+  if(ph==='remedial')S.remedialActive=(res.parts||[]).slice();
+  S.session=freshSessionAPI(ph,res.remaining!=null?res.remaining:TOTAL);
+  try{var ap=activeParts(),cp=ap[0];for(var i=0;i<ap.length;i++){cp=ap[i];if(!partComplete(ap[i]))break;}S.session.currentPart=cp;var fq=firstMissingQ(cp);S.session.currentQ=fq<0?0:fq;}catch(e){}
+  S.phase='active_exam';render();startTimer();toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');
+  return 'ok';
+}
+var _rcTimer=null;
+// เน็ตล่มตอนรีเฟรช แต่มี session เดิมค้างอยู่ → แสดงจอ "กำลังเชื่อมต่อกลับ" + ลองใหม่อัตโนมัติ (ห้ามเด้งไปหน้าลงทะเบียนเด็ดขาด)
+function showResumeReconnect(d){
+  if(_rcTimer){clearInterval(_rcTimer);_rcTimer=null;}
+  app.innerHTML=`${appbar()}<div class="wrap-narrow card" style="padding:var(--space-6);text-align:center;display:flex;flex-direction:column;gap:var(--space-4);align-items:center">
+    <div class="spinner"></div>
+    <h2 class="hero-h">กำลังเชื่อมต่อกลับเข้าห้องสอบ…</h2>
+    <div class="hero-sub"><b style="color:var(--success)">คำตอบของคุณยังอยู่ครบ ไม่ต้องเริ่มใหม่</b><br>เครือข่ายไม่เสถียรชั่วคราว — ระบบจะพากลับเข้าสอบเดิมให้อัตโนมัติเมื่อสัญญาณกลับมา</div>
+    <button class="btn btn-primary lg" id="rcRetry">ลองเชื่อมต่ออีกครั้ง</button>
+  </div>`;
+  var attempt=function(){ tryResumeCore(d).then(function(r){
+    if(r==='ok'){ if(_rcTimer){clearInterval(_rcTimer);_rcTimer=null;} }                 // กลับเข้าสอบแล้ว
+    else if(r==='gone'){ if(_rcTimer){clearInterval(_rcTimer);_rcTimer=null;} clearResume(); render(); resolveRound(); } // จบจริง → ปล่อยไปหน้าปกติ
+    // r==='retry' → ยังต่อไม่ติด คงจอนี้ไว้ ลองใหม่รอบถัดไป
+  }).catch(function(){}); };
+  var rb=$('#rcRetry'); if(rb)rb.onclick=attempt;
+  _rcTimer=setInterval(attempt,4000);
+}
+async function tryResume(){
+  var raw;try{raw=localStorage.getItem('xvResume');}catch(e){}
+  if(!raw)return false;var d;try{d=JSON.parse(raw);}catch(e){clearResume();return false;}
+  if(!d||!d.id||!d.token)return false;
+  var r=await tryResumeCore(d);
+  if(r==='ok')return true;
+  if(r==='gone'){clearResume();return false;}
+  // r==='retry': เน็ตล่มชั่วคราว แต่มี session เดิม → แสดงจอเชื่อมต่อกลับ (ไม่หลุดไปหน้าลงทะเบียน)
+  showResumeReconnect(d);
+  return true;
+}
+/* ---------- ตัวเช็กเวอร์ชัน: กัน "โค้ดเก่าค้างในเครื่อง" หลัง deploy (เช่นเปิดหน้าค้างไว้ข้ามรอบอัปเดต) ---------- */
+var _appVer=null,_verBannerShown=false,_verChecking=false;
+async function _fetchAppTag(){ try{ var r=await fetch('/xvisor_new.html',{method:'HEAD',cache:'no-store'}); return r.headers.get('etag')||r.headers.get('last-modified')||null; }catch(e){ return null; } }
+async function captureAppVer(){ if(!_appVer)_appVer=await _fetchAppTag(); }
+async function checkAppVersion(){
+  if(_verBannerShown||_verChecking)return;
+  if(!(S.api&&S.api.on))return;                 // เช็กเฉพาะตอนสอบจริง — คำตอบถูกเก็บบนเซิร์ฟเวอร์ รีโหลดแล้ว resume ได้ครบ
+  _verChecking=true;
+  try{
+    if(!_appVer){ _appVer=await _fetchAppTag(); return; }   // ยังไม่มี baseline → เก็บไว้ก่อน
+    var cur=await _fetchAppTag();
+    if(cur&&cur!==_appVer) showUpdateBanner();
+  }catch(e){} finally{ _verChecking=false; }
+}
+function showUpdateBanner(){
+  if(_verBannerShown)return; _verBannerShown=true;
+  var b=document.createElement('div'); b.id='verBanner';
+  b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99999;background:var(--primary-600,#0077B6);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:15px;line-height:1.35;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.2);cursor:pointer';
+  b.innerHTML='<span>🔄 ระบบมีเวอร์ชันใหม่ — แตะเพื่ออัปเดต (คำตอบของคุณถูกบันทึกไว้แล้ว)</span>';
+  b.onclick=async function(){
+    b.style.opacity='.75'; b.innerHTML='<span>กำลังบันทึกคำตอบและอัปเดต…</span>';
+    try{ await syncAll(); }catch(e){}
+    if(typeof pendingCount==='function' && pendingCount()>0){ b.style.opacity='1'; b.innerHTML='<span>ยังบันทึกไม่ครบ — แตะอีกครั้งเมื่อสัญญาณกลับมา (คำตอบยังอยู่ครบ)</span>'; return; }
+    location.reload();
+  };
+  document.body.appendChild(b);
+}
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') checkAppVersion(); });
+setInterval(checkAppVersion,90000);
+
+initState();mountFeedback();captureAppVer();
+tryResume().then(function(ok){if(!ok){render();resolveRound();}}).catch(function(){render();resolveRound();});
+</script>
+</body>
+</html>
