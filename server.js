@@ -818,6 +818,10 @@ function identityOwns(recPhone, recEmail, recName, ph, em, nm) {
 }
 function ownsOrder(o, ph, em, nm) { return identityOwns(o.phone, o.email, o.name, ph, em, nm); }
 // ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล/ชื่อ) — คืนเฉพาะออเดอร์ที่ตรง
+// ---- กำหนดส่งคืนสินค้า: ลูกค้าต้องส่งคืนภายในวันที่ 30 ก.ย. 2569 (เวลาไทย) — ปรับได้ด้วย ENV RETURN_DEADLINE (ISO) ----
+var RETURN_DEADLINE_ISO = process.env.RETURN_DEADLINE || '2026-09-30T23:59:59+07:00';
+function retDeadlinePassed() { var t = Date.parse(RETURN_DEADLINE_ISO); return isFinite(t) && Date.now() > t; }
+function retOverdue(r) { return retDeadlinePassed() && r && r.choice !== 'wait' && r.status === 'awaiting_shipment'; }
 function retLog(r, text) { r.history = Array.isArray(r.history) ? r.history : []; r.history.unshift({ at: new Date().toISOString(), text: text }); }
 function retOwns(r, ph, em, nm) { return identityOwns(r.phone, r.email, r.name, ph, em, nm); }
 function saveDataImage(dataUrl, prefix) {
@@ -831,7 +835,7 @@ app.post('/api/returns/lookup', function (req, res) {
   if (!ph && !em) return res.status(400).json({ ok: false, error: 'need_phone_or_email' });
   var matches = read().filter(function (o) { return ownsOrder(o, ph, em, nm); });
   var mine = readReturns().filter(function (r) { return retOwns(r, ph, em, nm); });
-  res.json({ ok: true, orders: matches.map(pubOrder), myReturns: mine });
+  res.json({ ok: true, orders: matches.map(pubOrder), myReturns: mine, returnDeadline: RETURN_DEADLINE_ISO, returnOpen: !retDeadlinePassed() });
 });
 // ลูกค้ายื่นคำขอคืนสินค้า/รอปรับปรุง
 app.post('/api/returns', function (req, res) {
@@ -841,6 +845,7 @@ app.post('/api/returns', function (req, res) {
   var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
   if (!ownsOrder(o, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   var choice = b.choice === 'wait' ? 'wait' : 'return';
+  if (choice === 'return' && retDeadlinePassed()) return res.status(403).json({ ok: false, error: 'return_closed', deadline: RETURN_DEADLINE_ISO });
   var opay = String(o.pay || '').toLowerCase();
   var channel = (b.channel === 'bank' || b.channel === 'card') ? b.channel : (opay === 'bank' ? 'bank' : 'card'); // เคารพช่องทางที่ลูกค้าเลือก (บัตร/บัญชี) มิฉะนั้นอิงวิธีชำระเดิม
   var refundAccount = (b.refundAccount && typeof b.refundAccount === 'object') ? { name: String(b.refundAccount.name || '').slice(0, 80), bank: String(b.refundAccount.bank || '').slice(0, 60), no: String(b.refundAccount.no || '').slice(0, 40) } : null;
@@ -862,7 +867,7 @@ app.post('/api/returns', function (req, res) {
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returns: readReturns() }); });
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: readReturns().map(function (r) { return retOverdue(r) ? Object.assign({}, r, { overdue: true }) : r; }) }); });
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
@@ -877,7 +882,8 @@ app.post('/api/returns/:rid/ship', function (req, res) {
   r.returnTracking = tracking; r.returnCarrier = carrier; if (rslip) r.returnSlip = rslip;
   if (acct.name || acct.no || acct.bank) r.refundAccount = acct;
   r.status = 'in_transit'; r.shippedAt = new Date().toISOString();
-  retLog(r, 'ลูกค้าแจ้งการส่งคืน' + (tracking ? (' · เลขพัสดุ ' + tracking) : '') + (carrier ? (' (' + carrier + ')') : '') + (rslip ? ' · แนบสลิปการคืน' : '') + (acct.no ? (' · บัญชีรับเงินคืน ' + acct.bank + ' ' + acct.no) : ''));
+  var late = retDeadlinePassed(); if (late) r.lateShipment = true;
+  retLog(r, 'ลูกค้าแจ้งการส่งคืน' + (tracking ? (' · เลขพัสดุ ' + tracking) : '') + (carrier ? (' (' + carrier + ')') : '') + (rslip ? ' · แนบสลิปการคืน' : '') + (acct.no ? (' · บัญชีรับเงินคืน ' + acct.bank + ' ' + acct.no) : '') + (late ? ' · แจ้งหลังกำหนดส่งคืน' : ''));
   writeReturns(rlist);
   if (tracking) { try { refreshTrack(r, true); } catch (e) {} } // เริ่มดึงสถานะพัสดุทันที (ไม่บล็อกการตอบกลับ)
   res.json({ ok: true, ret: r });
