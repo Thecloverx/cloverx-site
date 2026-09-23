@@ -42,28 +42,56 @@ module.exports = function (app, DATA, opts) {
   const USE_PG = !!process.env.DATABASE_URL;
   const mem = { sessions: [], rounds: [], registrations: [], audit: [], qsets: [], roster: [], feedback: [] };
   let pool = null, pgReady = false;
-  const persistQ = {};
+  // รวมการเขียน Postgres: ยิงทีละครั้งต่อ collection และรวมคำตอบที่เข้ามาถี่ ๆ ใน 800ms เป็นการเขียนครั้งเดียว
+  // (เดิมเขียนทั้งก้อนทุกคำตอบ → ช่วงทุกคนส่งพร้อมกันตอนหมดเวลา เซิร์ฟเวอร์ค้าง)
+  const _pgBusy = {}, _pgAgain = {}, _pgTimer = {};
   const pgPersist = (coll) => {
     if (!pool) return;
-    const snap = mem[coll];
-    persistQ[coll] = (persistQ[coll] || Promise.resolve()).then(() =>
-      pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [coll, JSON.stringify(snap)])
-    ).catch(e => console.error('[x-visor] PG persist ' + coll + ' failed:', e.message));
+    if (_pgBusy[coll] || _pgTimer[coll]) { _pgAgain[coll] = true; return; }
+    _pgTimer[coll] = setTimeout(() => {
+      _pgTimer[coll] = null; _pgBusy[coll] = true; _pgAgain[coll] = false;
+      let data; try { data = JSON.stringify(mem[coll]); } catch (e) { _pgBusy[coll] = false; return; }
+      pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [coll, data])
+        .catch(e => console.error('[x-visor] PG persist ' + coll + ' failed:', e.message))
+        .finally(() => { _pgBusy[coll] = false; if (_pgAgain[coll]) { _pgAgain[coll] = false; pgPersist(coll); } });
+    }, 800);
   };
   // hydrate the in-memory store from files at boot (PG mode overwrites this once PG is ready).
   // in-memory becomes the authoritative read source → GETs no longer re-read+parse the whole file each call.
-  COLLS.forEach(c => { try { const d = rd(fileOf[c], []); mem[c] = Array.isArray(d) ? d : []; } catch (e) { mem[c] = []; } });
+  COLLS.forEach(c => {
+    const f = fileOf[c];
+    let d = rd(f, null);
+    if (d === null && fs.existsSync(f)) {           // ไฟล์เสีย → อย่าเริ่มว่างเปล่าเงียบ ๆ: ลองไฟล์ชั่วคราว แล้วเก็บไฟล์เสียไว้ตรวจ
+      const t = rd(f + '.tmp', null);
+      try { fs.copyFileSync(f, f + '.corrupt-' + Date.now()); } catch (e) {}
+      console.error('[x-visor] ' + c + ' file unreadable — ' + (t ? 'recovered from .tmp' : 'starting empty (backup kept)'));
+      d = t;
+    }
+    mem[c] = Array.isArray(d) ? d : [];
+  });
   const readColl = (coll) => mem[coll] || [];
   // durable file mirror — debounced & ASYNC so a burst of writes (e.g. answers) never blocks the event loop
   // with a synchronous full-file rewrite. Postgres (when on) is the primary durable store; file is the backup.
   const _fileDirty = {}, _fileTimer = {}, FILE_DEBOUNCE = 1200;
+  // เขียนไฟล์แบบปลอดภัย: เขียนลงไฟล์ชั่วคราวก่อนแล้ว rename (กันไฟล์ครึ่ง ๆ กลาง ๆ ถ้าเขียนซ้อนกัน/เครื่องดับ) · ทีละครั้งต่อไฟล์
+  const _fileBusy = {};
+  const writeFileAtomicSync = (f, data) => { const tmp = f + '.tmp'; fs.writeFileSync(tmp, data); fs.renameSync(tmp, f); };
   const flushColl = (coll) => {
-    if (!_fileDirty[coll]) return; _fileDirty[coll] = false;
-    try { fs.writeFile(fileOf[coll], JSON.stringify(mem[coll], null, 2), () => {}); } catch (e) {}
+    if (!_fileDirty[coll]) return;
+    if (_fileBusy[coll]) { if (!_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, 300); return; }
+    _fileDirty[coll] = false; _fileBusy[coll] = true;
+    const f = fileOf[coll], tmp = f + '.tmp';
+    let data; try { data = JSON.stringify(mem[coll]); } catch (e) { _fileBusy[coll] = false; return; }
+    fs.writeFile(tmp, data, (err) => {
+      if (!err) { try { fs.renameSync(tmp, f); } catch (e) {} }
+      _fileBusy[coll] = false;
+      if (_fileDirty[coll] && !_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, 300);
+    });
   };
-  const flushAllColls = () => { COLLS.forEach(c => { if (_fileTimer[c]) { clearTimeout(_fileTimer[c]); _fileTimer[c] = null; } if (_fileDirty[c]) { _fileDirty[c] = false; try { fs.writeFileSync(fileOf[c], JSON.stringify(mem[c], null, 2)); } catch (e) {} } }); };
+  const flushAllColls = () => { COLLS.forEach(c => { if (_fileTimer[c]) { clearTimeout(_fileTimer[c]); _fileTimer[c] = null; } if (_fileDirty[c]) { _fileDirty[c] = false; try { writeFileAtomicSync(fileOf[c], JSON.stringify(mem[c])); } catch (e) {} } }); };
   // เขียนลงไฟล์ทันทีแบบ sync (ใช้ตอนต้องคงทนก่อนตอบ ok เช่น submit) — กันข้อมูลหายถ้า process ตายในหน้าต่าง debounce
-  const flushCollSync = (coll) => { if (_fileTimer[coll]) { clearTimeout(_fileTimer[coll]); _fileTimer[coll] = null; } _fileDirty[coll] = false; try { fs.writeFileSync(fileOf[coll], JSON.stringify(mem[coll], null, 2)); } catch (e) {} };
+  const flushCollSync = (coll) => { if (_fileTimer[coll]) { clearTimeout(_fileTimer[coll]); _fileTimer[coll] = null; } _fileDirty[coll] = false; try { writeFileAtomicSync(fileOf[coll], JSON.stringify(mem[coll])); } catch (e) {} };
+  const flushSoon = (coll) => { _fileDirty[coll] = true; if (_fileTimer[coll]) clearTimeout(_fileTimer[coll]); _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, 300); };
   const writeColl = (coll, all) => {
     mem[coll] = all;                           // authoritative in-memory (read-after-write stays consistent)
     if (pool && pgReady) pgPersist(coll);      // durable in Postgres (async, queued)
@@ -168,7 +196,7 @@ module.exports = function (app, DATA, opts) {
     waitlist: !!r.waitlist, venue: r.venue || '', timeslot: r.timeslot || '', regCloseAt: r.regCloseAt || '',
     examType: (typeof examTypeOf === 'function') ? examTypeOf(r) : 'X-Visor',
     setId: r.setId || '', setName: (function () { if (!r.setId) return ''; const s = (readColl('qsets') || []).find(x => x.id === r.setId); return s ? s.name : ''; })(),
-    examOpenedAt: r.examOpenedAt || null, examDeadlineAt: r.examDeadlineAt || null,
+    examOpenedAt: r.examOpenedAt || null, examDeadlineAt: r.examDeadlineAt || null, examLiveToday: (typeof xvExamLive === 'function') ? xvExamLive(r) : false,
     examRemaining: (r.status === 'open' && r.examDeadlineAt) ? Math.max(0, Math.ceil((r.examDeadlineAt - Date.now()) / 1000)) : null
   }, roundSeats(r));
   // save a data-url image to disk, return its public path (or '' if none/invalid)
@@ -385,7 +413,7 @@ module.exports = function (app, DATA, opts) {
   }
 
   /* ---- server-side time enforcement (กันโกงเวลา: ไม่เชื่อค่าเวลาจากฝั่งลูกค้า) ---- */
-  const XV_GRACE_MS = 10000; // เผื่อความหน่วงเครือข่าย 10 วินาที ก่อนตัดเวลาจริง
+  const XV_GRACE_MS = 30000; // เผื่อความหน่วงเครือข่าย 10 วินาที ก่อนตัดเวลาจริง
   function xvDeadline(s) { return s.deadlineAt || ((s.startedAt || Date.now()) + TOTAL * 1000); }
   // เวลาที่เหลือจริง คำนวณจากนาฬิกาเซิร์ฟเวอร์ (ถ้ากำลัง pause ใช้เวลา ณ ตอนหยุด)
   function xvRemaining(s) { const dl = xvDeadline(s); const ref = (s.paused && s.pausedAt) ? s.pausedAt : Date.now(); return Math.max(0, Math.ceil((dl - ref) / 1000)); }
@@ -399,6 +427,12 @@ module.exports = function (app, DATA, opts) {
   // ตัดข้อสอบอัตโนมัติเมื่อหมดเวลา (แม้ลูกค้าจะเปิดค้างไว้/ไม่กดส่ง)
   function xvAutoExpire(s) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s, true); s.autoExpired = true; return true; } return false; }
   const xvDigits = (v) => String(v || '').replace(/\D/g, '');
+  const xvPh9 = (v) => { const d = xvDigits(v); return d.length > 9 ? d.slice(-9) : d; };   // 081… กับ +6681… = คนเดียวกัน
+  const xvBkkDate = (ms) => new Date((ms || Date.now()) + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  // ห้องสอบเปิดจริง = ทีมงานกด "เปิดสอบ/เริ่มจับเวลา" ในวันนี้ (เวลาไทย)
+  // (สถานะ open อย่างเดียวแปลว่า "เปิดรับสมัคร" ได้ด้วย — ถ้าเปิดไว้ตั้งแต่ก่อนวันสอบ นาฬิกาห้องจะหมดไปแล้ว ผู้สอบเข้าไม่ได้)
+  const xvExamLive = (r) => !!(r && r.status === 'open' && r.examOpenedAt && xvBkkDate(r.examOpenedAt) === xvBkkDate());
+  const xvFinishedPayload = (s) => ({ ok: false, error: 'already_taken', status: s.status, sessionId: s.id, token: s.token, code: s.code, mode: (s.candidate || {}).mode, phase: s.phase, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified', examType: sessExamType(s) });
 
   /* ---------------- candidate endpoints ---------------- */
   app.post('/api/xv/start', (req, res) => {
@@ -408,12 +442,12 @@ module.exports = function (app, DATA, opts) {
     let round = null;
     if (b.roundId) round = findR(b.roundId);
     if (!round && b.roundCode) round = findRByCode(b.roundCode);
-    if (round && round.status !== 'open') return res.status(403).json({ ok: false, error: 'round_closed' });
+    if (!round) return res.status(400).json({ ok: false, error: 'no_round' });   // ต้องเข้าจากลิงก์/QR ของรอบเท่านั้น
     const all = readS();
-    // กันเปิดสอบซ้ำ/หลาย session ต่อคนต่อรอบ (เฉพาะรอบที่ระบุ)
+    // กันเปิดสอบซ้ำ/หลาย session ต่อคนต่อรอบ — ตรวจ "ก่อน" สถานะรอบ เพื่อให้คนที่สอบค้าง/สอบจบแล้วกลับเข้าหน้าเดิมได้เสมอ
     if (round) {
-      const ph = xvDigits(b.phone);
-      const prev = all.find(x => x.roundId === round.id && xvDigits((x.candidate || {}).phone) === ph);
+      const ph = xvPh9(b.phone);
+      const prev = ph ? all.filter(x => x.roundId === round.id && xvPh9((x.candidate || {}).phone) === ph).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0] : null;
       if (prev) {
         xvAutoExpire(prev); // เผื่อ session เดิมหมดเวลาไปแล้ว
         if (prev.status === 'in_progress') {
@@ -427,11 +461,14 @@ module.exports = function (app, DATA, opts) {
             examType: sessExamType(prev)
           });
         }
-        // สอบจบไปแล้ว (รอตรวจ/ผ่าน/ตก/ตัดสิทธิ์) → ห้ามสอบซ้ำในรอบเดิม
+        // สอบจบไปแล้ว (รอตรวจ/ผ่าน/ต้องสอบซ่อม/ตก/ตัดสิทธิ์) → ห้ามสอบซ้ำในรอบเดิม แต่ส่งข้อมูล session เดิมกลับไป
+        // ให้หน้าเว็บพาไปหน้าที่ถูกต้อง (ผลสอบ / สอบซ่อม / รอยืนยัน) แทนการติดล็อก "สอบไปแล้ว"
         writeS(all);
-        return res.status(409).json({ ok: false, error: 'already_taken', status: prev.status });
+        return res.status(409).json(xvFinishedPayload(prev));
       }
     }
+    if (round.status !== 'open') return res.status(403).json({ ok: false, error: 'round_closed' });
+    if (!xvExamLive(round)) return res.status(403).json({ ok: false, error: 'not_started' });
     // pick the question set assigned to this round (falls back to the default/first set)
     const B = getSet(round ? round.setId : null);
     if (!B.bank || Object.keys(B.bank).length < 5) return res.status(400).json({ ok: false, error: 'no_questions' });
@@ -468,7 +505,7 @@ module.exports = function (app, DATA, opts) {
     if (_onsite && typeof b.paused === 'boolean') xvSyncPause(s, b.paused);
     if (_onsite && typeof b.pauseUsed === 'number') s.pauseUsed = b.pauseUsed;
     // บังคับเวลาจากเซิร์ฟเวอร์: หมดเวลาแล้ว → ตัดข้อสอบทันที ไม่รับคำตอบเพิ่ม (ไม่เชื่อค่าเวลาจากลูกค้า)
-    if (xvExpired(s)) { score(s, true); writeS(all); return res.json({ ok: true, expired: true, status: s.status, remaining: 0 }); }
+    if (xvExpired(s)) return res.json({ ok: false, expired: true, status: s.status, remaining: 0 }); // ไม่ตัดคะแนนที่นี่ — ให้ /submit รวมคำตอบชุดเต็มก่อน (ตัวกวาด 45 วิ ตัดให้ถ้าไม่มีใครส่ง)
     // ตรวจขอบเขต part/q ให้ตรงกับตอน submit (mergeAnswers) — กันเขียนคีย์นอกพาร์ต/นอกช่วง และกันคำตอบ phase เก่ารั่วข้ามรอบ
     if (b.part != null && b.q != null && (b.choice === null || (b.choice >= 0 && b.choice < 4))) {
       const _p = +b.part, _q = +b.q;
@@ -531,9 +568,11 @@ module.exports = function (app, DATA, opts) {
       // รวมคำตอบชุดเต็ม "ก่อน" คิดเรื่องหมดเวลาเสมอ — เพื่อกู้ข้อที่ตอบแล้วแต่ยังซิงก์ไม่ทัน (เน็ตช้า+ใกล้หมดเวลา)
       // การ merge ไม่ทำให้ได้เวลาเพิ่ม (แค่ยืนยันคำตอบที่เลือกไว้แล้ว) และ mergeAnswers ตรวจ scope/range อยู่แล้ว จึงปลอดภัยแม้หมดเวลา
       mergeAnswers(s, b.answers);
-      const expired = xvExpired(s);
+      // ส่งตอนหมดเวลา (หน้าเว็บส่งให้เองเมื่อเวลาเหลือ 0) = นับเป็นหมดเวลา ตามกติกา "หมดเวลาแล้วยังมีพาร์ทไม่ผ่าน = ไม่ผ่าน"
+      // ช่วงผ่อนผัน 30 วิ มีไว้รับคำตอบที่ส่งช้าเพราะเน็ตเท่านั้น ไม่ได้ให้เวลาสอบเพิ่ม
+      const expired = xvExpired(s) || (!s.paused && Date.now() >= xvDeadline(s) - 1000);
       score(s, expired); writeS(all);
-      flushCollSync('sessions'); // คงทนทันทีก่อนตอบ ok — กันผลสอบหายถ้า process ตายในหน้าต่าง debounce
+      flushSoon('sessions'); // เขียนลงไฟล์ภายใน ~0.3 วิ (เดิมเขียนทั้งไฟล์แบบ sync ทุกครั้ง → ตอนทุกคนส่งพร้อมกัน เซิร์ฟเวอร์ค้างเป็นสิบวินาที)
     }
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0), examType: sessExamType(s) });
   });
@@ -583,7 +622,9 @@ module.exports = function (app, DATA, opts) {
     // ถ้าหมดเวลาแต่ยังไม่ได้ส่ง (เช่นปิดแท็บทิ้งไว้) → ตัดข้อสอบอัตโนมัติเมื่อมีการเรียกดู
     if (xvAutoExpire(s)) writeS(all);
     const parts = activeParts(s);
-    res.json({ ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, answers: s.answers, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: s.staffVerified, paper: clientPaper(s.paper, parts), examType: sessExamType(s) });
+    const out = { ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified', examType: sessExamType(s) };
+    if (req.query.lite !== '1') { out.answers = s.answers; out.paper = clientPaper(s.paper, parts); }   // โพลระหว่างสอบใช้ lite=1 (ไม่ต้องส่งข้อสอบ 100 ข้อทุก 6 วิ)
+    res.json(out);
   });
 
   /* -------- feedback / bug reports (สาธารณะ: ผู้เทสต์แจ้งปัญหาได้โดยไม่ต้องล็อกอิน) -------- */
@@ -626,7 +667,7 @@ module.exports = function (app, DATA, opts) {
   app.get('/api/xv/review/:id', (req, res) => {
     const all = readS(); const s = findS(all, req.params.id, req.query.token);
     if (!s) return res.status(404).json({ ok: false });
-    if (!s.staffVerified) return res.json({ ok: false, error: 'not_verified' });
+    if (!s.staffVerified || s.status === 'disqualified') return res.json({ ok: false, error: 'not_verified' });
     res.json({ ok: true, results: s.results.map(r => ({ part: r.part, score: r.score, wrongIds: r.wrongIds || [], questions: (r.wrongIds || []).map(n => s.paper[r.part][n - 1].q) })) });
   });
 
@@ -634,7 +675,7 @@ module.exports = function (app, DATA, opts) {
   app.get('/api/xv/round/:code', (req, res) => {
     const r = findRByCode(req.params.code);
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
-    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: r.status === 'open', mode: r.mode || 'online', venue: r.venue || '', timeslot: r.timeslot || '', examType: examTypeOf(r) } });
+    res.json({ ok: true, round: { id: r.id, code: r.code, no: r.no, date: r.date, topic: r.topic, status: r.status, open: xvExamLive(r), regOpen: r.status === 'open', mode: r.mode || 'online', venue: r.venue || '', timeslot: r.timeslot || '', examType: examTypeOf(r) } });
   });
 
   /* ---------------- roster: imported "paid registrants" for exam-entry autofill ----------------
@@ -761,7 +802,7 @@ module.exports = function (app, DATA, opts) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
     const d = req.body && req.body.decision;
-    if (d === 'disqualified') { s.status = 'disqualified'; s.proctorDecision = 'disqualified'; s.disqualifiedAt = Date.now(); }
+    if (d === 'disqualified') { s.statusBeforeDq = s.status; s.status = 'disqualified'; s.proctorDecision = 'disqualified'; s.disqualifiedAt = Date.now(); s.staffVerified = false; }
     else if (d === 'normal') { s.proctorDecision = 'normal'; }
     else return res.status(400).json({ ok: false, error: 'bad_decision' });
     writeS(all); res.json({ ok: true, status: s.status });
@@ -801,6 +842,7 @@ module.exports = function (app, DATA, opts) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
     if (s.status === 'in_progress') return res.status(400).json({ ok: false, error: 'in_progress' }); // แก้ได้เฉพาะรายการที่จบแล้ว
+    if (s.status === 'disqualified') return res.status(409).json({ ok: false, error: 'disqualified' });   // ตัดสิทธิ์แล้ว ห้ามแก้คะแนนจนสถานะเปลี่ยนกลับเป็นผ่าน
     const b = req.body || {};
     const edits = Array.isArray(b.scores) ? b.scores : null; // [{part, score}]
     const reason = String(b.reason || '').trim().slice(0, 200);
@@ -851,6 +893,7 @@ module.exports = function (app, DATA, opts) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const b = req.body || {}; const all = readS(); const s = all.find(x => x.id === req.params.id);
     if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (s.status === 'disqualified') return res.status(409).json({ ok: false, error: 'disqualified' });
     // พาร์ตที่ "ไม่ผ่าน" (คะแนน < เกณฑ์) และยังไม่หมดสิทธิ์ (ทำมาแล้วน้อยกว่า MAXATT ครั้ง)
     // ทีมงาน (admin) เปิดพาร์ตที่ "ไม่ผ่าน" ให้ทำใหม่ได้ — รวมกรณีใช้สิทธิ์ซ่อมครบแล้ว (เผื่อระบบมีปัญหา/คำตอบไม่ถูกบันทึก) · admin-only + บันทึก audit
     const failedParts = (s.results || []).filter(r => (r.score || 0) < PASS).map(r => r.part).sort((a, b) => a - b);
@@ -944,8 +987,9 @@ module.exports = function (app, DATA, opts) {
     if (b.venue != null) r.venue = String(b.venue).slice(0, 200);
     if (b.timeslot != null) r.timeslot = String(b.timeslot).slice(0, 60);
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
-    // กดเปิดสอบ (closed → open) = เริ่มนาฬิการวมของห้อง 120 นาทีใหม่ทุกครั้ง
-    if (r.status === 'open' && !wasOpen) {
+    // กดเปิดสอบ (closed → open) หรือกด "เริ่มจับเวลาสอบ" (startClock ตอนรอบเปิดรับสมัครอยู่แล้ว) = เริ่มนาฬิการวมของห้อง 120 นาที
+    if (b.startClock) r.status = 'open';
+    if (r.status === 'open' && (!wasOpen || b.startClock)) {
       r.examOpenedAt = Date.now();
       r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000;
       // คนที่กำลังสอบด้วยนาฬิกาห้อง (รอบแรก) รีเซ็ตเวลาตามนาฬิกาห้องใหม่ด้วย
@@ -959,7 +1003,7 @@ module.exports = function (app, DATA, opts) {
       if (touched) writeS(allS);
     }
     writeR(all);
-    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.status === 'open' ? 'เปิดสอบ (เริ่มจับเวลา)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
+    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, ((b.status === 'open' || b.startClock) ? 'เปิดสอบ (เริ่มจับเวลา)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
     res.json({ ok: true, round: pubRound(r) });
   });
 

@@ -425,7 +425,7 @@ body.xr-on{background:#FAFAFA!important}
 .checkrow{display:flex;align-items:center;gap:var(--space-3);background:var(--surface-solid);border:1px solid var(--border);border-radius:var(--radius-control);padding:12px var(--space-4);margin-bottom:var(--space-2);text-align:left;font-weight:600;font-size:14px}
 .checkrow .ci2{width:28px;height:28px;flex:none;color:var(--primary-500)}.checkrow .ci2 svg{width:28px;height:28px}
 
-.toast{position:fixed;left:50%;bottom:var(--space-5);transform:translateX(-50%) translateY(14px);opacity:0;background:var(--text-primary);color:#fff;padding:11px var(--space-5);border-radius:var(--radius-pill);font-size:14px;font-weight:600;z-index:90;transition:.25s var(--ease);box-shadow:0 14px 30px -12px rgba(9,42,100,.5)}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:var(--space-5);transform:translateX(-50%) translateY(14px);opacity:0;background:var(--text-primary);color:#fff;padding:11px var(--space-5);border-radius:var(--radius-pill);font-size:14px;font-weight:600;z-index:90;transition:.25s var(--ease);box-shadow:0 14px 30px -12px rgba(9,42,100,.5)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .demobar{position:fixed;right:14px;bottom:14px;z-index:70;font-size:12px;color:var(--text-secondary);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-pill);padding:7px 14px;backdrop-filter:blur(10px)}
 .demobar b{color:var(--primary-600);cursor:pointer}
@@ -693,7 +693,7 @@ function flushAnswers(){
         var results=await Promise.allSettled(keys.map(function(k){
           var choice=_syncQ[k]; var pq=k.split('-');
           return apiPost('/api/xv/answer',{sessionId:S.api.id,token:S.api.token,part:+pq[0],q:+pq[1],choice:choice,remaining:S.session?S.session.remaining:0})
-            .then(function(){ if(_syncQ[k]===choice) delete _syncQ[k]; });
+            .then(function(j){ if(_syncQ[k]===choice) delete _syncQ[k]; try{ if(j&&j.remaining!=null&&S.phase==='active_exam')syncRemaining(j.remaining); }catch(e){} });
         }));
         try{ updateSyncUI(); }catch(e){}
         if(results.some(function(r){return r.status==='rejected';})){ await new Promise(function(r){setTimeout(r,700);}); } // บางข้อล้มเหลว → พักสั้น ๆ แล้ววนส่งเฉพาะที่ยังค้าง
@@ -741,6 +741,12 @@ async function resolveRound(){
   try{document.title=xvBrand().name+' — ระบบสอบ';}catch(e){}
   if(S.phase==='registration')render();
 }
+// รอบยังไม่เปิด → เช็กสถานะรอบให้ทุก 15 วินาที เปิดแล้วหน้าเปลี่ยนเอง (ไม่ต้องรีเฟรช)
+setInterval(async function(){ try{
+  if(!(S&&S.phase==='registration'&&S.round&&S.round.code&&!S.round.notFound&&S.round.open!==true))return;
+  var r=await fetch('/api/xv/round/'+encodeURIComponent(S.round.code),{cache:'no-store'}); var j=await r.json();
+  if(j&&j.ok&&j.round&&(j.round.open!==S.round.open||S.round.offline)){ S.round=j.round; if(j.round.examType)S.examType=j.round.examType; render(); }
+}catch(e){} },15000);
 function freshSession(phase){buildPaper(phase==='remedial'?S.remedialQueue:[1,2,3,4,5]);return {phase,remaining:TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
 function activeParts(){return S.session&&S.session.phase==='remedial'?S.remedialQueue.slice():[1,2,3,4,5];}
 function partAnswered(p){let n=0;for(let q=0;q<QPP;q++)if(S.answers[key(p,q)]!=null)n++;return n;}
@@ -798,7 +804,7 @@ function ringSVG(pct,opt={}){const r=opt.r||R,c=2*Math.PI*r,off=c*(1-pct/100),dg
 function render(){
  const r={registration:renderRegistration,active_exam:renderExam,checking:renderChecking,first_result:renderResult,
    remedial_prep:renderRemedialPrep,remedial_result:renderResult,attempts_completed:renderAttempts,
-   waiting_verification:renderWaiting,all_passed:renderAllPassed,wrong_review:renderWrongReview,final_report:renderFinal}[S.phase];
+   waiting_verification:renderWaiting,all_passed:renderAllPassed,wrong_review:renderWrongReview,final_report:renderFinal,disqualified:renderDisqualified}[S.phase];
  try{var _xr=S.phase==='registration';document.body.classList.toggle('xr-on',_xr);app.classList.toggle('xr-on',_xr);}catch(e){}
  if(r)r();
  // ซิงก์ลายน้ำ + เว็บแคม proctoring ตามสถานะการสอบ
@@ -821,7 +827,7 @@ function roundBanner(){const r=S.round;if(!r)return '';
   if(r.notFound)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-weight:700;font-size:14px">ไม่พบรอบสอบนี้ — โปรดตรวจสอบลิงก์กับผู้จัดสอบอีกครั้ง</div>`;
   const closed=r.open===false;
   const meta=`ครั้งที่ ${r.no}${r.date?(' วันที่ '+thDate(r.date)):''}${r.topic?(' ('+r.topic+')'):''}`;
-  if(closed)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">รอบนี้ยังไม่เปิดสอบ / ปิดรับแล้ว — โปรดรอผู้จัดสอบเปิดรอบ</div></div>`;
+  if(closed)return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">ยังไม่ถึงเวลาเปิดสอบ</div><div style="font-weight:500;margin-top:2px">หน้านี้จะเปิดให้เองเมื่อทีมงานเริ่มการสอบ</div></div>`;
   return `<div style="margin-top:var(--space-4);padding:14px 18px;border-radius:14px;background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;font-weight:700;font-size:14px">รอบสอบ ${meta}<div style="font-weight:600;margin-top:3px">เปิดรับสมัคร — กรอกข้อมูลแล้วเริ่มสอบได้เลย</div></div>`;
 }
 const XRI={
@@ -925,7 +931,11 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
      _re();regErr('เชื่อมต่อไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง');return;
    }
    if(res&&res.error==='round_closed'){_re();S.round&&(S.round.open=false);toast('รอบนี้เพิ่งถูกปิด — เข้าสอบไม่ได้');render();return;}
-   if(res&&res.error==='already_taken'){_re();regErr('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
+   if(res&&res.error==='already_taken'){_re();
+     if(res.sessionId&&res.token){restoreFinished({id:res.sessionId,token:res.token,code:res.code,firstName:c.firstName,lastName:c.lastName,phone:c.phone,mode:res.mode||c.mode},res);toast('คุณสอบรอบนี้แล้ว ระบบพากลับไปหน้าผลของคุณ');return;}
+     regErr('คุณได้สอบรอบนี้ไปแล้ว ไม่สามารถสอบซ้ำได้');return;}
+   if(res&&res.error==='not_started'){_re();if(S.round)S.round.open=false;toast('ยังไม่ถึงเวลาเปิดสอบ โปรดรอทีมงานเริ่มการสอบ');render();return;}
+   if(res&&res.error==='no_round'){_re();regErr('กรุณาเปิดหน้าสอบจากลิงก์หรือ QR ของรอบสอบ');return;}
    if(res&&res.error==='exam_time_ended'){_re();regErr('หมดเวลาสอบของรอบนี้แล้ว');return;}
    if(res&&res.ok){S.api={on:true,id:res.sessionId,token:res.token,code:res.code};S.candidate.id=res.code;if(res.examType)S.examType=res.examType;S.paper={};(res.parts||[]).forEach(pp=>S.paper[pp]=res.paper[pp]);
      if(res.resumed){S.answers=mergeLocalAnswers(res.sessionId,res.answers);if((res.phase||'first')==='remedial')S.remedialQueue=(res.parts||[]).slice();S.session=freshSessionAPI(res.phase||'first',res.remaining!=null?res.remaining:res.durationSec);toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');}
@@ -991,7 +1001,12 @@ function setProgress(pct){const arc=$('#qbody')?app.querySelector('.progress-car
 function animateNum(el,from,to){if(!el)return;if(from===to){el.textContent=to+'%';return;}const t0=performance.now();
  (function step(t){const k=Math.min(1,(t-t0)/560),v=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));el.textContent=v+'%';if(k<1)requestAnimationFrame(step);})(performance.now());}
 function tickExam(){$$('.tv').forEach(e=>e.textContent=fmt(S.session.remaining));}
-function startTimer(){clearInterval(examTimer);examTimer=setInterval(()=>{const ss=S.session;if(!ss||ss.paused)return;if(ss.remaining>0){ss.remaining--;tickExam();}else{clearInterval(examTimer);doSubmit();}},1000);}
+// นับถอยหลังเทียบกับ "เวลาสิ้นสุด" (ไม่ใช่ลบทีละวินาที) — มือถือพักหน้าจอ/สลับแอปแล้วกลับมา เวลายังตรงกับเซิร์ฟเวอร์
+function startTimer(){clearInterval(examTimer);const s0=S.session;if(s0)s0.endAt=Date.now()+Math.max(0,s0.remaining||0)*1000;
+ examTimer=setInterval(()=>{const ss=S.session;if(!ss)return;if(ss.paused){ss.endAt=Date.now()+ss.remaining*1000;return;}
+  const left=Math.max(0,Math.ceil((ss.endAt-Date.now())/1000));if(left!==ss.remaining){ss.remaining=left;tickExam();}
+  if(left<=0){clearInterval(examTimer);doSubmit();}},1000);}
+function syncRemaining(sec){const ss=S.session;if(!ss||ss.paused||sec==null||!(sec>=0))return;if(Math.abs((ss.remaining||0)-sec)>=2){ss.endAt=Date.now()+sec*1000;ss.remaining=sec;tickExam();}}
 
 /* ---------- pause (onsite) ---------- */
 function openPause(){const ss=S.session;if(ss.pauseUsed>=PAUSE_MAX){toast('ใช้สิทธิ์หยุดเวลาครบแล้ว');return;}ss.paused=true;
@@ -1064,9 +1079,8 @@ function confirmSubmit2(){
 async function doSubmit(){
  if(S.api&&S.api.on){
    if(S._submitting)return; S._submitting=true; clearInterval(examTimer);
-   try{await flushAnswers();}catch(e){}
    apiPost('/api/xv/submit',{sessionId:S.api.id,token:S.api.token,answers:S.answers}).then(res=>{
-     if(res&&res.ok){if(res.examType)S.examType=res.examType;S.results=[1,2,3,4,5].map(p=>{const r=(res.results||[]).find(x=>x.part===p)||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';S._submitting=false;S.phase='checking';render();}
+     if(res&&res.ok){if(res.examType)S.examType=res.examType;S.results=[1,2,3,4,5].map(p=>{const r=(res.results||[]).find(x=>x.part===p)||{};return {part:p,score:r.score||0,status:r.status||'failed',attempts:r.attempts||0,wrongIds:[]};});S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';S._submitting=false;S.phase='checking';render();}
      else{S._submitting=false;submitFailed();} // ส่งไม่สำเร็จ (ok:false) — ห้ามเปลี่ยนเป็นผ่าน/รอตรวจปลอม
    }).catch(()=>{S._submitting=false;submitFailed();});
    return;}
@@ -1080,7 +1094,8 @@ function submitFailed(){try{if(S.session&&!S.session.paused)startTimer();}catch(
 /* ---------- scoring ---------- */
 function scoreActive(){if(S.api&&S.api.on)return;const ap=activeParts();ap.forEach(p=>{let sc=0;const wrong=[];for(let q=0;q<QPP;q++){const ok=S.answers[key(p,q)]===S.paper[p][q].c;if(ok)sc++;else wrong.push(q+1);}
    const r=S.results[p-1];r.score=sc;if(S.session.phase==='remedial')r.attempts++;r.status=sc>=PASS?'passed':'failed';r.wrongIds=wrong;});}
-function afterScore(){const failed=S.results.filter(r=>r.status==='failed');
+function afterScore(){if(S.api&&S.api.on&&S.serverStatus==='disqualified'){S.phase='disqualified';return;}
+ const failed=S.results.filter(r=>r.status==='failed');
  // เซิร์ฟเวอร์ตัดจบการสอบแล้ว (หมดเวลา 120 นาที = ตก แม้สิทธิ์ซ่อมยังไม่ครบ) → ไปจอ "ไม่ผ่าน" เสมอ ไม่เสนอสอบซ่อม
  if(S.api&&S.api.on&&S.serverStatus==='ended_failed'){S.phase='attempts_completed';return;}
  const exhausted=failed.filter(r=>r.attempts>=MAXATT);
@@ -1166,18 +1181,27 @@ function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div c
  $('#home').onclick=()=>{clearResume();app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ X-VISOR<br>แล้วพบกันใหม่ในรอบถัดไป</p></div>`;};
 }
 
+/* ---------- ถูกยุติการสอบโดยทีมงาน ---------- */
+function renderDisqualified(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
+   <h2>การสอบของคุณถูกยุติโดยทีมงาน</h2><p><span style="display:block">ทีมงานพบพฤติกรรมที่ผิดกติกาการสอบ</span><span style="display:block">จึงยุติการสอบในรอบนี้</span></p><p><span style="display:block">หากมีข้อสงสัย</span><span style="display:block;white-space:nowrap">ติดต่อทาง LINE @cloverxth</span></p></div>`;}
 /* ---------- 10 waiting ---------- */
 function renderWaiting(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic info">${I.shield}</div>
-   <h2>รอทีมงานยืนยันผล</h2><p>คุณผ่านครบทั้ง 5 พาร์ทแล้ว ทีมงานกำลังตรวจสอบความถูกต้องของการสอบ</p>
+   <h2>รอทีมงานยืนยันผล</h2><p><span style="display:block">คุณผ่านครบทั้ง 5 พาร์ทแล้ว</span><span style="display:block">ทีมงานกำลังตรวจสอบความถูกต้องของการสอบ</span></p>
    <div class="tl"><div class="tli done"><span class="td">${I.checkc}</span>ทำข้อสอบครบทุกพาร์ท</div><div class="tli done"><span class="td">${I.checkc}</span>ระบบตรวจคะแนนแล้ว</div>
      <div class="tli doing"><span class="td"><span class="mini-spin"></span></span>ทีมงานกำลังตรวจสอบและยืนยันผล</div><div class="tli"><span class="td">${I.eye}</span>เปิดสิทธิ์ดูข้อที่ตอบผิด</div></div>
    <div style="margin-top:var(--space-5)"><button class="btn btn-primary lg" id="v">${DEMO?'ทีมงานยืนยันผลแล้ว (เดโม) ':'ตรวจสอบสถานะการยืนยัน '}${I.next}</button></div></div>`;
  $('#v').onclick=async()=>{
    if(S.api&&S.api.on){try{const res=await apiGet('/api/xv/session/'+S.api.id+'?token='+S.api.token);
+     if(res&&res.ok&&res.status==='disqualified'){S.serverStatus='disqualified';S.phase='disqualified';render();return;}
      if(res&&res.ok&&res.staffVerified){S.staffVerified=true;S.phase='all_passed';render();return;}
      toast('ทีมงานยังไม่ยืนยันผล กรุณารอสักครู่');return;}catch(e){toast('เชื่อมต่อไม่สำเร็จ ลองอีกครั้ง');return;}}
    if(DEMO){S.staffVerified=true;S.phase='all_passed';render();return;}
    toast('ทีมงานยังไม่ยืนยันผล กรุณารอสักครู่');};
+ // เช็กให้อัตโนมัติทุก 20 วินาที (ไม่ต้องกดเอง) — หยุดเมื่อออกจากหน้านี้
+ if(S.api&&S.api.on){if(window._wv)clearInterval(window._wv);window._wv=setInterval(async()=>{if(S.phase!=='waiting_verification'){clearInterval(window._wv);window._wv=null;return;}
+   try{const res=await apiGet('/api/xv/session/'+S.api.id+'?lite=1&token='+encodeURIComponent(S.api.token));
+     if(res&&res.ok&&res.status==='disqualified'){clearInterval(window._wv);window._wv=null;S.serverStatus='disqualified';S.phase='disqualified';render();}
+     else if(res&&res.ok&&res.staffVerified){clearInterval(window._wv);window._wv=null;S.staffVerified=true;S.phase='all_passed';render();}}catch(e){}},20000);}
 }
 
 /* ---------- helpers: score ring + confetti ---------- */
@@ -1372,22 +1396,25 @@ window.xvEnterFS=xvEnterFS;
    ระหว่างสอบ เช็กสถานะทุก 6 วินาที ถ้าถูกตรวจแล้ว (สถานะไม่ใช่ in_progress) → เด้งไปหน้าผล+คะแนนทันที */
 (function forceGradeWatch(){
   var busy=false;
-  setInterval(function(){
+  function poll(){
     if(busy)return;
     if(!(S&&S.phase==='active_exam'&&S.api&&S.api.on))return;
     busy=true;
-    apiGet('/api/xv/session/'+S.api.id+'?token='+encodeURIComponent(S.api.token)).then(function(res){
+    apiGet('/api/xv/session/'+S.api.id+'?lite=1&token='+encodeURIComponent(S.api.token)).then(function(res){
       busy=false;
       if(!res||!res.ok)return;
+      if(res.status==='in_progress'){ try{ syncRemaining(res.remaining); }catch(e){} return; }
+      if(S._submitting)return;
       if(res.status&&res.status!=='in_progress'){
         clearInterval(examTimer);
-        S.results=[1,2,3,4,5].map(function(p){var r=(res.results||[]).find(function(x){return x.part===p;})||{};return {part:p,score:r.score||0,status:r.status||'passed',attempts:r.attempts||0,wrongIds:[]};});
-        S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';
-        try{clearResume();}catch(e){}
+        S.results=[1,2,3,4,5].map(function(p){var r=(res.results||[]).find(function(x){return x.part===p;})||{};return {part:p,score:r.score||0,status:r.status||'failed',attempts:r.attempts||0,wrongIds:[]};});
+        S.remedialQueue=res.remedialQueue||[];S.serverStatus=res.status||'';S.staffVerified=!!res.staffVerified;
         S.phase='checking';render();
       }
     },function(){busy=false;}).catch(function(){busy=false;});
-  },6000);
+  }
+  setInterval(poll,6000);
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') setTimeout(poll,300); });
 })();
 /* ---------- กันแคปจอ: เบลอ/บังเนื้อหาเมื่อหน้าต่างไม่ได้โฟกัส (เฉพาะหน้าคำถาม/ทบทวนข้อผิด) ----------
    ช่วยกันสกรีนช็อต/แชร์จอ: พอสลับหน้าต่างหรือเรียกเครื่องมือแคป หน้าจะถูกบังทันที
@@ -1495,7 +1522,8 @@ async function tryResumeCore(d){
   }
   if(hardGone) return 'gone';
   if(!res) return 'retry';                                // ต่อเซิร์ฟเวอร์ไม่ติดหลังลองหลายครั้ง (แต่มี session เดิมอยู่)
-  if(!res.ok||res.status!=='in_progress') return 'gone';  // จบไปแล้ว/ไม่ได้กำลังสอบ
+  if(!res.ok) return 'gone';
+  if(res.status!=='in_progress'){ restoreFinished(d,res); return 'ok'; }  // สอบจบ/รอซ่อม/รอยืนยัน → พากลับหน้าที่ถูกต้อง (ไม่ล้างข้อมูล ไม่เด้งไปหน้ากรอกชื่อ)
   if(res.examType)S.examType=res.examType;
   S.api={on:true,id:d.id,token:d.token,code:d.code};
   S.candidate={firstName:d.firstName||'',lastName:d.lastName||'',phone:d.phone||'',mode:d.mode||res.mode||'onsite',id:d.code||''};
@@ -1508,6 +1536,22 @@ async function tryResumeCore(d){
   try{var ap=activeParts(),cp=ap[0];for(var i=0;i<ap.length;i++){cp=ap[i];if(!partComplete(ap[i]))break;}S.session.currentPart=cp;var fq=firstMissingQ(cp);S.session.currentQ=fq<0?0:fq;}catch(e){}
   S.phase='active_exam';render();startTimer();toast('กลับเข้าสู่การสอบเดิมของคุณ ⏱');
   return 'ok';
+}
+// กลับไปหน้าที่ตรงกับสถานะจริงบนเซิร์ฟเวอร์ (หลังรีเฟรช / มือถือโหลดแท็บใหม่ / กดเริ่มสอบซ้ำ)
+function restoreFinished(d,res){
+  if(res.examType)S.examType=res.examType;
+  S.api={on:true,id:d.id,token:d.token,code:d.code};
+  S.candidate={firstName:d.firstName||'',lastName:d.lastName||'',phone:d.phone||'',mode:d.mode||res.mode||'online',id:d.code||''};
+  S.results=[1,2,3,4,5].map(function(p){var r=(res.results||[]).find(function(x){return x.part===p;})||{};return {part:p,score:r.score||0,status:r.status||'failed',attempts:r.attempts||0,wrongIds:[]};});
+  S.remedialQueue=(res.remedialQueue||[]).slice(); S.serverStatus=res.status||''; S.staffVerified=!!res.staffVerified;
+  var st=res.status;
+  if(st==='disqualified') S.phase='disqualified';
+  else if(st==='verified'||st==='submitted'||(st!=='awaiting_verify'&&res.staffVerified)) { S.staffVerified=true; S.phase='all_passed'; }
+  else if(st==='awaiting_verify') S.phase='waiting_verification';
+  else if(st==='remedial_required') S.phase=(res.phase==='remedial')?'remedial_result':'first_result';
+  else S.phase='attempts_completed';
+  try{saveResume();}catch(e){}
+  render();
 }
 var _rcTimer=null;
 // เน็ตล่มตอนรีเฟรช แต่มี session เดิมค้างอยู่ → แสดงจอ "กำลังเชื่อมต่อกลับ" + ลองใหม่อัตโนมัติ (ห้ามเด้งไปหน้าลงทะเบียนเด็ดขาด)
