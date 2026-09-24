@@ -2454,7 +2454,12 @@
         +'<td class="num">'+remain+'</td>'
         +'<td class="num">'+scoreCell+'</td>'
         +'<td>'+statusCell+'</td>'
-        +'<td><button onclick="xvForceGrade(\''+s.id+'\',\''+delName+'\')" title="บังคับตรวจคะแนนตอนนี้ (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้)" style="border:1px solid #82D7B3;background:#EFFBF6;color:#078654;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:800;font-size:.78rem;line-height:1;margin-right:6px">✓ ตรวจคะแนน</button>'+'<button onclick="xvSessionDetail(\''+s.id+'\')" title="ดูข้อที่ตอบผิด (ระหว่างสอบ) & คะแนนรายครั้ง" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-right:6px">📊</button>'+((s.camPhotos>0)?'<button onclick="xvShowPhotos(\''+s.id+'\')" title="ภาพเว็บแคม '+s.camPhotos+' ภาพ" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.8rem;line-height:1;margin-right:6px">📷 '+s.camPhotos+'</button>':'')+'<button onclick="xvDelSession(\''+s.id+'\',\''+delName+'\',\'tracker\')" title="ลบรายการนี้ (ทดสอบ/ผิดพลาด)" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;cursor:pointer;color:var(--bad);font-size:.9rem;line-height:1">🗑</button></td></tr>';
+        +'<td><div class="kebab-wrap"><button class="kebab-btn" onclick="poMenu(this)" aria-label="เมนูจัดการ">⋮</button><div class="kebab-menu">'
+          +'<button class="kebab-item k-good" onclick="poMenuClose(this);xvForceGrade(\''+s.id+'\',\''+delName+'\')">✓ ตรวจคะแนน + จบการสอบ</button>'
+          +'<button class="kebab-item k-brand" onclick="poMenuClose(this);xvSessionDetail(\''+s.id+'\')">📊 คะแนน & ข้อที่ตอบผิด</button>'
+          +((s.camPhotos>0)?'<button class="kebab-item k-brand" onclick="poMenuClose(this);xvShowPhotos(\''+s.id+'\')">📷 ภาพเว็บแคม ('+s.camPhotos+' ภาพ)</button>':'')
+          +'<button class="kebab-item k-bad" onclick="poMenuClose(this);xvDelSession(\''+s.id+'\',\''+delName+'\',\'tracker\')">🗑 ลบรายการนี้</button>'
+          +'</div></div></td></tr>';
     }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">ไม่มีผู้ที่กำลังสอบอยู่ตอนนี้<span class=mdiv></span>ผู้ที่สอบเสร็จแล้วดูได้ที่ <a class="link" href="#" onclick="go(\'exam-result\');return false">หน้าผลการสอบ →</a></td></tr>';
     var modeLabel=EXAM_TAB==='online'?'Online (สอบออนไลน์)':'Offline<span class=mdiv></span>On-Site (สอบที่ศูนย์)';
     gen.innerHTML=xvHead('ติดตามการสอบ<span class=mdiv></span>Exam Tracker','ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ X-Visor แยกตามรูปแบบการสอบ')
@@ -4578,7 +4583,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     box.innerHTML='<table style="'+MA_TBL+'"><thead><tr><th style="'+MA_TH+'">สมาชิก</th><th style="'+MA_TH+'">อีเมล</th><th style="'+MA_TH+'">เบอร์โทร</th><th style="'+MA_TH+'">ระดับ</th><th style="'+MA_TH+'">สมัครเมื่อ</th><th style="'+MA_TH+'">เข้าใช้ล่าสุด</th><th style="'+MA_TH+'"></th></tr></thead><tbody>'
       +rows.map(function(m){ return '<tr style="'+(m.disabled?'opacity:.55':'')+'"><td style="'+MA_TD+'"><div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:17px;background:#EEF4FF;flex:none;overflow:hidden;display:grid;place-items:center;color:#94A3B8">'+(m.avatar?'<img src="'+maE(m.avatar)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>')+'</span><b>'+maE(m.name)+'</b>'+(m.disabled?' <span class="pill bad">ระงับ</span>':'')+'</div></td>'
         +'<td style="'+MA_TD+'">'+maE(m.email)+'</td><td style="'+MA_TD+';font-variant-numeric:tabular-nums">'+maE(m.phone)+'</td><td style="'+MA_TD+'">'+maTierPill(m.tier)+'</td><td style="'+MA_TD+';white-space:nowrap">'+maDate(m.createdAt)+'</td><td style="'+MA_TD+';white-space:nowrap">'+maDate(m.lastLoginAt)+'</td>'
-        +'<td style="'+MA_TD+';text-align:right;white-space:nowrap"><button class="xbtn" style="height:34px" onclick="maEditMember(\''+maE(m.id)+'\')">แก้ไข</button></td></tr>'; }).join('')+'</tbody></table>';
+        +'<td style="'+MA_TD+';text-align:right;white-space:nowrap"><div class="kebab-wrap"><button class="kebab-btn" onclick="poMenu(this)" aria-label="เมนูจัดการ">⋮</button><div class="kebab-menu"><button class="kebab-item k-brand" onclick="poMenuClose(this);maEditMember(\''+maE(m.id)+'\')">✎ แก้ไขข้อมูล / ปลดล็อกการสอบ</button><button class="kebab-item k-bad" onclick="poMenuClose(this);maDelMember(\''+maE(m.id)+'\')">🗑 ลบบัญชี</button></div></div></td></tr>'; }).join('')+'</tbody></table>';
   }
   function maField(id,label,val,attrs){ return '<label style="display:block;margin-top:12px;font-size:.8rem;font-weight:700;color:var(--muted)">'+label+'<input id="'+id+'" value="'+maE(val||'')+'" '+(attrs||'')+' style="display:block;width:100%;margin-top:6px;height:42px;padding:0 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;color:var(--ink);font-weight:500"></label>'; }
   function maArea(id,label,val,rows){ return '<label style="display:block;margin-top:12px;font-size:.8rem;font-weight:700;color:var(--muted)">'+label+'<textarea id="'+id+'" rows="'+(rows||4)+'" style="display:block;width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;color:var(--ink);font-weight:500;resize:vertical">'+maE(val||'')+'</textarea></label>'; }
@@ -4617,7 +4622,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--line);border-radius:12px;'+(x.active===false?'opacity:.55':'')+'"><div style="width:'+(type==='banners'?'120px':'96px')+';aspect-ratio:'+(type==='banners'?'367/163':'16/9')+';border-radius:8px;background:#E8EEF7 '+(th?'url(\''+maE(th)+'\') center/cover':'')+';flex:none"></div>'
         +'<div style="flex:1;min-width:0"><div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+maE(x.title||x.badge||'(ไม่มีชื่อ)')+'</div><div style="color:var(--muted);font-size:.8rem;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
         +maE(type==='banners'?((x.badge?x.badge+'  ':'')+(x.link||'ไม่มีลิงก์')):(type==='lessons'?((x.category||'')+(x.duration?'  '+x.duration:'')):(x.summary||'')))+'</div><div style="color:var(--muted);font-size:.74rem;margin-top:2px">'+maDate(x.at)+(x.active===false?'  ซ่อนอยู่':'')+'</div></div>'
-        +'<button class="xbtn" style="height:34px" onclick="maEdit(\''+type+'\',\''+maE(x.id)+'\')">แก้ไข</button></div>'; }).join('')+'</div>';
+        +'<div class="kebab-wrap"><button class="kebab-btn" onclick="poMenu(this)" aria-label="เมนูจัดการ">⋮</button><div class="kebab-menu"><button class="kebab-item k-brand" onclick="poMenuClose(this);maEdit(\''+type+'\',\''+maE(x.id)+'\')">✎ แก้ไข</button><button class="kebab-item k-bad" onclick="poMenuClose(this);maDel(\''+type+'\',\''+maE(x.id)+'\')">🗑 ลบ</button></div></div></div>'; }).join('')+'</div>';
   }
   var MA_IMG=null;
   function maEdit(type,id){ var x=id?(MA.content[type]||[]).find(function(y){return y.id===id;}):{}; if(!x)return; MA_IMG=null;
@@ -4684,11 +4689,21 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function poDelete(id){if(!confirm('ลบออเดอร์ '+id+' ออกจากระบบถาวร?\n(ลบเฉพาะรายการในระบบ ไม่กระทบการเงินฝั่ง Stripe)'))return;fetch('/api/orders/'+id+(OPS_KEY?('?key='+encodeURIComponent(OPS_KEY)):''),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){poRefresh();}else{alert('ลบไม่สำเร็จ: '+((j&&j.error)||'')+((j&&j.error==='forbidden')?' (ต้องใส่ Admin Key)':''));}}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});}
   // ===== Refund flow =====
   var RF_SUB={'ลูกค้าคืนสินค้า':['สินค้าชำรุด/เสียหาย','ได้รับสินค้าผิด','เปลี่ยนใจ'],'ลูกค้ายกเลิกคำสั่งซื้อ':['เปลี่ยนสินค้า','เปลี่ยนใจ'],'ระบบมีปัญหา':['ราคาสินค้าผิด']};
-  function poMenuCloseAll(){document.querySelectorAll('.kebab-menu.on').forEach(function(x){x.classList.remove('on');});}
-  function poMenu(btn){var m=btn.nextElementSibling;var wasOpen=m.classList.contains('on');poMenuCloseAll();if(wasOpen)return;var r=btn.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';var left=r.right-Math.max(200,m.offsetWidth||200);m.style.left=Math.max(8,left)+'px';m.classList.add('on');var r2=r.right-(m.offsetWidth||200);m.style.left=Math.max(8,r2)+'px';}
+  function poMenuCloseAll(){document.querySelectorAll('.kebab-menu').forEach(function(x){x.classList.remove('on');if(x._btn&&!x._btn.isConnected&&x.parentNode===document.body)x.remove();});}
+  // เมนู ⋮ ย้ายไปอยู่ใต้ body ตอนเปิด (กันกรอบที่มี transform/overflow ทำให้ตำแหน่งเพี้ยน) และพลิกขึ้นด้านบนเมื่อพื้นที่ด้านล่างไม่พอ
+  function poMenu(btn){var m=btn._m||btn.nextElementSibling;if(!m)return;btn._m=m;m._btn=btn;var wasOpen=m.classList.contains('on');poMenuCloseAll();if(wasOpen)return;
+    if(m.parentNode!==document.body)document.body.appendChild(m);
+    m.style.maxHeight='';m.style.overflowY='';m.style.top='0px';m.style.left='0px';m.classList.add('on');
+    var r=btn.getBoundingClientRect(),w=m.offsetWidth||200,h=m.offsetHeight,vh=window.innerHeight,vw=window.innerWidth;
+    m.style.left=Math.max(8,Math.min(vw-w-8,r.right-w))+'px';
+    var below=vh-8-(r.bottom+6),above=r.top-6-8;
+    if(h<=below){m.style.top=(r.bottom+6)+'px';}
+    else if(h<=above){m.style.top=(r.top-6-h)+'px';}
+    else if(below>=above){m.style.top=(r.bottom+6)+'px';m.style.maxHeight=below+'px';m.style.overflowY='auto';}
+    else{m.style.top='8px';m.style.maxHeight=above+'px';m.style.overflowY='auto';}}
   function poMenuClose(el){var m=el.closest('.kebab-menu');if(m)m.classList.remove('on');}
   document.addEventListener('click',function(e){if(!e.target.closest('.kebab-wrap'))poMenuCloseAll();});
-  window.addEventListener('scroll',function(){poMenuCloseAll();},true);
+  window.addEventListener('scroll',function(e){if(e.target&&e.target.closest&&e.target.closest('.kebab-menu'))return;poMenuCloseAll();},true);
   window.addEventListener('resize',function(){poMenuCloseAll();});
   var RF={id:'',total:0,pay:'',refunded:0,full:true,kind:'order',nm:''};
   var RF_CATS={order:[['','— เลือกเหตุผล —'],['ลูกค้าคืนสินค้า','ลูกค้าคืนสินค้า'],['ลูกค้ายกเลิกคำสั่งซื้อ','ลูกค้ายกเลิกคำสั่งซื้อ'],['ระบบมีปัญหา','ระบบมีปัญหา'],['อื่น ๆ','อื่น ๆ']],
