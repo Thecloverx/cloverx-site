@@ -697,6 +697,14 @@ function xvBrand(){
     stepLine:lead?'ผ่านการสอบเลื่อนระดับ เพื่อก้าวสู่การเป็น X-Lead':'ผ่านการทดสอบ X-Visor ครบทั้ง 5 พาร์ต'
   };
 }
+/* วาดหน้ากรอกข้อมูลใหม่โดยไม่ทำให้สิ่งที่พิมพ์ค้างหาย และคงเคอร์เซอร์ไว้ที่ช่องเดิม (เช่น ข้อมูลรอบสอบโหลดเสร็จระหว่างพิมพ์) */
+function renderKeepForm(){
+  var map={fn:'firstName',ln:'lastName',ph:'phone'}, a=document.activeElement, id=a&&a.id, pos=null;
+  try{ if(id&&map[id]) pos=a.selectionStart; }catch(e){}
+  Object.keys(map).forEach(function(k){ var e=document.getElementById(k); if(e&&S.candidate) S.candidate[map[k]]=e.value; });
+  render();
+  if(id&&map[id]){ var n=document.getElementById(id); if(n){ try{ n.focus({preventScroll:true}); if(pos!=null) n.setSelectionRange(pos,pos); }catch(e){} } }
+}
 /* resolve exam round from ?round=CODE (candidate share link) */
 async function resolveRound(){
   let code=null; try{code=new URLSearchParams(location.search).get('round');}catch(e){}
@@ -705,13 +713,13 @@ async function resolveRound(){
     if(j&&j.ok){S.round=j.round; if(j.round&&j.round.examType)S.examType=j.round.examType; if(j.round&&(j.round.mode==='onsite'||j.round.mode==='online')){S.candidate.mode=j.round.mode;}} else {S.round={code,notFound:true};}
   }catch(e){S.round={code,offline:true};}
   try{document.title=xvBrand().name+' — ระบบสอบ';}catch(e){}
-  if(S.phase==='registration')render();
+  if(S.phase==='registration')renderKeepForm();
 }
 // รอบยังไม่เปิด → เช็กสถานะรอบให้ทุก 15 วินาที เปิดแล้วหน้าเปลี่ยนเอง (ไม่ต้องรีเฟรช)
 setInterval(async function(){ try{
   if(!(S&&S.phase==='registration'&&S.round&&S.round.code&&!S.round.notFound&&S.round.open!==true))return;
   var r=await fetch('/api/xv/round/'+encodeURIComponent(S.round.code),{cache:'no-store'}); var j=await r.json();
-  if(j&&j.ok&&j.round&&(j.round.open!==S.round.open||S.round.offline)){ S.round=j.round; if(j.round.examType)S.examType=j.round.examType; render(); }
+  if(j&&j.ok&&j.round&&(j.round.open!==S.round.open||S.round.offline)){ S.round=j.round; if(j.round.examType)S.examType=j.round.examType; renderKeepForm(); }
 }catch(e){} },15000);
 function freshSession(phase){buildPaper(phase==='remedial'?S.remedialQueue:[1,2,3,4,5]);return {phase,remaining:TOTAL,currentPart:phase==='remedial'?S.remedialQueue[0]:1,currentQ:0,pauseUsed:0,shownPct:0};}
 function activeParts(){return S.session&&S.session.phase==='remedial'?S.remedialQueue.slice():[1,2,3,4,5];}
@@ -810,9 +818,9 @@ function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite(
    ${roundBanner()}
  <div class="reg-grid${(onsiteRound||S.round)?' reg-solo':''}" style="margin-top:var(--space-5)">
      <div><div class="field-title">ข้อมูลผู้สอบ</div>
-       <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>ชื่อ</label><input id="fn" placeholder="กรอกชื่อ" value="${c.firstName}"></span></div>
-       <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>นามสกุล</label><input id="ln" placeholder="กรอกนามสกุล" value="${c.lastName}"></span></div>
-       <div class="frow"><span class="fi">${I.phone}</span><span class="fc"><label>เบอร์โทรศัพท์</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="08X-XXX-XXXX" value="${c.phone}"></span></div>
+       <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>ชื่อ</label><input id="fn" placeholder="กรอกชื่อ" value="${esc(c.firstName)}"></span></div>
+       <div class="frow"><span class="fi">${I.user}</span><span class="fc"><label>นามสกุล</label><input id="ln" placeholder="กรอกนามสกุล" value="${esc(c.lastName)}"></span></div>
+       <div class="frow"><span class="fi">${I.phone}</span><span class="fc"><label>เบอร์โทรศัพท์</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="08X-XXX-XXXX" value="${esc(c.phone)}"></span></div>
        <div id="rosterHit" class="rosterhit" style="display:none"></div>
        ${onsiteRound?`<div class="onsite-note"><span class="mi" style="font-size:22px">${I.bldg}</span><span><b>สอบที่ศูนย์ (On-Site)</b><small>คุมสอบโดยทีมงานหน้างาน</small></span></div>`:''}</div>
      ${(onsiteRound||S.round)?'':`<div style="display:flex;flex-direction:column"><div class="field-title">รูปแบบการสอบ</div>
