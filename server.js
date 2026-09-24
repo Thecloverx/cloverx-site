@@ -1473,6 +1473,8 @@ app.use(function (req, res, next) {
   if (h.indexOf('railway.app') < 0) return next();
   var p = req.path || '';
   if (p === '/leanlab' || p.indexOf('/leanlab/') === 0) return res.redirect(302, 'https://leanlab.cloverxth.com' + (req.originalUrl || p));
+  // แอปสมาชิก: เปิดจากโดเมน railway → เด้งไปโดเมนสมาชิก (ตั้ง MEMBER_HOST เพื่อเปลี่ยนชื่อ)
+  if (p === '/app' || p === '/app.html') return res.redirect(302, 'https://' + (process.env.MEMBER_HOST || 'member.cloverxth.com') + '/app' + (req.originalUrl.indexOf('?') >= 0 ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : ''));
   return next();
 });
 
@@ -1483,6 +1485,7 @@ function siteForHost(req) {
   if (h.indexOf('leanlab') === 0) return 'leanlab';
   if (h.indexOf('center') === 0) return 'center';
   if (h.indexOf('shop') === 0) return 'shop';        // shopping.cloverxth.com / shop.*
+  if (h.indexOf('member') === 0 || h.indexOf('my.') === 0) return 'member'; // member.cloverxth.com → แอปสมาชิก X-Visor / X-Lead
   return 'career';                                    // career(s).cloverxth.com, โดเมน railway, apex → หน้าเว็บสมัครงาน
 }
 
@@ -1494,6 +1497,7 @@ app.get('/', (req, res) => {
   if (s === 'leanlab') return res.redirect('/leanlab');   // leanlab.cloverxth.com → โครงการ Lean Lab
   if (s === 'center') return res.redirect('/center');     // center.cloverxth.com → ระบบพนักงาน (ผ่านล็อกอิน)
   if (s === 'shop') return res.redirect('/preorder');     // shopping.cloverxth.com → หน้าสั่งซื้อ
+  if (s === 'member') return res.redirect('/app');        // member.cloverxth.com → แอปสมาชิก
   return res.sendFile(path.join(__dirname, 'index.html'));// career → หน้าเว็บสมัครงาน
 });
 
