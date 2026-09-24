@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>ลงทะเบียนสอบ CloverX E-xam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
+<style>
+/* ===== โทเคนสีตาม Figma (X-Visor = น้ำเงิน, X-Lead = ทอง) ===== */
+:root{
+  --brand:#2563eb;--brand-d:#1d4ed8;--brand-l:#3b82f6;--brand-soft:#eff6ff;--brand-bd:#bfdbfe;
+  --ink:#1e293b;--mut:#64748b;--ph:#94a3b8;--line:#e2e8f0;--bg:#f4f7fc;--card:#ffffff;
+  --ok:#10b981;--ok-bg:#e6f4ea;--warn:#f59e0b;--warn-bg:#fef3c7;--bad:#dc2626;--bad-bg:#fee2e2;
+  --prog:#e2e8f0;--chk-t:#64748b;--hero-a:#3b82f6;--hero-b:#1d4ed8;--hero-sub:#e0f2fe;--shadow:rgba(37,99,235,.2);
+  --f:"Inter","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+body.lead{
+  --brand:#b1961d;--brand-d:#9a8217;--brand-l:#bea32b;--brand-soft:#fbf6e3;--brand-bd:#eadca0;
+  --ink:#451a03;--line:#e5e7eb;--bg:#ffffff;--prog:#f3e5b5;--chk-t:#78350f;
+  --hero-a:#b1961d;--hero-b:#e0cb57;--hero-sub:#fef3c7;--shadow:rgba(217,119,6,.2);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#e9eef6;color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hide{display:none!important}
+.ln{display:inline-block}
+.nb{white-space:nowrap}
+
+/* แอปกว้างเท่ามือถือ แม้เปิดบนจอใหญ่ */
+.app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;position:relative}
+@media(min-width:520px){.app{box-shadow:0 0 0 1px rgba(15,23,42,.05),0 20px 60px rgba(15,23,42,.08)}}
+.view{flex:1;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.view>.body{flex:1}
+
+/* ===== แถบบน ===== */
+.nav{background:#fff;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;gap:12px}
+body.lead .nav{border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
+body:not(.lead) .logo{color:#1e3a8a}
+.logo .lgb{width:28px;height:28px;border-radius:8px;background:var(--brand);display:grid;place-items:center;flex:none}
+.logo b{font-size:16px;font-weight:800;white-space:nowrap}
+.mylink{background:none;border:0;padding:6px 0;color:var(--brand);font-weight:600;font-size:14px;text-decoration:underline;white-space:nowrap}
+.hdr{background:#fff;border-bottom:1px solid var(--line);height:56px;display:flex;align-items:center;gap:16px;padding:0 24px;position:sticky;top:0;z-index:5}
+.hdr h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:700;line-height:1.2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr .sp{width:32px;height:32px;flex:none}
+.back{width:32px;height:32px;border-radius:16px;border:0;background:var(--bg);display:grid;place-items:center;flex:none;color:var(--ink)}
+body.lead .back{background:#fff}
+.back:focus-visible,.btn:focus-visible,.seg button:focus-visible,.mylink:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ===== ตัวเลือกหลักสูตร ===== */
+.selwrap{background:#fff;padding:16px 24px}
+body.lead .selwrap{border-bottom:1px solid var(--line)}
+.seg{height:44px;background:var(--bg);border-radius:12px;padding:4px;display:flex}
+body.lead .seg{background:#fff;border:1px solid var(--line)}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;color:var(--mut);font-weight:500;font-size:14px}
+body.lead .seg button{background:#f9fafb}
+.seg button.on{background:#fff;color:var(--brand);font-weight:700;box-shadow:0 2px 2px rgba(0,0,0,.04)}
+body.lead .seg button.on{background:#fff;box-shadow:0 2px 2px rgba(180,83,9,.12)}
+
+/* ===== Hero ===== */
+.hero{padding:24px;background:linear-gradient(90deg,var(--hero-a),var(--hero-b));color:#fff;display:flex;flex-direction:column;gap:12px}
+.hero .bdg{align-self:flex-start;background:rgba(255,255,255,.2);border-radius:100px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.02em}
+body.lead .hero .bdg{font-size:11px;letter-spacing:0}
+.hero h2{margin:0;font-size:28px;font-weight:800;line-height:1.25;text-wrap:balance}
+body.lead .hero h2{font-size:20px}
+.hero p{margin:4px 0 0;color:var(--hero-sub);font-size:16px;line-height:1.45}
+body.lead .hero p{font-size:15px}
+
+/* ===== พื้นที่เนื้อหา ===== */
+.pad{padding:24px;display:flex;flex-direction:column;gap:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+.rules{display:flex;flex-direction:column;gap:16px}
+.rules-h{display:flex;align-items:center;justify-content:space-between;background:none;border:0;padding:0;width:100%;text-align:left;color:var(--ink)}
+.rules-h span{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.rules-h .cv{transition:transform .2s}
+.rules.fold .cv{transform:rotate(-90deg)}
+.rules.fold .rl{display:none}
+.rl{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;color:var(--mut);font-size:14px}
+.rl li{display:flex;gap:8px}
+.rl li:before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;margin-top:9px;flex:none}
+.empty{text-align:center;color:var(--mut);font-size:14px;padding:6px 0}
+
+/* ===== ฟอร์ม ===== */
+.prog{height:4px;background:var(--prog);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--brand);border-radius:2px}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld>label,.fld>.lb{font-weight:600;font-size:14px;color:var(--ink)}
+.fld>label.opt{font-weight:400}
+.inp{height:48px;width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 16px;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;appearance:none}
+@media(min-width:420px){.inp{font-size:14px}}
+.inp::placeholder{color:var(--ph)}
+.inp:focus{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 14%,transparent)}
+.inp[readonly]{color:#9ca3af;font-weight:600}
+.inp.err{border-color:var(--bad)}
+.sel{position:relative}
+.sel select{padding-right:44px;font-weight:600;text-overflow:ellipsis}
+.sel select.ph{font-weight:400;color:var(--mut)}
+.sel.hl select{border:1.5px solid var(--brand)}
+.sel svg{position:absolute;right:16px;top:15px;pointer-events:none}
+.efield{display:none;color:var(--bad);font-size:12.5px;line-height:1.4}
+.efield.show{display:block}
+.hint{color:var(--mut);font-size:12.5px;line-height:1.45}
+.radios{display:flex;flex-direction:column;gap:8px}
+.rad{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;text-align:left;width:100%;color:var(--mut);font-size:14px}
+.rad .dot{width:20px;height:20px;border-radius:10px;border:2px solid var(--ph);flex:none;display:grid;place-items:center;background:#fff}
+.rad.on{border:1.5px solid var(--brand);color:var(--ink);font-weight:600;padding:13.5px}
+.rad.on .dot{border-color:var(--brand)}
+.rad.on .dot:after{content:"";width:10px;height:10px;border-radius:5px;background:var(--brand)}
+.rad:disabled{opacity:.5;cursor:not-allowed}
+.rad small{display:block;font-weight:400;color:var(--ph);font-size:12px}
+.chk{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;color:var(--chk-t);font-size:13px;line-height:1.45}
+body.lead .chk{font-size:12px}
+.chk input{position:absolute;opacity:0;width:1px;height:1px}
+.chk .box{width:20px;height:20px;border-radius:6px;border:2px solid var(--ph);background:#fff;flex:none;display:grid;place-items:center;margin-top:-1px}
+.chk .box svg{opacity:0}
+.chk input:checked+.box{background:var(--brand);border-color:var(--brand)}
+.chk input:checked+.box svg{opacity:1}
+.chk input:focus-visible+.box{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ===== ปุ่มล่าง ===== */
+.bot{position:sticky;bottom:0;z-index:4;background:#fff;border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 24px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+body.lead .bot{border-top-color:#f3e5b5}
+.btn{height:52px;border-radius:26px;border:0;background:var(--brand);color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:0 18px;box-shadow:0 4px 6px var(--shadow);text-decoration:none;text-align:center;line-height:1.2}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand);box-shadow:none}
+.btn.sm{height:48px;border-radius:24px;font-size:15px}
+.btn.xs{height:40px;border-radius:8px;font-size:13px;box-shadow:none}
+.row2{display:flex;gap:12px}.row2 .btn{flex:1;min-width:0}
+.sup{display:flex;justify-content:center;gap:6px;font-size:13px;color:var(--mut);flex-wrap:wrap}
+.sup a{color:var(--brand);font-weight:700;text-decoration:none}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;animation:sp .8s linear infinite;flex:none}
+.btn.ghost .spin{border-color:color-mix(in srgb,var(--brand) 30%,transparent);border-top-color:var(--brand)}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ===== X-Lead ตรวจสิทธิ์ ===== */
+.vcard{display:flex;align-items:center;gap:12px;padding:16px;border-radius:16px;background:#ecfdf5;border:1px solid #a7f3d0}
+.vcard i{width:36px;height:36px;border-radius:18px;background:#d1fae5;display:grid;place-items:center;flex:none}
+.vcard b{display:block;color:#065f46;font-weight:800;font-size:14px;line-height:1.35}
+.vcard small{display:block;color:#047857;font-size:12px;line-height:1.4;margin-top:2px}
+.vcard.warn{background:#fffbeb;border-color:#fde68a}.vcard.warn i{background:#fef3c7}.vcard.warn b{color:#92400e}.vcard.warn small{color:#b45309}
+
+/* ===== ชำระเงิน ===== */
+.sum{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px}
+.sum .l{display:flex;align-items:center;gap:12px;min-width:0}
+.ico{width:40px;height:40px;border-radius:20px;background:var(--bg);display:grid;place-items:center;flex:none}
+body.lead .ico{background:var(--brand-soft)}
+.sum b{display:block;font-weight:600;font-size:14px}
+.sum small{display:block;color:var(--mut);font-size:12px;line-height:1.35}
+.sum .amt{color:var(--brand);font-weight:800;font-size:18px;white-space:nowrap}
+.bank{display:flex;flex-direction:column;gap:16px}
+.bank-h{display:flex;align-items:center;gap:12px}
+.bank-h .lg{width:36px;height:36px;border-radius:8px;object-fit:contain;flex:none;display:block}
+.bank-h b{display:block;font-size:15px;font-weight:700}
+.bank-h small{display:block;color:var(--mut);font-size:12px}
+.hr{height:1px;background:var(--line);border:0;margin:0}
+.acc{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.k{color:var(--mut);font-size:12px}
+.acc b{display:block;font-size:18px;font-weight:800;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.copy{display:flex;align-items:center;gap:4px;background:var(--bg);border:0;border-radius:8px;padding:6px 12px;color:var(--brand);font-weight:700;font-size:12px;white-space:nowrap}
+.accn b{display:block;font-size:14px;font-weight:600}
+.up{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;background:#fff;border:1px dashed var(--brand);border-radius:16px;text-align:center;width:100%}
+.up .ico{width:48px;height:48px;border-radius:24px}
+.up b{color:var(--brand);font-size:14px;font-weight:700}
+.up small{color:var(--mut);font-size:12px}
+.up.err{border-color:var(--bad)}.up.err b{color:var(--bad)}
+.up.has{border-style:solid}
+.up img.pv{max-width:100%;max-height:220px;border-radius:10px;border:1px solid var(--line)}
+.pdfchip{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:13px;max-width:100%}
+.pdfchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== สำเร็จ / สถานะ ===== */
+.center{align-items:center;text-align:center}
+.bigok{width:72px;height:72px;border-radius:36px;background:var(--ok-bg);display:grid;place-items:center}
+.bigok.lg{width:80px;height:80px;border-radius:40px}
+.head2 h2{margin:0;font-size:22px;font-weight:800;line-height:1.3}
+.head2 p{margin:6px 0 0;color:var(--mut);font-size:14px}
+.info{display:flex;flex-direction:column;gap:16px;width:100%;text-align:left}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px}
+.kv>span:first-child{color:var(--mut);white-space:nowrap}
+.kv>b,.kv>span:last-child{text-align:right;font-weight:600}
+.kvs{display:flex;flex-direction:column;gap:12px}
+.kvs.tight{gap:10px}
+.chip{background:var(--bg);border-radius:8px;padding:4px 10px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:100px;padding:6px 12px;font-weight:700;font-size:12px;white-space:nowrap}
+.pill.sm{padding:4px 10px}
+.pill .d{width:8px;height:8px;border-radius:4px;background:currentColor}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.mut{background:var(--bg);color:var(--mut)}
+.note{display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px;background:#f8fafc;color:var(--mut);font-size:13px;width:100%;text-align:left}
+.note svg{flex:none}
+.bluebox{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:16px;background:var(--brand-soft);border:1px solid var(--brand-bd);width:100%;text-align:left}
+.bluebox b{display:block;color:var(--brand);font-size:14px;font-weight:700}
+.bluebox p{margin:4px 0 0;color:var(--mut);font-size:13px;line-height:1.4}
+.bluebox a{color:var(--brand);font-weight:700;text-decoration:none}
+.bluebox svg{flex:none;margin-top:1px}
+
+.pad.dash{padding:20px}
+.dcard{border-radius:20px;display:flex;flex-direction:column;gap:16px}
+.brow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brow .rg{color:var(--mut);font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}
+.who h3{margin:0;font-size:20px;font-weight:800;line-height:1.3;word-break:break-word}
+.who p{margin:4px 0 0;color:var(--mut);font-size:14px}
+.ctitle{margin:0;font-size:14px;font-weight:700}
+.ctitle.l{font-size:15px}
+.steps{display:flex;justify-content:space-between;gap:2px}
+.step{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.step i{width:24px;height:24px;border-radius:12px;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:11px;background:var(--line);color:var(--mut)}
+.step.done i{background:var(--ok);color:#fff}
+.step.cur i{background:var(--brand);color:#fff}
+.step span{font-size:10px;font-weight:500;text-align:center;line-height:1.25;white-space:nowrap}
+.step.cur span{color:var(--brand);font-weight:700}
+.tl{display:flex;flex-direction:column;gap:14px}
+.tli{display:flex;gap:12px;align-items:flex-start}
+.tli i{width:32px;height:32px;border-radius:16px;display:grid;place-items:center;flex:none;background:var(--bg)}
+.tli i.ok{background:var(--ok-bg)}.tli i.warn{background:var(--warn-bg)}.tli i.bad{background:var(--bad-bg)}
+.tli b{display:block;font-weight:600;font-size:14px;line-height:1.35}
+.tli small{display:block;color:var(--mut);font-size:12px}
+
+/* ===== บัตรผู้เข้าสอบ ===== */
+.ticket{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.05);width:100%}
+.tk-b{padding:20px;background:linear-gradient(90deg,var(--hero-a),var(--hero-b));color:#fff;display:flex;flex-direction:column;gap:12px;text-align:left}
+.tk-b .t{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tk-b .t b{font-weight:800;font-size:14px;letter-spacing:.02em;white-space:nowrap}
+.tk-b .pill{background:var(--ok-bg);color:var(--ok);font-size:11px;padding:4px 10px}
+.tk-b .pill .d{width:6px;height:6px}
+.tk-b h3{margin:0;font-size:20px;font-weight:800;line-height:1.3;word-break:break-word}
+.tk-b p{margin:4px 0 0;color:#93c5fd;font-size:13px}
+body.lead .tk-b p{color:#fef3c7}
+.tk-q{padding:32px 24px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.qrbox{width:180px;height:180px;border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;place-items:center;background:#fff}
+.qrbox canvas{width:100%;height:100%;image-rendering:pixelated}
+.tk-q small{color:var(--mut);font-size:12px;text-align:center}
+.tk-dash{border-top:1px dashed var(--line)}
+.tk-i{background:#fafafa;padding:20px;text-align:center}
+.tk-i b{display:block;font-size:13px;font-weight:700}
+.tk-i p{margin:4px 0 0;color:var(--mut);font-size:12px;line-height:1.5}
+.stampbox{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:var(--brand-soft);border:1px solid var(--brand-bd);width:100%;text-align:left}
+.stampbox b{display:block;color:var(--brand);font-size:13px;font-weight:700}
+.stampbox small{display:block;color:var(--mut);font-size:11px;line-height:1.45}
+.stampbox .err{color:var(--bad);font-size:12px}
+.stampbox .okline{display:flex;align-items:center;gap:6px;color:#047857;font-weight:700;font-size:13px}
+.loading{padding:40px 0;text-align:center;color:var(--mut)}
+
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-10px);background:#0f172a;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:374px){.pad{padding:20px 16px}.pad.dash{padding:16px}.hdr,.nav,.selwrap{padding-left:16px;padding-right:16px}.hero{padding:22px 16px}.bot{padding-left:16px;padding-right:16px}.card{padding:16px}.hero h2{font-size:25px}.step span{font-size:9.5px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- ===== 1) หน้าแรก / X-Lead ตรวจสิทธิ์ ===== -->
+<section class="view" id="v-land">
+  <div class="body">
+    <div class="nav">
+      <a class="logo" href="#" id="logoHome" aria-label="CloverX E-xam หน้าแรก"><span class="lgb"><i data-ic="clover" data-s="16" data-c="#fff"></i></span><b>CloverX E-xam</b></a>
+      <button class="mylink" data-go="login" type="button">การสมัครของฉัน</button>
+    </div>
+    <div class="selwrap"><div class="seg" role="tablist" aria-label="เลือกหลักสูตร">
+      <button type="button" role="tab" data-c="X-Visor">X-Visor</button>
+      <button type="button" role="tab" data-c="X-Lead">X-Lead</button>
+    </div></div>
+    <div class="hero">
+      <span class="bdg" id="hBadge">OPEN REGISTRATION</span>
+      <div><h2 id="hTitle">ลงทะเบียนสอบ X-Visor</h2><p id="hSub"></p></div>
+    </div>
+    <!-- X-Visor: กติกา -->
+    <div class="pad" id="landVisor">
+      <div class="card rules" id="rulesCard">
+        <button class="rules-h" type="button" id="rulesTg" aria-expanded="true"><span><i data-ic="file" data-s="20" data-c="var(--brand)"></i>กติกาการสอบ X-Visor</span><i class="cv" data-ic="chev" data-s="16" data-c="#64748b"></i></button>
+        <ul class="rl">
+          <li>ข้อสอบ 5 พาร์ต พาร์ตละ 20 ข้อ</li>
+          <li>ต้องได้ 16/20 คะแนนขึ้นไปทุกพาร์ต</li>
+          <li>สิทธิ์สอบซ่อมฟรี 2 ครั้งต่อหมวดหมู่</li>
+          <li>ค่าธรรมเนียมสมัครตามรอบที่เลือก</li>
+        </ul>
+      </div>
+      <div class="empty hide" id="noVisor"><span class="ln">ยังไม่เปิดรอบสอบ X-Visor</span> <span class="ln">ติดตามประกาศทาง LINE @cloverxth</span></div>
+    </div>
+    <!-- X-Lead: ตรวจสิทธิ์ด้วยเบอร์โทร -->
+    <div class="pad hide" id="landLead">
+      <div class="fld">
+        <label for="leadPhone" style="font-weight:700">เบอร์โทรศัพท์ที่เคยสมัคร X-Visor *</label>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input class="inp" id="leadPhone" inputmode="tel" autocomplete="tel" placeholder="08X-XXX-XXXX" style="border-width:1.5px">
+          <div class="efield" data-for="leadPhone"></div>
+          <button class="btn sm" type="button" id="leadGo" style="box-shadow:none">ตรวจสอบสิทธิ์สมัคร X-Lead</button>
+        </div>
+      </div>
+      <div id="leadOk" class="hide"></div>
+      <div class="empty hide" id="noLead"><span class="ln">ยังไม่เปิดรอบสอบ X-Lead</span> <span class="ln">ติดตามประกาศทาง LINE @cloverxth</span></div>
+    </div>
+  </div>
+  <div class="bot">
+    <button class="btn" type="button" id="landGo">เริ่มลงทะเบียน</button>
+    <div class="sup" id="landSup"><span>ติดต่อสอบถามเพิ่มเติม</span><a href="https://line.me/R/ti/p/@cloverxth" target="_blank" rel="noopener">LINE @cloverxth</a></div>
+  </div>
+</section>
+
+<!-- ===== 2) ใบสมัคร ===== -->
+<section class="view hide" id="v-form">
+  <div class="body">
+    <div class="hdr"><button class="back" type="button" data-back aria-label="ย้อนกลับ"><i data-ic="back" data-s="16"></i></button><h1 id="formTitle">ลงทะเบียนสอบ X-Visor</h1><span class="sp"></span></div>
+    <div class="pad">
+      <div class="prog"><i id="formProg" style="width:34%"></i></div>
+      <!-- X-Visor -->
+      <div class="fld only-visor"><label for="firstName">ชื่อจริง *</label><input class="inp" id="firstName" autocomplete="given-name" placeholder="ชื่อจริง"><div class="efield" data-for="firstName">กรุณากรอกชื่อจริง</div></div>
+      <div class="fld only-visor"><label for="lastName">นามสกุล *</label><input class="inp" id="lastName" autocomplete="family-name" placeholder="นามสกุล"><div class="efield" data-for="lastName">กรุณากรอกนามสกุล</div></div>
+      <div class="fld only-visor"><label for="phone">เบอร์โทรศัพท์ *</label><input class="inp" id="phone" inputmode="tel" autocomplete="tel" placeholder="08X-XXX-XXXX"><div class="efield" data-for="phone">กรุณากรอกเบอร์โทรศัพท์ให้ครบ</div></div>
+      <!-- X-Lead -->
+      <div class="fld only-lead"><label for="leadName">ชื่อ-นามสกุล</label><input class="inp" id="leadName" readonly tabindex="-1"></div>
+      <div class="fld"><label for="email">อีเมลสำหรับจัดส่งใบกำกับภาษี *</label><input class="inp" id="email" type="email" inputmode="email" autocomplete="email" placeholder="name@email.com"><div class="hint only-lead" id="emailHint"></div><div class="efield" data-for="email">กรุณากรอกอีเมลให้ถูกต้อง</div></div>
+      <div class="fld"><label for="roundSel" id="roundLbl">เลือกรอบการสอบที่ต้องการ *</label>
+        <div class="sel" id="roundWrap"><select class="inp ph" id="roundSel"></select><i data-ic="chev" data-s="18" data-c="var(--brand)"></i></div>
+        <div class="efield" data-for="roundSel">กรุณาเลือกรอบการสอบ</div></div>
+      <div class="fld only-visor" id="modeFld"><span class="lb">รูปแบบการสอบ *</span>
+        <div class="radios" id="modeRad" role="radiogroup" aria-label="รูปแบบการสอบ">
+          <button type="button" class="rad" role="radio" data-m="online"><span class="dot"></span><span>สอบออนไลน์ผ่านระบบเสมือน</span></button>
+          <button type="button" class="rad" role="radio" data-m="onsite"><span class="dot"></span><span>สอบ ณ ศูนย์สอบ (On Site)</span></button>
+        </div></div>
+      <div class="fld"><label for="coachTeam" id="coachLbl" class="opt">เลือกโค้ชทีม</label>
+        <div class="sel"><select class="inp ph" id="coachTeam"><option value="">ไม่ระบุโค้ช</option><option value="โค้ชซิง">โค้ชซิง</option><option value="โค้ชนุ่น">โค้ชนุ่น</option><option value="โค้ชจา">โค้ชจา</option><option value="โค้ชต๊ะ">โค้ชต๊ะ</option><option value="อื่นๆ">อื่น ๆ</option></select><i data-ic="chev" data-s="18" data-c="#64748b"></i></div></div>
+      <div class="fld hide" id="coachOtherWrap"><label for="coachOther">ชื่อโค้ชทีม *</label><input class="inp" id="coachOther" placeholder="พิมพ์ชื่อโค้ชทีม"><div class="efield" data-for="coachOther">กรุณาระบุชื่อโค้ชทีม</div></div>
+      <div class="fld"><label for="referrer" class="opt" id="refLbl">ระบุผู้แนะนำ (ถ้ามี)</label><input class="inp" id="referrer" placeholder="ชื่อผู้แนะนำ หรือ รหัสสมาชิก"></div>
+      <div>
+        <label class="chk"><input type="checkbox" id="cTerms"><span class="box"><i data-ic="check" data-s="12" data-c="#fff" data-w="3"></i></span><span id="consentTxt">ข้าพเจ้ายอมรับเงื่อนไขและข้อตกลงการสมัครสอบ</span></label>
+        <div class="efield" data-for="consent">กรุณาติ๊กยอมรับเงื่อนไขก่อนดำเนินการต่อ</div>
+      </div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn" type="button" id="toPay">ลงทะเบียนและชำระเงิน</button></div>
+</section>
+
+<!-- ===== 3) ชำระเงิน ===== -->
+<section class="view hide" id="v-pay">
+  <div class="body">
+    <div class="hdr"><button class="back" type="button" data-back aria-label="ย้อนกลับ"><i data-ic="back" data-s="16"></i></button><h1>ชำระเงิน</h1><span class="sp"></span></div>
+    <div class="pad">
+      <div class="card sum">
+        <div class="l"><span class="ico"><i data-ic="card" data-s="20" data-c="var(--brand)"></i></span><div><b>ยอดชำระทั้งหมด</b><small id="paySub">รวมค่าธรรมเนียมสอบออนไลน์ (Online)</small></div></div>
+        <span class="amt" id="payAmt">-</span>
+      </div>
+      <div class="card bank">
+        <div class="bank-h"><img class="lg" src="/xr-kbank.png" width="36" height="36" alt="ธนาคารกสิกรไทย"><div><b>ธนาคารกสิกรไทย (KBank)</b><small>โอนผ่าน Mobile Banking หรือ ตู้ ATM</small></div></div>
+        <hr class="hr">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="acc"><div><span class="k">เลขที่บัญชี</span><b>231-1-71119-1</b></div><button class="copy" type="button" id="copyAcct"><i data-ic="copy" data-s="14" data-c="var(--brand)"></i><span>คัดลอก</span></button></div>
+          <div class="accn"><span class="k">ชื่อบัญชี</span><b>บจก.โคลเวอร์เอ็กซ์ (ไทยแลนด์)</b></div>
+        </div>
+      </div>
+      <div class="fld"><span class="lb">แนบสลิปการโอนเงิน</span>
+        <button type="button" class="up" id="upSlip"><span class="ico"><i data-ic="upload" data-s="24" data-c="var(--brand)"></i></span><span style="display:flex;flex-direction:column;gap:4px"><b>อัปโหลดไฟล์หลักฐาน</b><small>รองรับไฟล์ PNG, JPG หรือ PDF ไม่เกิน 5MB</small></span></button>
+        <input type="file" id="slipFile" accept="image/png,image/jpeg,image/webp,image/*,application/pdf" class="hide">
+        <div class="efield" data-for="slip">กรุณาแนบสลิปการโอนเงิน</div>
+      </div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn" type="button" id="submitBtn">ยืนยันการชำระเงิน</button></div>
+</section>
+
+<!-- ===== 4) ลงทะเบียนสำเร็จ ===== -->
+<section class="view hide" id="v-done">
+  <div class="body">
+    <div class="hdr"><span class="sp"></span><h1>สถานะการลงทะเบียน</h1><span class="sp"></span></div>
+    <div class="pad center" style="gap:24px">
+      <span class="bigok"><i data-ic="okc" data-s="36" data-c="#10b981"></i></span>
+      <div class="head2"><h2>ลงทะเบียนสำเร็จ!</h2><p><span class="ln">ระบบได้รับข้อมูลและสลิปการโอนเงิน</span><span class="ln">ของท่านแล้ว</span></p></div>
+      <div class="card info">
+        <div class="kv"><span>หมายเลขลงทะเบียน</span><span class="chip" id="dReg">-</span></div>
+        <hr class="hr">
+        <div class="kv"><span>สถานะการชำระเงิน</span><span id="dSt"></span></div>
+        <hr class="hr">
+        <div class="kvs" id="dRows"></div>
+      </div>
+      <div class="note" id="dNote"><i data-ic="clock" data-s="18" data-c="#64748b"></i><span><span class="ln">ทีมงานจะตรวจสอบการชำระเงินโดยเร็ว</span> <span class="ln">(ภายใน 24 ชม.)</span></span></div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn" type="button" id="doneGo">ดูสถานะการสมัคร</button></div>
+</section>
+
+<!-- ===== 5) การสมัครของฉัน (เข้าสู่ระบบ) ===== -->
+<section class="view hide" id="v-login">
+  <div class="body">
+    <div class="hdr"><button class="back" type="button" data-back aria-label="ย้อนกลับ"><i data-ic="back" data-s="16"></i></button><h1>การสมัครของฉัน</h1><span class="sp"></span></div>
+    <div class="pad">
+      <div class="head2" style="text-align:left"><h2 style="font-size:20px">เข้าดูสถานะการสมัคร</h2><p><span class="ln">ใช้หมายเลขลงทะเบียน</span> <span class="ln">และเบอร์โทรศัพท์ที่ใช้สมัคร</span></p></div>
+      <div class="fld"><label for="lgReg">หมายเลขลงทะเบียน *</label><input class="inp" id="lgReg" autocomplete="off" autocapitalize="characters" placeholder="เช่น RG261015001" style="text-transform:uppercase"><div class="efield" data-for="lgReg">กรุณากรอกหมายเลขลงทะเบียน</div></div>
+      <div class="fld"><label for="lgPhone">เบอร์โทรศัพท์ที่ใช้สมัคร *</label><input class="inp" id="lgPhone" inputmode="tel" autocomplete="tel" placeholder="08X-XXX-XXXX"><div class="efield" data-for="lgPhone">กรุณากรอกเบอร์โทรศัพท์</div></div>
+      <div class="efield" id="lgErr"></div>
+      <div class="note"><i data-ic="file" data-s="18" data-c="#64748b"></i><span><span class="ln">หมายเลขลงทะเบียนอยู่ในหน้าลงทะเบียนสำเร็จ</span> <span class="ln">หากหาไม่พบ ติดต่อทาง LINE @cloverxth</span></span></div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn" type="button" id="lgGo">เข้าสู่ระบบ</button></div>
+</section>
+
+<!-- ===== 6) สถานะการสมัคร ===== -->
+<section class="view hide" id="v-status">
+  <div class="body">
+    <div class="hdr"><button class="back" type="button" data-back aria-label="ย้อนกลับ"><i data-ic="back" data-s="16"></i></button><h1>สถานะการสมัคร</h1><span class="sp"></span></div>
+    <div class="pad dash" id="stBody"><div class="loading">กำลังโหลด…</div></div>
+  </div>
+  <div class="bot" id="stBot"></div>
+</section>
+
+<!-- ===== 7) บัตรผู้เข้าสอบ ===== -->
+<section class="view hide" id="v-ticket">
+  <div class="body">
+    <div class="hdr"><button class="back" type="button" data-back aria-label="ย้อนกลับ"><i data-ic="back" data-s="16"></i></button><h1>บัตรผู้เข้าสอบ</h1><span class="sp"></span></div>
+    <div class="pad center" id="tkBody"><div class="loading">กำลังโหลดบัตรเข้าสอบ…</div></div>
+  </div>
+  <div class="bot"><button class="btn ghost" type="button" id="tkSave"><i data-ic="download" data-s="18" data-c="var(--brand)"></i>บันทึก QR</button></div>
+</section>
+
+<!-- ===== 8) ยืนยันเข้าร่วมสำเร็จ ===== -->
+<section class="view hide" id="v-stamp">
+  <div class="body">
+    <div class="hdr"><button class="back" type="button" data-back aria-label="ย้อนกลับ"><i data-ic="back" data-s="16"></i></button><h1>ยืนยันเข้าร่วม</h1><span class="sp"></span></div>
+    <div class="pad center" style="gap:24px">
+      <div style="padding:20px 0 10px;display:flex;flex-direction:column;align-items:center">
+        <span class="bigok lg"><i data-ic="okc" data-s="40" data-c="#10b981"></i></span>
+        <div class="head2" style="padding-top:16px"><h2>ยืนยันเข้าร่วมสำเร็จ!</h2><p id="spAt"></p></div>
+      </div>
+      <div class="card info" id="spRows"></div>
+      <div class="bluebox"><i data-ic="clock" data-s="20" data-c="var(--brand)"></i><div><b>รอผู้จัดสอบเปิดห้องสอบ</b><p><span class="ln">ลิงก์สำหรับการสอบ</span> <span class="ln">จะได้รับจากทางทีมงานอีกครั้ง</span> <span class="ln">หรือหากไม่ได้รับ</span> <span class="ln">สามารถติดต่อได้ที่ <a href="https://line.me/R/ti/p/@cloverxth" target="_blank" rel="noopener">@cloverxth</a></span></p></div></div>
+    </div>
+  </div>
+  <div class="bot"><button class="btn" type="button" id="spHome">กลับสู่หน้าหลัก</button></div>
+</section>
+
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+var API='';
+var LINE_URL='https://line.me/R/ti/p/@cloverxth';
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
+var val=function(id){var e=$('#'+id);return e?String(e.value||'').trim():'';};
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function digits(s){return String(s||'').replace(/\D/g,'');}
+
+/* ---------- ไอคอน (เส้นแบบเดียวกับ Figma) ---------- */
+var IC={
+  clover:'<circle cx="8" cy="8" r="4"/><circle cx="16" cy="8" r="4"/><circle cx="8" cy="16" r="4"/><circle cx="16" cy="16" r="4"/>',
+  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8M16 13H8M16 17H8"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
+  back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  card:'<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  okc:'<path d="M21.8 10A10 10 0 1 1 17 3.3"/><path d="m9 11 3 3L22 4"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  x:'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+  bank:'<path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><path d="m12 2 8 5H4Z"/>',
+  pdf:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
+};
+function ic(n,s,c,w){ var fill=n==='clover'; return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="'+(fill?(c||'currentColor'):'none')+'" stroke="'+(fill?'none':(c||'currentColor'))+'" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>'; }
+function paintIcons(root){ $$('i[data-ic]',root).forEach(function(el){ el.outerHTML=ic(el.getAttribute('data-ic'),+el.getAttribute('data-s')||16,el.getAttribute('data-c'),el.getAttribute('data-w')); }); }
+paintIcons(document);
+
+/* ---------- วันที่ภาษาไทย ---------- */
+var THMON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var THDOW=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+function dObj(iso){var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+function thDate(iso){var d=dObj(iso);return d?(d.getDate()+' '+THMON[d.getMonth()]+' '+(d.getFullYear()+543)):(iso||'-');}
+function thDayDate(iso){var d=dObj(iso);return d?(THDOW[d.getDay()]+' '+thDate(iso)):(iso||'-');}
+function startHHMM(ts){var m=String(ts||'').match(/(\d{1,2})[:.](\d{2})/);return m?(('0'+m[1]).slice(-2)+':'+m[2]):'';}
+function whenTxt(r){var s=startHHMM(r&&r.timeslot);return thDayDate(r&&r.date)+(s?' ('+s+' น.)':'');}
+function baht(n){return (Number(n)||0).toLocaleString('th-TH');}
+function bkk(ms){var d=new Date(ms+7*3600000);return {iso:d.toISOString().slice(0,10),hm:d.toISOString().slice(11,16)};}
+function tlTime(ms){ if(!ms)return ''; var a=bkk(ms), today=bkk(Date.now()).iso; return (a.iso===today?'วันนี้':thDate(a.iso))+' '+a.hm+' น.'; }
+
+var toastT; function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
+function jget(u){return fetch(API+u,{cache:'no-store'}).then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});});}
+function store(k,v){try{ if(v==null)localStorage.removeItem(k); else localStorage.setItem(k,JSON.stringify(v)); }catch(e){}}
+function load(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+
+/* ---------- สถานะหน้าจอ ---------- */
+var ST={course:'X-Visor',mode:'',roundId:'',round:null,slip:null,view:'land'};
+var ROUNDS=[], LEAD={ok:false,phone:'',info:null}, ME=null;   // ME = {regNo, phone}
+var BACK={form:'land',pay:'form',login:'land',status:'land',ticket:'status',stamp:'status',done:'status'};
+function show(v,opt){ opt=opt||{};
+  ST.view=v; if(['land','form','pay','login'].indexOf(v)>=0)document.body.classList.toggle('lead',ST.course==='X-Lead');
+  $$('.view').forEach(function(s){s.classList.toggle('hide',s.id!=='v-'+v);});
+  try{ window.scrollTo(0,0); }catch(e){}
+  if(!opt.nopush){ try{ history[opt.replace?'replaceState':'pushState']({v:v},'',location.pathname+location.search+(v==='login'||v==='status'?'#my':'')); }catch(e){} }
+  clearInterval(show._poll); clearInterval(show._tick);
+}
+window.addEventListener('popstate',function(e){ var v=(e.state&&e.state.v)||'land';
+  if(ST.view==='done'||v==='pay'&&!ST.round)v=ME?'status':'land';
+  if(v==='status'){ if(ME)openStatus(true); else show('login',{nopush:true}); return; }
+  show(v,{nopush:true}); if(v==='ticket')openTicket(true); });
+$$('[data-back]').forEach(function(b){ b.onclick=function(){ var to=BACK[ST.view]||'land'; if(to==='status')openStatus(); else show(to); }; });
+$$('[data-go="login"]').forEach(function(b){ b.onclick=goMy; });
+$('#logoHome').onclick=function(e){e.preventDefault();show('land');};
+function goMy(){ if(ME)openStatus(); else { var last=load('xr_me'); if(last&&last.regNo)$('#lgReg').value=last.regNo; show('login'); } }
+
+/* ---------- หลักสูตร ---------- */
+var COURSE={
+  'X-Visor':{badge:'OPEN REGISTRATION',title:'ลงทะเบียนสอบ X-Visor',sub:'<span class="ln">เริ่มต้นการเป็นผู้ขาย</span> <span class="ln">และยกระดับมาตรฐานความรู้ของคุณกับเรา</span>'},
+  'X-Lead':{badge:'สำหรับผู้ผ่านระดับ X-Visor เท่านั้น',title:'ลงทะเบียนสอบเลื่อนระดับ X-Lead',sub:'<span class="ln">ก้าวสำคัญสู่ความเป็นผู้นำ</span> <span class="ln">และเพิ่มศักยภาพสูงสุดให้กับสายงานคุณ</span>'}};
+function courseRounds(c){return ROUNDS.filter(function(r){return (r.examType||'X-Visor')===(c||ST.course);});}
+function setCourse(c,keepUrl){
+  ST.course=c; var lead=c==='X-Lead', k=COURSE[c];
+  if(['land','form','pay','login'].indexOf(ST.view)>=0)document.body.classList.toggle('lead',lead);
+  $$('.seg button').forEach(function(b){ var on=b.dataset.c===c; b.classList.toggle('on',on); b.setAttribute('aria-selected',on); });
+  $('#hBadge').textContent=k.badge; $('#hTitle').textContent=k.title; $('#hSub').innerHTML=k.sub;
+  $('#landVisor').classList.toggle('hide',lead); $('#landLead').classList.toggle('hide',!lead);
+  $$('.only-visor').forEach(function(e){e.classList.toggle('hide',lead);});
+  $$('.only-lead').forEach(function(e){e.classList.toggle('hide',!lead);});
+  $('#formTitle').textContent=lead?'ใบสมัคร X-Lead':'ลงทะเบียนสอบ X-Visor';
+  $('#formProg').style.width=lead?'56%':'34%';
+  $('#roundLbl').textContent=lead?'เลือกรอบการสอบ X-Lead ที่ต้องการ *':'เลือกรอบการสอบที่ต้องการ *';
+  $('#coachLbl').textContent=lead?'ผู้ฝึกสอน / โค้ชทีมผู้แนะนำ':'เลือกโค้ชทีม';
+  $('#coachLbl').classList.toggle('opt',!lead);
+  $('#refLbl').textContent=lead?'ระบุผู้แนะนำอื่นๆ (ถ้ามี)':'ระบุผู้แนะนำ (ถ้ามี)';
+  $('#consentTxt').innerHTML=lead?'<span class="ln">ข้าพเจ้ายอมรับเงื่อนไขและข้อตกลง</span><span class="ln">การสมัครสอบเลื่อนระดับ X-Lead</span>':'ข้าพเจ้ายอมรับเงื่อนไขและข้อตกลงการสมัครสอบ';
+  var has=courseRounds().length>0;
+  $('#noVisor').classList.toggle('hide',lead||has); $('#noLead').classList.toggle('hide',!lead||has);
+  $('#leadPhone').closest('.fld').classList.toggle('hide',lead&&!has); $('#leadOk').classList.toggle('hide',!(lead&&has&&LEAD.ok));
+  paintLandCta();
+  var modes=['online','onsite'].filter(function(m){return courseRounds().some(function(r){return r.mode===m;});});
+  if(modes.indexOf(ST.mode)<0)ST.mode=modes[0]||'';
+  ST.roundId='';ST.round=null; paintModes(); paintRounds();
+  if(!keepUrl){ try{ var q=lead?'?c=lead':''; history.replaceState(history.state,'',location.pathname+q+location.hash); }catch(e){} }
+}
+$$('.seg button').forEach(function(b){ b.onclick=function(){ setCourse(b.dataset.c); }; });
+function paintLandCta(){
+  var b=$('#landGo'), lead=ST.course==='X-Lead', has=courseRounds().length>0;
+  if(!has){ b.disabled=true; b.textContent='ยังไม่เปิดรับสมัคร'; return; }
+  b.disabled=lead&&!LEAD.ok; b.textContent=lead?'ดำเนินการกรอกใบสมัครต่อ':'เริ่มลงทะเบียน';
+}
+$('#landGo').onclick=function(){ if(ST.course==='X-Lead'&&!LEAD.ok){ setErr('leadPhone',true,'กรุณากดตรวจสอบสิทธิ์ก่อน'); return; } show('form'); };
+$('#rulesTg').onclick=function(){ var c=$('#rulesCard'); c.classList.toggle('fold'); this.setAttribute('aria-expanded',!c.classList.contains('fold')); };
+
+/* ---------- รอบสอบ ---------- */
+function loadRounds(){
+  jget('/api/xv/reg/rounds').then(function(o){
+    ROUNDS=((o.j&&o.j.rounds)||[]).map(function(r){r.mode=r.mode||'online';return r;}).sort(function(a,b){return a.date<b.date?-1:1;});
+    var want=/[?&]c=lead|lead/i.test(location.search)?'X-Lead':'X-Visor';
+    if(!courseRounds(want).length&&courseRounds(want==='X-Lead'?'X-Visor':'X-Lead').length&&!/lead/i.test(location.search))want='X-Lead';
+    setCourse(want,true);
+  }).catch(function(){ setCourse(ST.course,true); toast('โหลดรอบสอบไม่สำเร็จ กรุณารีเฟรช'); });
+}
+function paintModes(){
+  var rs=courseRounds();
+  $$('#modeRad .rad').forEach(function(b){ var m=b.dataset.m, ok=rs.some(function(r){return r.mode===m;});
+    b.disabled=!ok; var on=ok&&m===ST.mode; b.classList.toggle('on',on); b.setAttribute('aria-checked',on); });
+}
+$$('#modeRad .rad').forEach(function(b){ b.onclick=function(){ if(b.disabled)return; ST.mode=b.dataset.m; ST.roundId='';ST.round=null; paintModes(); paintRounds(); }; });
+function roundLabel(r,mixed){ return 'รอบที่ '+r.no+' : '+whenTxt(r)+(mixed?(r.mode==='onsite'?' On Site':' Online'):''); }
+function paintRounds(){
+  var sel=$('#roundSel'), lead=ST.course==='X-Lead';
+  var rs=courseRounds().filter(function(r){return lead||r.mode===ST.mode;});
+  var mixed=lead&&rs.some(function(r){return r.mode==='onsite';})&&rs.some(function(r){return r.mode!=='onsite';});
+  if(!rs.length){ sel.innerHTML='<option value="">ยังไม่มีรอบสอบที่เปิดรับสมัคร</option>'; sel.disabled=true; }
+  else { sel.disabled=false; sel.innerHTML=(rs.length>1?'<option value="">เลือกรอบการสอบ</option>':'')+rs.map(function(r){return '<option value="'+esc(r.id)+'">'+esc(roundLabel(r,mixed))+'</option>';}).join(''); }
+  if(rs.length===1) pickRound(rs[0].id); else pickRound('');
+}
+function pickRound(id){ ST.roundId=id; ST.round=ROUNDS.filter(function(r){return r.id===id;})[0]||null; $('#roundSel').value=id;
+  $('#roundSel').classList.toggle('ph',!id); $('#roundWrap').classList.toggle('hl',!!id); if(id)setErr('roundSel',false);
+  var r=ST.round; $('#toPay').textContent=r?('ลงทะเบียนและชำระเงิน — '+baht(r.fee)+' บาท'):'ลงทะเบียนและชำระเงิน'; }
+$('#roundSel').onchange=function(){ pickRound(this.value); };
+$('#coachTeam').onchange=function(){ this.classList.toggle('ph',!this.value); $('#coachOtherWrap').classList.toggle('hide',this.value!=='อื่นๆ'); };
+function coachVal(){ var c=val('coachTeam'); return c==='อื่นๆ'?val('coachOther'):c; }
+
+/* ---------- ตรวจความถูกต้อง ---------- */
+function setErr(id,on,msg){ var f=$('.efield[data-for="'+id+'"]'), el=$('#'+id);
+  if(f){ if(msg!=null)f.innerHTML=msg; f.classList.toggle('show',!!on); } if(el&&el.classList&&el.tagName!=='BUTTON')el.classList.toggle('err',!!on); }
+function validEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
+function firstErr(){ var e=$('.view:not(.hide) .efield.show'); if(e){ var y=e.getBoundingClientRect().top+window.pageYOffset-140; window.scrollTo({top:y<0?0:y,behavior:'smooth'}); } }
+$$('.inp').forEach(function(el){ el.addEventListener('input',function(){ if(el.id)setErr(el.id,false); }); });
+$('#cTerms').onchange=function(){ if(this.checked)setErr('consent',false); };
+
+/* ---------- X-Lead: ตรวจสิทธิ์ด้วยเบอร์โทร ---------- */
+$('#leadGo').onclick=function(){
+  var ph=digits(val('leadPhone')), btn=this, box=$('#leadOk');
+  if(ph.length<9){ setErr('leadPhone',true,'กรุณากรอกเบอร์โทรศัพท์ให้ครบ'); return; }
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>กำลังตรวจสอบ…';
+  jget('/api/xv/reg/xlead-lookup?phone='+encodeURIComponent(ph)).then(function(o){
+    btn.disabled=false; btn.textContent='ตรวจสอบสิทธิ์สมัคร X-Lead'; var j=o.j||{};
+    if(!j.ok){ LEAD={ok:false,phone:'',info:null}; box.classList.add('hide'); paintLandCta();
+      setErr('leadPhone',true,'<span class="ln">ไม่พบการสมัคร X-Visor ของเบอร์นี้</span> <span class="ln">กรุณาตรวจสอบเบอร์อีกครั้ง</span>'); return; }
+    LEAD={ok:true,phone:ph,info:j}; setErr('leadPhone',false);
+    var nm=(j.firstName+' '+j.lastName).trim();
+    box.className='vcard'+(j.passedXVisor?'':' warn');
+    box.innerHTML='<i>'+ic(j.passedXVisor?'okc':'clock',20,j.passedXVisor?'#10b981':'#f59e0b')+'</i><div><b>'+esc(nm)+(j.passedXVisor?' (ผ่านสิทธิ์แล้ว)':'')+'</b><small>'
+      +(j.passedXVisor?'คุณสมบัติผ่านเกณฑ์การสมัครสอบเลื่อนระดับ X-Lead':'<span class="ln">ยังไม่พบผลสอบผ่าน X-Visor ในระบบ</span> <span class="ln">ทีมงานจะตรวจสอบสิทธิ์ให้อีกครั้ง</span>')+'</small></div>';
+    $('#leadName').value=nm+(j.passedXVisor?' (ผ่านสิทธิ์แล้ว)':'');
+    $('#email').placeholder=j.emailMasked||'name@email.com';
+    $('#emailHint').innerHTML=j.emailMasked?('<span class="ln">เว้นว่างไว้ ระบบจะใช้อีเมลเดิม</span> <span class="ln nb">'+esc(j.emailMasked)+'</span>'):'';
+    if(j.coachTeam){ var cs=$('#coachTeam'), has=[].slice.call(cs.options).some(function(x){return x.value===j.coachTeam;});
+      if(has)cs.value=j.coachTeam; else { cs.value='อื่นๆ'; $('#coachOther').value=j.coachTeam; } cs.onchange(); }
+    paintLandCta();
+  }).catch(function(){ btn.disabled=false; btn.textContent='ตรวจสอบสิทธิ์สมัคร X-Lead'; toast('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่'); });
+};
+$('#leadPhone').addEventListener('input',function(){ if(LEAD.ok){ LEAD={ok:false,phone:'',info:null}; $('#leadOk').classList.add('hide'); paintLandCta(); } });
+$('#leadPhone').addEventListener('keydown',function(e){ if(e.key==='Enter')$('#leadGo').click(); });
+
+/* ---------- ไปหน้าชำระเงิน ---------- */
+$('#toPay').onclick=function(){
+  var ok=true, bad=function(id,c){ setErr(id,c); if(c)ok=false; }, lead=ST.course==='X-Lead';
+  if(lead){ if(!LEAD.ok){ show('land'); setErr('leadPhone',true,'กรุณากดตรวจสอบสิทธิ์ก่อน'); return; }
+    bad('email',!!val('email')&&!validEmail(val('email'))); }
+  else { bad('firstName',!val('firstName')); bad('lastName',!val('lastName')); bad('phone',digits(val('phone')).length<9); bad('email',!validEmail(val('email'))); }
+  bad('roundSel',!ST.roundId);
+  if(val('coachTeam')==='อื่นๆ')bad('coachOther',!val('coachOther'));
+  bad('consent',!$('#cTerms').checked);
+  if(!ok){ firstErr(); return; }
+  var r=ST.round;
+  $('#payAmt').textContent=baht(r.fee)+' บาท';
+  $('#paySub').innerHTML=r.mode==='onsite'?'<span class="ln">รวมค่าธรรมเนียมสอบ ณ ศูนย์สอบ</span> <span class="ln">(On Site)</span>':'<span class="ln">รวมค่าธรรมเนียมสอบออนไลน์</span> <span class="ln">(Online)</span>';
+  show('pay');
+};
+$('#copyAcct').onclick=function(){ var b=this, t='2311711191', s=b.querySelector('span');
+  var done=function(){ s.textContent='คัดลอกแล้ว'; setTimeout(function(){s.textContent='คัดลอก';},1800); };
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){prompt('เลขที่บัญชี',t);}); else prompt('เลขที่บัญชี',t); };
+
+/* ---------- แนบสลิป (รูปย่อขนาดก่อนส่ง / PDF ส่งตรง) ---------- */
+function shrink(file,cb){ var rd=new FileReader();
+  rd.onload=function(){ var img=new Image(); img.onload=function(){ var max=1600,w=img.width,h=img.height,s=Math.min(1,max/Math.max(w,h)); var c=document.createElement('canvas'); c.width=Math.round(w*s); c.height=Math.round(h*s);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height); try{cb(c.toDataURL('image/jpeg',.85));}catch(e){cb(rd.result);} };
+    img.onerror=function(){cb('');}; img.src=rd.result; };
+  rd.onerror=function(){cb('');}; rd.readAsDataURL(file); }
+var UPZ=$('#upSlip'), UPF=$('#slipFile'), UP0=UPZ.innerHTML;
+UPZ.onclick=function(){ UPF.click(); };
+function upErr(msg){ ST.slip=null; UPZ.classList.remove('has'); UPZ.classList.add('err'); UPZ.innerHTML=UP0; UPZ.querySelector('b').textContent=msg; UPZ.querySelector('small').textContent='รองรับไฟล์ PNG, JPG หรือ PDF ไม่เกิน 5MB'; UPF.value=''; }
+UPF.onchange=function(){ var f=UPF.files[0]; if(!f)return;
+  var isPdf=/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name);
+  if(isPdf){
+    if(f.size>5*1024*1024)return upErr('ไฟล์ PDF ใหญ่เกิน 5MB');
+    var rd=new FileReader(); rd.onload=function(){ var d=String(rd.result||'').replace(/^data:[^;]*;/,'data:application/pdf;');
+      if(!/^data:application\/pdf;base64,/.test(d))return upErr('เปิดไฟล์นี้ไม่ได้');
+      ST.slip=d; UPZ.classList.remove('err'); UPZ.classList.add('has'); setErr('slip',false);
+      UPZ.innerHTML='<span class="pdfchip">'+ic('pdf',18,'var(--brand)')+'<span>'+esc(f.name)+'</span></span><span style="display:flex;flex-direction:column;gap:4px"><b>แนบสลิปแล้ว</b><small>แตะเพื่อเปลี่ยนไฟล์</small></span>'; };
+    rd.onerror=function(){upErr('เปิดไฟล์นี้ไม่ได้');}; rd.readAsDataURL(f); return; }
+  if(f.size>25*1024*1024)return upErr('ไฟล์ใหญ่เกินไป');
+  shrink(f,function(d){
+    if(!d||!/^data:image\/(png|jpe?g|webp);base64,/.test(d)||d.length>7*1024*1024)return upErr('เปิดไฟล์นี้ไม่ได้ กรุณาใช้ภาพหน้าจอสลิป');
+    ST.slip=d; UPZ.classList.remove('err'); UPZ.classList.add('has'); setErr('slip',false);
+    UPZ.innerHTML='<img class="pv" src="'+d+'" alt="ตัวอย่างสลิป"><span style="display:flex;flex-direction:column;gap:4px"><b>แนบสลิปแล้ว</b><small>แตะเพื่อเปลี่ยนรูป</small></span>'; });
+};
+
+/* ---------- ส่งใบสมัคร ---------- */
+var ERR={already_registered:'เบอร์นี้ลงทะเบียนรอบนี้ไว้แล้ว ตรวจสอบได้ที่ "การสมัครของฉัน"',bad_slip_format:'เปิดไฟล์สลิปไม่ได้ กรุณาใช้ไฟล์ JPG, PNG หรือ PDF',bad_phone:'เบอร์โทรศัพท์ไม่ถูกต้อง',round_full:'รอบสอบนี้เต็มแล้ว กรุณาเลือกรอบอื่น',round_closed:'รอบสอบนี้ปิดรับสมัครแล้ว กรุณาเลือกรอบอื่น',image_too_big:'ไฟล์ใหญ่เกินไป กรุณาเลือกไฟล์ใหม่',round_not_found:'ไม่พบรอบสอบนี้ กรุณาเลือกใหม่',missing_email:'กรุณากรอกอีเมลสำหรับจัดส่งใบกำกับภาษี',missing_firstName:'กรุณากรอกชื่อ',missing_lastName:'กรุณากรอกนามสกุล'};
+$('#submitBtn').onclick=function(){
+  if(!ST.slip){ setErr('slip',true); UPZ.classList.add('err'); return; }
+  var btn=this, lead=ST.course==='X-Lead'; btn.disabled=true; btn.innerHTML='<span class="spin"></span>กำลังบันทึก…';
+  var info=LEAD.info||{};
+  var phone=lead?LEAD.phone:digits(val('phone'));
+  var payload={firstName:lead?(info.masked?'':info.firstName):val('firstName'),lastName:lead?(info.masked?'':info.lastName):val('lastName'),
+    phone:phone,email:val('email'),taxEmail:val('email'),roundId:ST.roundId,coachTeam:coachVal(),referrer:val('referrer')||'-',
+    country:'ประเทศไทย',slipImage:ST.slip,consentTerms:true,consentPdpa:true};
+  fetch(API+'/api/xv/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+    .then(function(o){ btn.disabled=false; btn.textContent='ยืนยันการชำระเงิน'; var j=o.j||{};
+      if((o.s===200&&j.ok)||(j.error==='already_registered'&&j.regNo)){ showDone(j,phone); return; }
+      var m=ERR[j.error]||'ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'; toast(m);
+      if(/round_|bad_phone|missing_/.test(j.error||''))show('form');
+    }).catch(function(){ btn.disabled=false; btn.textContent='ยืนยันการชำระเงิน'; toast('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'); });
+};
+var STX={PENDING_PAYMENT:['รอชำระเงิน','warn'],PAYMENT_REVIEW:['รอตรวจสลิป','warn'],WAITLISTED:['รายชื่อสำรอง','warn'],CONFIRMED:['ยืนยันการจองแล้ว','ok'],CHECKED_IN:['เช็กอินแล้ว','ok'],EXAM_STARTED:['เข้าสอบแล้ว','ok'],TRANSFERRED_TO_EXAM:['เข้าสอบแล้ว','ok'],COMPLETED:['สอบเสร็จแล้ว','ok'],REJECTED:['สลิปไม่ผ่าน','bad'],CANCELLED:['ยกเลิกแล้ว','bad'],REFUNDED:['คืนเงินแล้ว','mut'],PARTIALLY_REFUNDED:['คืนเงินบางส่วน','mut']};
+var PAID=['CONFIRMED','CHECKED_IN','EXAM_STARTED','COMPLETED','TRANSFERRED_TO_EXAM'];
+function pill(st,sm){ var x=STX[st]||[st,'mut']; return '<span class="pill '+x[1]+(sm?' sm':'')+'">'+(sm?'':'<span class="d"></span>')+esc(x[0])+'</span>'; }
+function modeTxt(m){return m==='onsite'?'สอบ ณ ศูนย์สอบ (On Site)':'ออนไลน์ (Online)';}
+function kv(k,v,bold){return '<div class="kv"><span>'+k+'</span><span'+(bold?' style="font-weight:700"':'')+'>'+v+'</span></div>';}
+function showDone(j,phone){
+  ME={regNo:j.regNo,phone:phone}; store('xr_me',ME);
+  var r=j.round||{};
+  $('#dReg').textContent=j.regNo; $('#dSt').innerHTML=pill(j.status);
+  $('#dRows').innerHTML=kv('หลักสูตร',ST.course+' Examination')+kv('รอบการสอบ','<span class="nb">'+esc(whenTxt(r))+'</span>')+kv('รูปแบบการสอบ',modeTxt(j.mode||r.mode));
+  $('#dNote').classList.toggle('hide',PAID.indexOf(j.status)>=0);
+  show('done',{replace:true});
+}
+$('#doneGo').onclick=function(){ openStatus(); };
+
+/* ---------- เข้าสู่ระบบ: การสมัครของฉัน ---------- */
+$('#lgGo').onclick=function(){
+  var reg=val('lgReg').toUpperCase(), ph=digits(val('lgPhone')); var ok=true;
+  setErr('lgReg',!reg); setErr('lgPhone',ph.length<9); if(!reg||ph.length<9)ok=false;
+  var le=$('#lgErr'); le.classList.remove('show');
+  if(!ok)return;
+  var btn=this; btn.disabled=true; btn.innerHTML='<span class="spin"></span>กำลังตรวจสอบ…';
+  jget('/api/xv/reg/status?regNo='+encodeURIComponent(reg)+'&phone='+encodeURIComponent(ph)).then(function(o){
+    btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+    if(o.s!==200||!o.j.ok){ le.innerHTML='<span class="ln">ไม่พบข้อมูลการสมัคร</span> <span class="ln">กรุณาตรวจสอบหมายเลขลงทะเบียนและเบอร์โทรอีกครั้ง</span>'; le.classList.add('show'); return; }
+    ME={regNo:o.j.regNo,phone:ph}; store('xr_me',ME); STAT=o.j; openStatus(false,true);
+  }).catch(function(){ btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; toast('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่'); });
+};
+$('#lgPhone').addEventListener('keydown',function(e){ if(e.key==='Enter')$('#lgGo').click(); });
+
+/* ---------- หน้าสถานะ ---------- */
+var STAT=null, TK=null, OFF=0, TKBUSY=false, TKERR='';
+function setTheme(examType){ document.body.classList.toggle('lead',/lead/i.test(examType||'')); }
+function openStatus(nopush,have){
+  if(!ME){ show('login'); return; }
+  show('status',{nopush:nopush});
+  if(!have){ $('#stBody').innerHTML='<div class="loading">กำลังโหลด…</div>'; $('#stBot').innerHTML=''; }
+  refreshStatus(!have);
+  show._poll=setInterval(function(){ if(ST.view==='status'&&STAT&&['PAYMENT_REVIEW','PENDING_PAYMENT','WAITLISTED'].indexOf(STAT.status)>=0)refreshStatus(false); },20000);
+}
+function refreshStatus(fresh){
+  var me=ME; return jget('/api/xv/reg/status?regNo='+encodeURIComponent(me.regNo)+'&phone='+encodeURIComponent(me.phone)).then(function(o){
+    if(o.s!==200||!o.j.ok){ if(fresh){ ME=null; store('xr_me',null); show('login',{replace:true}); $('#lgErr').innerHTML='ไม่พบข้อมูลการสมัคร กรุณาเข้าสู่ระบบอีกครั้ง'; $('#lgErr').classList.add('show'); } return; }
+    var was=STAT&&STAT.status; STAT=o.j; setTheme(STAT.examType);
+    if(PAID.indexOf(STAT.status)>=0){ return loadTicket().then(function(){ if(ST.view==='status')paintStatus(); if(was&&was!==STAT.status)toast('ยืนยันการชำระเงินแล้ว'); }); }
+    TK=null; if(ST.view==='status')paintStatus();
+  }).catch(function(){ if(fresh)$('#stBody').innerHTML='<div class="loading"><span class="ln">เชื่อมต่อไม่สำเร็จ</span> <span class="ln">กรุณาลองใหม่อีกครั้ง</span></div>'; });
+}
+function loadTicket(){
+  return jget('/api/xv/reg/ticket?regNo='+encodeURIComponent(ME.regNo)+'&phone='+encodeURIComponent(ME.phone)).then(function(o){
+    if(o.j&&o.j.ok){ TK=o.j; OFF=(TK.serverNow||Date.now())-Date.now(); } else TK=null; }).catch(function(){});
+}
+function stepIdx(s){ var st=s.status;
+  if(st==='COMPLETED')return 5; if(st==='EXAM_STARTED'||st==='TRANSFERRED_TO_EXAM')return 4;
+  if(st==='CHECKED_IN'||s.attendance)return 3; if(st==='CONFIRMED')return 2; return 1; }
+function paintStatus(){
+  var s=STAT, r=s.round||{}, lead=/lead/i.test(s.examType||''), paid=PAID.indexOf(s.status)>=0, online=(s.mode||r.mode)!=='onsite';
+  var att=(TK&&TK.attendance)||s.attendance;
+  var cur=stepIdx({status:s.status,attendance:att});
+  var names=['ลงทะเบียน','ชำระเงิน','ยืนยันแล้ว','เช็กอิน','เข้าสอบ','ผลสอบ'];
+  var badSt=['REJECTED','CANCELLED','REFUNDED','PARTIALLY_REFUNDED'].indexOf(s.status)>=0;
+  var steps=names.map(function(n,i){ var cls=i<cur?'done':(i===cur&&!badSt?'cur':''); if(s.status==='COMPLETED'&&i===5)cls='done';
+    return '<div class="step '+cls+'"><i>'+(cls==='done'?ic('check',10,'#fff',3.5):(i+1))+'</i><span>'+n+'</span></div>'; }).join('');
+  var nm=(TK&&TK.name)||s.name||'-';
+  var TIC={reg:['file',''],slip:['upload',''],review:['clock','warn'],wait:['clock','warn'],paid:['okc','ok'],attend:['okc','ok'],bad:['x','bad']};
+  var TCOL={'':'var(--mut)',warn:'#f59e0b',ok:'#10b981',bad:'#dc2626'};
+  var tl=(s.timeline||[]).map(function(e){ var x=TIC[e.k]||['file',''];
+    return '<div class="tli"><i class="'+x[1]+'">'+ic(x[0],16,TCOL[x[1]])+'</i><div><b>'+esc(e.t)+'</b><small>'+(e.at?esc(tlTime(e.at)):(e.k==='review'?'อยู่ระหว่างตรวจสอบ':''))+'</small></div></div>'; }).join('');
+  var rows=kv('รอบสอบ','รอบที่ '+esc(r.no||'-'))+kv('วันที่','<span class="nb">'+esc(whenTxt(r))+'</span>')+kv('รูปแบบ',online?'ออนไลน์ (Online)':'On Site',true)
+    +(!online&&r.venue?kv('สถานที่',esc(r.venue)):'')+kv('โค้ชทีม',esc(s.coachTeam||'ไม่ระบุโค้ช'));
+  var msg='';
+  if(s.status==='PAYMENT_REVIEW'||s.status==='PENDING_PAYMENT')msg='<div class="note">'+ic('clock',18,'#64748b')+'<span><span class="ln">ทีมงานจะตรวจสอบการชำระเงินโดยเร็ว</span> <span class="ln">(ภายใน 24 ชม.)</span> <span class="ln">QR เข้าสอบจะแสดงเมื่อยืนยันแล้ว</span></span></div>';
+  if(s.status==='REJECTED')msg='<div class="note">'+ic('x',18,'#dc2626')+'<span><span class="ln">สลิปไม่ผ่านการตรวจสอบ</span> <span class="ln">กรุณาติดต่อทีมงานทาง <a href="'+LINE_URL+'" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700;text-decoration:none">LINE @cloverxth</a></span></span></div>';
+  $('#stBody').innerHTML=
+     '<div class="card dcard"><div class="brow">'+pill(s.status,true)+'<span class="rg">'+esc(s.regNo)+'</span></div>'
+    +'<div class="who"><h3>'+esc(nm)+'</h3><p>หลักสูตร : '+(lead?'X-Lead':'X-Visor')+' Examination</p></div></div>'
+    +msg
+    +'<div class="card dcard"><p class="ctitle">ขั้นตอนการสอบ</p><div class="steps">'+steps+'</div></div>'
+    +'<div class="card dcard" style="gap:14px"><p class="ctitle l">รายละเอียดรอบสอบ</p><hr class="hr"><div class="kvs tight">'+rows+'</div></div>'
+    +(tl?'<div class="card dcard"><p class="ctitle l">ประวัติการดำเนินการ</p><div class="tl">'+tl+'</div></div>':'')
+    +'<div class="sup" style="padding:2px 0 6px"><button class="mylink" type="button" id="stOut" style="color:var(--mut);font-weight:500">ออกจากระบบ</button></div>';
+  $('#stOut').onclick=function(){ ME=null; STAT=null; TK=null; store('xr_me',null); document.body.classList.toggle('lead',ST.course==='X-Lead'); show('land'); };
+  var bot=$('#stBot');
+  if(paid&&TK){
+    if(online) bot.innerHTML='<div class="row2"><button class="btn ghost sm" type="button" id="stQr">ดู QR Code</button><button class="btn sm" type="button" id="stStamp" style="box-shadow:none">'+(att?'สแตมป์แล้ว':'สแตมป์เข้าร่วม')+'</button></div>';
+    else bot.innerHTML='<button class="btn" type="button" id="stQr">ดู QR Code</button>';
+    $('#stQr').onclick=function(){ openTicket(); };
+    var sb=$('#stStamp'); if(sb)sb.onclick=function(){ if(att){ showStamped(); } else openTicket(false,true); };
+  } else if(paid){ bot.innerHTML='<button class="btn" type="button" id="stRe">โหลดบัตรเข้าสอบอีกครั้ง</button>'; $('#stRe').onclick=function(){ refreshStatus(false); }; }
+  else if(badSt){ bot.innerHTML='<a class="btn" href="'+LINE_URL+'" target="_blank" rel="noopener">ติดต่อทีมงานทาง LINE</a>'; }
+  else { bot.innerHTML='<button class="btn" type="button" id="stRe">รีเฟรชสถานะ</button>'; $('#stRe').onclick=function(){ var b=this; b.disabled=true; b.innerHTML='<span class="spin"></span>กำลังตรวจสอบ…'; refreshStatus(false).then(function(){ var x=$('#stRe'); if(x){x.disabled=false;x.textContent='รีเฟรชสถานะ';} }); }; }
+}
+
+/* ---------- บัตรผู้เข้าสอบ + สแตมป์ ---------- */
+var _qr=null; function qrLib(){ if(_qr)return _qr; _qr=new Promise(function(ok,no){ if(window.qrcode)return ok(); var s=document.createElement('script'); s.src='/xv-qrgen.js'; s.onload=function(){ok();}; s.onerror=function(){_qr=null;no();}; document.head.appendChild(s); }); return _qr; }
+function drawQr(text,px){ var q=qrcode(0,'M'); q.addData(text); q.make(); var n=q.getModuleCount(), m=2, cell=Math.max(4,Math.floor(px/(n+m*2))), size=cell*(n+m*2);
+  var c=document.createElement('canvas'); c.width=size; c.height=size; var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,size,size); g.fillStyle='#000';
+  for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))g.fillRect((k+m)*cell,(r+m)*cell,cell,cell); return c; }
+function nowMs(){return Date.now()+OFF;}
+function atMs(date,hhmm){return Date.parse(date+'T'+hhmm+':00+07:00');}
+function openTicket(nopush,focusStamp){
+  if(!ME){ show('login'); return; }
+  show('ticket',{nopush:nopush});
+  var go=function(){ if(!TK){ $('#tkBody').innerHTML='<div class="loading"><span class="ln">ยังไม่มีบัตรเข้าสอบ</span> <span class="ln">บัตรจะออกเมื่อยืนยันการชำระเงินแล้ว</span></div>'; $('#tkSave').disabled=true; return; }
+    setTheme(TK.examType); paintTicket(); if(focusStamp){ var b=$('#stampBox'); if(b)b.scrollIntoView({block:'center'}); } };
+  if(TK)go(); else loadTicket().then(go);
+  show._tick=setInterval(tickStamp,1000);
+}
+function paintTicket(){
+  var t=TK, r=t.round||{}, lead=/lead/i.test(t.examType||''), online=(t.mode||r.mode)!=='onsite', w=t.window||{};
+  var st=startHHMM(r.timeslot)||w.startsAt||'';
+  var inst=online?'':'<div class="tk-dash"></div><div class="tk-i"><b>รายละเอียดและข้อปฏิบัติ (On-Site)</b><p><span class="ln">แสดง QR CODE นี้ให้ทีมงานสแกนที่จุดลงทะเบียน</span><br><span class="ln">สแกนได้ตั้งแต่ '+esc(w.opensAt||'06:00')+' น. ถึง '+esc(w.startsAt||st)+' น.</span><br><span class="ln">ใช้หมายเลขผู้เข้าสอบแทน QR ได้ หากสแกนไม่ติด</span></p>'
+    +(t.attendance?'<p style="color:#047857;font-weight:700;margin-top:8px">เช็กอินแล้ว เวลา '+esc(bkk(t.attendance.at).hm)+' น.</p>':'')+'</div>';
+  $('#tkBody').innerHTML='<div class="ticket">'
+    +'<div class="tk-b"><div class="t"><b>'+(lead?'X-LEAD':'X-VISOR')+' EXAM TICKET</b><span class="pill"><span class="d"></span>ยืนยันการจองแล้ว</span></div>'
+    +'<div><h3>'+esc(t.name)+'</h3><p>หมายเลขผู้เข้าสอบ: '+esc(t.regNo)+'</p></div></div>'
+    +'<div class="tk-q"><div class="qrbox" id="tkQr" role="img" aria-label="QR เข้าสอบ '+esc(t.regNo)+'"></div><small><span class="ln">รอบสอบ : '+esc(thDayDate(r.date))+'</span> <span class="ln">| เวลา '+esc(st)+' น.</span></small></div>'
+    +inst+'</div>'
+    +(online?'<div class="stampbox" id="stampBox"></div>':'');
+  if(online)paintStampBox();
+  $('#tkSave').disabled=false;
+  qrLib().then(function(){ var el=$('#tkQr'); if(!el)return; el.innerHTML=''; el.appendChild(drawQr(t.payload,480)); })
+    .catch(function(){ var el=$('#tkQr'); if(el)el.innerHTML='<small style="text-align:center">โหลด QR ไม่สำเร็จ<br>แจ้งหมายเลขผู้เข้าสอบกับทีมงานแทนได้</small>'; });
+}
+function fmtLeft(ms){ if(ms<0)ms=0; var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60; return h?(h+' ชม. '+m+' นาที'):(('0'+m).slice(-2)+':'+('0'+x).slice(-2)+' นาที'); }
+function paintStampBox(){
+  var el=$('#stampBox'); if(!el||!TK)return; var w=TK.window||{}, att=TK.attendance;
+  var head='<div><b>กรณีสอบออนไลน์ (Online)</b><small>สแตมป์ยืนยันในเวลาที่กำหนด ('+esc(w.opensAt||'06:00')+' - '+esc(w.startsAt||'')+' น.) <span class="nb">วัน'+esc(thDayDate(w.date))+'</span></small></div>';
+  if(att){ el.innerHTML=head+'<div class="okline">'+ic('okc',16,'#10b981')+'สแตมป์แล้ว เวลา '+esc(bkk(att.at).hm)+' น.</div>'; return; }
+  if(w.state==='open'){ el.innerHTML=head+'<small id="spLeft"></small><button class="btn xs" type="button" id="spGo"'+(TKBUSY?' disabled':'')+'>'+(TKBUSY?'<span class="spin"></span>กำลังบันทึก…':'สแตมป์ยืนยันการเข้าร่วม')+'</button>'+(TKERR?'<div class="err">'+esc(TKERR)+'</div>':'');
+    $('#spGo').onclick=doStamp; tickStamp(); return; }
+  if(w.state==='not_yet'){ el.innerHTML=head+'<small id="spLeft"></small><button class="btn xs" type="button" disabled>ยังไม่ถึงเวลาสแตมป์</button>'; tickStamp(); return; }
+  el.innerHTML=head+'<button class="btn xs" type="button" disabled>ปิดการสแตมป์แล้ว</button><small><span class="ln">เลยเวลาเริ่มสอบแล้ว หากมีเหตุจำเป็น</span> <span class="ln">ติดต่อทีมงานทาง <a href="'+LINE_URL+'" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700;text-decoration:none">LINE @cloverxth</a></span></small>';
+}
+var _rf=0;
+function tickStamp(){ if(ST.view!=='ticket'||!TK||TK.attendance)return; var w=TK.window||{}; if(!w.date)return; var now=nowMs(), open=atMs(w.date,w.opensAt), start=atMs(w.date,w.startsAt), l=$('#spLeft');
+  if(w.state==='open'){ if(l)l.textContent='ปิดรับสแตมป์ในอีก '+fmtLeft(start-now); if(now>=start)reTicket(); }
+  else if(w.state==='not_yet'){ var dl=open-now; if(l)l.textContent=dl<24*3600000?('เปิดให้สแตมป์ในอีก '+fmtLeft(dl)):''; if(dl<=0)reTicket(); } }
+function reTicket(){ if(Date.now()-_rf<4000||TKBUSY)return; _rf=Date.now(); loadTicket().then(function(){ if(ST.view==='ticket'&&TK)paintStampBox(); }); }
+function doStamp(){ if(TKBUSY)return; TKBUSY=true; TKERR=''; paintStampBox(); var tries=0;
+  (function go(){ tries++;
+    fetch(API+'/api/xv/reg/attend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({regNo:ME.regNo,phone:ME.phone})})
+      .then(function(r){return r.json();}).then(function(j){ TKBUSY=false;
+        if(j.ok){ TK.attendance=j.attendance; if(STAT)STAT.attendance=j.attendance; try{ if(navigator.vibrate)navigator.vibrate(60); }catch(e){} showStamped(); return; }
+        if(j.window)TK.window=j.window;
+        TKERR={not_open_yet:'ยังไม่ถึงเวลาเปิดสแตมป์',closed:'ปิดการสแตมป์แล้ว (เลยเวลาเริ่มสอบ)',not_paid:'การลงทะเบียนยังไม่พร้อม กรุณาติดต่อทีมงาน'}[j.error]||'บันทึกไม่สำเร็จ กรุณากดอีกครั้ง'; paintStampBox(); })
+      .catch(function(){ if(tries<3){ setTimeout(go,1500*tries); return; } TKBUSY=false; TKERR='บันทึกไม่สำเร็จ (อินเทอร์เน็ตขัดข้อง) กรุณากดอีกครั้ง'; paintStampBox(); });
+  })(); }
+function showStamped(){
+  var t=TK||{}, r=t.round||{}, a=t.attendance||(STAT&&STAT.attendance); if(!a)return;
+  var b=bkk(a.at); $('#spAt').textContent='สแตมป์เมื่อ '+b.hm+' น. '+thDate(b.iso);
+  $('#spRows').innerHTML=kv('หลักสูตร',(/lead/i.test(t.examType||'')?'X-Lead':'X-Visor')+' Examination',true)+'<hr class="hr">'+kv('รอบการสอบ','<span class="nb">'+esc(whenTxt(r))+'</span>',true)+'<hr class="hr">'+kv('รูปแบบการสอบ','ออนไลน์ (Online)',true);
+  show('stamp');
+}
+$('#spHome').onclick=function(){ openStatus(); };
+$('#tkSave').onclick=function(){
+  var t=TK, src=$('#tkQr canvas'); if(!t||!src)return; var r=t.round||{};
+  var lead=/lead/i.test(t.examType||''), col=lead?'#b1961d':'#2563eb', col2=lead?'#e0cb57':'#1d4ed8', onsite=(t.mode||r.mode)==='onsite';
+  var W=720,H=1040,c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d'); var F='"Inter","Noto Sans Thai",Tahoma,sans-serif';
+  g.fillStyle='#ffffff';g.fillRect(0,0,W,H);
+  var gr=g.createLinearGradient(0,0,W,0); gr.addColorStop(0,lead?'#b1961d':'#3b82f6'); gr.addColorStop(1,col2); g.fillStyle=gr; g.fillRect(0,0,W,210);
+  g.fillStyle='#fff'; g.textAlign='left'; g.font='800 26px '+F; g.fillText((lead?'X-LEAD':'X-VISOR')+' EXAM TICKET',48,70);
+  g.font='800 40px '+F; g.fillText(String(t.name||'').slice(0,34),48,135);
+  g.font='500 24px '+F; g.globalAlpha=.85; g.fillText('หมายเลขผู้เข้าสอบ: '+t.regNo,48,178); g.globalAlpha=1;
+  g.imageSmoothingEnabled=false; g.drawImage(src,170,250,380,380);
+  g.textAlign='center'; g.fillStyle='#1e293b'; g.font='800 44px '+F; g.fillText(t.regNo,W/2,690);
+  g.fillStyle='#64748b'; g.font='500 25px '+F;
+  g.fillText('รอบสอบ : '+thDayDate(r.date)+(startHHMM(r.timeslot)?(' | เวลา '+startHHMM(r.timeslot)+' น.'):''),W/2,745);
+  g.fillText(onsite?('สอบ ณ ศูนย์สอบ'+(r.venue?(' '+String(r.venue).slice(0,30)):'')):'สอบออนไลน์ (Online)',W/2,790);
+  g.strokeStyle='#e2e8f0'; g.setLineDash([10,8]); g.beginPath(); g.moveTo(40,840); g.lineTo(W-40,840); g.stroke(); g.setLineDash([]);
+  g.fillStyle='#1e293b'; g.font='700 24px '+F; g.fillText(onsite?'แสดง QR นี้ให้ทีมงานสแกนที่จุดลงทะเบียน':'QR นี้เป็นหลักฐานการลงทะเบียนสอบ',W/2,895);
+  g.fillStyle=col; g.font='700 22px '+F; g.fillText('CloverX E-xam  LINE @cloverxth',W/2,H-50);
+  c.toBlob(function(bl){ if(!bl)return; var u=URL.createObjectURL(bl), a=document.createElement('a'); a.href=u; a.download='QR-'+t.regNo+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},4000); toast('บันทึก QR แล้ว'); },'image/png');
+};
+
+/* ---------- เริ่มต้น ---------- */
+ME=load('xr_me'); if(ME&&!(ME.regNo&&ME.phone))ME=null;
+loadRounds();
+if(/^#(my|status)$/i.test(location.hash)){ if(ME)openStatus(false); else { show('login',{replace:true}); } }
+else show('land',{replace:true});
+})();
+</script>
+</body>
+</html>

@@ -221,7 +221,8 @@ module.exports = function (app, DATA, opts) {
   // save a data-url image to disk, return its public path (or '' if none/invalid)
   const saveRegImage = (dataUrl, tag) => {
     if (!dataUrl || typeof dataUrl !== 'string') return '';
-    const m = dataUrl.match(/^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/=]+)$/);
+    let m = dataUrl.match(/^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!m && tag === 'slip') { const pm = dataUrl.match(/^data:application\/pdf;base64,([A-Za-z0-9+/=]+)$/); if (pm && Buffer.from(pm[1].slice(0, 8), 'base64').toString('latin1').indexOf('%PDF') === 0) m = [null, 'pdf', pm[1]]; }   // สลิปแบบ PDF (ตาม Figma)
     if (!m) return '';
     const ext = m[1] === 'jpeg' ? 'jpg' : m[1];
     const buf = Buffer.from(m[2], 'base64');
@@ -1241,6 +1242,20 @@ module.exports = function (app, DATA, opts) {
     logAudit('reg_edit', 'registration', r.id, r.regNo, null, null, 'แก้ไขข้อมูลผู้สมัคร' + (b.reason ? (': ' + String(b.reason).slice(0, 120)) : ''), 'staff');
     res.json({ ok: true, registration: r, before: before });
   });
+  // ประวัติการดำเนินการของใบสมัคร (สำหรับหน้าสถานะของผู้สมัคร) ใหม่สุดอยู่บน
+  function regTimeline(r) {
+    const t = [], c = r.createdAt || null;
+    t.push({ k: 'reg', at: c, t: 'ลงทะเบียนสำเร็จ' });
+    if (r.payment && r.payment.slipUrl) t.push({ k: 'slip', at: c, t: 'ส่งหลักฐานการชำระเงินแล้ว' });
+    if (r.status === 'PAYMENT_REVIEW') t.push({ k: 'review', at: null, t: 'กำลังตรวจสอบสลิป' });
+    if (r.status === 'WAITLISTED') t.push({ k: 'wait', at: null, t: 'อยู่ในรายชื่อสำรอง' });
+    if (PAID_ST.indexOf(r.status) >= 0) t.push({ k: 'paid', at: r.confirmedAt || null, t: 'ยืนยันการชำระเงินสำเร็จ' });
+    const a = attendPub(r); if (a) t.push({ k: 'attend', at: a.at, t: a.method === 'stamp' ? 'สแตมป์ยืนยันการเข้าร่วมแล้ว' : 'เช็กอินแล้ว' });
+    if (r.status === 'REJECTED') t.push({ k: 'bad', at: null, t: 'สลิปไม่ผ่านการตรวจสอบ' });
+    if (r.status === 'CANCELLED') t.push({ k: 'bad', at: null, t: 'ยกเลิกการสมัครแล้ว' });
+    if (r.status === 'REFUNDED' || r.status === 'PARTIALLY_REFUNDED') t.push({ k: 'bad', at: null, t: 'คืนเงินแล้ว' });
+    return t.reverse();
+  }
   app.get('/api/xv/reg/status', (req, res) => {
     const regNo = String(req.query.regNo || '').trim().toUpperCase();
     const phone = String(req.query.phone || '');
@@ -1251,9 +1266,11 @@ module.exports = function (app, DATA, opts) {
     const round = findR(r.roundId);
     res.json({
       ok: true, regNo: r.regNo, status: r.status, mode: r.mode,
-      name: nm.length > 1 ? (nm[0] + '****' + nm.slice(-1)) : nm,
+      name: ((maskName(r.candidate.firstName) + ' ' + maskName(r.candidate.lastName)).trim()) || '-',
       round: round ? { no: round.no, date: round.date, mode: round.mode, venue: round.venue, timeslot: round.timeslot } : null,
-      createdAt: r.createdAt
+      createdAt: r.createdAt,
+      examType: round ? examTypeOf(round) : 'X-Visor', coachTeam: r.coachTeam || '',
+      attendance: attendPub(r), timeline: regTimeline(r)
     });
   });
   /* ================= ยืนยันการเข้าร่วมสอบ: QR ส่วนบุคคล (On Site) + สแตมป์ (Online) =================

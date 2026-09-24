@@ -748,6 +748,7 @@
         <div class="children">
           <button class="item" data-view="exam-dashboard"><span class="dot"></span><span class="lbl">Dashboard</span></button>
           <button class="item" data-view="exam-regqr"><span class="dot"></span><span class="lbl">QR Management</span></button>
+          <button class="item" data-view="exam-reghub"><span class="dot"></span><span class="lbl">Register</span></button>
         </div>
       </div>
 
@@ -880,6 +881,7 @@
     'reg-payments':{t:'Payment Verification',th:'ตรวจสอบการชำระเงิน',d:'คิวตรวจสลิป (EasySlip) และการชำระเงิน',kind:'plain'},
     'reg-history':{t:'Registration History',th:'ประวัติการลงทะเบียน',d:'รอบที่ปิด/จบแล้ว — ค้นหาและดูย้อนหลัง',kind:'plain'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบ X-Visor',kind:'dash'},
+    'exam-reghub':{t:'Register',th:'Register',d:'หน้าลงทะเบียนและการสมัครของฉัน สำหรับ X-Visor และ X-Lead',kind:'plain'},
     'exam-regqr':{t:'QR Management',th:'QR Management',d:'QR สมัครสอบ บัตรเข้าสอบ และสแกนเช็กอิน',kind:'plain'},
     'exam-dashboard':{t:'E-xam Dashboard',th:'Dashboard ภาพรวม E-xam',d:'ผู้สมัคร การยืนยันเข้าร่วม และผลสอบ แยกตามหลักสูตรและทีมโค้ช',kind:'plain'},
     'exam-session':{t:'Exam Session',th:'รอบการสอบ',d:'จัดการรอบสอบ ตารางสอบ และผู้เข้าสอบ',kind:'plain'},
@@ -1100,6 +1102,7 @@
     EXAM_VIEW=v;
     gen.classList.add('xv');
     if(v==='exam-regqr')renderRegQr();
+    else if(v==='exam-reghub')renderRegHub();
     else if(v==='exam-dashboard')renderExamDashboard();
     else if(v==='exam-overview')renderExamOverview();
     else if(v==='exam-session')renderExamSession();
@@ -1251,11 +1254,47 @@
       +'<p class="rq-note">ต้องล็อกอินพนักงานก่อน</p></section></div>';
     rqLib(function(){ RQ_LIST.forEach(function(x){ var el=document.getElementById('rq_'+x.k); if(el){ el.innerHTML=''; el.appendChild(rqCanvas(rqUrl(x),520)); } }); });
   }
-  function rqCopy(k){ var x=RQ_LIST.find(function(z){return z.k===k;}), u=rqUrl(x);
+  /* ================= Register: หน้าลงทะเบียน/เข้าสู่ระบบ X-Visor และ X-Lead (ตาม Figma ชุดใหม่) ================= */
+  var RG_LIST=[
+    {k:'rg_visor',title:'ลงทะเบียน X-Visor',sub:'ผู้สมัครใหม่ กรอกใบสมัคร ชำระเงิน แนบสลิป',path:'/exam-register',poster:'สแกนเพื่อลงทะเบียนสอบ X-Visor',file:'QR-ลงทะเบียน-X-Visor',note:'โพสต์ หรือส่งทาง LINE'},
+    {k:'rg_lead',title:'ลงทะเบียน X-Lead',sub:'ผู้ผ่าน X-Visor ตรวจสิทธิ์ด้วยเบอร์โทร ไม่ต้องกรอกซ้ำ',path:'/exam-register?c=lead',poster:'สแกนเพื่อลงทะเบียนสอบ X-Lead',file:'QR-ลงทะเบียน-X-Lead',note:'ส่งให้ผู้ผ่าน X-Visor'},
+    {k:'rg_my',title:'การสมัครของฉัน',sub:'เข้าสู่ระบบด้วยหมายเลขลงทะเบียนและเบอร์โทร',path:'/exam-register#my',poster:'สแกนเพื่อดูสถานะและบัตรเข้าสอบ',file:'QR-การสมัครของฉัน',note:'ดูสถานะ บัตร QR และสแตมป์'}];
+  var RG_HUB={loading:false};
+  function renderRegHub(){
+    var g=gen;
+    if(!REG_CACHE&&!RG_HUB.loading){ RG_HUB.loading=true; g.innerHTML=xvSpinner('กำลังโหลดข้อมูลผู้สมัคร…'); fetchRegs(function(){ RG_HUB.loading=false; if(EXAM_VIEW==='exam-reghub')renderRegHub(); }); return; }
+    var regs=REG_CACHE||[], rounds=EXAM_ROUNDS||[];
+    var typeOf=function(r){ var rd=rounds.find(function(x){return x.id===r.roundId;}); return /lead/i.test((rd&&rd.examType)||'')?'X-Lead':'X-Visor'; };
+    var paidSt=['CONFIRMED','CHECKED_IN','EXAM_STARTED','COMPLETED','TRANSFERRED_TO_EXAM'];
+    var stat=function(t){ var a=regs.filter(function(r){return typeOf(r)===t&&['CANCELLED','REJECTED','REFUNDED'].indexOf(r.status)<0;});
+      return {all:a.length,review:a.filter(function(r){return r.status==='PAYMENT_REVIEW'||r.status==='PENDING_PAYMENT';}).length,
+        paid:a.filter(function(r){return paidSt.indexOf(r.status)>=0;}).length,
+        att:a.filter(function(r){return r.attendance||r.status==='CHECKED_IN';}).length}; };
+    var openR=function(t){ return rounds.filter(function(x){return (/lead/i.test(x.examType||'')?'X-Lead':'X-Visor')===t&&x.status!=='closed'&&x.regOpen!==false;}).length; };
+    var box=function(t,col){ var s=stat(t);
+      var it=function(lb,v,c){return '<div style="flex:1;min-width:92px;padding:10px 12px;border-radius:12px;background:#F7FAFF;border:1px solid #E6EEF9"><div style="font-size:.74rem;color:var(--muted)">'+lb+'</div><div class="num" style="font-size:1.35rem;font-weight:800;color:'+(c||'var(--ink)')+'">'+v+'</div></div>';};
+      return '<section class="xdb-card" style="margin:0"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px"><h3 class="xdb-h" style="margin:0"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+col+';margin-right:8px"></span>'+t+'</h3><span style="font-size:.78rem;color:var(--muted)">รอบที่เปิดรับสมัคร '+openR(t)+' รอบ</span></div>'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+it('ผู้สมัคร',s.all)+it('รอตรวจสลิป',s.review,s.review?'#B7791F':'')+it('ยืนยันแล้ว',s.paid,'#0F9D6E')+it('สแตมป์/เช็กอิน',s.att,'#2563EB')+'</div></section>'; };
+    var frame=function(src,lb){ return '<figure style="margin:0;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:300px;height:600px;border-radius:30px;border:8px solid #0F172A;overflow:hidden;background:#fff;box-shadow:0 14px 30px rgba(15,23,42,.18)"><iframe src="'+src+'" title="ตัวอย่าง '+lb+'" loading="lazy" style="width:390px;height:780px;border:0;transform:scale(.7487);transform-origin:0 0"></iframe></div><figcaption style="font-size:.8rem;color:var(--muted)">'+lb+'</figcaption></figure>'; };
+    g.innerHTML=xvHead('Register','หน้าลงทะเบียนและการสมัครของฉัน สำหรับ X-Visor และ X-Lead')
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px">'+box('X-Visor','#2563EB')+box('X-Lead','#B1961D')+'</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"><button class="xbtn pri" onclick="go(\'reg-payments\')">ตรวจสอบการชำระเงิน</button><button class="xbtn" onclick="go(\'reg-people\')">รายชื่อผู้ลงทะเบียน</button><button class="xbtn" onclick="go(\'reg-schedules\')">จัดการรอบสอบ</button><button class="xbtn" onclick="REG_CACHE=null;renderRegHub()">รีเฟรช</button></div>'
+      +'<div class="rq-grid">'+RG_LIST.map(function(x){ var u=rqUrl(x);
+        return '<section class="xdb-card rq-card"><h3 class="xdb-h">'+x.title+'</h3><p class="rq-sub">'+x.sub+'</p>'
+          +'<div class="rq-qr" id="rq_'+x.k+'"></div>'
+          +'<div class="rq-url" title="'+xdbE(u)+'">'+xdbE(u.replace(/^https?:\/\//,''))+'</div>'
+          +'<div class="rq-act"><button class="xbtn" onclick="rqCopy(\''+x.k+'\')">คัดลอกลิงก์</button><button class="xbtn pri" onclick="rqPoster(\''+x.k+'\')">ดาวน์โหลดรูป QR</button></div>'
+          +'<p class="rq-note">'+x.note+'  <a href="'+xdbE(x.path)+'" target="_blank" rel="noopener">เปิดหน้านี้</a></p></section>'; }).join('')+'</div>'
+      +'<section class="xdb-card" style="margin-top:14px"><h3 class="xdb-h">ตัวอย่างหน้าจอมือถือ</h3><p class="rq-sub" style="margin:0 0 14px">แสดงหน้าจริงที่ลูกค้าเห็น กดใช้งานได้ (อย่าส่งใบสมัครจริงจากตัวอย่างนี้)</p>'
+      +'<div style="display:flex;gap:28px;flex-wrap:wrap;justify-content:center">'+frame('/exam-register','X-Visor')+frame('/exam-register?c=lead','X-Lead')+frame('/exam-register#my','การสมัครของฉัน')+'</div></section>';
+    rqLib(function(){ RG_LIST.forEach(function(x){ var el=document.getElementById('rq_'+x.k); if(el){ el.innerHTML=''; el.appendChild(rqCanvas(rqUrl(x),520)); } }); });
+  }
+  function rqFind(k){ return RQ_LIST.concat(RG_LIST).find(function(z){return z.k===k;}); }
+  function rqCopy(k){ var x=rqFind(k), u=rqUrl(x);
     var ok=function(){xvToast('คัดลอกลิงก์แล้ว','ok');};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(ok,function(){prompt('คัดลอกลิงก์นี้',u);}); else prompt('คัดลอกลิงก์นี้',u); }
   function rqPoster(k){
-    var x=RQ_LIST.find(function(z){return z.k===k;}), u=rqUrl(x);
+    var x=rqFind(k), u=rqUrl(x);
     rqLib(function(){
       var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d');
       var F='"Sarabun","Noto Sans Thai",Tahoma,sans-serif';
@@ -1270,7 +1309,7 @@
       g.fillStyle='#fff'; g.font='700 34px '+F; g.fillText('เปิดกล้องมือถือ แล้วสแกน QR นี้',W/2,by+box+90);
       g.font='500 26px '+F; g.globalAlpha=.85; g.fillText(u.replace(/^https?:\/\//,''),W/2,by+box+145); g.globalAlpha=1;
       g.font='600 26px '+F; g.fillText('สอบถามทาง LINE @cloverxth',W/2,H-60);
-      c.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=(k==='reg'?'QR-สมัครสอบ':'QR-การสมัครของฉัน')+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},4000); },'image/png');
+      c.toBlob(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=(x.file||(k==='reg'?'QR-สมัครสอบ':'QR-การสมัครของฉัน'))+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},4000); },'image/png');
     });
   }
   function renderExamOverview(){
