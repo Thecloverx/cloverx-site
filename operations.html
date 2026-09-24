@@ -3764,7 +3764,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var hc=h.replace(/ /g,''), nc=n.replace(/ /g,''); if(hc.indexOf(nc)>=0)return true;
     var hd=h.replace(/\D/g,''), nd=n.replace(/\D/g,''); if(nd.length>=4&&nd.length===n.replace(/[\s-]/g,'').length&&hd.indexOf(nd)>=0)return true;
     return n.split(' ').every(function(t){return hc.indexOf(t)>=0;}); }
-  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.orderFamily,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
+  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
   function retInRange(at){ return drpIn('ret',at); }
   function retInRangeLegacy(at){
     if(RET_RANGE==='all')return true;
@@ -4122,54 +4122,6 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
 
   /* ---------- Customer (share QR) ---------- */
-  /* ===== Return & Refund: รายชื่อลูกค้าจากชีต Order Master ใช้ยืนยันตัวตนหน้าคืนสินค้า (ไม่แก้ออเดอร์ Pre-Order) ===== */
-  var PIC={rows:null,file:''};
-  function picModal(html){ var m=document.getElementById('picModal');
-    if(!m){ m=document.createElement('div'); m.id='picModal'; m.style.cssText='position:fixed;inset:0;z-index:9997;display:flex;align-items:center;justify-content:center;background:rgba(20,30,55,.42);padding:20px';
-      m.addEventListener('click',function(e){if(e.target===m)m.style.display='none';}); document.body.appendChild(m); }
-    m.innerHTML='<div style="background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:24px;box-shadow:0 30px 80px -20px rgba(0,0,0,.5)">'+html+'</div>'; m.style.display='flex'; return m; }
-  function picClose(){ var m=document.getElementById('picModal'); if(m)m.style.display='none'; }
-  function retContactsUpload(){ PIC={rows:null,file:''};
-    picModal('<h3 style="font-size:1.12rem;margin-bottom:6px">อัปโหลดรายชื่อลูกค้าจากชีต</h3>'
-      +'<p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:14px">ใช้ยืนยันตัวตนลูกค้าในหน้าคืนสินค้า (ชื่อ เบอร์ อีเมล และผู้ซื้อร่วม) ไม่แก้ข้อมูลออเดอร์ใน Pre-Order<br>ใช้ไฟล์ Order Master จาก Google Sheets (ไฟล์ > ดาวน์โหลด > .xlsx)<br>อัปโหลดใหม่จะแทนที่รายชื่อชุดเดิมทั้งหมด</p>'
-      +'<label style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px;border:1.5px dashed var(--brand);border-radius:14px;cursor:pointer;text-align:center;position:relative"><b style="color:var(--brand)">เลือกไฟล์ชีต</b><span style="font-size:.8rem;color:var(--muted)">รองรับ .xlsx .csv หรือ .json</span><span id="picFile" style="font-size:.82rem;font-weight:700"></span><input type="file" accept=".xlsx,.xls,.csv,.json" onchange="picPick(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>'
-      +'<div id="picOut" style="margin-top:14px;font-size:.88rem"></div>'
-      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px"><button onclick="picClose()" style="background:none;border:1px solid var(--line);border-radius:10px;padding:9px 16px;font-family:inherit;font-weight:700;cursor:pointer">ปิด</button><button id="picGo" disabled onclick="picApply()" style="border:0;border-radius:10px;padding:9px 18px;font-family:inherit;font-weight:800;color:#fff;background:var(--good);cursor:pointer;opacity:.5">ยืนยันอัปโหลด</button></div>'); }
-  function picXlsx(cb){ if(window.XLSX)return cb(); var sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload=cb; sc.onerror=function(){picMsg('โหลดตัวอ่านไฟล์ไม่สำเร็จ ลองใหม่อีกครั้ง',true);}; document.head.appendChild(sc); }
-  function picMsg(t,bad){ var o=document.getElementById('picOut'); if(o)o.innerHTML='<div style="color:'+(bad?'var(--bad)':'var(--ink)')+'">'+t+'</div>'; }
-  function picRowsFromAoa(aoa){ var out=[], seen={};
-    var norm=function(x){return String(x==null?'':x).replace(/[​-‏﻿]/g,'').replace(/\s+/g,' ').trim();};
-    for(var h=0;h<aoa.length;h++){ var hd=(aoa[h]||[]).map(norm); var iN=hd.indexOf('ชื่อ-นามสกุล'), iP=hd.indexOf('เบอร์โทร'); if(iN<0||iP<0)continue;
-      var iE=hd.findIndex(function(x){return /^e-?mail$/i.test(x);}), iA=hd.indexOf('ที่อยู่จัดส่ง'), iFN=hd.indexOf('ชื่อ Family'), iFP=hd.indexOf('เบอร์โทร Family'), iId=-1;
-      for(var r=h+1;r<aoa.length;r++){ var row=(aoa[r]||[]).map(norm);
-        if(iId<0){ iId=row.findIndex(function(x){return /^PO-\d{6}-/.test(x);}); if(iId<0)continue; }
-        var id=row[iId]; if(!/^PO-\d{6}-/.test(id)){ if(!row.join(''))continue; if(row.some(function(x){return x==='ชื่อ-นามสกุล';}))break; continue; }
-        if(seen[id])continue; seen[id]=1;
-        out.push({id:id,name:row[iN]||'',phone:row[iP]||'',email:iE>=0?row[iE]:'',addr:iA>=0?row[iA]:'',familyName:iFN>=0?row[iFN]:'',familyPhone:iFP>=0?row[iFP]:''}); }
-    } return out; }
-  function picPick(inp){ var f=inp.files&&inp.files[0]; if(!f)return; PIC.file=f.name; document.getElementById('picFile').textContent=f.name; picMsg('กำลังอ่านไฟล์…');
-    var done=function(rows){ if(!rows.length){ picMsg('ไม่พบแถวออเดอร์ในไฟล์นี้ (ต้องมีคอลัมน์ ชื่อ-นามสกุล และ เบอร์โทร และเลข PO)',true); return; } PIC.rows=rows; picPreview(); };
-    if(/\.json$/i.test(f.name)){ var rd=new FileReader(); rd.onload=function(){ try{ var j=JSON.parse(rd.result); done(Array.isArray(j)?j:(j.rows||[])); }catch(e){ picMsg('อ่านไฟล์ JSON ไม่ได้',true); } }; rd.readAsText(f); return; }
-    picXlsx(function(){ var rd=new FileReader(); rd.onload=function(){ try{ var wb=XLSX.read(new Uint8Array(rd.result),{type:'array',raw:false}); var rows=[], seen={};
-        wb.SheetNames.forEach(function(n){ picRowsFromAoa(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''})).forEach(function(x){ if(!seen[x.id]){seen[x.id]=1;rows.push(x);} }); });
-        done(rows); }catch(e){ picMsg('อ่านไฟล์ไม่ได้ กรุณาใช้ไฟล์ .xlsx หรือ .csv จาก Google Sheets',true); } }; rd.readAsArrayBuffer(f); }); }
-  function picSend(dry){ return fetch('/api/returns/contacts'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows:PIC.rows,dryRun:dry})}).then(function(r){return r.json();}); }
-  function picSummary(j,applied){ var e=function(x){return String(x==null?'':x).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});};
-    return '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">'
-      +[['แถวในไฟล์',j.total],[applied?'บันทึกแล้ว':'ตรงกับออเดอร์ในระบบ',applied?j.count:j.matched],['ไม่พบในระบบ',j.notFound.length]].map(function(x){return '<div style="background:#F7FAFF;border:1px solid #E6EEF9;border-radius:10px;padding:8px 10px"><div style="font-size:.74rem;color:var(--muted)">'+x[0]+'</div><div style="font-size:1.2rem;font-weight:800">'+x[1]+'</div></div>';}).join('')+'</div>'
-      +(j.notFound.length?'<div style="font-size:.8rem;color:var(--muted)">ไม่พบเลข PO ในระบบ: '+e(j.notFound.slice(0,8).join(', '))+(j.notFound.length>8?' …':'')+'</div>':'')
-      +(applied?'<div style="margin-top:8px;font-size:.84rem;color:var(--good);font-weight:700">ลูกค้าในรายชื่อนี้เข้าหน้าคืนสินค้าด้วยชื่อและเบอร์ตามชีตได้แล้ว</div>':''); }
-  function picPreview(){ picMsg('กำลังตรวจสอบกับระบบ…'); picSend(true).then(function(j){ if(!j||!j.ok){ picMsg('ตรวจสอบไม่สำเร็จ'+(j&&j.error==='forbidden'?' (ต้องล็อกอินพนักงาน)':''),true); return; }
-      document.getElementById('picOut').innerHTML=picSummary(j,false); var g=document.getElementById('picGo'); g.disabled=!j.matched; g.style.opacity=j.matched?'1':'.5'; })
-    .catch(function(){ picMsg('เชื่อมต่อไม่สำเร็จ',true); }); }
-  function picApply(){ var g=document.getElementById('picGo'); g.disabled=true; g.textContent='กำลังอัปโหลด…';
-    picSend(false).then(function(j){ g.textContent='ยืนยันอัปโหลด'; if(!j||!j.ok){ picMsg('อัปโหลดไม่สำเร็จ',true); g.disabled=false; return; }
-      document.getElementById('picOut').innerHTML=picSummary(j,true); g.style.opacity='.5'; xvToast('บันทึกรายชื่อแล้ว '+j.count+' ออเดอร์','ok'); retContactsMeta(); })
-    .catch(function(){ g.disabled=false; g.textContent='ยืนยันอัปโหลด'; picMsg('เชื่อมต่อไม่สำเร็จ',true); }); }
-  function retContactsMeta(){ var el=document.getElementById('retCtMeta'); if(!el)return;
-    fetch('/api/returns/contacts'+xvKeyQ()).then(function(r){return r.json();}).then(function(j){ if(!j||!j.ok){el.textContent='โหลดข้อมูลไม่สำเร็จ';return;}
-      el.innerHTML=j.count?('มีรายชื่อ <b>'+j.count+'</b> ออเดอร์ อัปเดตล่าสุด '+(j.updatedAt?new Date(j.updatedAt).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}):'-')):'ยังไม่มีรายชื่อ กรุณาอัปโหลดไฟล์ชีต'; }).catch(function(){el.textContent='โหลดข้อมูลไม่สำเร็จ';}); }
-  window.retContactsUpload=retContactsUpload; window.picPick=picPick; window.picApply=picApply; window.picClose=picClose;
   function renderRetCustomer(){
     RET_VIEW='customer';
     var gen=document.getElementById('view-generic'); if(!gen)return; gen.classList.remove('xv');
@@ -4182,11 +4134,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<label style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:7px">ลิงก์หน้าคืนสินค้า / ติดตามสถานะ</label>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"><input id="retCustLink" readonly value="'+url+'" style="flex:1;min-width:220px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.86rem;background:var(--soft)"><button onclick="var i=document.getElementById(\'retCustLink\');i.select();try{document.execCommand(\'copy\');}catch(e){}xvToast(\'คัดลอกลิงก์แล้ว\',\'ok\')" style="'+btnPri()+'">คัดลอก</button><a href="'+url+'" target="_blank" rel="noopener" style="border:1px solid var(--line);border-radius:10px;padding:10px 16px;text-decoration:none;color:var(--brand);font-weight:700;font-size:.84rem">เปิด ↗</a></div>'
       +'<div style="background:var(--soft);border-radius:12px;padding:16px;font-size:.86rem;line-height:1.7;color:var(--ink)"><b>ลูกค้าทำอะไรได้บ้าง</b><ul style="margin:8px 0 0;padding-left:20px;color:var(--muted)"><li>ค้นหาคำสั่งซื้อด้วยเบอร์/อีเมล แล้วยื่นคำขอคืนสินค้า</li><li>เลือกคืนทั้งเซตหรือรายชิ้น (เฉพาะ Triple Set) และเลือกช่องทางคืนเงิน</li><li><b>แจ้งเลขพัสดุ/แนบสลิปการส่งคืน</b> เมื่อส่งสินค้ากลับ</li><li><b>ติดตามสถานะได้ตลอดเวลา</b> — รอส่งคืน → ตรวจรับ → คืนเงิน</li></ul></div>'
-      +'</div></div></div>'
-      +'<div class="panel" style="margin-top:16px"><div class="ph"><h3>รายชื่อลูกค้าสำหรับยืนยันตัวตน</h3><button onclick="retContactsUpload()" style="background:var(--brand);border:0;border-radius:9px;padding:8px 14px;color:#fff;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">อัปโหลดไฟล์ชีต</button></div>'
-      +'<p style="font-size:.86rem;color:var(--muted);line-height:1.6;margin:0 0 8px">สำหรับออเดอร์เก่าที่ชื่อหรือเบอร์ในระบบไม่ครบ ลูกค้าจะเข้าหน้าคืนสินค้าด้วยชื่อ เบอร์ หรืออีเมลตามชีต Order Master ได้ ข้อมูลออเดอร์ใน Pre-Order ไม่เปลี่ยน</p>'
-      +'<div id="retCtMeta" style="font-size:.88rem">กำลังโหลด…</div></div>';
-    retContactsMeta();
+      +'</div></div></div>';
   }
 
   /* ---------- actions ---------- */

@@ -818,25 +818,20 @@ function identityOwns(recPhone, recEmail, recName, ph, em, nm) {
   if (pf === 'suffix' && nameFactorOk(recName, nm)) return true;
   return false;
 }
-// รายชื่อติดต่อจากชีต Order Master (ชื่อเต็ม เบอร์เต็ม อีเมล ผู้ซื้อร่วม) ใช้ยืนยันตัวตนในระบบคืนสินค้าเท่านั้น ไม่แก้ข้อมูลออเดอร์ Pre-Order
-// ทีมงานอัปโหลดจากหลังบ้าน Return & Refund > Customer  เก็บบนเซิร์ฟเวอร์ (DATA) ไม่อยู่ใน GitHub
-var RET_CONTACTS_FILE = path.join(DATA, 'returns-contacts.json');
-var retFix0 = function (d) { return (d.length === 9 && /^[689]/.test(d)) ? '0' + d : d; };
-function retContactRow(r) { var c = function (x, n) { return String(x == null ? '' : x).replace(/[\u200b-\u200f\u2060\ufeff]/g, '').replace(/\s+/g, ' ').trim().slice(0, n); };
-  return { id: c(r && r.id, 60), name: c(r && r.name, 120), phone: retFix0(digitsOnly(r && r.phone)), email: c(r && r.email, 120).toLowerCase(), familyName: c(r && r.familyName, 120), familyPhone: retFix0(digitsOnly(r && r.familyPhone)) }; }
-var RET_CONTACTS = {}, RET_CONTACTS_META = { count: 0, updatedAt: null };
-function loadRetContacts() {
-  var m = {};
-  try { var j = JSON.parse(fs.readFileSync(RET_CONTACTS_FILE, 'utf8')); (j.rows || []).forEach(function (r) { var x = retContactRow(r); if (x.id) m[x.id] = x; }); RET_CONTACTS_META = { count: Object.keys(m).length, updatedAt: j.updatedAt || null }; } catch (e) { RET_CONTACTS_META = { count: 0, updatedAt: null }; }
-  RET_CONTACTS = m;
+// ยืนยันตัวตนหน้าคืนสินค้า สำหรับออเดอร์เก่าที่ชื่อในระบบไม่ใช่ผู้สั่ง (อ้างอิงชีต Order Master)
+// returns-alias.json เก็บเฉพาะ 4 ตัวท้ายของเบอร์ อักษรแรกของนามสกุล และรหัสแฮชของชื่อจริง (ไม่มีชื่อ เบอร์เต็ม หรืออีเมล)
+var RET_ALIAS = {};
+try { RET_ALIAS = JSON.parse(fs.readFileSync(path.join(__dirname, 'returns-alias.json'), 'utf8')) || {}; } catch (e) { RET_ALIAS = {}; }
+function retAliasHash(id, first) { return crypto.createHash('sha256').update('cx-ret-v1|' + id + '|' + first).digest('hex').slice(0, 16); }
+function retAliasOwns(o, ph, nm) {
+  var list = RET_ALIAS[o.id]; if (!Array.isArray(list) || !ph || !nm) return false;
+  var e = normName(nm).split(' '); var first = e[0] || '', sur = e.slice(1).join('');
+  if (!first) return false; var h = retAliasHash(o.id, first);
+  return list.some(function (a) { return a && a.n === h && phoneFactor(a.p4, ph) !== 'none' && (!a.s || sur.charAt(0) === a.s); });
 }
-loadRetContacts();
 function ownsOrder(o, ph, em, nm) {
   if (identityOwns(o.phone, o.email, o.name, ph, em, nm)) return true;
-  var c = RET_CONTACTS[o.id]; if (!c) return false;
-  if (identityOwns(c.phone, c.email, c.name, ph, em, nm)) return true;                               // ผู้สั่งตามชีต
-  if (c.familyPhone && identityOwns(c.familyPhone, '', c.familyName, ph, em, nm)) return true;      // ผู้ซื้อร่วม (Family)
-  return false;
+  return retAliasOwns(o, digitsOnly(ph), nm);   // ผู้สั่ง/ผู้ซื้อร่วมตามชีต
 }
 // ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล/ชื่อ) — คืนเฉพาะออเดอร์ที่ตรง
 // ---- กำหนดส่งคืนสินค้า: ลูกค้าต้องส่งคืนภายในวันที่ 30 ก.ย. 2569 (เวลาไทย) — ปรับได้ด้วย ENV RETURN_DEADLINE (ISO) ----
@@ -888,23 +883,7 @@ app.post('/api/returns', function (req, res) {
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns/contacts', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, count: RET_CONTACTS_META.count, updatedAt: RET_CONTACTS_META.updatedAt }); });
-app.post('/api/returns/contacts', function (req, res) {
-  if (!staffOrKey(req, res)) return;
-  var b = req.body || {}; var rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 5000).map(retContactRow).filter(function (x) { return /^PO-/.test(x.id) && (x.phone.length >= 9 || x.email); });
-  var ids = {}; read().forEach(function (o) { if (o && o.id) ids[o.id] = 1; });
-  var matched = rows.filter(function (x) { return ids[x.id]; });
-  var out = { ok: true, dryRun: !!b.dryRun, total: rows.length, matched: matched.length, notFound: rows.filter(function (x) { return !ids[x.id]; }).map(function (x) { return x.id; }).slice(0, 50) };
-  if (!b.dryRun) {
-    if (!matched.length) return res.status(400).json({ ok: false, error: 'no_rows' });
-    var data = { updatedAt: new Date().toISOString(), rows: matched }; var tmp = RET_CONTACTS_FILE + '.tmp';
-    try { fs.writeFileSync(tmp, JSON.stringify(data)); fs.renameSync(tmp, RET_CONTACTS_FILE); } catch (e) { return res.status(500).json({ ok: false, error: 'save_failed' }); }
-    loadRetContacts(); out.count = RET_CONTACTS_META.count; out.updatedAt = RET_CONTACTS_META.updatedAt;
-    console.log('[returns] contacts uploaded: ' + out.count);
-  }
-  res.json(out);
-});
-app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderFamily: (function (c) { return c ? [c.name, c.phone, c.email, c.familyName, c.familyPhone].join(' ') : ''; })(RET_CONTACTS[r.orderId]), orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
