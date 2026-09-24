@@ -1,6 +1,7 @@
 <title>CloverX Operations</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="/ops-retnew.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
@@ -719,6 +720,17 @@
           <button class="item lvl3" data-view="ret-orders"><span class="dot"></span><span class="lbl">Purchase Order</span></button>
           <button class="item lvl3" data-view="ret-manage"><span class="dot"></span><span class="lbl">Management</span></button>
           <button class="item lvl3" data-view="ret-customer"><span class="dot"></span><span class="lbl">Customer</span></button>
+        </div>
+      </div>
+
+      <!-- Return & Refund (New) — คำขอจากแอปสมาชิก -->
+      <div class="group" id="g-returns-new">
+        <button class="item ghead" data-toggle="g-returns-new"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/><path d="M12 8v4l2 2"/></svg><span class="lbl">RT (New)</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item lvl3" data-view="rn-overview"><span class="dot"></span><span class="lbl">ภาพรวม</span></button>
+          <button class="item lvl3" data-view="rn-list"><span class="dot"></span><span class="lbl">รายการคำขอ</span></button>
+          <button class="item lvl3" data-view="rn-manage"><span class="dot"></span><span class="lbl">จัดการคำขอ</span></button>
+          <button class="item lvl3" data-view="rn-customer"><span class="dot"></span><span class="lbl">ข้อมูลลูกค้า</span></button>
         </div>
       </div>
 
@@ -4672,7 +4684,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v.indexOf('rn-')===0){ if(window.CXRN)CXRN.render(v); } else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)
