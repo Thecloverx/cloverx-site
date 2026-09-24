@@ -38,13 +38,19 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .view>.body{flex:1}
 
 /* ===== แถบบน ===== */
-.nav{background:#fff;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;gap:12px}
+.nav{background:#fff;display:flex;align-items:center;justify-content:flex-start;padding:14px 20px;gap:10px}
 body.lead .nav{border-bottom:1px solid var(--line)}
 .logo{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
 body:not(.lead) .logo{color:#1e3a8a}
+.logo .lgimg{display:block;height:23px;width:auto}
 .logo .lgb{width:28px;height:28px;border-radius:8px;background:var(--brand);display:grid;place-items:center;flex:none}
 .logo b{font-size:16px;font-weight:800;white-space:nowrap}
-.mylink{background:none;border:0;padding:6px 0;color:var(--brand);font-weight:600;font-size:14px;text-decoration:underline;white-space:nowrap}
+.mylink{display:inline-flex;align-items:center;gap:6px;margin-left:auto;background:var(--brand-soft);border:1px solid var(--brand-bd);border-radius:999px;padding:7px 13px;color:var(--brand);font:inherit;font-weight:700;font-size:13px;white-space:nowrap;cursor:pointer;text-decoration:none}
+.mylink i{display:flex}
+.navbk{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--ink);flex:none;text-decoration:none}
+.navbk.hide{display:none}
+@media(max-width:400px){.nav{padding:12px 16px}.mylink{padding:7px 11px;font-size:12.5px;gap:5px}}
+@media(max-width:340px){.mylink .t{display:none}.mylink{padding:9px}}
 .hdr{background:#fff;border-bottom:1px solid var(--line);height:56px;display:flex;align-items:center;gap:16px;padding:0 24px;position:sticky;top:0;z-index:5}
 .hdr h1{flex:1;margin:0;text-align:center;font-size:18px;font-weight:700;line-height:1.2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr .sp{width:32px;height:32px;flex:none}
@@ -259,8 +265,9 @@ body.lead .tk-b p{color:#fef3c7}
 <section class="view" id="v-land">
   <div class="body">
     <div class="nav">
-      <a class="logo" href="#" id="logoHome" aria-label="CloverX E-xam หน้าแรก"><span class="lgb"><i data-ic="clover" data-s="16" data-c="#fff"></i></span><b>CloverX E-xam</b></a>
-      <button class="mylink" data-go="login" type="button">การสมัครของฉัน</button>
+      <a class="navbk hide" href="/app#exam" id="navBack" aria-label="กลับไปแอป CloverX"><i data-ic="back" data-s="18"></i></a>
+      <a class="logo" href="#" id="logoHome" aria-label="CloverX E-xam หน้าแรก"><img class="lgimg" src="/cloverx_logo_t.png" alt="CloverX" width="104" height="23"></a>
+      <button class="mylink" data-go="login" type="button" aria-label="การสมัครของฉัน"><i data-ic="user" data-s="16"></i><span class="t">การสมัครของฉัน</span></button>
     </div>
     <div class="selwrap"><div class="seg" role="tablist" aria-label="เลือกหลักสูตร">
       <button type="button" role="tab" data-c="X-Visor">X-Visor</button>
@@ -281,7 +288,6 @@ body.lead .tk-b p{color:#fef3c7}
           <li>ค่าธรรมเนียมสมัครตามรอบที่เลือก</li>
         </ul>
       </div>
-      <div class="empty hide" id="noVisor"><span class="ln">ยังไม่เปิดรอบสอบ X-Visor</span> <span class="ln">ติดตามประกาศทาง LINE @cloverxth</span></div>
     </div>
     <!-- X-Lead: ตรวจสิทธิ์ด้วยเบอร์โทร -->
     <div class="pad hide" id="landLead">
@@ -294,7 +300,6 @@ body.lead .tk-b p{color:#fef3c7}
         </div>
       </div>
       <div id="leadOk" class="hide"></div>
-      <div class="empty hide" id="noLead"><span class="ln">ยังไม่เปิดรอบสอบ X-Lead</span> <span class="ln">ติดตามประกาศทาง LINE @cloverxth</span></div>
     </div>
   </div>
   <div class="bot">
@@ -448,6 +453,8 @@ function digits(s){return String(s||'').replace(/\D/g,'');}
 
 /* ---------- ไอคอน (เส้นแบบเดียวกับ Figma) ---------- */
 var IC={
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+
   clover:'<circle cx="8" cy="8" r="4"/><circle cx="16" cy="8" r="4"/><circle cx="8" cy="16" r="4"/><circle cx="16" cy="16" r="4"/>',
   file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8M16 13H8M16 17H8"/>',
   chev:'<path d="m6 9 6 6 6-6"/>',
@@ -525,7 +532,7 @@ function setCourse(c,keepUrl){
   $('#refLbl').textContent=lead?'ระบุผู้แนะนำอื่นๆ (ถ้ามี)':'ระบุผู้แนะนำ (ถ้ามี)';
   $('#consentTxt').innerHTML=lead?'<span class="ln">ข้าพเจ้ายอมรับเงื่อนไขและข้อตกลง</span><span class="ln">การสมัครสอบเลื่อนระดับ X-Lead</span>':'ข้าพเจ้ายอมรับเงื่อนไขและข้อตกลงการสมัครสอบ';
   var has=courseRounds().length>0;
-  $('#noVisor').classList.toggle('hide',lead||has); $('#noLead').classList.toggle('hide',!lead||has);
+  /* ข้อความ 'ยังไม่เปิดรอบสอบ' ถูกนำออก — ปุ่มด้านล่างแจ้งสถานะ 'ยังไม่เปิดรับสมัคร' อยู่แล้ว */
   $('#leadPhone').closest('.fld').classList.toggle('hide',lead&&!has); $('#leadOk').classList.toggle('hide',!(lead&&has&&LEAD.ok));
   paintLandCta();
   var modes=['online','onsite'].filter(function(m){return courseRounds().some(function(r){return r.mode===m;});});
@@ -845,7 +852,7 @@ $('#tkSave').onclick=function(){
 
 /* ---------- มาจากแอปสมาชิก: เติมข้อมูลจากบัญชีให้อัตโนมัติ ---------- */
 var FROM_APP=/[?&]from=app/.test(location.search);
-if(FROM_APP){ var nb=$('.nav'); if(nb){ var bk=document.createElement('a'); bk.href='/app#exam'; bk.className='mylink'; bk.textContent='กลับไปแอป'; bk.style.marginRight='auto'; bk.style.marginLeft='12px'; var lg=$('#logoHome'); if(lg)lg.after(bk); } }
+if(FROM_APP){ var nbk=$('#navBack'); if(nbk)nbk.classList.remove('hide'); }   /* เปิดจากแอป: ปุ่มย้อนกลับวงกลมด้านซ้าย */
 fetch('/api/m/me',{cache:'no-store',credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
   if(!j||!j.ok||!j.member)return; var m=j.member;
   var put=function(id,v){ var e=$('#'+id); if(e&&!e.value&&v){ e.value=v; e.dispatchEvent(new Event('input')); } };
