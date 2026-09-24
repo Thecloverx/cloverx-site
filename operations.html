@@ -3380,7 +3380,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     return (list||[]).filter(function(o){
       if(!poDateInRange(o.at))return false;
       if(PO_PRODF!=='all'){ if(!(o.items||[]).some(function(it){return poBaseName(it.nm)===PO_PRODF;}))return false; }
-      if(q){ var hay=[o.id,o.name,o.phone,o.team,o.ref,(o.items||[]).map(function(it){return it.nm;}).join(' ')].join(' ').toLowerCase(); if(hay.indexOf(q)<0)return false; }
+      if(q){ var hay=[o.id,o.name,o.phone,o.email,o.team,o.ref,(o.items||[]).map(function(it){return it.nm;}).join(' ')].join(' '); if(!srchHit(hay,q))return false; }
       return true;
     });
   }
@@ -3758,6 +3758,13 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   var RET_RANGE='all', RET_CFROM='', RET_CTO='';
   // ตัวกรองช่วงเวลาของคำขอคืนเงิน (การทำรายการ) — วันนี้/สัปดาห์/เดือน/กำหนดเอง
   DRP_CB.ret=function(){RET_OPAGE=1;RET_MPAGE=1;retRedraw();};
+  /* ค้นหาแบบทนทาน: ตัดอักขระล่องหน (zero-width) ช่องว่างซ้ำ และจัดรูปสระ/วรรณยุกต์ไทยให้ตรงกัน แล้วเทียบทุกคำที่พิมพ์ */
+  function srchNorm(x){ x=String(x==null?'':x); try{x=x.normalize('NFC');}catch(e){} return x.replace(/[\u200b-\u200f\u2060\ufeff\u00ad]/g,'').replace(/\u0e4d\u0e32/g,'\u0e33').replace(/[\s\u00a0]+/g,' ').trim().toLowerCase(); }
+  function srchHit(hay,q){ if(!q)return true; var h=srchNorm(hay), n=srchNorm(q); if(!n)return true; if(h.indexOf(n)>=0)return true;
+    var hc=h.replace(/ /g,''), nc=n.replace(/ /g,''); if(hc.indexOf(nc)>=0)return true;
+    var hd=h.replace(/\D/g,''), nd=n.replace(/\D/g,''); if(nd.length>=4&&nd.length===n.replace(/[\s-]/g,'').length&&hd.indexOf(nd)>=0)return true;
+    return n.split(' ').every(function(t){return hc.indexOf(t)>=0;}); }
+  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
   function retInRange(at){ return drpIn('ret',at); }
   function retInRangeLegacy(at){
     if(RET_RANGE==='all')return true;
@@ -3936,10 +3943,10 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<span style="display:inline-block;width:14px"></span>'+retChip('all',RET_CH,'ทุกช่องทาง','ch')+retChip('card',RET_CH,'บัตรเครดิต','ch')+retChip('bank',RET_CH,'โอนธนาคาร','ch');
       fil.querySelectorAll('button[data-grp]').forEach(function(b){b.addEventListener('click',function(){if(b.dataset.grp==='stat')RET_STAT=b.dataset.val;else RET_CH=b.dataset.val;RET_OPAGE=1;retDraw();});});}
     var rows=RET_ALL.filter(function(r){
-      if(!retInRange(r.at))return false;
+      if(!RET_Q&&!retInRange(r.at))return false;   // เมื่อค้นหา ให้ค้นทุกช่วงวันที่
       if(RET_STAT!=='all'&&r.status!==RET_STAT)return false;
       if(RET_CH!=='all'&&r.channel!==RET_CH)return false;
-      if(RET_Q){var hay=(r.rid+' '+r.orderId+' '+(r.name||'')+' '+(r.phone||'')).toLowerCase();if(hay.indexOf(RET_Q)<0)return false;}
+      if(RET_Q&&!srchHit(retHay(r),RET_Q))return false;
       return true;});
     var cnt=document.getElementById('retCount'); if(cnt)cnt.textContent='('+rows.length+(rows.length!==RET_ALL.length?(' / '+RET_ALL.length):'')+')';
     var w=document.getElementById('retTableWrap'); if(!w)return;
@@ -3996,7 +4003,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
   function retManageDraw(){
     var db=document.getElementById('retMDate'); if(db)db.innerHTML=retDateBar();
-    var all=RET_ALL.filter(function(r){return r.choice!=='wait'&&retInRange(r.at);});
+    var all=RET_ALL.filter(function(r){return r.choice!=='wait'&&(RET_MQ||retInRange(r.at));});   // เมื่อค้นหา ให้ค้นทุกช่วงวันที่
     var cAwait=all.filter(function(r){return r.status==='awaiting_shipment';}).length;
     var cTransit=all.filter(function(r){return r.status==='in_transit';}).length;
     var cReview=all.filter(function(r){return r.status==='refund_review';}).length;
@@ -4014,7 +4021,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       tw.querySelectorAll('button[data-grp]').forEach(function(b){b.addEventListener('click',function(){RET_MTAB=b.dataset.val;retManageDraw();});});}
     var rows=all.filter(function(r){
       if(!(RET_MTAB==='all'||r.status===RET_MTAB))return false;
-      if(RET_MQ){var hay=(r.rid+' '+r.orderId+' '+(r.name||'')+' '+(r.phone||'')).toLowerCase();if(hay.indexOf(RET_MQ)<0)return false;}
+      if(RET_MQ&&!srchHit(retHay(r),RET_MQ))return false;
       return true;});
     var cnt=document.getElementById('retMCount'); if(cnt)cnt.textContent='('+rows.length+(RET_MQ&&rows.length!==all.length?(' / '+all.length):'')+')';
     var list=document.getElementById('retMList'); if(!list)return;

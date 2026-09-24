@@ -868,7 +868,7 @@ app.post('/api/returns', function (req, res) {
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: readReturns().map(function (r) { return retOverdue(r) ? Object.assign({}, r, { overdue: true }) : r; }) }); });
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });

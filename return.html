@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CloverX · คืนสินค้า / คืนเงิน</title>
+<title>CloverX คืนสินค้า / คืนเงิน</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#1E40AF">
 <script>try{var t=localStorage.getItem("cx_theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
@@ -253,6 +253,19 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
 .trk-act{padding:20px;display:flex;flex-direction:column;gap:14px}
 .ncard{background:var(--card);border:1px solid var(--pri-ink);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 4px 6px rgba(30,64,175,.02)}
 .ncard .h-sec{margin-bottom:0}
+.nb{white-space:nowrap}
+.flbl{font-size:14px;font-weight:600;color:var(--ink)}
+.flbl .opt-t{font-weight:400;color:var(--sub2)}
+.slip-up{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 16px;border:1.5px dashed var(--pri-ink);border-radius:14px;background:var(--card);text-align:center;cursor:pointer;overflow:hidden}
+.slip-up input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.slip-up .su-ic{width:48px;height:48px;border-radius:24px;background:var(--pri-soft);color:var(--pri-ink);display:grid;place-items:center}
+.slip-up .su-t{display:flex;flex-direction:column;gap:4px}
+.slip-up b{font-size:14px;font-weight:700;color:var(--pri-ink)}
+.slip-up small{font-size:12.5px;color:var(--sub2);line-height:1.45}
+.slip-up.has{border-style:solid}
+.slip-up.has .su-ic{display:none}
+.slip-up .su-pv{max-width:100%;max-height:200px;border-radius:10px;border:1px solid var(--line)}
+.slip-up:focus-within{outline:2px solid var(--pri);outline-offset:2px}
 .slip-link{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--pri-ink);position:relative;overflow:hidden;padding:4px 0;cursor:pointer}
 .slip-link svg.i{width:18px;height:18px}
 .slip-link input{position:absolute;inset:0;opacity:0;cursor:pointer}
@@ -413,6 +426,7 @@ var ASSETS={"PROD_IMG":{"band-black":"data:image/webp;base64,UklGRp5aAABXRUJQVlA
 var PROD_IMG=ASSETS.PROD_IMG, LOGO=ASSETS.LOGO;
 /* Figma ใช้ไอคอนชุด Lucide — ใส่เป็น inline SVG ชุดเดียวกัน */
 var IP={
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
  back:'<path d="m15 18-6-6 6-6"/>',
  home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
  circx:'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
@@ -522,7 +536,7 @@ function setPrice(s){return (s.comps||[]).reduce(function(a,c){return a+(Number(
 function renderOrders(){
   var h='';
   var active=MYRET.filter(function(r){return r.status!=='cancelled';});
-  if(active.length){h+='<button class="ret-banner" onclick="viewTrack()">'+ic('circx')+'<span>คุณมีคำขอคืนสินค้า '+active.length+' รายการ · แตะเพื่อติดตาม</span></button>';}
+  if(active.length){h+='<button class="ret-banner" onclick="viewTrack()">'+ic('circx')+'<span>คุณมีคำขอคืนสินค้า '+active.length+' รายการ</span> <span class="nb">แตะเพื่อติดตาม</span></button>';}
   h+=ORDERS.map(function(o){
     var ret=retForOrder(o.id);
     var sets=o.sets&&o.sets.length?o.sets:[{nm:'',comps:[]}];
@@ -707,7 +721,7 @@ function trackCard(r){
   var cur=stepIndex(r.status);if(cur==null)cur=0;var refunded=(r.status==='refunded'),rejected=(r.status==='rejected');
   function cls(i){if(refunded)return 'done';if(rejected&&i===2)return 'fail';if(i<cur)return 'done';if(i===cur)return 'now';return '';}
   var shipSub=r.returnTracking?('เลขพัสดุ '+esc(r.returnTracking)+(r.returnCarrier?(' ('+esc(r.returnCarrier)+')'):'')):(cur>1?'แจ้งการส่งคืนแล้ว':'กรุณาระบุเลขพัสดุที่ท่านส่งคืน');
-  var inspSub=rejected?('ปฏิเสธการรับคืน'+(r.inspection&&r.inspection.reason?(' — '+esc(r.inspection.reason)):'')+' · สินค้าจะถูกส่งกลับคืนท่าน'):(cur>2||refunded?'ตรวจรับสินค้าเรียบร้อยแล้ว':'รอทีมงาน CloverX ยืนยัน');
+  var inspSub=rejected?('ปฏิเสธการรับคืน'+(r.inspection&&r.inspection.reason?(' — '+esc(r.inspection.reason)):'')+' สินค้าจะถูกส่งกลับคืนท่าน'):(cur>2||refunded?'ตรวจรับสินค้าเรียบร้อยแล้ว':'รอทีมงาน CloverX ยืนยัน');
   var refSub=refunded&&r.refund?('คืนเงิน'+(r.refund.type==='full'?'เต็มจำนวน':'บางส่วน')+' '+baht(r.refund.amount)+' เรียบร้อยแล้ว'):'โอนคืนช่องทางการชำระเงินเดิม (ไม่สามารถเปลี่ยนแปลงได้)';
   var stp='<div class="stp">'
     +stepRow(cls(0),'ยื่นคำขอคืนสินค้า','ยื่นคำขอแล้วเมื่อ '+fmtDate(r.at))
@@ -728,7 +742,9 @@ function trackCard(r){
     act='<div class="trk-act">'+addrCard()+'<div class="ncard"><h2 class="h-sec">แจ้งการส่งคืนพัสดุ</h2>'
       +'<div class="fld"><label for="tk_'+r.rid+'">เลขพัสดุ (Tracking Number)</label><input class="inp" type="text" id="tk_'+r.rid+'" placeholder="กรอกเลขพัสดุคืน" autocapitalize="characters"></div>'
       +'<div class="fld"><label for="cr_'+r.rid+'">บริษัทขนส่ง</label><select class="inp" id="cr_'+r.rid+'">'+CARRIERS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div>'
-      +'<label class="slip-link">'+ic('receipt')+'<span id="sln_'+r.rid+'">แนบใบเสร็จค่าจัดส่ง เพื่อรับค่าส่งคืน</span><input type="file" accept="image/*" data-rid="'+r.rid+'" onchange="trackSlip(this,\''+r.rid+'\')"></label>'
+      +'<div class="fld"><span class="flbl">ใบเสร็จค่าจัดส่ง <span class="opt-t">(ถ้ามี)</span></span>'
+      +'<label class="slip-up" id="slz_'+r.rid+'"><span class="su-ic">'+ic('upload')+'</span><span class="su-t"><b id="sln_'+r.rid+'">แนบใบเสร็จค่าจัดส่ง</b><small id="sls_'+r.rid+'"><span class="ln">เพื่อรับค่าส่งคืน</span> <span class="ln">รองรับไฟล์ JPG หรือ PNG</span></small></span>'
+      +'<input type="file" accept="image/*" data-rid="'+r.rid+'" onchange="trackSlip(this,\''+r.rid+'\')"></label></div>'
       +acctF
       +'<button class="btn" id="shipbtn_'+r.rid+'" onclick="shipSubmit(\''+r.rid+'\')">แจ้งส่งคืนสินค้า</button>'
       +'</div><div class="note">'+ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+'</span></div></div>';
@@ -741,7 +757,7 @@ function trackCard(r){
   }
   return panel+act;
 }
-function trackSlip(inp,rid){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){inp.setAttribute('data-slip',rd.result);document.getElementById('sln_'+rid).textContent='✓ แนบใบเสร็จแล้ว: '+f.name;var w=document.getElementById('acw_'+rid);if(w)w.classList.add('on');};rd.readAsDataURL(f);}
+function trackSlip(inp,rid){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){inp.setAttribute('data-slip',rd.result);var z=document.getElementById('slz_'+rid);z.classList.add('has');var old=z.querySelector('img.su-pv');if(old)old.remove();var im=document.createElement('img');im.className='su-pv';im.alt='ใบเสร็จค่าจัดส่ง';im.src=rd.result;z.insertBefore(im,z.firstChild);document.getElementById('sln_'+rid).textContent='แนบใบเสร็จแล้ว';document.getElementById('sls_'+rid).textContent='แตะเพื่อเปลี่ยนรูป';var w=document.getElementById('acw_'+rid);if(w)w.classList.add('on');};rd.readAsDataURL(f);}
 function shipSubmit(rid){
   function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
   var tk=gv('tk_'+rid),cr=gv('cr_'+rid),an=gv('an_'+rid),bk=gv('bk_'+rid),ac=gv('ac_'+rid);
