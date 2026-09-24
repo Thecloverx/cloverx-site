@@ -46,7 +46,7 @@ module.exports = function (app, DATA, opts) {
   // (เดิมเขียนทั้งก้อนทุกคำตอบ → ช่วงทุกคนส่งพร้อมกันตอนหมดเวลา เซิร์ฟเวอร์ค้าง)
   const _pgBusy = {}, _pgAgain = {}, _pgTimer = {};
   const pgPersist = (coll) => {
-    if (!pool) return;
+    if (!pool || (typeof _xvDown !== 'undefined' && _xvDown)) return;
     if (_pgBusy[coll] || _pgTimer[coll]) { _pgAgain[coll] = true; return; }
     _pgTimer[coll] = setTimeout(() => {
       _pgTimer[coll] = null; _pgBusy[coll] = true; _pgAgain[coll] = false;
@@ -54,7 +54,7 @@ module.exports = function (app, DATA, opts) {
       pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [coll, data])
         .catch(e => console.error('[x-visor] PG persist ' + coll + ' failed:', e.message))
         .finally(() => { _pgBusy[coll] = false; if (_pgAgain[coll]) { _pgAgain[coll] = false; pgPersist(coll); } });
-    }, 800);
+    }, 3000);   // เขียนทั้งก้อนไม่เกินทุก 3 วิ (ไฟล์บนดิสก์เป็นตัวสำรองอีกชั้น)
   };
   // hydrate the in-memory store from files at boot (PG mode overwrites this once PG is ready).
   // in-memory becomes the authoritative read source → GETs no longer re-read+parse the whole file each call.
@@ -74,16 +74,18 @@ module.exports = function (app, DATA, opts) {
   // with a synchronous full-file rewrite. Postgres (when on) is the primary durable store; file is the backup.
   const _fileDirty = {}, _fileTimer = {}, FILE_DEBOUNCE = 1200;
   // เขียนไฟล์แบบปลอดภัย: เขียนลงไฟล์ชั่วคราวก่อนแล้ว rename (กันไฟล์ครึ่ง ๆ กลาง ๆ ถ้าเขียนซ้อนกัน/เครื่องดับ) · ทีละครั้งต่อไฟล์
-  const _fileBusy = {};
-  const writeFileAtomicSync = (f, data) => { const tmp = f + '.tmp'; fs.writeFileSync(tmp, data); fs.renameSync(tmp, f); };
+  const _fileBusy = {}; let _tmpN = 0;
+  const tmpName = (f) => f + '.' + process.pid + '.' + (++_tmpN) + '.tmp';   // ชื่อไฟล์ชั่วคราวไม่ซ้ำกัน กันเขียนซ้อนทับกันเอง
+  const writeFileAtomicSync = (f, data) => { const tmp = tmpName(f); fs.writeFileSync(tmp, data); fs.renameSync(tmp, f); };
   const flushColl = (coll) => {
     if (!_fileDirty[coll]) return;
     if (_fileBusy[coll]) { if (!_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, 300); return; }
     _fileDirty[coll] = false; _fileBusy[coll] = true;
-    const f = fileOf[coll], tmp = f + '.tmp';
-    let data; try { data = JSON.stringify(mem[coll]); } catch (e) { _fileBusy[coll] = false; return; }
+    const f = fileOf[coll], tmp = tmpName(f);
+    let data; try { data = JSON.stringify(mem[coll]); } catch (e) { _fileBusy[coll] = false; _fileDirty[coll] = true; return; }
     fs.writeFile(tmp, data, (err) => {
-      if (!err) { try { fs.renameSync(tmp, f); } catch (e) {} }
+      if (!err) { try { fs.renameSync(tmp, f); } catch (e) { _fileDirty[coll] = true; } }
+      else { _fileDirty[coll] = true; try { fs.unlinkSync(tmp); } catch (e) {} }   // เขียนไม่สำเร็จ → ลองใหม่รอบถัดไป
       _fileBusy[coll] = false;
       if (_fileDirty[coll] && !_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, 300);
     });
@@ -91,19 +93,35 @@ module.exports = function (app, DATA, opts) {
   const flushAllColls = () => { COLLS.forEach(c => { if (_fileTimer[c]) { clearTimeout(_fileTimer[c]); _fileTimer[c] = null; } if (_fileDirty[c]) { _fileDirty[c] = false; try { writeFileAtomicSync(fileOf[c], JSON.stringify(mem[c])); } catch (e) {} } }); };
   // เขียนลงไฟล์ทันทีแบบ sync (ใช้ตอนต้องคงทนก่อนตอบ ok เช่น submit) — กันข้อมูลหายถ้า process ตายในหน้าต่าง debounce
   const flushCollSync = (coll) => { if (_fileTimer[coll]) { clearTimeout(_fileTimer[coll]); _fileTimer[coll] = null; } _fileDirty[coll] = false; try { writeFileAtomicSync(fileOf[coll], JSON.stringify(mem[coll])); } catch (e) {} };
-  const flushSoon = (coll) => { _fileDirty[coll] = true; if (_fileTimer[coll]) clearTimeout(_fileTimer[coll]); _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, 300); };
+  // เขียนลงไฟล์ภายใน 0.3 วิ: ถ้ามีรอบเขียนนัดไว้ช้ากว่านั้น เลื่อนให้เร็วขึ้น (ไม่เลื่อนออกไปอีก กันรอไม่จบตอนมีคนส่งถี่ ๆ)
+  const _fileDue = {};
+  const flushSoon = (coll) => { _fileDirty[coll] = true; const due = Date.now() + 300;
+    if (_fileTimer[coll] && (_fileDue[coll] || Infinity) <= due) return;
+    if (_fileTimer[coll]) clearTimeout(_fileTimer[coll]);
+    _fileDue[coll] = due; _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; _fileDue[coll] = 0; flushColl(coll); }, 300); };
   const writeColl = (coll, all) => {
     mem[coll] = all;                           // authoritative in-memory (read-after-write stays consistent)
     if (pool && pgReady) pgPersist(coll);      // durable in Postgres (async, queued)
     _fileDirty[coll] = true;                    // durable file mirror — debounced + async (non-blocking)
-    if (!_fileTimer[coll]) _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; flushColl(coll); }, FILE_DEBOUNCE);
+    if (!_fileTimer[coll]) { _fileDue[coll] = Date.now() + FILE_DEBOUNCE; _fileTimer[coll] = setTimeout(() => { _fileTimer[coll] = null; _fileDue[coll] = 0; flushColl(coll); }, FILE_DEBOUNCE); }
   };
-  process.on('SIGTERM', flushAllColls); process.on('SIGINT', flushAllColls); process.on('beforeExit', flushAllColls); // กัน redeploy/restart แล้วข้อมูลค้างในคิวหาย
+  // รีสตาร์ท/redeploy: เขียนข้อมูลลงไฟล์ทันที แล้วปิดตัวเองภายใน 2.5 วิ (เดิมไม่ปิด → เครื่องเก่ากับใหม่ทำงานซ้อนกันจนเขียนทับกัน)
+  let _xvDown = false;
+  const xvShutdown = () => {
+    if (_xvDown) return; _xvDown = true;
+    try { flushAllColls(); } catch (e) {}
+    const jobs = [];
+    if (pool) { COLLS.forEach(c => { if (_pgTimer[c]) { clearTimeout(_pgTimer[c]); _pgTimer[c] = null; }
+      try { jobs.push(pool.query('INSERT INTO xv_store(coll,data,updated_at) VALUES($1,$2,now()) ON CONFLICT(coll) DO UPDATE SET data=$2, updated_at=now()', [c, JSON.stringify(mem[c])]).catch(() => {})); } catch (e) {} }); }
+    const done = () => process.exit(0);
+    Promise.all(jobs).then(() => setTimeout(done, 200), done); setTimeout(done, 2500);
+  };
+  process.on('SIGTERM', xvShutdown); process.on('SIGINT', xvShutdown); process.on('beforeExit', flushAllColls);
   // กัน crash แบบไม่ graceful (uncaught/rejection) แล้วคำตอบที่ตอบรับไปหาย — เขียนลงไฟล์ก่อนออก แล้วให้ตัว supervisor รีสตาร์ท
   process.on('uncaughtException', (e) => { try { flushAllColls(); } catch (_) {} console.error('[x-visor] uncaughtException:', e && (e.stack || e.message || e)); process.exit(1); });
   process.on('unhandledRejection', (e) => { try { flushAllColls(); } catch (_) {} console.error('[x-visor] unhandledRejection:', e && (e.message || e)); });
   // กวาดปิด session ที่หมดเวลาแต่ผู้สอบไม่ได้กดส่ง/ปิดแท็บไป — เดิมตัดเวลาเฉพาะตอนมี request จึงอาจค้าง in_progress ตลอดกาล
-  setInterval(() => { try { const all = readS(); let changed = false; for (const s of all) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s, true); s.autoExpired = true; changed = true; } } if (changed) writeS(all); } catch (e) {} }, 45000);
+  setInterval(() => { if (_xvDown) return; try { const all = readS(); let changed = false; for (const s of all) { if (s && s.status === 'in_progress' && xvExpired(s)) { score(s, true); s.autoExpired = true; changed = true; } } if (changed) writeS(all); } catch (e) {} }, 45000);
   if (USE_PG) {
     try {
       const { Pool } = require('pg');
@@ -120,7 +138,8 @@ module.exports = function (app, DATA, opts) {
             let data = Array.isArray(rows[0].data) ? rows[0].data : [];
             const seen = new Set(data.map(x => x && x.id));
             let recovered = 0;
-            for (const f of (Array.isArray(fileData) ? fileData : [])) { if (f && f.id && !seen.has(f.id)) { data.push(f); recovered++; } }
+            for (const f of (Array.isArray(fileData) ? fileData : [])) { if (f && f.id && !seen.has(f.id)) { data.push(f); seen.add(f.id); recovered++; } }
+            for (const f of (mem[coll] || [])) { if (f && f.id && !seen.has(f.id)) { data.push(f); seen.add(f.id); recovered++; } }   // รายการที่สร้างระหว่างรอโหลด Postgres
             mem[coll] = data;
             if (recovered) await pool.query('UPDATE xv_store SET data=$2, updated_at=now() WHERE coll=$1', [coll, JSON.stringify(data)]);
           }
@@ -248,7 +267,7 @@ module.exports = function (app, DATA, opts) {
       const sD = esExtract(r.body); if (!sD) { x.easyslip.result = 'no_data'; writeReg(all); return; }
       x.easyslip.amount = sD.amount; x.easyslip.recvName = sD.recvName; x.easyslip.recvNum = sD.recvNum; x.easyslip.ref = sD.ref;
       const fee = Number((x.payment && x.payment.fee) || 0);
-      const amtOk = (sD.amount != null && !isNaN(sD.amount)) && Math.abs(sD.amount - fee) < 1;
+      const amtOk = (sD.amount != null && !isNaN(sD.amount)) && Math.abs(sD.amount - fee) <= 1;
       const want = esDigits(process.env.EASYSLIP_RECV_ACCOUNT || '2311711191'); const last4 = want.slice(-4); const recvDigits = esDigits(sD.recvNum);
       const acctOk = !!(recvDigits && recvDigits.length >= 4 && want && (want.indexOf(recvDigits) >= 0 || recvDigits.indexOf(last4) >= 0));
       const esNorm = s => String(s || '').replace(/[\s().\-]/g, '').replace(/[​‎‏ ]/g, '').normalize('NFC');
@@ -256,9 +275,10 @@ module.exports = function (app, DATA, opts) {
       const nameOk = !!(rn && ((nk && (rn.indexOf(nk) >= 0 || nk.indexOf(rn) >= 0)) || (core && rn.indexOf(core) >= 0)));
       const dup = !!(sD.ref && all.some(y => y.id !== x.id && y.easyslip && y.easyslip.ref && y.easyslip.ref === sD.ref));
       x.easyslip.amtOk = amtOk; x.easyslip.acctOk = acctOk; x.easyslip.nameOk = nameOk; x.easyslip.dup = dup;
-      const pass = amtOk && (acctOk || nameOk) && !dup;
+      const pass = amtOk && acctOk && !dup;   // ต้องเป็นบัญชีรับเงินของบริษัท (ชื่อคล้าย "โคลเวอร์" อย่างเดียวไม่พอ)
       const wasConfirmed = SEAT_TAKEN.indexOf(x.status) >= 0;
-      if (pass && process.env.EASYSLIP_AUTOCONFIRM !== '0') { x.status = 'CONFIRMED'; x.confirmedAt = Date.now(); x.easyslip.result = 'confirmed'; }
+      const rd0 = findR(x.roundId); const seatsNow = rd0 ? roundSeats(rd0) : { full: false };
+      if (pass && x.status === 'PAYMENT_REVIEW' && !seatsNow.full && process.env.EASYSLIP_AUTOCONFIRM !== '0') { x.status = 'CONFIRMED'; x.confirmedAt = Date.now(); x.easyslip.result = 'confirmed'; }
       else x.easyslip.result = pass ? 'verified' : (dup ? 'duplicate' : 'mismatch');
       writeReg(all);
       if (!wasConfirmed && x.status === 'CONFIRMED') logAudit('payment_auto_confirm', 'registration', x.id, x.regNo, 'PAYMENT_REVIEW', 'CONFIRMED', 'EasySlip ตรวจสลิปผ่าน (ยอด+บัญชีตรง) — ยืนยันอัตโนมัติ', 'system');
@@ -273,6 +293,7 @@ module.exports = function (app, DATA, opts) {
   const xvClientIp = (req) => String((req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || (req.connection && req.connection.remoteAddress) || 'x');
   const _xvFail = {};
   const adminWrite = (req) => {
+    if (isStaff(req)) return true;   // พนักงานที่ล็อกอินแล้ว ทำรายการได้เสมอ (ไม่ต้องใส่คีย์)
     const need = process.env.ADMIN_KEY || '';
     if (!need) return isStaff(req);   // ยังไม่ตั้งคีย์ → อนุญาตเฉพาะพนักงานที่ล็อกอิน (หน้า Operations) ไม่เปิดให้คนนอก
     const ip = xvClientIp(req), now = Date.now(); let f = _xvFail[ip];
@@ -370,26 +391,34 @@ module.exports = function (app, DATA, opts) {
       if (s.candidate && s.candidate.mode === 'onsite') { s.status = 'submitted'; s.staffVerified = true; s.verifiedAt = Date.now(); }
       else s.status = 'awaiting_verify';
     }
-    else if (expired) { s.status = 'ended_failed'; s.timedOut = true; s.remedialQueue = []; s.remedialActive = null; } // หมดเวลา + ยังมีพาร์ทไม่ผ่าน = ตกทุกกรณี
+    // หมดเวลา (กติกา CloverX 23 ก.ย. 2569):
+    //  - รอบแรกหมดเวลา → ส่งคำตอบที่ทำไว้ (ข้อที่ไม่ตอบ = ผิด) แล้วพาร์ตที่ไม่ผ่านไปสอบซ่อมตามสิทธิ์
+    //  - สอบซ่อม (รวมรอบพิเศษ) หมดเวลาแล้วยังมีพาร์ตไม่ผ่าน → หมดสิทธิ์สอบทันที แม้สิทธิ์ซ่อมยังเหลือ
+    else if (expired && s.phase === 'remedial') { s.status = 'ended_failed'; s.timedOut = true; s.remedialQueue = []; s.remedialActive = null; }
     else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); s.remedialActive = null; }
+    if (expired) s.timedOut = true;
     s.paused = false;
     s.submittedAt = Date.now();
     // บันทึกประวัติการส่งรายครั้ง (สำหรับรายงาน "ประวัติรายครั้ง") — 1 record ต่อการส่ง 1 ครั้ง
     try {
       s.attemptLog = s.attemptLog || [];
-      const ev = { at: Date.now(), kind: (s.phase === 'remedial' ? 'remedial' : 'first'), parts: parts.slice(), perPart: {}, wrong: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: false, expired: !!expired };
+      const kind = (s.phase === 'remedial') ? (s.reopenPending ? 'special' : 'remedial') : 'first';
+      const ev = { at: Date.now(), kind: kind, no: (s.attemptLog || []).filter(e => e.kind === kind).length + 1, parts: parts.slice(), perPart: {}, wrong: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: false, expired: !!expired };
+      if (kind === 'special') { ev.reason = s.reopenReason || ''; ev.by = s.reopenedBy || 'staff'; }
+      s.reopenPending = false;
       let evTot = 0; parts.forEach(p => { const rr = s.results.find(x => x.part === p); const sc = rr ? (rr.score || 0) : 0; ev.perPart[p] = sc; ev.wrong[p] = rr ? (rr.wrongIds || []).slice() : []; evTot += sc; });
       ev.total = evTot; ev.full = parts.length * QPP; ev.pass = parts.every(p => (ev.perPart[p] || 0) >= PASS);
       ev.remedialAfter = (s.remedialQueue || []).slice();
       s.attemptLog.push(ev);
     } catch (e) {}
   }
+  const pubAttempts = (s) => (s.attemptLog || []).filter(e => e.kind !== 'reopen').map(e => ({ kind: e.kind, no: e.no || null, at: e.at, parts: (e.parts || []).slice(), perPart: e.perPart || {}, total: e.total, full: e.full, pass: !!e.pass, forced: !!e.forced, expired: !!e.expired }));
   const pubResults = (s) => s.results.map(r => ({ part: r.part, score: r.score, status: r.status, attempts: r.attempts }));
 
   // live progress ของผู้ที่กำลังสอบ (in_progress) — คำนวณจากคำตอบที่ส่งมาแล้วเทียบกับเฉลยฝั่งเซิร์ฟเวอร์
   // ส่งออกเฉพาะ "จำนวน" (ตอบแล้ว/ถูก/ผิด ต่อพาร์ท + รวม + พาร์ท/ข้อปัจจุบัน) ไม่ส่งเฉลยหรือความถูก-ผิดรายข้อ
   function xvLiveProgress(s) {
-    const activeP = (s.phase === 'remedial') ? (s.remedialQueue || []) : PARTS;
+    const activeP = activeParts(s);
     const perPart = []; let totalAnswered = 0, totalCorrect = 0, inScopeTotal = 0;
     PARTS.forEach(p => {
       const inScope = activeP.indexOf(p) >= 0;
@@ -432,7 +461,7 @@ module.exports = function (app, DATA, opts) {
   // ห้องสอบเปิดจริง = ทีมงานกด "เปิดสอบ/เริ่มจับเวลา" ในวันนี้ (เวลาไทย)
   // (สถานะ open อย่างเดียวแปลว่า "เปิดรับสมัคร" ได้ด้วย — ถ้าเปิดไว้ตั้งแต่ก่อนวันสอบ นาฬิกาห้องจะหมดไปแล้ว ผู้สอบเข้าไม่ได้)
   const xvExamLive = (r) => !!(r && r.status === 'open' && r.examOpenedAt && xvBkkDate(r.examOpenedAt) === xvBkkDate());
-  const xvFinishedPayload = (s) => ({ ok: false, error: 'already_taken', status: s.status, sessionId: s.id, token: s.token, code: s.code, mode: (s.candidate || {}).mode, phase: s.phase, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified', examType: sessExamType(s) });
+  const xvFinishedPayload = (s) => ({ ok: false, error: 'already_taken', attempts: pubAttempts(s), roundCode: (findR(s.roundId) || {}).code || '', status: s.status, sessionId: s.id, token: s.token, code: s.code, mode: (s.candidate || {}).mode, phase: s.phase, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified', examType: sessExamType(s) });
 
   /* ---------------- candidate endpoints ---------------- */
   app.post('/api/xv/start', (req, res) => {
@@ -477,14 +506,14 @@ module.exports = function (app, DATA, opts) {
     // นาฬิการวมของห้อง (รอบสอบแรก): เวลาผูกกับ "รอบ" — เริ่มนับตั้งแต่ทีมงานกดเปิดสอบ ทุกคนหมดเวลาพร้อมกัน
     // คนเข้าสอบสายจะเหลือเวลาน้อยกว่า 120 นาที · ถ้ารอบยังไม่ตั้งนาฬิกา (รอบเก่า) fallback = 120 นาทีต่อคน
     const roomDeadline = (round && round.examDeadlineAt) ? round.examDeadlineAt : null;
-    if (roomDeadline && now > roomDeadline + XV_GRACE_MS) return res.status(403).json({ ok: false, error: 'exam_time_ended' });
+    if (roomDeadline && now > roomDeadline - 60000) return res.status(403).json({ ok: false, error: 'exam_time_ended' });   // เหลือไม่ถึง 1 นาที ไม่ให้เริ่ม (กันได้ 0 วินาทีแล้วตกทันที)
     const deadlineAt = roomDeadline || (now + TOTAL * 1000);
     const remainSec = Math.max(0, Math.ceil((deadlineAt - now) / 1000));
     const s = {
       id: genId(), token: crypto.randomBytes(12).toString('hex'),
       // โหมดสอบยึดจาก "รอบ" ฝั่งเซิร์ฟเวอร์เสมอ (กันผู้สอบปลอม mode:onsite บนรอบออนไลน์ เพื่อข้ามการตรวจ/หยุดเวลา) — ถ้าไม่มีรอบจึงค่อย fallback body
       candidate: { firstName: String(b.firstName).slice(0, 60), lastName: String(b.lastName).slice(0, 60), phone: String(b.phone).slice(0, 30), mode: (round && (round.mode === 'onsite' || round.mode === 'online')) ? round.mode : (b.mode === 'onsite' ? 'onsite' : 'online') },
-      code: 'XV' + (Date.now() % 1000000),
+      code: (function () { let c; do { c = 'XV' + String(100000 + crypto.randomInt(900000)); } while (all.some(x => x.code === c)); return c; })(),
       setId: B.id || null,
       roundId: round ? round.id : null, roundNo: round ? round.no : null,
       phase: 'first', paper, answers: {}, results: [], status: 'in_progress',
@@ -567,14 +596,14 @@ module.exports = function (app, DATA, opts) {
     if (s.status === 'in_progress') {
       // รวมคำตอบชุดเต็ม "ก่อน" คิดเรื่องหมดเวลาเสมอ — เพื่อกู้ข้อที่ตอบแล้วแต่ยังซิงก์ไม่ทัน (เน็ตช้า+ใกล้หมดเวลา)
       // การ merge ไม่ทำให้ได้เวลาเพิ่ม (แค่ยืนยันคำตอบที่เลือกไว้แล้ว) และ mergeAnswers ตรวจ scope/range อยู่แล้ว จึงปลอดภัยแม้หมดเวลา
-      mergeAnswers(s, b.answers);
+      if (Date.now() <= xvDeadline(s) + XV_GRACE_MS) mergeAnswers(s, b.answers);   // รับคำตอบที่ค้างส่งได้ไม่เกินช่วงผ่อนผัน 30 วิ
       // ส่งตอนหมดเวลา (หน้าเว็บส่งให้เองเมื่อเวลาเหลือ 0) = นับเป็นหมดเวลา ตามกติกา "หมดเวลาแล้วยังมีพาร์ทไม่ผ่าน = ไม่ผ่าน"
       // ช่วงผ่อนผัน 30 วิ มีไว้รับคำตอบที่ส่งช้าเพราะเน็ตเท่านั้น ไม่ได้ให้เวลาสอบเพิ่ม
       const expired = xvExpired(s) || (!s.paused && Date.now() >= xvDeadline(s) - 1000);
       score(s, expired); writeS(all);
       flushSoon('sessions'); // เขียนลงไฟล์ภายใน ~0.3 วิ (เดิมเขียนทั้งไฟล์แบบ sync ทุกครั้ง → ตอนทุกคนส่งพร้อมกัน เซิร์ฟเวอร์ค้างเป็นสิบวินาที)
     }
-    res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0), examType: sessExamType(s) });
+    res.json({ ok: true, status: s.status, results: pubResults(s), attempts: pubAttempts(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0), examType: sessExamType(s) });
   });
 
   // ทีมงานบังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — ตรวจคำตอบที่มีตอนนี้เหมือนลูกค้ากดส่งเอง
@@ -584,6 +613,7 @@ module.exports = function (app, DATA, opts) {
     const b = req.body || {}; const all = readS(); const s = all.find(x => x.id === req.params.id);
     if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
     if (s.status !== 'in_progress') return res.status(409).json({ ok: false, error: 'not_in_progress', status: s.status });
+    if (!String(b.reason || '').trim()) return res.status(400).json({ ok: false, error: 'reason_required' });
     const before = s.status;
     // พาร์ตที่ทีมงานเลือกตรวจ (บันทึกไว้ตรวจสอบย้อนหลัง) — การให้คะแนนใช้ตัวตรวจปกติ: ตรวจทุกพาร์ตในขอบเขตจากคำตอบที่มี
     // (ข้อไม่ตอบ = ผิด) แล้วจบการสอบทันที · พาร์ตที่ไม่ได้ทำจึงนับเป็นไม่ผ่าน เข้าสู่ผ่าน/ซ่อมตาม logic ปกติ
@@ -592,6 +622,7 @@ module.exports = function (app, DATA, opts) {
     if (!sel.length) sel = active.slice();
     score(s, false);
     s.forcedGrade = { by: String(b.actor || 'staff').slice(0, 60), at: Date.now(), parts: sel, reason: String(b.reason || '').slice(0, 200) };
+    const lastEv = (s.attemptLog || [])[(s.attemptLog || []).length - 1]; if (lastEv) { lastEv.forced = true; lastEv.reason = s.forcedGrade.reason; lastEv.by = s.forcedGrade.by; }
     writeS(all);
     logAudit('force_grade', 'session', s.id, s.code || '', before, s.status, 'ทีมงานบังคับตรวจคะแนน (พาร์ต ' + sel.join(', ') + ')' + (b.reason ? (' · ' + b.reason) : ''), s.forcedGrade.by);
     res.json({ ok: true, status: s.status, results: pubResults(s), remedialQueue: s.remedialQueue || [], total: s.results.reduce((a, r) => a + (r.score || 0), 0) });
@@ -622,7 +653,7 @@ module.exports = function (app, DATA, opts) {
     // ถ้าหมดเวลาแต่ยังไม่ได้ส่ง (เช่นปิดแท็บทิ้งไว้) → ตัดข้อสอบอัตโนมัติเมื่อมีการเรียกดู
     if (xvAutoExpire(s)) writeS(all);
     const parts = activeParts(s);
-    const out = { ok: true, mode: s.candidate.mode, phase: s.phase, status: s.status, parts, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified', examType: sessExamType(s) };
+    const out = { ok: true, attempts: pubAttempts(s), roundCode: (findR(s.roundId) || {}).code || '', mode: s.candidate.mode, phase: s.phase, status: s.status, parts, remaining: (s.status === 'in_progress' ? xvRemaining(s) : (s.remaining || 0)), pauseUsed: s.pauseUsed, results: pubResults(s), remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified', examType: sessExamType(s) };
     if (req.query.lite !== '1') { out.answers = s.answers; out.paper = clientPaper(s.paper, parts); }   // โพลระหว่างสอบใช้ lite=1 (ไม่ต้องส่งข้อสอบ 100 ข้อทุก 6 วิ)
     res.json(out);
   });
@@ -803,9 +834,42 @@ module.exports = function (app, DATA, opts) {
     const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false });
     const d = req.body && req.body.decision;
     if (d === 'disqualified') { s.statusBeforeDq = s.status; s.status = 'disqualified'; s.proctorDecision = 'disqualified'; s.disqualifiedAt = Date.now(); s.staffVerified = false; }
-    else if (d === 'normal') { s.proctorDecision = 'normal'; }
+    else if (d === 'normal') { if (s.status === 'disqualified') { s.status = s.statusBeforeDq || 'ended_failed'; if (s.status === 'verified' || s.status === 'submitted') s.staffVerified = true; s.undoDqAt = Date.now(); } s.proctorDecision = 'normal'; }
     else return res.status(400).json({ ok: false, error: 'bad_decision' });
-    writeS(all); res.json({ ok: true, status: s.status });
+    writeS(all);
+    logAudit(d === 'disqualified' ? 'disqualify' : 'proctor_normal', 'session', s.id, s.code || '', null, s.status, d === 'disqualified' ? 'ทีมงานยุติการสอบ (ตัดสิทธิ์)' : 'ทีมงานตัดสินว่าปกติ', String((req.body && req.body.actor) || 'staff').slice(0, 60));
+    res.json({ ok: true, status: s.status });
+  });
+
+  // สรุปผลรอบ: คนที่หมดเวลาแล้วแต่ยังค้าง "กำลังสอบ" → ตรวจคะแนนให้ · คนที่ "ต้องสอบซ่อม" แต่ไม่ได้สอบซ่อม → ไม่ผ่าน (เปิดรอบพิเศษให้ภายหลังได้)
+  app.post('/api/xv/admin/rounds/:id/finalize', (req, res) => {
+    const reason = String((req.body && req.body.reason) || '').trim().slice(0, 200);
+    if (!reason) return res.status(400).json({ ok: false, error: 'reason_required' });
+    const actor = String((req.body && req.body.actor) || 'staff').slice(0, 60);
+    const all = readS(); let graded = 0, closed = 0, still = 0; const now = Date.now();
+    all.forEach(s => {
+      if (s.roundId !== req.params.id) return;
+      if (s.status === 'in_progress') {
+        if (now > xvDeadline(s)) { score(s, true); s.autoExpired = true; s.finalizedBy = actor; graded++;
+          if (s.status === 'remedial_required') { s.status = 'ended_failed'; s.remedialQueue = []; s.finalizedAt = now; s.finalizeReason = reason; closed++; } }
+        else still++;
+      } else if (s.status === 'remedial_required') {
+        s.status = 'ended_failed'; s.remedialQueue = []; s.finalizedBy = actor; s.finalizedAt = now; s.finalizeReason = reason; closed++;
+      }
+    });
+    writeS(all);
+    logAudit('round_finalize', 'round', req.params.id, '', null, null, 'สรุปผลรอบ: ตรวจคะแนน ' + graded + ' คน, ปิดคนไม่สอบซ่อม ' + closed + ' คน · ' + reason, actor);
+    res.json({ ok: true, graded, closed, stillInExam: still });
+  });
+
+  // ยืนยันผลหลายคนพร้อมกัน (สอบออนไลน์ที่ผ่านครบและรอยืนยัน)
+  app.post('/api/xv/admin/sessions/verify-bulk', (req, res) => {
+    const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.map(String) : [];
+    if (!ids.length) return res.status(400).json({ ok: false, error: 'no_ids' });
+    const all = readS(); let n = 0; const now = Date.now();
+    all.forEach(s => { if (ids.indexOf(s.id) >= 0 && s.status === 'awaiting_verify') { s.staffVerified = true; s.status = 'verified'; s.verifiedAt = now; n++; } });
+    writeS(all); logAudit('verify_bulk', 'session', '', '', null, 'verified', 'ยืนยันผลพร้อมกัน ' + n + ' รายการ', String((req.body && req.body.actor) || 'staff').slice(0, 60));
+    res.json({ ok: true, verified: n });
   });
 
   app.post('/api/xv/admin/session/:id/verify', (req, res) => {
@@ -842,7 +906,6 @@ module.exports = function (app, DATA, opts) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const all = readS(); const s = all.find(x => x.id === req.params.id); if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
     if (s.status === 'in_progress') return res.status(400).json({ ok: false, error: 'in_progress' }); // แก้ได้เฉพาะรายการที่จบแล้ว
-    if (s.status === 'disqualified') return res.status(409).json({ ok: false, error: 'disqualified' });   // ตัดสิทธิ์แล้ว ห้ามแก้คะแนนจนสถานะเปลี่ยนกลับเป็นผ่าน
     const b = req.body || {};
     const edits = Array.isArray(b.scores) ? b.scores : null; // [{part, score}]
     const reason = String(b.reason || '').trim().slice(0, 200);
@@ -864,6 +927,9 @@ module.exports = function (app, DATA, opts) {
     });
     if (!applied) return res.status(400).json({ ok: false, error: 'bad_scores' });
     s.results.sort((a, b) => a.part - b.part);
+    PARTS.forEach(p => { if (!s.results.find(r => r.part === p)) s.results.push({ part: p, score: 0, attempts: 1, status: 'failed', wrongIds: [] }); });   // พาร์ตที่ยังไม่มีคะแนน = ไม่ผ่าน
+    s.results.sort((a, b) => a.part - b.part);
+    if (s.status === 'disqualified') { s.proctorDecision = 'normal'; s.dqLiftedBy = actor; s.dqLiftedAt = Date.now(); }   // ทีมงานแก้คะแนนคนที่ถูกตัดสิทธิ์ = ยกเลิกการตัดสิทธิ์ (มีเหตุผลกำกับ)
     // คำนวณสถานะรวมใหม่ (ตามตรรกะ score() แต่ไม่เพิ่มจำนวนครั้งสอบ/ไม่ยุ่งกับนาฬิกา)
     const failed = s.results.filter(r => r.status === 'failed');
     const exhausted = failed.filter(r => (r.attempts || 1) >= MAXATT);
@@ -873,11 +939,12 @@ module.exports = function (app, DATA, opts) {
       else if (before.status === 'verified') { s.status = 'verified'; }   // ออนไลน์ที่ปล่อยผลแล้ว → คงสถานะผ่าน
       else { s.status = 'awaiting_verify'; }
     } else { s.status = 'remedial_required'; s.remedialQueue = failed.map(r => r.part).sort((a, b) => a - b); }
+    if (s.status !== 'verified' && s.status !== 'submitted') s.staffVerified = false;
     s.scoreEdited = true; s.scoreEditedAt = Date.now(); s.scoreEditedBy = actor; s.scoreEditReason = reason;
     try {
       s.attemptLog = s.attemptLog || [];
       const parts = edits.map(e => parseInt(e.part, 10)).filter(p => p >= 1 && p <= PARTS.length);
-      const ev = { at: Date.now(), kind: 'edit', parts: parts.slice(), perPart: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: true };
+      const ev = { at: Date.now(), kind: 'edit', no: (s.attemptLog || []).filter(e => e.kind === 'edit').length + 1, parts: parts.slice(), perPart: {}, pauseUsed: s.pauseUsed || 0, scoreEdited: true, reason: reason, by: actor, fromStatus: before.status };
       let evTot = 0; parts.forEach(p => { const rr = s.results.find(x => x.part === p); const sc = rr ? (rr.score || 0) : 0; ev.perPart[p] = sc; evTot += sc; });
       ev.total = evTot; ev.full = parts.length * QPP; ev.pass = parts.every(p => (ev.perPart[p] || 0) >= PASS); ev.remedialAfter = (s.remedialQueue || []).slice();
       s.attemptLog.push(ev);
@@ -893,10 +960,11 @@ module.exports = function (app, DATA, opts) {
     if (!adminOk(req)) return res.status(403).json({ ok: false });
     const b = req.body || {}; const all = readS(); const s = all.find(x => x.id === req.params.id);
     if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
-    if (s.status === 'disqualified') return res.status(409).json({ ok: false, error: 'disqualified' });
+    if (s.status === 'in_progress') return res.status(409).json({ ok: false, error: 'in_progress' });   // กำลังสอบอยู่: ให้ตรวจคะแนนก่อน
+    if (!String(b.reason || '').trim()) return res.status(400).json({ ok: false, error: 'reason_required' });
     // พาร์ตที่ "ไม่ผ่าน" (คะแนน < เกณฑ์) และยังไม่หมดสิทธิ์ (ทำมาแล้วน้อยกว่า MAXATT ครั้ง)
     // ทีมงาน (admin) เปิดพาร์ตที่ "ไม่ผ่าน" ให้ทำใหม่ได้ — รวมกรณีใช้สิทธิ์ซ่อมครบแล้ว (เผื่อระบบมีปัญหา/คำตอบไม่ถูกบันทึก) · admin-only + บันทึก audit
-    const failedParts = (s.results || []).filter(r => (r.score || 0) < PASS).map(r => r.part).sort((a, b) => a - b);
+    const failedParts = PARTS.filter(p => { const r = (s.results || []).find(x => x.part === p); return !r || (r.score || 0) < PASS; });   // รวมพาร์ตที่ยังไม่มีคะแนน (เช่น ถูกตัดสิทธิ์กลางคัน)
     let sel = Array.isArray(b.parts) ? b.parts.map(Number).filter(p => failedParts.indexOf(p) >= 0) : [];
     sel = Array.from(new Set(sel)).sort((a, b) => a - b);
     if (!sel.length) return res.status(400).json({ ok: false, error: 'no_valid_parts', failedParts: failedParts });
@@ -909,6 +977,9 @@ module.exports = function (app, DATA, opts) {
     s.startedAt = now; s.deadlineAt = now + TOTAL * 1000; s.roomClock = false; s.remaining = TOTAL;
     s.paused = false; s.pausedAt = null; s.autoExpired = false; s.timedOut = false; s.submittedAt = null;
     s.reopenedBy = String(b.actor || 'staff').slice(0, 60); s.reopenedAt = now; s.reopenParts = sel.slice();
+    s.reopenPending = true; s.reopenReason = reason; s.staffVerified = false;
+    if (before === 'disqualified') { s.proctorDecision = 'normal'; s.dqLiftedBy = s.reopenedBy; s.dqLiftedAt = now; }
+    s.attemptLog = s.attemptLog || []; s.attemptLog.push({ at: now, kind: 'reopen', parts: sel.slice(), reason: reason, by: s.reopenedBy, fromStatus: before });
     writeS(all);
     logAudit('reopen_parts', 'session', s.id, s.code || '', before, 'in_progress', 'ทีมงานเปิดพาร์ต ' + sel.join(', ') + ' ให้ทำใหม่' + (reason ? (' · ' + reason) : ''), s.reopenedBy);
     res.json({ ok: true, parts: sel, status: s.status });
@@ -962,8 +1033,8 @@ module.exports = function (app, DATA, opts) {
       regCloseAt: String(b.regCloseAt || '').slice(0, 10),
       createdAt: Date.now()
     };
-    // ถ้าสร้างแบบ "เปิดสอบทันที" → เริ่มนาฬิการวมของห้องเลย
-    if (r.status === 'open') { r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }
+    // สร้างรอบ = เปิดรับสมัครเท่านั้น · นาฬิกาสอบเริ่มเมื่อทีมงานกด "เริ่มจับเวลาสอบ" ในวันสอบ
+    if (b.startClock) { r.status = 'open'; r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }
     const all = readR(); all.push(r); writeR(all);
     logAudit('round_create', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, 'สร้างรอบ ' + r.date + ' (' + r.mode + ')', 'staff');
     res.json({ ok: true, round: pubRound(r) });
@@ -989,7 +1060,7 @@ module.exports = function (app, DATA, opts) {
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
     // กดเปิดสอบ (closed → open) หรือกด "เริ่มจับเวลาสอบ" (startClock ตอนรอบเปิดรับสมัครอยู่แล้ว) = เริ่มนาฬิการวมของห้อง 120 นาที
     if (b.startClock) r.status = 'open';
-    if (r.status === 'open' && (!wasOpen || b.startClock)) {
+    if (r.status === 'open' && b.startClock) {
       r.examOpenedAt = Date.now();
       r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000;
       // คนที่กำลังสอบด้วยนาฬิกาห้อง (รอบแรก) รีเซ็ตเวลาตามนาฬิกาห้องใหม่ด้วย
@@ -1003,7 +1074,7 @@ module.exports = function (app, DATA, opts) {
       if (touched) writeS(allS);
     }
     writeR(all);
-    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, ((b.status === 'open' || b.startClock) ? 'เปิดสอบ (เริ่มจับเวลา)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
+    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.startClock ? 'เริ่มจับเวลาสอบ' : (b.status === 'open') ? 'เปิดรอบ (รับสมัคร)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
     res.json({ ok: true, round: pubRound(r) });
   });
 
@@ -1033,11 +1104,15 @@ module.exports = function (app, DATA, opts) {
 
   /* ---------------- REGISTRATION (public + admin) ---------------- */
   const REG_STATUS = ['DRAFT', 'PENDING_PAYMENT', 'PAYMENT_REVIEW', 'CONFIRMED', 'WAITLISTED', 'CANCELLED', 'REJECTED', 'CHECKED_IN', 'NO_SHOW', 'EXAM_STARTED', 'COMPLETED', 'REFUNDED', 'PARTIALLY_REFUNDED'];
+  // รับสมัครได้เมื่อรอบเปิด + ยังไม่เลยวันปิดรับ (เวลาไทย) + ยังไม่ถึงเวลาเริ่มสอบของวันสอบ
   const regOpenForReg = (r) => {
     if (r.status !== 'open') return false;
-    if (r.regCloseAt) { const today = new Date().toISOString().slice(0, 10); if (today > r.regCloseAt) return false; }
+    const now = bkkNow();
+    if (r.regCloseAt && now.date > r.regCloseAt) return false;
+    if (r.date && (now.date > r.date || (now.date === r.date && now.min >= roundStartMin(r)))) return false;
     return true;
   };
+  const phEq = (a, b) => { const x = xvPh9(a), y = xvPh9(b); return x.length >= 9 && x === y; };   // 081… = +6681… = 81…
   // public: rounds available to register for (optionally filtered by mode)
   app.get('/api/xv/reg/rounds', (req, res) => {
     const mode = req.query.mode === 'onsite' ? 'onsite' : (req.query.mode === 'online' ? 'online' : null);
@@ -1071,11 +1146,15 @@ module.exports = function (app, DATA, opts) {
     if (!round) return res.status(404).json({ ok: false, error: 'round_not_found' });
     if (!regOpenForReg(round)) return res.status(403).json({ ok: false, error: 'round_closed' });
     const nid = String(b.nationalId || '').replace(/\D/g, '');
-    const ph = String(b.phone || '').replace(/\D/g, '');
+    if (xvPh9(b.phone).length < 9) return res.status(400).json({ ok: false, error: 'bad_phone' });
     const all = readReg();
-    // duplicate guard: same person + round, not cancelled
-    if (all.some(x => x.candidate && x.roundId === round.id && x.status !== 'CANCELLED' && x.status !== 'REJECTED' && (nid ? x.candidate.nationalId === nid : String(x.candidate.phone || '').replace(/\D/g, '') === ph)))
-      return res.status(409).json({ ok: false, error: 'already_registered' });
+    // duplicate guard: เบอร์เดียวกัน (หรือเลขบัตรเดียวกัน) ในรอบเดียวกัน ที่ยังไม่ยกเลิก → ส่งเลขที่เดิมกลับไป (กันเน็ตหลุดแล้วกดซ้ำหาเลขไม่เจอ)
+    const dupReg = all.find(x => x.candidate && x.roundId === round.id && ['CANCELLED', 'REJECTED', 'REFUNDED'].indexOf(x.status) < 0 && (phEq(x.candidate.phone, b.phone) || (nid && x.candidate.nationalId === nid)));
+    if (dupReg) {
+      const sameEmail = String((dupReg.candidate || {}).email || '').trim().toLowerCase() === String(b.email || '').trim().toLowerCase();
+      if (!sameEmail) return res.status(409).json({ ok: false, error: 'already_registered' });
+      return res.status(409).json({ ok: false, error: 'already_registered', regNo: dupReg.regNo, status: dupReg.status, mode: dupReg.mode, round: { no: round.no, date: round.date, mode: round.mode, venue: round.venue, timeslot: round.timeslot } });
+    }
     // capacity guard (re-read fresh)
     const seats = roundSeats(round);
     if (seats.full) {
@@ -1084,6 +1163,7 @@ module.exports = function (app, DATA, opts) {
     const slipUrl = saveRegImage(b.slipImage, 'slip');
     const idCardUrl = saveRegImage(b.idCardImage, 'idcard');
     if (slipUrl === 'TOO_BIG' || idCardUrl === 'TOO_BIG') return res.status(400).json({ ok: false, error: 'image_too_big' });
+    if (b.slipImage && !slipUrl) return res.status(400).json({ ok: false, error: 'bad_slip_format' });   // เช่น HEIC ที่เบราว์เซอร์แปลงไม่ได้ — อย่ารับใบสมัครโดยไม่มีสลิป
     const hasSlip = !!slipUrl;
     const reg = {
       id: genId(), regNo: nextRegNo(), createdAt: Date.now(),
@@ -1127,20 +1207,23 @@ module.exports = function (app, DATA, opts) {
   // public: check a registration's status (regNo + phone to verify identity)
   // หาใบสมัครล่าสุดของเบอร์นี้ (ใช้เติมข้อมูลตอนสมัคร X-Lead)
   function findPrevByPhone(phone) {
-    const ph = String(phone || '').replace(/\D/g, ''); if (ph.length < 9) return null;
-    const list = readReg().filter(x => String((x.candidate || {}).phone || '').replace(/\D/g, '') === ph && ['CANCELLED', 'REJECTED'].indexOf(x.status) < 0)
-      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (xvPh9(phone).length < 9) return null;
+    const rank = (x) => (PAID_ST.indexOf(x.status) >= 0 ? 2 : 0) + (examTypeOf(findR(x.roundId) || {}) === 'X-Visor' ? 1 : 0);   // เลือกใบสมัคร X-Visor ที่ชำระแล้วก่อน
+    const list = readReg().filter(x => phEq((x.candidate || {}).phone, phone) && ['CANCELLED', 'REJECTED', 'REFUNDED'].indexOf(x.status) < 0)
+      .sort((a, b) => (rank(b) - rank(a)) || ((b.createdAt || 0) - (a.createdAt || 0)));
     return list[0] || null;
   }
+  const maskName = (s) => { s = String(s || '').trim(); if (!s) return ''; const a = Array.from(s); return a.length <= 2 ? a[0] + '*' : a.slice(0, 2).join('') + '***'; };
   const maskEmail = (e) => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return ''; return e.slice(0, Math.min(2, i)) + '***' + e.slice(i); };
   // ผู้สมัคร X-Lead: ตรวจสิทธิ์และดึงข้อมูลจากการสมัคร X-Visor เดิมด้วยเบอร์โทร
   app.get('/api/xv/reg/xlead-lookup', (req, res) => {
-    const ph = String(req.query.phone || '').replace(/\D/g, '');
+    const ph = String(req.query.phone || '');
     const prev = findPrevByPhone(ph);
     if (!prev) return res.json({ ok: false, error: 'not_found' });
     const c = prev.candidate || {};
-    const passed = readS().some(x => String((x.candidate || {}).phone || '').replace(/\D/g, '') === ph && x.status === 'verified' && sessExamType(x) === 'X-Visor');
-    res.json({ ok: true, firstName: c.firstName || '', lastName: c.lastName || '', emailMasked: maskEmail(c.email), coachTeam: prev.coachTeam || '', referrer: prev.referrer || '', passedXVisor: passed });
+    const passed = readS().some(x => phEq((x.candidate || {}).phone, ph) && x.status === 'verified' && sessExamType(x) === 'X-Visor');
+    // PDPA: ส่งชื่อแบบปิดบังบางส่วน (ระบบเติมชื่อจริงให้เองตอนสมัคร)
+    res.json({ ok: true, firstName: maskName(c.firstName), lastName: maskName(c.lastName), masked: true, emailMasked: maskEmail(c.email), coachTeam: prev.coachTeam || '', referrer: prev.referrer || '', passedXVisor: passed });
   });
   // ทีมงาน: แก้ไขข้อมูลผู้สมัคร (เพิ่ม/ลบ/เปลี่ยนได้ทุกช่อง) — บันทึกก่อน/หลังใน Audit
   app.post('/api/xv/admin/registrations/:id/edit', (req, res) => {
@@ -1160,10 +1243,10 @@ module.exports = function (app, DATA, opts) {
   });
   app.get('/api/xv/reg/status', (req, res) => {
     const regNo = String(req.query.regNo || '').trim().toUpperCase();
-    const phone = String(req.query.phone || '').replace(/\D/g, '');
+    const phone = String(req.query.phone || '');
     if (!regNo || !phone) return res.status(400).json({ ok: false, error: 'missing_fields' });
     const r = readReg().find(x => (x.regNo || '').toUpperCase() === regNo);
-    if (!r || String((r.candidate || {}).phone || '').replace(/\D/g, '') !== phone) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (!r || !phEq((r.candidate || {}).phone, phone)) return res.status(404).json({ ok: false, error: 'not_found' });
     const nm = ((r.candidate.firstName || '') + ' ' + (r.candidate.lastName || '')).trim();
     const round = findR(r.roundId);
     res.json({
@@ -1194,10 +1277,10 @@ module.exports = function (app, DATA, opts) {
     return { state: state, date: day, opensAt: minToHHMM(ATTEND_OPEN_MIN), startsAt: minToHHMM(start), now: now.hhmm, minutesLeft: state === 'open' ? (start - now.min) : 0 };
   };
   const findRegOwned = (regNo, phone) => {
-    regNo = String(regNo || '').trim().toUpperCase(); phone = String(phone || '').replace(/\D/g, '');
+    regNo = String(regNo || '').trim().toUpperCase(); phone = String(phone || '');
     if (!regNo || !phone) return null;
     const all = readReg(); const r = all.find(x => (x.regNo || '').toUpperCase() === regNo);
-    if (!r || String((r.candidate || {}).phone || '').replace(/\D/g, '') !== phone) return null;
+    if (!r || !phEq((r.candidate || {}).phone, phone)) return null;
     return { all: all, r: r };
   };
   // ถ้าแอดมินกดเช็กอินเองจากหลังบ้าน (ระบบเดิม) ก็นับว่ายืนยันเข้าร่วมแล้ว

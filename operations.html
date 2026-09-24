@@ -872,19 +872,19 @@
     preorder:{t:'Order',th:'จัดการ Pre-Order',d:'ตรวจสลิป ยืนยันการชำระเงิน ออกใบรับเงินมัดจำ และจัดคิวคำสั่งซื้อล่วงหน้า',kind:'plain'},
     qr:{t:'QR Code',th:'QR Code สั่งซื้อ Pre-Order',d:'ลิงก์และ QR สำหรับส่งให้ลูกค้าเปิดหน้าสั่งซื้อ',kind:'plain'},
     podash:{t:'Dashboard',th:'แดชบอร์ด',d:'เลือกหัวข้อแดชบอร์ดจากฟิลเตอร์ด้านบน',kind:'dash'},
-    cert:{t:'Certification Dashboard',th:'แดชบอร์ดการรับรอง X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
+    cert:{t:'Certification Dashboard',th:'แดชบอร์ดผลสอบ X-Visor',d:'ติดตามสถานะ Certification ของ X-Visor',kind:'dash'},
     activity:{t:'Activity Dashboard',th:'แดชบอร์ดกิจกรรม X-Visor',d:'ติดตามกิจกรรมและความเคลื่อนไหวของทีม X-Visor',kind:'dash'},
     'reg-overview':{t:'Registration Overview',th:'ภาพรวมการลงทะเบียน',d:'สรุปผู้สมัคร ที่นั่ง และรายการที่ต้องดำเนินการ',kind:'plain'},
     'reg-schedules':{t:'Exam Schedules',th:'รอบสอบ',d:'สร้าง/แก้/เปิด-ปิดรอบสอบ และดูที่นั่งคงเหลือ',kind:'plain'},
     'reg-people':{t:'Registrants',th:'ผู้ลงทะเบียน',d:'รายชื่อผู้สมัคร จัดการ เช็กอิน คืนเงิน ยกเลิก',kind:'plain'},
     'reg-payments':{t:'Payment Verification',th:'ตรวจสอบการชำระเงิน',d:'คิวตรวจสลิป (EasySlip) และการชำระเงิน',kind:'plain'},
     'reg-history':{t:'Registration History',th:'ประวัติการลงทะเบียน',d:'รอบที่ปิด/จบแล้ว — ค้นหาและดูย้อนหลัง',kind:'plain'},
-    'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบรับรอง X-Visor',kind:'dash'},
+    'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบ X-Visor',kind:'dash'},
     'exam-regqr':{t:'QR Management',th:'QR Management',d:'QR สมัครสอบ บัตรเข้าสอบ และสแกนเช็กอิน',kind:'plain'},
     'exam-dashboard':{t:'E-xam Dashboard',th:'Dashboard ภาพรวม E-xam',d:'ผู้สมัคร การยืนยันเข้าร่วม และผลสอบ แยกตามหลักสูตรและทีมโค้ช',kind:'plain'},
     'exam-session':{t:'Exam Session',th:'รอบการสอบ',d:'จัดการรอบสอบ ตารางสอบ และผู้เข้าสอบ',kind:'plain'},
     'exam-tracker':{t:'Exam Tracker',th:'ติดตามการสอบ',d:'ติดตามสถานะและความคืบหน้าของผู้เข้าสอบ',kind:'dash'},
-    'exam-result':{t:'Exam Result',th:'ผลการสอบ',d:'ผลสอบ คะแนน และการออกใบรับรอง',kind:'dash'},
+    'exam-result':{t:'Exam Result',th:'ผลการสอบ',d:'ผลสอบ คะแนน และการยืนยันผล',kind:'dash'},
     customers:{t:'Customers',th:'ลูกค้า',d:'ฐานข้อมูลลูกค้าและประวัติการสั่งซื้อ',kind:'plain'},
     tasks:{t:'Tasks',th:'งาน',d:'รายการงานและการมอบหมายของฝ่ายปฏิบัติการ',kind:'plain'},
     issues:{t:'Issues / Tickets',th:'ปัญหา / ทิกเก็ต',d:'จัดการปัญหาและคำร้องขอความช่วยเหลือ',kind:'plain'},
@@ -998,7 +998,7 @@
       el.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:9999;background:#1E2A44;color:#fff;padding:12px 18px;border-radius:12px;font-family:inherit;font-weight:700;font-size:.9rem;box-shadow:0 14px 40px -12px rgba(0,0,0,.45);opacity:0;transition:.25s;max-width:88vw';
       document.body.appendChild(el);}
     el.style.background=kind==='ok'?'#12A67C':kind==='bad'?'#E5484D':'#1E2A44';
-    el.textContent=msg;
+    el.textContent=String(msg==null?'':msg).replace(/<span class=mdiv><\/span>/g,' / ').replace(/<[^>]+>/g,'');
     requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateX(-50%) translateY(0)';});
     clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(-50%) translateY(20px)';},2600);
   }
@@ -1067,9 +1067,9 @@
   function xvBanner(){
     if(EXAM_LIVE) return '<div style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">'
       +'<span style="display:inline-flex;align-items:center;gap:7px;background:var(--good-tint);color:var(--good);font-weight:700;font-size:.78rem;padding:5px 12px;border-radius:999px"><span style="width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px rgba(18,166,124,.18)"></span>เชื่อมต่อระบบสอบจริง (Live)</span>'
-      +(OPS_KEY
+      +(false
         ? '<button onclick="opsLock()" title="ล็อกสิทธิ์จัดการ — ล้าง Admin Key ออกจากเครื่องนี้ (กันคนอื่นมาลบ/แก้)" style="display:inline-flex;align-items:center;gap:6px;background:var(--good-tint);color:var(--good);border:1px solid #A7E0CC;border-radius:999px;padding:5px 12px;font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer">🔓 ล็อกสิทธิ์จัดการ</button>'
-        : '<button onclick="opsUnlock()" title="ใส่ Admin Key เพื่อ ลบ/ตรวจคะแนน/แก้คะแนน" style="display:inline-flex;align-items:center;gap:6px;background:var(--warn);color:#fff;border:0;border-radius:999px;padding:6px 13px;font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer">🔑 ใส่ Admin Key เพื่อจัดการ</button>')
+        : '')
       +'</div>';
     return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-tint);border:1px solid #F3D9A8;border-radius:12px;padding:10px 14px;margin-bottom:16px">'
       +'<span style="font-weight:700;color:var(--warn);font-size:.84rem">โหมดตัวอย่าง (demo) — ยังไม่ได้เชื่อมข้อมูลจริง</span>'
@@ -1295,7 +1295,7 @@
       return '<div class="li" style="align-items:center"><div style="min-width:140px"><div class="t">'+lb+'</div></div>'
         +'<div style="flex:1;height:10px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 12px"><div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:999px"></div></div>'
         +'<div class="num" style="min-width:56px;text-align:right"><b>'+n+'</b> <span style="color:var(--muted);font-size:.8rem">'+pct+'%</span></div></div>';};
-    gen.innerHTML=xvHead('ภาพรวมการสอบ<span class=mdiv></span>Exam Overview','สรุปภาพรวมการสอบรับรอง X-Visor แบบเรียลไทม์<span class=mdiv></span>Certification')
+    gen.innerHTML=xvHead('ภาพรวมการสอบ<span class=mdiv></span>Exam Overview','สรุปภาพรวมการสอบ X-Visor แบบเรียลไทม์<span class=mdiv></span>Certification')
       +xvKstrip([
         xvKpi('ผู้เข้าสอบทั้งหมด',String(o.total),'#0A67D8','ทุกสถานะ',100,true),
         xvKpi('กำลังสอบ',String(o.inProgress),'#12A9F5','ออนไลน์ '+o.online+'<span class=mdiv></span>ที่ศูนย์ '+o.onsite,o.total?o.inProgress/o.total*100:20),
@@ -1312,7 +1312,7 @@
         +barRow('ไม่ผ่าน (ครบ '+MAXATT+' ครั้ง)',o.ended,o.total,'var(--bad)')
       +'</div>'
       +'<div class="panel"><div class="ph"><h3>สรุป</h3></div>'
-        +'<div class="li"><div class="dotc" style="background:var(--good-tint);color:var(--good)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="t">อัตราการรับรอง</div><div class="s">'+passRate+'% ของผู้เข้าสอบทั้งหมด</div></div></div>'
+        +'<div class="li"><div class="dotc" style="background:var(--good-tint);color:var(--good)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="t">อัตราสอบผ่าน</div><div class="s">'+passRate+'% ของผู้เข้าสอบทั้งหมด</div></div></div>'
         +'<div class="li"><div class="dotc" style="background:var(--brand-tint);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div><div class="t">รูปแบบการสอบ</div><div class="s">ออนไลน์ '+o.online+' คน<span class=mdiv></span>ที่ศูนย์ '+o.onsite+' คน</div></div></div>'
         +'<div class="li"><div class="dotc" style="background:var(--warn-tint);color:var(--warn)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><div class="t">ต้องติดตาม</div><div class="s">รอยืนยัน '+o.awaiting+'<span class=mdiv></span>สอบซ่อม '+o.remedial+'</div></div></div>'
         +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
@@ -1387,7 +1387,7 @@
       var s=setOf(r); var sTot=s?s.total:0; var sReady=s?s.ready:false; var setName=(r.setName||(s&&s.name))||'ชุดเริ่มต้น';
       var meta=sTot+' ข้อ<span class=mdiv></span>'+PARTS_N+' พาร์ท<span class=mdiv></span>ผ่าน '+passTotal+'/'+sTot+' ('+PASS_PART+'/พาร์ท)<span class=mdiv></span>'+EXAM_MIN+' นาที';
       var sub=(r.candidates?('ผู้เข้าสอบ '+r.candidates+' คน'):'ยังไม่มีผู้เข้าสอบ')+(r.inProgress?('<span class=mdiv></span>กำลังสอบ '+r.inProgress):'')+(r.awaiting?('<span class=mdiv></span>รอยืนยัน '+r.awaiting):'')+(r.verified?('<span class=mdiv></span>ผ่าน '+r.verified):'');
-      var kebab='<button class="rkebab" onclick="roundMenu(this)" data-id="'+r.id+'" data-code="'+r.code+'" data-no="'+r.no+'" data-date="'+(r.date||'')+'" data-topic="'+String(r.topic||'').replace(/"/g,'&quot;')+'" data-status="'+r.status+'" data-live="'+(r.examLiveToday?1:0)+'" data-mode="'+(r.mode||'online')+'" data-venue="'+String(r.venue||'').replace(/"/g,'&quot;')+'" data-fee="'+feeTxt+'" data-close="'+(r.regCloseAt||'')+'" data-set="'+(r.setId||'')+'" title="จัดการ" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:36px;height:36px;cursor:pointer;color:var(--ink);font-weight:800;line-height:1;flex:none">⋮</button>';
+      var kebab='<button class="rkebab" onclick="roundMenu(this)" data-id="'+r.id+'" data-code="'+r.code+'" data-no="'+r.no+'" data-date="'+(r.date||'')+'" data-topic="'+String(r.topic||'').replace(/"/g,'&quot;')+'" data-status="'+r.status+'" data-live="'+(r.examLiveToday?1:0)+'" data-ended="'+((r.examLiveToday&&r.examRemaining===0)?1:0)+'" data-mode="'+(r.mode||'online')+'" data-venue="'+String(r.venue||'').replace(/"/g,'&quot;')+'" data-fee="'+feeTxt+'" data-close="'+(r.regCloseAt||'')+'" data-set="'+(r.setId||'')+'" title="จัดการ" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:36px;height:36px;cursor:pointer;color:var(--ink);font-weight:800;line-height:1;flex:none">⋮</button>';
       return '<div class="exset">'
         +'<div style="flex:1;min-width:0">'
         +'<div class="exset-t">'+(r.topic||'X-VISOR Certification')+'<span class=mdiv></span>ครั้งที่ '+r.no+'<span class=mdiv></span>'+fmtDateTH(r.date)+'</div>'
@@ -1430,7 +1430,7 @@
         xvKpi('ผู้เข้าสอบรวม',String(totalC),'#12A9F5','ทุกรอบรวมกัน',totalC?100:6)
       ])
       +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>รอบสอบ <span style="color:var(--muted);font-weight:600;font-size:.85rem">('+totalR+')</span></h3>'
-        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><a class="link" href="#" onclick="go(\'reg-people\');return false">ดูผู้สมัคร →</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
+        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register_new" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><a class="link" href="#" onclick="go(\'reg-people\');return false">ดูผู้สมัคร →</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
         +'<div>'+cards+'</div>'
         +'<p style="color:var(--muted);font-size:.78rem;margin-top:6px">จัดการแต่ละรอบที่ปุ่ม ⋮ (เปิด/ปิดสอบ<span class=mdiv></span>แก้ไข<span class=mdiv></span>เลือกชุดข้อสอบ<span class=mdiv></span>แชร์ลิงก์+QR<span class=mdiv></span>คัดลอก<span class=mdiv></span>ลบ)</p>'
         +(EXAM_LIVE?'':'<p style="color:var(--muted);font-size:.8rem;margin-top:4px">* ตัวอย่าง — ใส่ Admin Key เพื่อจัดการจริง</p>')
@@ -1471,11 +1471,12 @@
     m.style.cssText='position:fixed;z-index:9995;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px -12px rgba(0,0,0,.3);padding:6px;min-width:212px';
     var mi=function(id,icon,label,color){return '<button data-act="'+id+'" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:9px 11px;font-family:inherit;font-weight:600;font-size:.86rem;color:'+(color||'var(--ink)')+';cursor:pointer">'+icon+'<span>'+label+'</span></button>';};
     var ic=function(p){return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none">'+p+'</svg>';};
-    var live=d.live==='1';
-    m.innerHTML=(open&&!live?mi('clock',ic('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>'),'เริ่มจับเวลาสอบ (วันนี้)','var(--good)'):'')
-      +mi('toggle',ic(open?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<polygon points="5 3 19 12 5 21 5 3"/>'),(open?'ปิดสอบ':'เปิดสอบ'),(open?'var(--warn)':'var(--good)'))
+    var live=d.live==='1', ended=d.ended==='1';
+    m.innerHTML=(open&&(!live||ended)?mi('clock',ic('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>'),(live&&ended)?'เริ่มจับเวลาสอบใหม่':'เริ่มจับเวลาสอบ (วันนี้)','var(--good)'):'')
+      +mi('toggle',ic(open?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<polygon points="5 3 19 12 5 21 5 3"/>'),(open?'ปิดรอบ (ไม่รับสมัคร/ไม่รับคนเข้าสอบ)':'เปิดรอบ (รับสมัคร)'),(open?'var(--warn)':'var(--good)'))
       +mi('edit',ic('<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),'แก้ไขรอบ (วัน/สถานที่/ค่าสมัคร)')
       +mi('share',ic('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/>'),'แชร์ลิงก์ + QR')
+      +mi('final',ic('<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'),'สรุปผลรอบนี้ (ปิดรายการค้าง)')
       +mi('dup',ic('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),'คัดลอกรอบ')
       +'<div style="height:1px;background:var(--line);margin:4px 6px"></div>'
       +mi('del',ic('<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'),'ลบรอบสอบ','var(--bad)');
@@ -1485,6 +1486,7 @@
     m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){
       var act=b.getAttribute('data-act');closeRoundMenus();
       if(act==='clock')roundStartClock(d.id,d.no);
+      else if(act==='final')roundFinalize(d.id,d.no);
       else if(act==='toggle')roundToggle(d.id, open?'closed':'open', d.no);
       else if(act==='edit')roundEditOpen({id:d.id,no:d.no,date:d.date,topic:d.topic,mode:d.mode,venue:d.venue,fee:d.fee,regCloseAt:d.close,setId:d.set});
       else if(act==='share')roundShareOpen(d.code,d.no,d.date);
@@ -1501,7 +1503,7 @@
     if(!demoGuard())return;
     fetch('/api/xv/admin/rounds/'+id+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,status:to})})
       .then(function(r){return r.json();}).then(function(j){
-        if(j&&j.ok){xvToast(to==='open'?('เปิดสอบครั้งที่ '+no+' แล้ว'):('ปิดสอบครั้งที่ '+no+' แล้ว'),'ok');roundsRefresh();}
+        if(j&&j.ok){xvToast(to==='open'?('เปิดรอบครั้งที่ '+no+' แล้ว (กดเริ่มจับเวลาสอบเมื่อถึงเวลาสอบ)'):('ปิดรอบครั้งที่ '+no+' แล้ว'),'ok');roundsRefresh();}
         else xvToast('ทำรายการไม่สำเร็จ','bad');
       }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
   }
@@ -1513,6 +1515,21 @@
         .then(function(r){return r.json();}).then(function(j){if(j&&j.ok){xvToast('เริ่มจับเวลาสอบครั้งที่ '+no+' แล้ว','ok');roundsRefresh();}else xvToast('ทำรายการไม่สำเร็จ','bad');})
         .catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
     });
+  }
+  // สรุปผลรอบ: ตรวจคะแนนคนที่หมดเวลาแต่ยังค้าง "กำลังสอบ" และปิดคนที่ไม่ได้สอบซ่อมเป็นไม่ผ่าน (เปิดรอบพิเศษให้ทีหลังได้)
+  function roundFinalize(id,no){
+    if(!demoGuard())return;
+    xvSheet('<h3 style="font-size:1.12rem">สรุปผลรอบครั้งที่ '+no+'</h3>'
+      +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 14px;line-height:1.6"><span style="display:block">คนที่หมดเวลาแล้วแต่ยังค้าง "กำลังสอบ" ระบบจะตรวจคะแนนให้</span><span style="display:block">คนที่ "ต้องสอบซ่อม" แต่ไม่ได้สอบซ่อม จะเป็น "ไม่ผ่าน"</span><span style="display:block">คนที่ยังมีเวลาสอบอยู่ ไม่ถูกแตะ และเปิดรอบพิเศษให้ภายหลังได้เสมอ</span></p>'
+      +'<label style="'+lblCss()+'">เหตุผล (บังคับ) <span style="color:var(--bad)">*</span></label><input id="fin_reason" placeholder="เช่น จบการสอบรอบ 27 ก.ย. 2569" style="'+fieldCss()+'">'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="finGo" style="'+btnPri()+'">สรุปผลรอบ</button></div>');
+    document.getElementById('finGo').onclick=function(){
+      var reason=(document.getElementById('fin_reason').value||'').trim(); if(!reason){xvToast('กรุณาระบุเหตุผลทุกครั้ง','bad');return;}
+      var b=this;b.disabled=true;b.textContent='กำลังสรุป…';
+      fetch('/api/xv/admin/rounds/'+id+'/finalize'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,reason:reason,actor:'staff'})}).then(function(r){return r.json();})
+        .then(function(j){if(j&&j.ok){xvSheetClose();xvToast('สรุปแล้ว: ตรวจคะแนน '+j.graded+' คน, ไม่ได้สอบซ่อม '+j.closed+' คน'+(j.stillInExam?(', ยังสอบอยู่ '+j.stillInExam+' คน'):''),'ok');roundsRefresh();}else{b.disabled=false;b.textContent='สรุปผลรอบ';xvToast('สรุปไม่สำเร็จ','bad');}})
+        .catch(function(){b.disabled=false;b.textContent='สรุปผลรอบ';xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
+    };
   }
   function roundDelete(id,no){
     if(!demoGuard())return;
@@ -1570,12 +1587,13 @@
       +'<label style="'+lblCss()+'">Topic</label><input id="rcTopic" type="text" value="'+String(d.topic||'Certification').replace(/"/g,'&quot;')+'" style="'+fieldCss()+'">'
       +'<label style="'+lblCss()+'">ชุดข้อสอบที่ใช้ในรอบนี้</label><select id="rcSet" style="'+fieldCss()+'">'+setOpts+'</select>'
       +'<p style="color:var(--muted);font-size:.76rem;margin:-4px 0 2px">แต่ละรอบเลือกได้ว่าจะใช้ชุดข้อสอบชุดไหน<span class=mdiv></span>จัดการชุดได้ที่หน้ารอบการสอบด้านล่าง</p>'
-      +(isEdit?'':'<label style="display:flex;align-items:center;gap:9px;margin-top:14px;font-size:.88rem;font-weight:600;cursor:pointer"><input id="rcOpen" type="checkbox" checked style="width:17px;height:17px">เปิดรับสมัคร/เปิดสอบทันที</label>')
+      +(isEdit?'':'<label style="display:flex;align-items:center;gap:9px;margin-top:14px;font-size:.88rem;font-weight:600;cursor:pointer"><input id="rcOpen" type="checkbox" checked style="width:17px;height:17px">เปิดรับสมัครทันที (นาฬิกาสอบเริ่มเมื่อกด "เริ่มจับเวลาสอบ" ในวันสอบ)</label>')
       +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="rcSave" style="'+btnPri()+'">'+(isEdit?'บันทึกการแก้ไข':'สร้างรอบสอบ')+'</button></div>');
     document.getElementById('rcMode').onchange=function(){document.getElementById('rcVenueWrap').style.display=this.value==='onsite'?'block':'none';};
     document.getElementById('rcSave').onclick=function(){
       var setEl=document.getElementById('rcSet');
       var body={key:OPS_KEY,mode:document.getElementById('rcMode').value,date:document.getElementById('rcDate').value,venue:document.getElementById('rcVenue').value,fee:document.getElementById('rcFee').value,regCloseAt:document.getElementById('rcClose').value,timeslot:(document.getElementById('rcTime').value||'').trim(),no:document.getElementById('rcNo').value,topic:document.getElementById('rcTopic').value,setId:setEl?setEl.value:''};
+      if(!body.timeslot){xvToast('กรุณากรอกช่วงเวลาสอบ เช่น 09:30-11:30 (ใช้กำหนดเวลาสแตมป์และปิดรับสมัคร)','bad');return;}
       if(body.timeslot&&!/^\s*\d{1,2}[:.]\d{2}/.test(body.timeslot)){xvToast('ช่วงเวลาสอบต้องขึ้นต้นด้วยเวลาเริ่ม เช่น 09:30-11:30','bad');return;}
       if(!isEdit)body.status=document.getElementById('rcOpen').checked?'open':'closed';
       this.disabled=true;this.textContent=isEdit?'กำลังบันทึก…':'กำลังสร้าง…';
@@ -1862,7 +1880,6 @@
   // ลบรายการสอบ (สำหรับลบรายการทดสอบ/ผิดพลาด — ต้องมีสิทธิ์แอดมิน)
   function xvDelSession(id,name,which){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
-    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     xvConfirm('ลบรายการสอบ','ยืนยันลบรายการสอบของ "'+name+'"? การลบนี้ถาวร — ใช้สำหรับลบรายการทดสอบหรือรายการที่ผิดพลาดเท่านั้น','ลบรายการ',function(){
       fetch('/api/xv/admin/session/'+id+'/delete'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
         .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
@@ -1876,7 +1893,6 @@
   // ---- bulk: ลบรายการสอบที่เลือก (Tracker) — สำหรับรายการทดสอบ/ผิดพลาด ----
   function trkBulkDelete(){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใช้กับข้อมูลจริงเท่านั้น','bad');return;}
-    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     var ids=Object.keys(EXAM_TRK_SEL).filter(function(k){return EXAM_TRK_SEL[k];});
     if(!ids.length){xvToast('ยังไม่ได้เลือกรายการ','bad');return;}
     xvConfirm('ลบรายการสอบที่เลือก','ลบรายการสอบ '+ids.length+' รายการที่เลือก? การลบนี้ถาวร — ใช้สำหรับลบรายการทดสอบหรือผิดพลาดเท่านั้น','ลบที่เลือก',function(){
@@ -1892,7 +1908,6 @@
   // บังคับตรวจคะแนน (เผื่อลูกค้าทำครบแต่กดส่งไม่ได้) — เลือกได้ว่าจะตรวจพาร์ตไหน แล้วจบการสอบทันที
   function xvForceGrade(id,name){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อตรวจจริง','bad');return;}
-    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;}); if(!s){xvToast('ไม่พบผู้สอบ','bad');return;}
     var lv=s.live||{}; var per={}; (lv.perPart||[]).forEach(function(pp){per[pp.part]=pp;});
     // พาร์ตในขอบเขต (รอบแรก = 1-5<span class=mdiv></span>สอบซ่อม = เฉพาะพาร์ตที่ซ่อม)
@@ -1907,12 +1922,13 @@
     xvSheet('<h3 style="font-size:1.12rem">ตรวจคะแนน<span class=mdiv></span>'+xvName(s)+' <span style="color:var(--muted);font-weight:600;font-size:.9rem">('+(s.code||'')+')</span></h3>'
       +'<p style="color:var(--muted);font-size:.84rem;margin:5px 0 14px;line-height:1.5">ใช้กรณีผู้สอบทำครบแต่กดส่งคะแนนไม่ได้ — ติ๊กเลือกพาร์ทที่ต้องการตรวจ (ค่าเริ่มต้นติ๊กเฉพาะพาร์ทที่ทำครบแล้ว) ระบบจะ<b>ตรวจแล้วจบการสอบทันที</b><span class=mdiv></span>พาร์ทที่ยังไม่ได้ทำจะนับข้อที่ไม่ตอบเป็นผิด แล้วเข้าสู่ผ่าน/สอบซ่อมตามเกณฑ์ปกติ<span class=mdiv></span>ลูกค้าจะเห็นผลของตัวเองในไม่กี่วินาที</p>'
       +rows
-      +'<div><label style="'+lblCss()+'">เหตุผล/บันทึก (ไม่บังคับ)</label><input id="fg_reason" placeholder="เช่น ลูกค้าทำครบแต่ปุ่มส่งค้าง" style="'+fieldCss()+'"></div>'
+      +'<div><label style="'+lblCss()+'">เหตุผลที่ตรวจคะแนนให้ (บังคับ) <span style="color:var(--bad)">*</span></label><input id="fg_reason" placeholder="เช่น ลูกค้าทำครบแต่ปุ่มส่งค้าง" style="'+fieldCss()+'"></div>'
       +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="fgGo" style="'+btnPri()+'">ตรวจคะแนน + จบการสอบ</button></div>');
     document.getElementById('fgGo').onclick=function(){
       var parts=[].slice.call(document.querySelectorAll('.fg_ck')).filter(function(c){return c.checked;}).map(function(c){return parseInt(c.value,10);});
       if(!parts.length){xvToast('เลือกอย่างน้อย 1 พาร์ท','bad');return;}
       var reason=((document.getElementById('fg_reason')||{}).value||'').trim();
+      if(!reason){xvToast('กรุณาระบุเหตุผลทุกครั้ง','bad');var fr=document.getElementById('fg_reason');if(fr)fr.focus();return;}
       var btn=this;btn.disabled=true;btn.textContent='กำลังตรวจ…';
       fetch('/api/xv/admin/session/'+id+'/force-grade'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,actor:'staff',parts:parts,reason:reason})})
         .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
@@ -1933,7 +1949,6 @@
   // ---- แก้ไขคะแนนผู้สอบ (กรณีระบบคำนวณผิด) — ต้องมี Admin Key + บังคับกรอกเหตุผล → บันทึก audit ----
   function xvScoreEdit(id){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อแก้คะแนนจริง','bad');return;}
-    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;}); if(!s){xvToast('ไม่พบผู้สอบ','bad');return;}
     var by={}; (s.results||[]).forEach(function(r){by[r.part]=r;});
     var rows='';
@@ -1968,8 +1983,9 @@
   window.xvScoreEdit=xvScoreEdit;
   // ---- ทีมงานเปิดพาร์ตให้ผู้สอบกลับไปทำใหม่ (กันเคสหลุด Browser / กดส่งคะแนนไม่ได้) ----
   function xvReopenEligible(s){
-    if(!s||!Array.isArray(s.results)||s.status==='in_progress')return [];
-    return s.results.filter(function(r){return (r.score||0)<PASS_PART;}).map(function(r){return r.part;}).sort(function(a,b){return a-b;});
+    if(!s||s.status==='in_progress')return [];
+    var by={};(s.results||[]).forEach(function(r){by[r.part]=r;});
+    var out=[];for(var p=1;p<=PARTS_N;p++){var r=by[p];if(!r||(r.score||0)<PASS_PART)out.push(p);}return out;
   }
   function xvReopenBtn(s){
     if(!xvReopenEligible(s).length)return '';
@@ -1977,7 +1993,6 @@
   }
   function xvReopenParts(id){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อเปิดพาร์ตจริง','bad');return;}
-    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     var s=(EXAM_CACHE||[]).find(function(x){return x.id===id;}); if(!s){xvToast('ไม่พบผู้สอบ','bad');return;}
     var elig=xvReopenEligible(s);
     if(!elig.length){xvToast('ผู้สอบคนนี้ไม่มีพาร์ตที่เปิดให้ทำใหม่ได้ (ผ่านครบ หรือใช้สิทธิ์ครบแล้ว)','bad');return;}
@@ -1986,17 +2001,18 @@
       return '<label style="display:flex;align-items:center;gap:12px;margin-bottom:9px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer">'
         +'<input type="checkbox" class="rop_ck" value="'+p+'" checked style="width:18px;height:18px;flex:none">'
         +'<div style="flex:1"><b style="color:var(--ink)">พาร์ท '+p+'</b> <span style="color:var(--muted);font-size:.82rem">คะแนนเดิม '+(r.score!=null?r.score:0)+'/'+QPP+'</span></div>'
-        +'<span style="color:var(--muted);font-size:.78rem">เปิดได้อีก '+left+' ครั้ง</span></label>';
+        +'<span style="color:var(--muted);font-size:.78rem">'+(left>0?('สิทธิ์ซ่อมเหลือ '+left+' ครั้ง'):'รอบพิเศษ (หมดสิทธิ์แล้ว)')+'</span></label>';
     }).join('');
     xvSheet('<h3 style="font-size:1.12rem">เปิดพาร์ตให้ทำใหม่<span class=mdiv></span>'+xvName(s)+' <span style="color:var(--muted);font-weight:600;font-size:.9rem">('+(s.code||'')+')</span></h3>'
       +'<p style="color:var(--muted);font-size:.84rem;margin:5px 0 14px;line-height:1.5">ใช้กรณีผู้สอบหลุดจาก Browser หรือกดส่งคะแนนไม่ได้ — ติ๊กเลือกพาร์ท<b>ที่ไม่ผ่าน</b>ที่ต้องการเปิดให้กลับไปทำใหม่ ระบบจะสุ่มข้อสอบชุดใหม่ของพาร์ทนั้น และเริ่มจับเวลา 120 นาทีใหม่ให้ผู้สอบคนนี้ทันที (นาฬิกาของใครของมัน)</p>'
       +rows
-      +'<div><label style="'+lblCss()+'">เหตุผล/บันทึก (ไม่บังคับ)</label><input id="rop_reason" placeholder="เช่น เน็ตหลุดตอนพาร์ท 3 กดส่งไม่ได้" style="'+fieldCss()+'"></div>'
+      +'<div><label style="'+lblCss()+'">เหตุผลที่เปิดให้สอบ (บังคับ) <span style="color:var(--bad)">*</span></label><input id="rop_reason" placeholder="เช่น เน็ตหลุดตอนพาร์ท 3 กดส่งไม่ได้" style="'+fieldCss()+'"></div>'
       +'<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="ropGo" style="'+btnPri()+'">เปิดพาร์ตให้ทำใหม่</button></div>');
     document.getElementById('ropGo').onclick=function(){
       var parts=[].slice.call(document.querySelectorAll('.rop_ck')).filter(function(c){return c.checked;}).map(function(c){return parseInt(c.value,10);});
       if(!parts.length){xvToast('เลือกอย่างน้อย 1 พาร์ท','bad');return;}
       var reason=((document.getElementById('rop_reason')||{}).value||'').trim();
+      if(!reason){xvToast('กรุณาระบุเหตุผลทุกครั้ง','bad');var rr=document.getElementById('rop_reason');if(rr)rr.focus();return;}
       var btn=this;btn.disabled=true;btn.textContent='กำลังเปิด…';
       fetch('/api/xv/admin/session/'+id+'/reopen-parts'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,parts:parts,reason:reason})})
         .then(function(r){return r.json().then(function(j){return{s:r.status,j:j};},function(){return{s:r.status,j:null};});}).then(function(o){
@@ -2041,7 +2057,8 @@
   }
   window.xvSessionDetail=xvSessionDetail;
   function xvWrongText(arr){if(!arr||!arr.length)return '<span style="color:var(--good);font-weight:700">ถูกทุกข้อ</span>';return '<span style="color:var(--bad)">ผิดข้อ '+arr.slice().sort(function(a,b){return a-b;}).join(', ')+'</span>';}
-  function xvKindLabel(k){return k==='remedial'?'สอบซ่อม':(k==='edit'?'แก้ไขคะแนนโดยทีมงาน':'สอบรอบแรก');}
+  function xvKindLabel(e){if(e&&typeof e==='object'){var k=e.kind;var base=k==='first'?'สอบครั้งแรก':k==='remedial'?('สอบซ่อมครั้งที่ '+(e.no||'')):k==='special'?'สอบรอบพิเศษ (ทีมงานอนุมัติ)':k==='edit'?'ทีมงานแก้คะแนน':k==='reopen'?('ทีมงานเปิดพาร์ต '+(e.parts||[]).join(', ')+' ให้สอบใหม่'):xvKindLabel0(k);return base+(e.forced?' (ทีมงานตรวจคะแนนให้)':'')+(e.expired?' (หมดเวลา)':'');}return xvKindLabel0(e);}
+  function xvKindLabel0(k){return k==='remedial'?'สอบซ่อม':(k==='edit'?'แก้ไขคะแนนโดยทีมงาน':'สอบรอบแรก');}
   function xvRenderSessionDetail(s){
     var c=s.candidate||{};
     var nm=((c.firstName||'')+' '+(c.lastName||'')).trim()||'—';
@@ -2082,7 +2099,9 @@
     if(!log.length){
       histHtml='<div style="color:var(--muted);font-size:.84rem;padding:10px 12px;background:var(--soft);border-radius:10px">ยังไม่มีบันทึกคะแนนรายครั้งสำหรับผู้สอบคนนี้ (ระบบเริ่มบันทึกประวัติแต่ละครั้งตั้งแต่รอบสอบถัดไป) — ด้านบนคือคะแนนล่าสุด</div>';
     } else {
+      var _c2={};log.forEach(function(e){_c2[e.kind]=(_c2[e.kind]||0)+1;if(!e.no)e.no=_c2[e.kind];});
       histHtml=log.map(function(ev,i){
+        if(ev.kind==='reopen')return '<div style="border:1px dashed var(--line);border-radius:11px;padding:9px 13px;font-size:.84rem;color:var(--muted)"><b style="color:var(--brand)">'+xvKindLabel(ev)+'</b> <span>'+xvThaiDT(ev.at)+'</span>'+(ev.reason?('<div>เหตุผล: '+String(ev.reason).replace(/</g,'&lt;')+(ev.by?(' (โดย '+String(ev.by).replace(/</g,'&lt;')+')'):'')+'</div>'):'')+'</div>';
         var kindCol=ev.kind==='remedial'?'var(--warn)':(ev.kind==='edit'?'var(--brand)':'var(--brand-ink,#0A4B8C)');
         var parts=(ev.parts||[]).slice().sort(function(a,b){return a-b;});
         var rows=parts.map(function(p){
@@ -2094,9 +2113,10 @@
         var evTot=(ev.total!=null)?ev.total:parts.reduce(function(a,p){return a+((ev.perPart&&ev.perPart[p])||0);},0);
         var evFull=(ev.full!=null)?ev.full:(parts.length*QPP);
         return '<div style="border:1px solid var(--line);border-left:4px solid '+kindCol+';border-radius:11px;padding:11px 13px;background:var(--panel)">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="color:'+kindCol+'">ครั้งที่ '+(i+1)+'<span class=mdiv></span>'+xvKindLabel(ev.kind)+'</b>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="color:'+kindCol+'">ครั้งที่ '+(i+1)+'<span class=mdiv></span>'+xvKindLabel(ev)+'</b>'
           +'<span style="font-size:.76rem;color:var(--muted)">'+xvThaiDT(ev.at)+'</span></div>'
           +'<div style="display:flex;align-items:center;gap:10px;margin:6px 0 2px;flex-wrap:wrap"><span style="font-weight:800">รวม '+evTot+'/'+evFull+'</span><span class="pill '+(ev.pass?'ok':'wait')+'" style="font-size:.7rem">'+(ev.pass?'ผ่านทุกพาร์ตในครั้งนี้':'ยังมีพาร์ตไม่ผ่าน')+'</span>'+(ev.expired?'<span class="pill bad" style="font-size:.7rem">หมดเวลา</span>':'')+(ev.scoreEdited?'<span class="pill" style="font-size:.7rem;background:var(--brand-tint);color:var(--brand)">แก้ไขโดยทีมงาน</span>':'')+'</div>'
+          +(ev.reason?('<div style="font-size:.8rem;color:var(--muted);margin:4px 0 2px">เหตุผล: '+String(ev.reason).replace(/</g,'&lt;')+(ev.by?(' (โดย '+String(ev.by).replace(/</g,'&lt;')+')'):'')+'</div>'):'')
           +rows+'</div>';
       }).join('');
     }
@@ -2187,8 +2207,8 @@
     var remParts=[],below=[],exhaust=[];
     for(var p2=1;p2<=PARTS_N;p2++){var r=ps[p2];if(!r)continue;if((r.attempts||1)>1)remParts.push(p2);if((r.score||0)<PASS_PART){below.push(p2);if((r.attempts||1)>=MAXATT)exhaust.push(p2);}}
     var log=(s.attemptLog||[]);
-    var remSubs=log.length?log.filter(function(e){return e.kind==='remedial';}).length:remParts.reduce(function(a,p){var r=ps[p];return a+Math.max(0,(r.attempts||1)-1);},0);
-    var perStr=graded.map(function(p){return 'พ.'+p+' '+(ps[p].score||0)+'/'+QPP;}).join('<span class=mdiv></span>');
+    var remSubs=log.length?log.filter(function(e){return e.kind==='remedial'||e.kind==='special';}).length:remParts.reduce(function(a,p){var r=ps[p];return a+Math.max(0,(r.attempts||1)-1);},0);
+    var perStr=graded.map(function(p){return 'พ.'+p+' '+(ps[p].score||0)+'/'+QPP;}).join(' / ');
     var lastAt=s.submittedAt||(log.length?log[log.length-1].at:0);
     var remark=disq?'ตัดสิทธิ์':(passed?(remParts.length===0?'ผ่านรวดเดียว':''):(exhaust.length?('ใช้สิทธิ์ซ่อมครบแล้วยังไม่ผ่าน พาร์ท '+exhaust.join(', ')):''));
     return {s:s,name:((c.firstName||'')+' '+(c.lastName||'')).trim(),phone:c.phone||'',set:xvSetLabel(s),
@@ -2234,11 +2254,12 @@
         var rowOf=function(cn,i){return [i+1,cn.name,cn.phone,cn.set,cn.total,cn.full,cn.pct,cn.result,cn.remCount,xvPlist(cn.remParts),cn.remSubs,xvPlist(cn.below),xvPlist(cn.exhaust),cn.perStr,cn.lastTxt,cn.note,cn.remark];};
         // หัวเรื่อง + คำโปรย (แถว 1-2)
         function titleRows(ws,title,sub,span){
-          ws.mergeCells(1,1,1,span);var t=ws.getCell(1,1);t.value=title;t.font={bold:true,size:18,color:{argb:TITLE}};t.alignment={vertical:'middle'};ws.getRow(1).height=27;
-          ws.mergeCells(2,1,2,span);var s=ws.getCell(2,1);s.value=sub;s.font={size:11,color:{argb:MUTE}};ws.getRow(2).height=18;
+          ws.mergeCells(1,1,1,span);var t=ws.getCell(1,1);t.value=xlClean(title);t.font={bold:true,size:18,color:{argb:TITLE}};t.alignment={vertical:'middle'};ws.getRow(1).height=27;
+          ws.mergeCells(2,1,2,span);var s=ws.getCell(2,1);s.value=xlClean(sub);s.font={size:11,color:{argb:MUTE}};ws.getRow(2).height=18;
         }
         function headerRow(ws,rowIdx,head){var hr=ws.getRow(rowIdx);head.forEach(function(h,i){var c=ws.getCell(rowIdx,i+1);c.value=h;c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:BR}};c.alignment={vertical:'middle',horizontal:'left',wrapText:true};c.border=BORDER;});hr.height=24;}
-        function dataRow(ws,rowIdx,arr,zeb,opt){arr.forEach(function(v,ci){var c=ws.getCell(rowIdx,ci+1);c.value=v;c.font={color:{argb:INK},size:11};c.alignment={vertical:'middle',horizontal:(typeof v==='number'?'center':'left'),wrapText:false};if(zeb)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEBRA}};c.border=BORDER;});
+        function xlClean(v){return (typeof v==='string')?v.replace(/<span class=mdiv><\/span>/g,' / ').replace(/<[^>]+>/g,''):v;}
+        function dataRow(ws,rowIdx,arr,zeb,opt){arr.forEach(function(v,ci){v=xlClean(v);var c=ws.getCell(rowIdx,ci+1);c.value=v;c.font={color:{argb:INK},size:11};c.alignment={vertical:'middle',horizontal:(typeof v==='number'?'center':'left'),wrapText:false};if(zeb)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:ZEBRA}};c.border=BORDER;});
           if(opt&&opt.resultCol){var rc=ws.getCell(rowIdx,opt.resultCol);var col=RESC[arr[opt.resultCol-1]];if(col)rc.font={color:{argb:col},bold:true,size:11};}
           if(opt&&opt.pctCol){ws.getCell(rowIdx,opt.pctCol).numFmt='0%';}}
         function mkTable(name,title,sub,arr){
@@ -2252,7 +2273,7 @@
         var nAll=cands.length,nPass=cands.filter(function(c){return c.passed;}).length,nFail=nAll-nPass;
         var top=byScore[0];var avg=nAll?Math.round(cands.reduce(function(a,c){return a+c.total;},0)/nAll*10)/10:0;
         var clean=cands.filter(function(c){return c.passed&&c.remCount===0;}).length;
-        var totalSubs=cands.reduce(function(a,c){return a+((c.s.attemptLog||[]).length);},0);
+        var totalSubs=cands.reduce(function(a,c){return a+((c.s.attemptLog||[]).filter(function(e){return e.kind!=='reopen';}).length);},0);
         var grp={};cands.forEach(function(c){grp[c.remCount]=(grp[c.remCount]||0)+1;});
         // ---- 1) สรุปภาพรวม ----
         var ws1=wb.addWorksheet('สรุปภาพรวม');ws1.getColumn(1).width=32;ws1.getColumn(2).width=46;
@@ -2264,7 +2285,7 @@
           ['คะแนนเฉลี่ย',avg+' คะแนน'],
           ['ผ่านโดยไม่ต้องสอบซ่อมเลย',clean+' คน'],
           ['ใบผลที่บันทึกรายครั้ง',totalSubs+' ใบ (รวมรอบสอบซ่อม)']];
-        sumRows.forEach(function(pr,i){var r=4+i;var a=ws1.getCell(r,1),b=ws1.getCell(r,2);a.value=pr[0];a.font={color:{argb:MUTE},size:11.5};b.value=pr[1];b.font={bold:true,size:13,color:{argb:BR}};ws1.getRow(r).height=20;});
+        sumRows.forEach(function(pr,i){var r=4+i;var a=ws1.getCell(r,1),b=ws1.getCell(r,2);a.value=pr[0];a.font={color:{argb:MUTE},size:11.5};b.value=xlClean(pr[1]);b.font={bold:true,size:13,color:{argb:BR}};ws1.getRow(r).height=20;});
         var gr=4+sumRows.length+1;ws1.mergeCells(gr,1,gr,2);var gh=ws1.getCell(gr,1);gh.value='แบ่งกลุ่มตามจำนวนพาร์ทที่สอบซ่อม';gh.font={bold:true,size:12,color:{argb:TITLE}};
         Object.keys(grp).sort(function(a,b){return a-b;}).forEach(function(k,i){var r=gr+1+i;var a=ws1.getCell(r,1),b=ws1.getCell(r,2);a.value=(k==='0'?'ผ่าน/สอบรวดเดียว (ไม่ซ่อม)':('ซ่อม '+k+' พาร์ท'));a.font={color:{argb:INK},size:11};b.value=grp[k]+' คน';b.font={bold:true,size:11,color:{argb:INK}};});
         // ---- 2) อันดับคะแนน ----
@@ -2290,9 +2311,12 @@
         });
         // ---- 6) ประวัติรายครั้ง ----
         var hist=[];
-        cands.forEach(function(c){(c.s.attemptLog||[]).forEach(function(e){
-          var perStr=(e.parts||[]).map(function(p){return 'พ.'+p+' '+((e.perPart&&e.perPart[p]!=null)?e.perPart[p]:0)+'/'+QPP;}).join('<span class=mdiv></span>');
-          var roundTxt=(e.kind==='first')?'รอบแรก':(e.kind==='edit')?('ทีมงานปรับคะแนน พาร์ท '+(e.parts||[]).join(', ')):('สอบซ่อม พาร์ท '+(e.parts||[]).join(', '));
+        cands.forEach(function(c){var _cnt={};(c.s.attemptLog||[]).forEach(function(e){
+          if(e.kind==='reopen')return;   // บันทึกการเปิดพาร์ตไม่ใช่การส่งคะแนน
+          _cnt[e.kind]=(_cnt[e.kind]||0)+1; var _no=e.no||_cnt[e.kind];
+          var perStr=(e.parts||[]).map(function(p){return 'พ.'+p+' '+((e.perPart&&e.perPart[p]!=null)?e.perPart[p]:0)+'/'+QPP;}).join(' / ');
+          var roundTxt=(e.kind==='first')?'รอบแรก':(e.kind==='edit')?('ทีมงานปรับคะแนน พาร์ต '+(e.parts||[]).join(', ')+(e.reason?(' ('+e.reason+')'):'')):(e.kind==='special')?('สอบรอบพิเศษ พาร์ต '+(e.parts||[]).join(', ')+(e.reason?(' ('+e.reason+')'):'')):('สอบซ่อมครั้งที่ '+_no+' พาร์ต '+(e.parts||[]).join(', '));
+          if(e.forced)roundTxt+=' [ทีมงานตรวจคะแนนให้'+(e.reason?(': '+e.reason):'')+']';
           hist.push({at:e.at,name:c.name,phone:c.phone,set:c.set,round:roundTxt,score:(e.total!=null?e.total:0),full:(e.full!=null?e.full:((e.parts||[]).length*QPP)),crit:((e.parts||[]).length*PASS_PART),res:(e.pass?'ผ่าน':'ไม่ผ่าน'),per:perStr,rem:xvPlist(e.remedialAfter||[]),pause:(e.pauseUsed||0),edit:(e.scoreEdited?'ใช่':'')});
         });});
         hist.sort(function(a,b){return b.at-a.at;});
@@ -2361,7 +2385,7 @@
       // On-Site is physically proctored — no tab-switch/screenshot decisioning. Suppress the proctor decision UI there.
       var pf=s.proctor||{}, flags=onsite?0:(s.flags||0), susp=onsite?false:xvSusp(s);
       var isRed=susp||(s.status==='disqualified'&&!onsite);
-      var warn=flags?(' <span title="ออกจากหน้าสอบ/สลับแท็บ '+((pf.leave||0)+(pf.blur||0))+' ครั้ง<span class=mdiv></span>ออกจากเต็มจอ '+(pf.fullscreen_exit||0)+'<span class=mdiv></span>พยายามแคปหน้าจอ '+(pf.printscreen||0)+'<span class=mdiv></span>คัดลอก/วาง/ตัด '+((pf.copy||0)+(pf.paste||0)+(pf.cut||0))+'<span class=mdiv></span>คลิกขวา '+(pf.contextmenu||0)+'" style="display:inline-block;background:var(--bad-tint);color:var(--bad);font-weight:800;font-size:.7rem;border-radius:999px;padding:1px 8px;margin-left:6px;cursor:help">⚠ '+flags+'</span>'):'';
+      var warn=flags?(' <span title="ออกจากหน้าสอบ/สลับแท็บ '+((pf.leave||0)+(pf.blur||0))+' ครั้ง / ออกจากเต็มจอ '+(pf.fullscreen_exit||0)+' / พยายามแคปหน้าจอ '+(pf.printscreen||0)+' / คัดลอก/วาง/ตัด '+((pf.copy||0)+(pf.paste||0)+(pf.cut||0))+' / คลิกขวา '+(pf.contextmenu||0)+'" style="display:inline-block;background:var(--bad-tint);color:var(--bad);font-weight:800;font-size:.7rem;border-radius:999px;padding:1px 8px;margin-left:6px;cursor:help">⚠ '+flags+'</span>'):'';
       var nameHtml='<b style="'+(isRed?'color:var(--bad)':'')+'">'+xvName(s)+'</b>'+warn+(!onsite&&s.proctorDecision==='normal'&&flags?' <span style="color:var(--good);font-size:.72rem;font-weight:700">✓ ตรวจแล้ว</span>':'')+rtag;
       // status cell: suspicious+undecided -> decision buttons; else status pill
       var statusCell;
@@ -2390,7 +2414,7 @@
       ]:[
         xvKpi('กำลังสอบ',String(doing),'#0A67D8','อัปเดตแบบเรียลไทม์',doing/tot*100,true),
         xvKpi('ต้องสอบซ่อม',String(rem),'#E8A317','รอผู้สอบทำการสอบซ่อม',rem/tot*100),
-        xvKpi('ยืนยันผ่านแล้ว',String(passed),'#0E9F6E','ผ่านเกณฑ์<span class=mdiv></span>ออกใบรับรอง',passed/tot*100),
+        xvKpi('ยืนยันผ่านแล้ว',String(passed),'#0E9F6E','ผ่านเกณฑ์ ปล่อยผลแล้ว',passed/tot*100),
         xvKpi('รอทีมงานยืนยัน',String(waiting),'#7790B5','ข้อมูลครบ รอกดยืนยัน',waiting/tot*100)
       ];})())
       +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
@@ -2496,7 +2520,7 @@
         xvKpi('ต้องสอบซ่อม',String(remC),'#E8A317','รอผู้สอบทำการสอบซ่อม',remC/tot*100),
         xvKpi('ไม่ผ่านเกณฑ์',String(failC),'#E5484D','ครบ '+MAXATT+' ครั้ง',failC/tot*100)
       ];
-      banner='<div style="background:#F1F6FF;border:1px solid #CBDBFF;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:600;color:var(--brand-ink);font-size:.85rem;line-height:1.55">ℹ️ ระบบบันทึกคะแนนอัตโนมัติเมื่อผู้สอบส่งข้อสอบ — เจ้าหน้าที่พิจารณา “ผลจากเกณฑ์ระบบ” แล้วเซ็นรับรอง ผ่าน/ไม่ผ่าน บนเอกสารหน้างาน ไม่มีการยืนยันผลในระบบ</div>';
+      banner='<div style="background:#F1F6FF;border:1px solid #CBDBFF;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:600;color:var(--brand-ink);font-size:.85rem;line-height:1.55">ℹ️ ระบบบันทึกคะแนนอัตโนมัติเมื่อผู้สอบส่งข้อสอบ — เจ้าหน้าที่พิจารณา “ผลจากเกณฑ์ระบบ” แล้วเซ็นยืนยัน ผ่าน/ไม่ผ่าน บนเอกสารหน้างาน ไม่มีการยืนยันผลในระบบ</div>';
     } else {
       rows=pageList.map(function(s){
         var st=XV_ST[s.status]||{cl:'wait',t:s.status};
@@ -2504,7 +2528,7 @@
         if(s.status==='awaiting_verify') action='<span class="pill wait">รอยืนยัน</span>';
         else if(s.status==='verified') action='<span class="pill ok">✓ ยืนยันแล้ว</span>';
         else if(s.status==='remedial_required') action='<span style="color:var(--muted);font-size:.8rem">รอสอบซ่อม</span>';
-        else if(s.status==='ended_failed') action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่านการรับรอง</span>';
+        else if(s.status==='ended_failed') action='<span style="color:var(--bad);font-size:.8rem;font-weight:700">ไม่ผ่าน</span>';
         return '<tr>'+xvSelBox(s)+'<td class="num">'+(s.code||'—')+'</td><td><b>'+xvName(s)+'</b>'+'<div style="color:var(--muted);font-size:.76rem">ออนไลน์'+(s.roundNo?('<span class=mdiv></span>รอบครั้งที่ '+s.roundNo):'')+'</div></td>'
           +'<td>'+xvPartPills(s)+'</td>'
           +'<td class="num"><b>'+xvTotal(s)+'</b><span style="color:var(--muted)">/'+xvMaxTotal()+'</span></td>'
@@ -2517,7 +2541,7 @@
       kstrip=[
         xvKpi('ผลสอบทั้งหมด',String(list.length),'#0A67D8','ที่ตรวจเสร็จแล้ว',100,true),
         xvKpi('รอยืนยัน',String(awaiting),'#7790B5','รอทีมงานกดยืนยัน',awaiting/tot2*100),
-        xvKpi('ยืนยันผ่านแล้ว',String(vf),'#0E9F6E','ออกใบรับรองแล้ว',vf/tot2*100),
+        xvKpi('ยืนยันผ่านแล้ว',String(vf),'#0E9F6E','ปล่อยผลให้ผู้สอบแล้ว',vf/tot2*100),
         xvKpi('ไม่ผ่าน',String(ef),'#E5484D','ครบ '+MAXATT+' ครั้ง',ef/tot2*100)
       ];
       banner=awaiting?'<div style="background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:var(--brand-ink);font-size:.86rem">มีผลสอบ '+awaiting+' รายการที่ตรวจเสร็จแล้ว รอทีมงานกดยืนยันเพื่อปล่อยผลให้ผู้สอบ</div>':'';
@@ -2530,9 +2554,9 @@
     var expBtn=EXAM_RES_ARCHIVE
       ? '<button onclick="xvExportExcel({archivedOnly:true,round:EXAM_RES_ROUND})" title="ดาวน์โหลดผลสอบที่จัดเก็บ — เลือกรอบจากตัวกรองเพื่อแยกเป็นไฟล์ของรอบนั้น" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ดาวน์โหลด'+(String(EXAM_RES_ROUND)!=='all'?(' รอบครั้งที่ '+EXAM_RES_ROUND):' (ทุกรอบ)')+'</button>'
       : '<button onclick="xvExportExcel()" style="border:1px solid #1D8A54;background:#1D8A54;border-radius:9px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.84rem;color:#fff;cursor:pointer">⬇ ส่งออก Excel</button><button onclick="xvExportResults()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer">CSV</button>';
-    var bulkBar='<div id="resbulk" style="display:none;align-items:center;gap:12px;background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:11px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap"><b style="color:var(--brand-ink)">เลือกไว้ <span id="resbulkn">0</span> รายการ</b><button id="bulkArchive" style="border:0;background:var(--brand);border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.83rem;color:#fff;cursor:pointer">'+(EXAM_RES_ARCHIVE?'♻️ กู้คืนที่เลือก':'🗂️ จัดเก็บที่เลือก')+'</button><button id="bulkClear" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.82rem;color:var(--muted);cursor:pointer">ล้างการเลือก</button></div>';
+    var bulkBar='<div id="resbulk" style="display:none;align-items:center;gap:12px;background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:11px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap"><b style="color:var(--brand-ink)">เลือกไว้ <span id="resbulkn">0</span> รายการ</b>'+(EXAM_RES_ARCHIVE?'':'<button id="bulkVerify" style="border:0;background:var(--good);border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.83rem;color:#fff;cursor:pointer">✓ ยืนยันผลที่เลือก</button>')+'<button id="bulkArchive" style="border:0;background:var(--brand);border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:.83rem;color:#fff;cursor:pointer">'+(EXAM_RES_ARCHIVE?'♻️ กู้คืนที่เลือก':'🗂️ จัดเก็บที่เลือก')+'</button><button id="bulkClear" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.82rem;color:var(--muted);cursor:pointer">ล้างการเลือก</button></div>';
     var arcBanner='<div style="background:#F4F7FB;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:600;color:var(--ink);font-size:.85rem;line-height:1.55">🗂️ คลังจัดเก็บ — รายชื่อที่ย้ายออกจากผลสอบหลัก<span class=mdiv></span>เลือก “รอบครั้งที่” จากตัวกรอง แล้วกด “ดาวน์โหลด” เพื่อได้ไฟล์แยกของรอบนั้น (1 รอบ = 1 ไฟล์)<span class=mdiv></span>กู้คืนได้ทุกเมื่อ</div>';
-    gen.innerHTML=xvHead('ผลการสอบ<span class=mdiv></span>Exam Result',onsite?'On-Site: ระบบแสดงและบันทึกคะแนน<span class=mdiv></span>เจ้าหน้าที่เซ็นรับรองผลบนเอกสารหน้างาน':'ผลสอบ คะแนนรายพาร์ท และการยืนยันผลเพื่อออกใบรับรอง X-Visor')
+    gen.innerHTML=xvHead('ผลการสอบ<span class=mdiv></span>Exam Result',onsite?'On-Site: ระบบแสดงและบันทึกคะแนน<span class=mdiv></span>เจ้าหน้าที่เซ็นยืนยันผลบนเอกสารหน้างาน':'ผลสอบ คะแนนรายพาร์ท และการยืนยันผลเพื่อปล่อยรายงานผลคะแนน')
       +xvKstrip(kstrip)
       +typeTabs
       +tabs
@@ -2557,13 +2581,20 @@
     gen.querySelectorAll('.reskebab').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();examResMenu(b);});});
     var arcT=document.getElementById('resArcToggle');if(arcT)arcT.addEventListener('click',function(){EXAM_RES_ARCHIVE=!EXAM_RES_ARCHIVE;EXAM_RES_SEL={};EXAM_RES_ROUND='all';EXAM_RES_PASS='all';EXAM_RES_PAGE=1;renderExamResult();});
     var bkA=document.getElementById('bulkArchive');if(bkA)bkA.addEventListener('click',function(){xvArchive(xvSelIds(),!EXAM_RES_ARCHIVE);});
+    var bkV=document.getElementById('bulkVerify');if(bkV)bkV.addEventListener('click',function(){
+      var ids=xvSelIds().filter(function(i){var x=(EXAM_CACHE||[]).find(function(y){return y.id===i;});return x&&x.status==='awaiting_verify';});
+      if(!ids.length){xvToast('รายการที่เลือกไม่มีคนที่รอยืนยันผล','bad');return;}
+      xvConfirm('ยืนยันผลหลายคน','ยืนยันผล '+ids.length+' คนที่ผ่านครบและรอยืนยัน ใช่ไหม? ผู้สอบจะเห็นรายงานผลคะแนนทันที','ยืนยันผล '+ids.length+' คน',function(){
+        fetch('/api/xv/admin/sessions/verify-bulk'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY,ids:ids,actor:'staff'})}).then(function(r){return r.json();})
+          .then(function(j){if(j&&j.ok){xvToast('ยืนยันผลแล้ว '+j.verified+' คน','ok');EXAM_RES_SEL={};xvFetch(function(){renderExamResult();});}else xvToast('ยืนยันไม่สำเร็จ','bad');})
+          .catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});});});
     var bkC=document.getElementById('bulkClear');if(bkC)bkC.addEventListener('click',function(){EXAM_RES_SEL={};renderExamResult();});
     updateBulkBar();
     gen.querySelectorAll('.xv-verify').forEach(function(b){
       b.addEventListener('click',function(){
         var id=b.getAttribute('data-id'), nm=b.getAttribute('data-name');
         if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อยืนยันผลจริง','bad');return;}
-        xvConfirm('ยืนยันผลการสอบ','ยืนยันผลของ "'+nm+'" ใช่ไหม? เมื่อยืนยันแล้ว ผู้สอบจะเห็นผลและระบบจะออกใบรับรองให้','ยืนยันผล ✓',function(){
+        xvConfirm('ยืนยันผลการสอบ','ยืนยันผลของ "'+nm+'" ใช่ไหม? เมื่อยืนยันแล้ว ผู้สอบจะเห็นรายงานผลคะแนนทันที','ยืนยันผล ✓',function(){
           b.disabled=true;b.textContent='กำลังยืนยัน…';
           fetch('/api/xv/admin/session/'+id+'/verify'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
             .then(function(r){return r.json();})
@@ -2595,7 +2626,8 @@
     html+=mi('detail','📊','คะแนน & ข้อที่ตอบผิด','var(--brand)');
     if(!EXAM_RES_ARCHIVE&&s.status==='awaiting_verify')html+=mi('verify','✓','ยืนยันผล','var(--good)');
     html+=mi('edit','✎','แก้ไขคะแนน');
-    if(xvReopenEligible(s))html+=mi('reopen','↻','เปิดพาร์ตให้ทำใหม่');
+    if(xvReopenEligible(s).length)html+=mi('reopen','↻','เปิดพาร์ตให้ทำใหม่ (รอบพิเศษ)');
+    if(s.status==='disqualified')html+=mi('undq','↺','ยกเลิกการตัดสิทธิ์','var(--brand)');
     if(s.camPhotos>0)html+=mi('photos','📷','ดูภาพเว็บแคม ('+s.camPhotos+')');
     html+='<div style="height:1px;background:var(--line);margin:4px 6px"></div>';
     if(EXAM_RES_ARCHIVE)html+=mi('restore','♻️','กู้คืนจากคลัง','var(--brand)');
@@ -2610,6 +2642,7 @@
       else if(act==='verify')xvVerifyResult(id,nm);
       else if(act==='edit')xvScoreEdit(id);
       else if(act==='reopen')xvReopenParts(id);
+      else if(act==='undq')xvConfirm('ยกเลิกการตัดสิทธิ์','คืนสถานะเดิมให้ "'+nm+'" ใช่ไหม?','ยกเลิกการตัดสิทธิ์',function(){proctorDecide(id,'normal',nm);});
       else if(act==='photos')xvShowPhotos(id);
       else if(act==='archive')xvArchive([id],true);
       else if(act==='restore')xvArchive([id],false);
@@ -2632,7 +2665,7 @@
   }
   function xvVerifyResult(id,nm){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อยืนยันผลจริง','bad');return;}
-    xvConfirm('ยืนยันผลการสอบ','ยืนยันผลของ "'+nm+'" ใช่ไหม? เมื่อยืนยันแล้ว ผู้สอบจะเห็นผลและระบบจะออกใบรับรองให้','ยืนยันผล ✓',function(){
+    xvConfirm('ยืนยันผลการสอบ','ยืนยันผลของ "'+nm+'" ใช่ไหม? เมื่อยืนยันแล้ว ผู้สอบจะเห็นรายงานผลคะแนนทันที','ยืนยันผล ✓',function(){
       fetch('/api/xv/admin/session/'+id+'/verify'+xvKeyQ(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:OPS_KEY})})
         .then(function(r){return r.json();})
         .then(function(j){if(j&&j.ok){xvToast('ยืนยันผลเรียบร้อย','ok');xvFetch(function(){renderExamResult();});}
@@ -2777,7 +2810,7 @@
     var PER=10, pages=Math.max(1,Math.ceil(shown.length/PER));
     if(REG_PAGE>pages)REG_PAGE=pages; if(REG_PAGE<1)REG_PAGE=1;
     var pageRows=shown.slice((REG_PAGE-1)*PER,REG_PAGE*PER);
-    var rows=pageRows.map(function(r){return regRowHtml(r,onsite);}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">'+(payMode?'ไม่มีรายการชำระเงินที่ต้องตรวจในหมวดนี้':'ยังไม่มีผู้สมัครในหมวดนี้')+'<span class=mdiv></span><a href="/xvisor_register" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></td></tr>';
+    var rows=pageRows.map(function(r){return regRowHtml(r,onsite);}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">'+(payMode?'ไม่มีรายการชำระเงินที่ต้องตรวจในหมวดนี้':'ยังไม่มีผู้สมัครในหมวดนี้')+'<span class=mdiv></span><a href="/xvisor_register_new" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></td></tr>';
     var rangeLbl=shown.length?('แสดง '+((REG_PAGE-1)*PER+1)+'–'+Math.min(REG_PAGE*PER,shown.length)+' จาก '+shown.length):'';
     REG_SHOWN_IDS=shown.map(function(r){return r.id;});
     var regSelN=REG_SHOWN_IDS.filter(function(i){return REG_SEL[i];}).length;
@@ -2790,7 +2823,7 @@
     var note=payMode?'ตรวจสลิปอัตโนมัติด้วย EasySlip — ยอดตรงระบบยืนยันเอง<span class=mdiv></span>แถวนี้คือที่ยังไม่ผ่านอัตโนมัติหรือรอชำระ':'ยอดตรง = ยืนยันการจองอัตโนมัติ<span class=mdiv></span>จัดการผ่านเมนู ⋮ (เช็กอิน<span class=mdiv></span>คืนเงิน<span class=mdiv></span>ยกเลิก)';
     return xvKstrip(kpis)
       +'<div class="etabs" style="margin-bottom:16px">'+seg('online','Online')+seg('onsite','Offline (On-Site)')+'</div>'
-      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(payMode?'ตรวจสอบการชำระเงิน':'ผู้สมัคร')+' '+(onsite?'ที่ศูนย์สอบ':'ออนไลน์')+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><input id="regSearch" type="text" value="'+String(REG_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ / เบอร์ / เลขลงทะเบียน" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;min-width:220px"><a href="/xvisor_register" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></div></div>'
+      +'<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>'+(payMode?'ตรวจสอบการชำระเงิน':'ผู้สมัคร')+' '+(onsite?'ที่ศูนย์สอบ':'ออนไลน์')+' <span style="color:var(--muted);font-weight:600">('+shown.length+')</span></h3><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><input id="regSearch" type="text" value="'+String(REG_Q).replace(/"/g,'&quot;')+'" placeholder="ค้นหา ชื่อ / เบอร์ / เลขลงทะเบียน" style="border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.84rem;min-width:220px"><a href="/xvisor_register_new" target="_blank" class="link">เปิดหน้าลงทะเบียน ↗</a></div></div>'
       +'<p style="color:var(--muted);font-size:.8rem;margin:0 0 12px">'+note+'</p>'
       +regBulk
       +'<div style="overflow-x:auto"><table><thead><tr><th style="width:34px;text-align:center"><input type="checkbox" id="regSelAll" title="เลือก/ยกเลิกทั้งหมด (ทุกหน้า)" '+(regAllChk?'checked':'')+' style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer"></th><th>เลขลงทะเบียน</th><th>ชื่อ–นามสกุล</th><th>รอบสอบ</th><th>การชำระเงิน (EasySlip)</th><th>สถานะ</th><th>การดำเนินการ</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
@@ -2824,12 +2857,12 @@
         +'<td class="num">'+regSeatText(cap,s.confirmed)+(s.pending?('<div style="color:var(--muted);font-size:.72rem">รอชำระ '+s.pending+(s.waitlist?('<span class=mdiv></span>สำรอง '+s.waitlist):'')+'</div>'):(s.waitlist?('<div style="color:var(--muted);font-size:.72rem">สำรอง '+s.waitlist+'</div>'):''))+'</td>'
         +'<td>'+(r.regCloseAt?fmtDateTH(r.regCloseAt):'—')+'</td>'
         +'<td>'+badge+'</td>'
-        +'<td style="text-align:right"><button class="rkebab" onclick="roundMenu(this)" data-id="'+r.id+'" data-code="'+r.code+'" data-no="'+r.no+'" data-date="'+(r.date||'')+'" data-topic="'+String(r.topic||'').replace(/"/g,'&quot;')+'" data-status="'+r.status+'" data-live="'+(r.examLiveToday?1:0)+'" data-mode="'+(r.mode||'online')+'" data-venue="'+String(r.venue||'').replace(/"/g,'&quot;')+'" data-fee="'+((r.fee!=null?r.fee:500))+'" data-close="'+(r.regCloseAt||'')+'" title="จัดการรอบ" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;color:var(--ink);font-weight:800;line-height:1">⋮</button></td>'
+        +'<td style="text-align:right"><button class="rkebab" onclick="roundMenu(this)" data-id="'+r.id+'" data-code="'+r.code+'" data-no="'+r.no+'" data-date="'+(r.date||'')+'" data-topic="'+String(r.topic||'').replace(/"/g,'&quot;')+'" data-status="'+r.status+'" data-live="'+(r.examLiveToday?1:0)+'" data-ended="'+((r.examLiveToday&&r.examRemaining===0)?1:0)+'" data-mode="'+(r.mode||'online')+'" data-venue="'+String(r.venue||'').replace(/"/g,'&quot;')+'" data-fee="'+((r.fee!=null?r.fee:500))+'" data-close="'+(r.regCloseAt||'')+'" title="จัดการรอบ" style="border:1px solid var(--line);background:#fff;border-radius:9px;width:34px;height:34px;cursor:pointer;color:var(--ink);font-weight:800;line-height:1">⋮</button></td>'
         +'</tr>';
     }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px">'+(sq?'ไม่พบรอบสอบตามที่ค้นหา':'ยังไม่มีรอบสอบ — กด “+ สร้างรอบสอบใหม่” เพื่อเริ่ม')+'</td></tr>';
     var schBulk=schSelN?('<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:9px 13px;background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:11px;flex-wrap:wrap"><b style="color:var(--brand-ink);font-size:.86rem">เลือกไว้ '+schSelN+' รอบ</b><button id="schedBulkDel" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:9px;padding:7px 13px;font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer">🗑 ลบรอบที่เลือก</button><button id="schedBulkClear" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.82rem;color:var(--muted);cursor:pointer">ล้างการเลือก</button><span style="color:var(--muted);font-size:.76rem">* ลบได้เฉพาะรอบที่ยังไม่มีผู้สมัคร</span></div>'):'';
     return '<div class="panel"><div class="ph" style="flex-wrap:wrap;gap:10px"><h3>รอบสอบทั้งหมด (Exam Schedules) <span style="color:var(--muted);font-weight:600">('+shownRounds.length+')</span></h3>'
-      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a href="/xvisor_register_new" target="_blank" style="'+btnGhost()+';text-decoration:none;display:inline-flex;align-items:center;gap:6px">เปิดหน้าลงทะเบียน ↗</a><button onclick="roundCreateOpen()" style="'+btnPri()+'">+ สร้างรอบสอบใหม่</button></div></div>'
       +'<input id="schedSearch" value="'+String(REG_SCHED_Q).replace(/"/g,"&quot;")+'" placeholder="ค้นหา วันที่ / ครั้งที่ / สถานที่ / รูปแบบ / สถานะ" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:.9rem;margin-bottom:12px">'
       +'<p style="color:var(--muted);font-size:.8rem;margin:0 0 12px">ที่นั่ง = นับเฉพาะคน<b>ชำระเงินยืนยันแล้ว</b><span class=mdiv></span>คนรอชำระยังไม่กันที่นั่ง<span class=mdiv></span>เมนู ⋮ = เปิด/ปิดรับ<span class=mdiv></span>แก้ไข<span class=mdiv></span>แชร์ลิงก์+QR<span class=mdiv></span>คัดลอกรอบ<span class=mdiv></span>ลบ</p>'
       +schBulk
@@ -2920,7 +2953,6 @@
   // ---- bulk: ยกเลิกการสมัครที่เลือก (ใช้ endpoint เดิม loop ทีละรายการ) ----
   function regBulkCancel(){
     if(!EXAM_LIVE){xvToast('โหมดตัวอย่าง — ใส่ Admin Key เพื่อจัดการจริง','bad');return;}
-    if(!OPS_KEY){xvToast('กรุณาใส่ Admin Key ก่อน','bad');opsUnlock();return;}
     var ids=Object.keys(REG_SEL).filter(function(k){return REG_SEL[k];});
     if(!ids.length){xvToast('ยังไม่ได้เลือกรายการ','bad');return;}
     xvConfirm('ยกเลิกการสมัครที่เลือก','ยกเลิกการสมัคร '+ids.length+' รายการที่เลือกใช่ไหม? (กู้คืนภายหลังได้จากเมนู ⋮)','ยกเลิกที่เลือก',function(){

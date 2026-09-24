@@ -517,14 +517,16 @@ function shrink(file,cb){
   var rd=new FileReader(); rd.onload=function(){ var img=new Image(); img.onload=function(){
       var max=1600, w=img.width, h=img.height, s=Math.min(1,max/Math.max(w,h)); var c=document.createElement('canvas'); c.width=Math.round(w*s); c.height=Math.round(h*s);
       c.getContext('2d').drawImage(img,0,0,c.width,c.height); try{cb(c.toDataURL('image/jpeg',.85));}catch(e){cb(rd.result);} };
-    img.onerror=function(){cb(rd.result);}; img.src=rd.result; }; rd.readAsDataURL(file); }
+    img.onerror=function(){cb('');}; img.src=rd.result; }; rd.onerror=function(){cb('');}; rd.readAsDataURL(file); }
 function wireUpload(zoneId,fileId,key,errKey,title){
   var zone=$('#'+zoneId), file=$('#'+fileId);
   zone.onclick=function(){file.click();};
   zone.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();file.click();}};
   file.onchange=function(){ var f=file.files[0]; if(!f)return;
-    if(f.size>5*1024*1024){ zone.classList.add('err'); zone.querySelector('span').textContent='ไฟล์ใหญ่เกิน 5MB กรุณาเลือกใหม่'; file.value=''; return; }
-    shrink(f,function(data){ ST[key]=data; zone.classList.remove('err'); zone.classList.add('hasf'); setErr(errKey,false);
+    if(f.size>25*1024*1024){ zone.classList.add('err'); zone.querySelector('span').textContent='ไฟล์ใหญ่เกินไป กรุณาใช้ภาพหน้าจอสลิป'; file.value=''; return; }
+    shrink(f,function(data){
+      if(!data||!/^data:image\/(png|jpe?g|webp);base64,/.test(data)||data.length>7.5*1024*1024){ ST[key]=null; zone.classList.remove('hasf'); zone.classList.add('err'); zone.innerHTML='<b>เปิดไฟล์นี้ไม่ได้</b><span>กรุณาใช้ภาพหน้าจอสลิป (JPG หรือ PNG)</span>'; file.value=''; return; }
+      ST[key]=data; zone.classList.remove('err'); zone.classList.add('hasf'); setErr(errKey,false);
       zone.innerHTML='<b>'+title+'แล้ว</b><span>แตะเพื่อเปลี่ยนรูป</span><img src="'+data+'" alt="">'; }); };
 }
 wireUpload('upSlip','slipFile','slipImage','slip','อัปโหลดสลิป');
@@ -536,7 +538,7 @@ $('#submitBtn').onclick=function(){
   if(!ok){firstErr();return;}
   var btn=this; btn.disabled=true; btn.innerHTML='<span class="spin"></span>กำลังบันทึก…';
   var isLead=ST.course==='X-Lead';
-  var payload={firstName:isLead?LEAD.info.firstName:val('firstName'),lastName:isLead?LEAD.info.lastName:val('lastName'),
+  var payload={firstName:isLead?((LEAD.info&&!LEAD.info.masked)?LEAD.info.firstName:''):val('firstName'),lastName:isLead?((LEAD.info&&!LEAD.info.masked)?LEAD.info.lastName:''):val('lastName'),
     phone:isLead?LEAD.phone:val('phone').replace(/[^\d+]/g,''),email:val('email'),taxEmail:val('email'),roundId:ST.roundId,
     coachTeam:coachVal(),referrer:val('referrer')||'-',country:'ประเทศไทย',slipImage:ST.slipImage,consentTerms:true,consentPdpa:true};
   fetch(API+'/api/xv/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
@@ -544,11 +546,13 @@ $('#submitBtn').onclick=function(){
     .then(function(o){
       btn.disabled=false; btn.textContent='ยืนยันการชำระเงิน';
       if(o.s===200&&o.j.ok){showSuccess(o.j);return;}
-      var msg={already_registered:'เลขบัตรนี้ลงทะเบียนรอบนี้ไว้แล้ว ตรวจสอบได้ที่ "การสมัครของฉัน"',round_full:'รอบสอบนี้เต็มแล้ว กรุณาเลือกรอบอื่น',round_closed:'รอบสอบนี้ปิดรับสมัครแล้ว กรุณาเลือกรอบอื่น',bad_national_id:'เลขบัตรประชาชนไม่ถูกต้อง',image_too_big:'ไฟล์รูปใหญ่เกินไป กรุณาเลือกรูปใหม่'}[o.j.error]||'ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
-      alert(msg); if(/round_|bad_national/.test(o.j.error||''))show('form');
+      if(o.j&&o.j.error==='already_registered'&&o.j.regNo){showSuccess(o.j);return;}   // เคยสมัครรอบนี้แล้ว (เช่น เน็ตหลุดแล้วกดซ้ำ) → แสดงเลขที่เดิม
+      var msg={already_registered:'เบอร์นี้ลงทะเบียนรอบนี้ไว้แล้ว ตรวจสอบได้ที่ "การสมัครของฉัน"',bad_slip_format:'เปิดไฟล์สลิปไม่ได้ กรุณาใช้ภาพหน้าจอสลิป (JPG หรือ PNG)',bad_phone:'เบอร์โทรศัพท์ไม่ถูกต้อง',round_full:'รอบสอบนี้เต็มแล้ว กรุณาเลือกรอบอื่น',round_closed:'รอบสอบนี้ปิดรับสมัครแล้ว กรุณาเลือกรอบอื่น',bad_national_id:'เลขบัตรประชาชนไม่ถูกต้อง',image_too_big:'ไฟล์รูปใหญ่เกินไป กรุณาเลือกรูปใหม่'}[o.j.error]||'ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      alert(msg); if(/round_|bad_national|bad_phone/.test(o.j.error||''))show('form');
     }).catch(function(){ btn.disabled=false; btn.textContent='ยืนยันการชำระเงิน'; alert('เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'); });
 };
 
+function startHHMM(ts){var m=String(ts||'').match(/(\d{1,2})[:.](\d{2})/);return m?(('0'+m[1]).slice(-2)+':'+m[2]):'09:30';}
 function showSuccess(j){
   show('success'); $('#sRegNo').textContent=j.regNo; var r=j.round||{};
   try{localStorage.setItem('xv_last_reg',j.regNo);}catch(e){}
@@ -560,9 +564,12 @@ function showSuccess(j){
   $('#sDetail').innerHTML=rows.map(function(x){return '<div class="r"><span>'+x[0]+'</span><b>'+esc(x[1])+'</b></div>';}).join('');
   $('#sNote').innerHTML= j.mode==='onsite'
     ? '<span class="ln">กรุณา<b>เก็บเลขที่การลงทะเบียนไว้</b></span><span class="ln">เมื่อทีมงานตรวจสอบการชำระเงินแล้ว</span><span class="ln">คุณจะได้รับ <b>QR ส่วนตัว</b></span><span class="ln"><span class="ln2">สำหรับให้ทีมงานสแกน</span> <span class="ln2">ที่จุดลงทะเบียนในวันสอบ</span></span>'
-    : '<span class="ln">กรุณา<b>เก็บเลขที่การลงทะเบียนไว้</b></span><span class="ln">ในวันสอบ เข้าหน้า “การสมัครของฉัน”</span><span class="ln">เพื่อ<b>สแตมป์ยืนยันการเข้าร่วม</b></span><span class="ln">ตั้งแต่ 06:00 น. ถึงเวลาเริ่มสอบ</span><span class="ln">ลิงก์ Zoom ทีมงานจะส่งให้ทาง LINE</span>';
+    : '<span class="ln">กรุณา<b>เก็บเลขที่การลงทะเบียนไว้</b></span><span class="ln">ในวันสอบ เข้าหน้า “การสมัครของฉัน”</span><span class="ln">เพื่อ<b>สแตมป์ยืนยันการเข้าร่วม</b></span><span class="ln">ตั้งแต่ 06:00 น. ถึง <span class="nb">'+startHHMM(r.timeslot)+' น.</span></span><span class="ln">ลิงก์ Zoom ทีมงานจะส่งให้ทาง LINE</span>';
   if(PAID.indexOf(j.status)>=0){ loadTicket($('#sTicket')); }
-  else $('#sTicket').innerHTML='<div class="pendq"><span class="ln"><b>QR เข้าสอบส่วนตัว</b></span><span class="ln"><span class="ln2">จะออกให้หลังชำระเงิน</span> <span class="ln2">ผ่านการตรวจสอบ</span></span><span class="ln"><span class="ln2">ดูสถานะและรับ QR ได้ที่</span> <span class="ln2">“การสมัครของฉัน”</span></span>'
+  else if(j.status==='PAYMENT_REVIEW'){ var _n=0; (function poll(){ fetch(API+'/api/xv/reg/status?regNo='+encodeURIComponent(j.regNo)+'&phone='+encodeURIComponent(MY.phone),{cache:'no-store'}).then(function(r){return r.json();}).then(function(x){
+      if(x&&x.ok&&PAID.indexOf(x.status)>=0){ var st=$('#sDetail .r:last-child b'); if(st)st.textContent='ชำระเงินแล้ว'; loadTicket($('#sTicket')); }
+      else if(++_n<6) setTimeout(poll,4000); }).catch(function(){ if(++_n<6) setTimeout(poll,4000); }); })(); }
+  if(PAID.indexOf(j.status)<0) $('#sTicket').innerHTML='<div class="pendq"><span class="ln"><b>QR เข้าสอบส่วนตัว</b></span><span class="ln"><span class="ln2">จะออกให้หลังชำระเงิน</span> <span class="ln2">ผ่านการตรวจสอบ</span></span><span class="ln"><span class="ln2">ดูสถานะและรับ QR ได้ที่</span> <span class="ln2">“การสมัครของฉัน”</span></span>'
     +'<div style="margin-top:12px"><button class="btn ghost" style="width:100%" onclick="openMy(true)">ไปหน้าการสมัครของฉัน</button></div></div>';
 }
 
@@ -617,7 +624,7 @@ function renderMy(){
     +'<span class="tk-badge">'+I_OK.replace(/30/g,'15')+' ชำระเงินแล้ว</span></div>'
     +'<div class="tk-qr" id="tkQr" role="img" aria-label="QR เข้าสอบของ '+esc(t.regNo)+'"></div>'
     +'<div class="tk-lbl">เลขที่ผู้สมัคร</div><div class="tk-no">'+esc(t.regNo)+'</div>'
-    +'<div class="tk-sub">ใช้แทน QR ได้ หากสแกนไม่ติด</div>'
+    +(online?'':'<div class="tk-sub">ใช้แทน QR ได้ หากสแกนไม่ติด</div>')
     +'<div class="tk-rows">'+rows.map(function(x){return '<div class="r"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>';}).join('')+'</div>'
     +hint
     +'<div class="tk-act"><button class="btn ghost" id="tkSave">บันทึก QR ลงเครื่อง</button></div>'
