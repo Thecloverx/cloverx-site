@@ -742,6 +742,16 @@
         </div>
       </div>
 
+      <!-- Member App — แอปลูกค้า (/app) -->
+      <div class="group" id="g-mapp">
+        <button class="item ghead" data-toggle="g-mapp"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg><span class="lbl">Member App</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="children">
+          <button class="item" data-view="mapp-members"><span class="dot"></span><span class="lbl">สมาชิก</span></button>
+          <button class="item" data-view="mapp-content"><span class="dot"></span><span class="lbl">แบนเนอร์และข่าว</span></button>
+          <button class="item" data-view="mapp-learn"><span class="dot"></span><span class="lbl">E-Learning</span></button>
+        </div>
+      </div>
+
       <!-- E-Xam (New) — ระบบใหม่ แยกจากของเดิม ไม่ทับกัน -->
       <div class="group" id="g-examnew">
         <button class="item ghead" data-toggle="g-examnew"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5M22 8v5"/></svg><span class="lbl">E-Xam (New)</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -881,6 +891,9 @@
     'reg-payments':{t:'Payment Verification',th:'ตรวจสอบการชำระเงิน',d:'คิวตรวจสลิป (EasySlip) และการชำระเงิน',kind:'plain'},
     'reg-history':{t:'Registration History',th:'ประวัติการลงทะเบียน',d:'รอบที่ปิด/จบแล้ว — ค้นหาและดูย้อนหลัง',kind:'plain'},
     'exam-overview':{t:'Exam Overview',th:'ภาพรวมการสอบ Certification',d:'สรุปภาพรวมการสอบ X-Visor',kind:'dash'},
+    'mapp-members':{t:'Members',th:'สมาชิก',d:'สมาชิกที่สมัครผ่านแอป',kind:'plain'},
+    'mapp-content':{t:'Banner & News',th:'แบนเนอร์และข่าว',d:'แบนเนอร์หน้าแรกและข่าวสารในแอป',kind:'plain'},
+    'mapp-learn':{t:'E-Learning',th:'E-Learning',d:'คลิปอบรมในแอป',kind:'plain'},
     'exam-reghub':{t:'Register',th:'Register',d:'หน้าลงทะเบียนและการสมัครของฉัน สำหรับ X-Visor และ X-Lead',kind:'plain'},
     'exam-regqr':{t:'QR Management',th:'QR Management',d:'QR สมัครสอบ บัตรเข้าสอบ และสแกนเช็กอิน',kind:'plain'},
     'exam-dashboard':{t:'E-xam Dashboard',th:'Dashboard ภาพรวม E-xam',d:'ผู้สมัคร การยืนยันเข้าร่วม และผลสอบ แยกตามหลักสูตรและทีมโค้ช',kind:'plain'},
@@ -4540,6 +4553,100 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     el.innerHTML=html;
   }
 
+  /* ================= Member App: สมาชิก / แบนเนอร์และข่าว / E-Learning (แอปลูกค้า /app) ================= */
+  var MA={members:null,content:null,q:'',busy:false};
+  function maE(x){ return xdbE(x); }
+  function maDate(ms){ if(!ms)return '-'; var d=new Date(ms); if(isNaN(d))return '-'; return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'}); }
+  function maFetch(u,o){ o=o||{}; var opt={method:o.method||'GET',headers:{},credentials:'same-origin',cache:'no-store'}; if(o.body){opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(o.body);} return fetch(u+xvKeyQ(),opt).then(function(r){return r.json().catch(function(){return {};}).then(function(j){j._s=r.status;return j;});}); }
+  function maShell(title,sub,body){ var g=document.getElementById('view-generic'); g.classList.add('xv');
+    g.innerHTML='<div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px"><div><h1>'+title+'</h1><p>'+sub+'</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="xbtn" href="/app" target="_blank" rel="noopener">เปิดแอปลูกค้า</a></div></div>'+body; return g; }
+  function renderMApp(v){ if(v==='mapp-members')maMembers(); else if(v==='mapp-content')maContent('news'); else if(v==='mapp-learn')maContent('lessons'); }
+  var MA_TBL='width:100%;border-collapse:collapse;font-size:.86rem';
+  var MA_TH='text-align:left;padding:10px 12px;color:var(--muted);font-weight:700;font-size:.76rem;border-bottom:1px solid var(--line);white-space:nowrap';
+  var MA_TD='padding:11px 12px;border-bottom:1px solid #EEF2F7;vertical-align:middle';
+  function maTierPill(t){ return '<span class="pill '+(t==='X-LEAD'?'wait':(t==='X-VISOR'?'ok':'new'))+'">'+maE(t)+'</span>'; }
+  function maMembers(){
+    var g=maShell('Member App<span class=mdiv></span>สมาชิก','สมาชิกที่สมัครผ่านแอป ค้นหา แก้ไขข้อมูล ระงับ หรือลบบัญชี','<section class="xdb-card"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><input id="maQ" value="'+maE(MA.q)+'" placeholder="ค้นหาชื่อ อีเมล หรือเบอร์โทร" style="flex:1;min-width:220px;height:40px;padding:0 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.88rem"><span id="maCount" style="color:var(--muted);font-size:.82rem"></span><button class="xbtn" onclick="MA.members=null;maMembers()">รีเฟรช</button></div><div id="maList" style="overflow-x:auto"><div style="padding:30px;text-align:center;color:var(--muted)">กำลังโหลด…</div></div></section>');
+    var q=document.getElementById('maQ'); q.oninput=function(){ MA.q=q.value; maMemberRows(); };
+    if(MA.members)return maMemberRows();
+    maFetch('/api/m/admin/members').then(function(j){ if(!j.ok){ document.getElementById('maList').innerHTML='<div style="padding:30px;text-align:center;color:var(--bad)">โหลดข้อมูลไม่สำเร็จ'+(j._s===403?' (ต้องล็อกอินพนักงาน)':'')+'</div>'; return; } MA.members=j.members; maMemberRows(); });
+  }
+  function maMemberRows(){ var box=document.getElementById('maList'); if(!box||!MA.members)return;
+    var q=(MA.q||'').trim().toLowerCase(), rows=MA.members.filter(function(m){ return !q||[m.name,m.email,m.phone].join(' ').toLowerCase().indexOf(q)>=0||m.phone.indexOf(q.replace(/\D/g,''))>=0&&q.replace(/\D/g,'').length>=3; });
+    document.getElementById('maCount').textContent=rows.length+' / '+MA.members.length+' คน';
+    if(!rows.length){ box.innerHTML='<div style="padding:30px;text-align:center;color:var(--muted)">'+(MA.members.length?'ไม่พบสมาชิกตามที่ค้นหา':'ยังไม่มีสมาชิก')+'</div>'; return; }
+    box.innerHTML='<table style="'+MA_TBL+'"><thead><tr><th style="'+MA_TH+'">สมาชิก</th><th style="'+MA_TH+'">อีเมล</th><th style="'+MA_TH+'">เบอร์โทร</th><th style="'+MA_TH+'">ระดับ</th><th style="'+MA_TH+'">สมัครเมื่อ</th><th style="'+MA_TH+'">เข้าใช้ล่าสุด</th><th style="'+MA_TH+'"></th></tr></thead><tbody>'
+      +rows.map(function(m){ return '<tr style="'+(m.disabled?'opacity:.55':'')+'"><td style="'+MA_TD+'"><div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:17px;background:#EEF4FF;flex:none;overflow:hidden;display:grid;place-items:center;color:#94A3B8">'+(m.avatar?'<img src="'+maE(m.avatar)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>')+'</span><b>'+maE(m.name)+'</b>'+(m.disabled?' <span class="pill bad">ระงับ</span>':'')+'</div></td>'
+        +'<td style="'+MA_TD+'">'+maE(m.email)+'</td><td style="'+MA_TD+';font-variant-numeric:tabular-nums">'+maE(m.phone)+'</td><td style="'+MA_TD+'">'+maTierPill(m.tier)+'</td><td style="'+MA_TD+';white-space:nowrap">'+maDate(m.createdAt)+'</td><td style="'+MA_TD+';white-space:nowrap">'+maDate(m.lastLoginAt)+'</td>'
+        +'<td style="'+MA_TD+';text-align:right;white-space:nowrap"><button class="xbtn" style="height:34px" onclick="maEditMember(\''+maE(m.id)+'\')">แก้ไข</button></td></tr>'; }).join('')+'</tbody></table>';
+  }
+  function maField(id,label,val,attrs){ return '<label style="display:block;margin-top:12px;font-size:.8rem;font-weight:700;color:var(--muted)">'+label+'<input id="'+id+'" value="'+maE(val||'')+'" '+(attrs||'')+' style="display:block;width:100%;margin-top:6px;height:42px;padding:0 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;color:var(--ink);font-weight:500"></label>'; }
+  function maArea(id,label,val,rows){ return '<label style="display:block;margin-top:12px;font-size:.8rem;font-weight:700;color:var(--muted)">'+label+'<textarea id="'+id+'" rows="'+(rows||4)+'" style="display:block;width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.9rem;color:var(--ink);font-weight:500;resize:vertical">'+maE(val||'')+'</textarea></label>'; }
+  function maBtns(save,extra){ return '<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap"><div>'+(extra||'')+'</div><div style="display:flex;gap:10px"><button onclick="xvSheetClose()" style="'+btnGhost()+'">ยกเลิก</button><button id="maSave" style="'+btnPri()+'">'+save+'</button></div></div>'; }
+  function maEditMember(id){ var m=(MA.members||[]).find(function(x){return x.id===id;}); if(!m)return;
+    xvSheet('<h3 style="font-size:1.12rem">แก้ไขข้อมูลสมาชิก</h3><p style="color:var(--muted);font-size:.84rem;margin-top:4px">เบอร์โทรศัพท์คือรหัสผ่านสำหรับเข้าสู่ระบบของลูกค้า</p>'
+      +maField('meFn','ชื่อจริง',m.firstName)+maField('meLn','นามสกุล',m.lastName)+maField('meEm','อีเมล',m.email,'type="email"')+maField('mePh','เบอร์โทรศัพท์',m.phone,'inputmode="tel"')
+      +'<label style="display:flex;gap:9px;align-items:center;margin-top:14px;font-size:.88rem;font-weight:600"><input id="meDis" type="checkbox" '+(m.disabled?'checked':'')+' style="width:17px;height:17px">ระงับการเข้าใช้งาน</label>'
+      +'<div style="margin-top:16px;font-size:.8rem;font-weight:700;color:var(--muted)">ปลดล็อกการสอบ (ใช้กับบัญชีทดสอบหรือกรณีพิเศษ)</div>'
+      +'<label style="display:flex;gap:9px;align-items:center;margin-top:10px;font-size:.88rem;font-weight:600"><input id="meUx" type="checkbox" '+((m.unlock||{}).xvisor?'checked':'')+' style="width:17px;height:17px">ปลดล็อกสอบ X-Visor</label>'
+      +'<label style="display:flex;gap:9px;align-items:center;margin-top:10px;font-size:.88rem;font-weight:600"><input id="meUl" type="checkbox" '+((m.unlock||{}).lead?'checked':'')+' style="width:17px;height:17px">ปลดล็อกสอบ X-Lead (ปกติต้องผ่าน X-Visor ก่อน)</label>'
+      +maBtns('บันทึก','<button onclick="maDelMember(\''+maE(m.id)+'\')" style="background:none;border:0;color:var(--bad);font-family:inherit;font-weight:700;cursor:pointer">ลบบัญชี</button>'));
+    document.getElementById('maSave').onclick=function(){ var b=this; b.disabled=true;
+      maFetch('/api/m/admin/members/'+encodeURIComponent(id),{method:'POST',body:{firstName:val('meFn'),lastName:val('meLn'),email:val('meEm'),phone:val('mePh'),disabled:document.getElementById('meDis').checked,unlockXvisor:document.getElementById('meUx').checked,unlockLead:document.getElementById('meUl').checked}}).then(function(j){ b.disabled=false;
+        if(j.ok){ xvSheetClose(); xvToast('บันทึกข้อมูลสมาชิกแล้ว','ok'); MA.members=null; maMembers(); } else xvToast({email_taken:'อีเมลนี้มีสมาชิกใช้แล้ว',phone_taken:'เบอร์นี้มีสมาชิกใช้แล้ว',bad_email:'อีเมลไม่ถูกต้อง',bad_phone:'เบอร์โทรไม่ถูกต้อง'}[j.error]||'บันทึกไม่สำเร็จ','bad'); }); };
+    function val(k){ return document.getElementById(k).value.trim(); }
+  }
+  function maDelMember(id){ xvSheetClose(); xvConfirm('ลบบัญชีสมาชิก','ลบบัญชีนี้ถาวรใช่ไหม? ลูกค้าจะเข้าสู่ระบบไม่ได้ และต้องสมัครใหม่ (ข้อมูลคำสั่งซื้อและการสมัครสอบไม่ถูกลบ)','ลบบัญชี',function(){
+    maFetch('/api/m/admin/members/'+encodeURIComponent(id),{method:'DELETE'}).then(function(j){ if(j.ok){ xvToast('ลบบัญชีแล้ว','ok'); MA.members=null; maMembers(); } else xvToast('ลบไม่สำเร็จ','bad'); }); },true); }
+
+  /* ---- คอนเทนต์ ---- */
+  var MA_T={banners:{one:'แบนเนอร์',many:'แบนเนอร์หน้าแรก'},news:{one:'ข่าว',many:'ข่าวสาร (NEWS)'},lessons:{one:'คลิปอบรม',many:'คลิปอบรม (E-LEARNING)'}};
+  function maContent(kind){
+    var lessons=kind==='lessons';
+    var g=maShell(lessons?'Member App<span class=mdiv></span>E-Learning':'Member App<span class=mdiv></span>แบนเนอร์และข่าว',lessons?'คลิปอบรมที่ลูกค้าดูในเมนู E-LEARNING (ใส่ลิงก์ YouTube)':'แบนเนอร์หน้าแรกของแอป และข่าวสารในเมนู NEWS',
+      (lessons?'':'<section class="xdb-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px"><h3 class="xdb-h" style="margin:0">แบนเนอร์หน้าแรก</h3><button class="xbtn pri" onclick="maEdit(\'banners\')">+ เพิ่มแบนเนอร์</button></div><p style="color:var(--muted);font-size:.8rem;margin:0 0 10px">ขนาดรูปแนะนำ 1100 x 490 พิกเซล (แนวนอน)</p><div id="maL_banners"></div></section>')
+      +'<section class="xdb-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px"><h3 class="xdb-h" style="margin:0">'+MA_T[kind].many+'</h3><button class="xbtn pri" onclick="maEdit(\''+kind+'\')">+ เพิ่ม'+MA_T[kind].one+'</button></div><div id="maL_'+kind+'"></div></section>');
+    var go=function(){ if(!lessons)maList('banners'); maList(kind); };
+    if(MA.content)return go();
+    maFetch('/api/m/admin/content').then(function(j){ if(!j.ok){ xvToast('โหลดข้อมูลไม่สำเร็จ','bad'); return; } MA.content=j; go(); });
+  }
+  function maList(type){ var box=document.getElementById('maL_'+type); if(!box)return; var l=(MA.content[type]||[]).slice();
+    l.sort(function(a,b){ return type==='banners'?((a.order||0)-(b.order||0)):((b.at||0)-(a.at||0)); });
+    if(!l.length){ box.innerHTML='<div style="padding:22px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:12px">ยังไม่มี'+MA_T[type].one+'</div>'; return; }
+    box.innerHTML='<div style="display:flex;flex-direction:column;gap:8px">'+l.map(function(x){ var th=x.img||(x.ytId?('https://i.ytimg.com/vi/'+x.ytId+'/mqdefault.jpg'):'');
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--line);border-radius:12px;'+(x.active===false?'opacity:.55':'')+'"><div style="width:'+(type==='banners'?'120px':'96px')+';aspect-ratio:'+(type==='banners'?'367/163':'16/9')+';border-radius:8px;background:#E8EEF7 '+(th?'url(\''+maE(th)+'\') center/cover':'')+';flex:none"></div>'
+        +'<div style="flex:1;min-width:0"><div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+maE(x.title||x.badge||'(ไม่มีชื่อ)')+'</div><div style="color:var(--muted);font-size:.8rem;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+        +maE(type==='banners'?((x.badge?x.badge+'  ':'')+(x.link||'ไม่มีลิงก์')):(type==='lessons'?((x.category||'')+(x.duration?'  '+x.duration:'')):(x.summary||'')))+'</div><div style="color:var(--muted);font-size:.74rem;margin-top:2px">'+maDate(x.at)+(x.active===false?'  ซ่อนอยู่':'')+'</div></div>'
+        +'<button class="xbtn" style="height:34px" onclick="maEdit(\''+type+'\',\''+maE(x.id)+'\')">แก้ไข</button></div>'; }).join('')+'</div>';
+  }
+  var MA_IMG=null;
+  function maEdit(type,id){ var x=id?(MA.content[type]||[]).find(function(y){return y.id===id;}):{}; if(!x)return; MA_IMG=null;
+    var f='';
+    if(type==='banners') f=maField('mcBadge','ป้ายบนแบนเนอร์ (เช่น XIRCLE BAND NYLON)',x.badge)+maField('mcTitle','ชื่อแบนเนอร์ (ใช้เป็นคำอธิบายรูป)',x.title)+maField('mcLink','ลิงก์เมื่อกด (ไม่ใส่ก็ได้)',x.link,'placeholder="/preorder หรือ https://..."')+maField('mcOrder','ลำดับการแสดง',x.order!=null?x.order:'','inputmode="numeric" placeholder="1"');
+    if(type==='news') f=maField('mcTitle','หัวข้อข่าว *',x.title)+maArea('mcSum','สรุปสั้น (แสดงในรายการ)',x.summary,2)+maArea('mcBody','เนื้อหา',x.body,6)+maField('mcLink','ลิงก์เพิ่มเติม (ไม่ใส่ก็ได้)',x.link)
+      +'<label style="display:block;margin-top:12px;font-size:.8rem;font-weight:700;color:var(--muted)">ป้ายหมวด<select id="mcTag" style="display:block;width:100%;margin-top:6px;height:42px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.92rem;background:#fff">'+[['news','ข่าวสาร'],['update','อัพเดท'],['promo','โปรโมชัน']].map(function(t){ return '<option value="'+t[0]+'"'+((x.tag||'news')===t[0]?' selected':'')+'>'+t[1]+'</option>'; }).join('')+'</select></label>'
+      +'<label style="display:flex;gap:9px;align-items:center;margin-top:14px;font-size:.88rem;font-weight:600"><input id="mcPin" type="checkbox" '+(x.pin?'checked':'')+' style="width:17px;height:17px">ปักหมุด (แสดงเป็นข่าวเด่นด้านบนสุด)</label>';
+    if(type==='lessons') f=maField('mcTitle','ชื่อคลิป *',x.title)+maField('mcYt','ลิงก์ YouTube *',x.youtube,'placeholder="https://www.youtube.com/watch?v=..."')+maField('mcCat','หมวดหมู่',x.category,'placeholder="เช่น X-Visor"')+maField('mcIns','ผู้สอน',x.instructor,'placeholder="เช่น ทีม CloverX"')+maField('mcDur','ความยาว',x.duration,'placeholder="เช่น 12 นาที หรือ 1.5 ชั่วโมง"')+maArea('mcSum','คำอธิบาย',x.summary,3);
+    var img=type!=='lessons'||true;
+    xvSheet('<h3 style="font-size:1.12rem">'+(id?'แก้ไข':'เพิ่ม')+MA_T[type].one+'</h3>'+f
+      +(img?'<div style="margin-top:12px;font-size:.8rem;font-weight:700;color:var(--muted)">รูปภาพ'+(type==='lessons'?' (ไม่ใส่ จะใช้ภาพจาก YouTube)':'')+'</div><label style="display:flex;align-items:center;gap:12px;margin-top:6px;padding:10px;border:1.5px dashed #9CC0F5;border-radius:12px;cursor:pointer"><span id="mcPrev" style="width:96px;aspect-ratio:16/9;border-radius:8px;background:#E8EEF7 '+(x.img?'url(\''+maE(x.img)+'\') center/cover':'')+';flex:none"></span><span style="font-size:.86rem;color:#0753C8;font-weight:700">เลือกรูป</span><input type="file" id="mcImg" accept="image/*" style="display:none"></label>':'')
+      +'<label style="display:flex;gap:9px;align-items:center;margin-top:14px;font-size:.88rem;font-weight:600"><input id="mcOn" type="checkbox" '+(x.active===false?'':'checked')+' style="width:17px;height:17px">แสดงในแอป</label>'
+      +maBtns('บันทึก',id?'<button onclick="maDel(\''+type+'\',\''+maE(id)+'\')" style="background:none;border:0;color:var(--bad);font-family:inherit;font-weight:700;cursor:pointer">ลบ</button>':''));
+    var fi=document.getElementById('mcImg'); if(fi)fi.onchange=function(){ var file=fi.files[0]; if(!file)return; var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){ var mx=1600,s=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas'); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s); c.getContext('2d').drawImage(im,0,0,c.width,c.height); MA_IMG=c.toDataURL('image/jpeg',.85); document.getElementById('mcPrev').style.background='url(\''+MA_IMG+'\') center/cover'; }; im.src=rd.result; }; rd.readAsDataURL(file); };
+    document.getElementById('maSave').onclick=function(){ var b=this, v=function(k){ var e=document.getElementById(k); return e?e.value.trim():undefined; };
+      var body={id:id||undefined,title:v('mcTitle'),badge:v('mcBadge'),link:v('mcLink'),order:v('mcOrder'),summary:v('mcSum'),body:v('mcBody'),youtube:v('mcYt'),category:v('mcCat'),duration:v('mcDur'),instructor:v('mcIns'),tag:v('mcTag'),active:document.getElementById('mcOn').checked};
+      var pe=document.getElementById('mcPin'); if(pe)body.pin=pe.checked;
+      Object.keys(body).forEach(function(k){ if(body[k]===undefined)delete body[k]; });
+      if(type!=='banners'&&!body.title){ xvToast('กรุณาใส่หัวข้อ','bad'); return; }
+      if(type==='lessons'&&!body.youtube){ xvToast('กรุณาใส่ลิงก์ YouTube','bad'); return; }
+      if(type==='banners'&&!MA_IMG&&!x.img){ xvToast('กรุณาเลือกรูปแบนเนอร์','bad'); return; }
+      if(MA_IMG)body.image=MA_IMG; b.disabled=true;
+      maFetch('/api/m/admin/content/'+type,{method:'POST',body:body}).then(function(j){ b.disabled=false;
+        if(j.ok){ xvSheetClose(); xvToast('บันทึกแล้ว','ok'); MA.content=null; maContent(type==='lessons'?'lessons':'news'); } else xvToast(j.error==='image_too_big'?'รูปใหญ่เกินไป':'บันทึกไม่สำเร็จ','bad'); }); };
+  }
+  function maDel(type,id){ xvSheetClose(); xvConfirm('ลบ'+MA_T[type].one,'ลบรายการนี้ออกจากแอปใช่ไหม?','ลบ',function(){ maFetch('/api/m/admin/content/'+type+'/'+encodeURIComponent(id),{method:'DELETE'}).then(function(j){ if(j.ok){ xvToast('ลบแล้ว','ok'); MA.content=null; maContent(type==='lessons'?'lessons':'news'); } else xvToast('ลบไม่สำเร็จ','bad'); }); },true); }
+  window.maEditMember=maEditMember; window.maDelMember=maDelMember; window.maEdit=maEdit; window.maDel=maDel; window.maMembers=maMembers; window.MA=MA;
+
   function go(v){
     var isOv=(v==='overview');
     var isExam=(v.indexOf('exam-')===0||v.indexOf('reg-')===0);
@@ -4547,7 +4654,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)

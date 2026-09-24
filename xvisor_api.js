@@ -1338,6 +1338,17 @@ module.exports = function (app, DATA, opts) {
     const all = readReg();
     let r = null;
     if (/^XV1\./.test(code)) r = all.find(x => x.ticket && ('XV1.' + x.ticket) === code);
+    else if (/^CXM1\./.test(code)) {   // QR สมาชิกจากแอป → หาใบสมัครของวันนี้ของสมาชิกคนนั้น
+      const mem = opts.memberByQr ? opts.memberByQr(code) : null;
+      if (!mem) return res.json({ ok: false, result: 'invalid' });
+      const today = bkkNow().date;
+      const mine = all.filter(x => phEq((x.candidate || {}).phone, mem.phone) && ['CANCELLED', 'REJECTED', 'REFUNDED'].indexOf(x.status) < 0)
+        .map(x => ({ x: x, rd: findR(x.roundId) || {} }))
+        .filter(o => o.rd.date === today && (!b.roundId || o.x.roundId === b.roundId));
+      const pick = mine.find(o => PAID_ST.indexOf(o.x.status) >= 0 && (o.x.mode || o.rd.mode) === 'onsite') || mine.find(o => PAID_ST.indexOf(o.x.status) >= 0) || mine[0];
+      if (!pick) return res.json({ ok: false, result: 'no_registration', name: mem.name });
+      r = pick.x;
+    }
     else r = all.find(x => (x.regNo || '').toUpperCase() === code.toUpperCase());
     if (!r) return res.json({ ok: false, result: 'invalid' });
     const round = findR(r.roundId) || {};
@@ -1634,5 +1645,8 @@ module.exports = function (app, DATA, opts) {
     const B = bank(); res.json({ ok: true, names: B.names, counts: setCounts(B) });
   });
 
+  // ให้แอปสมาชิก (member_api) อ่านข้อมูลการสมัคร/ผลสอบได้ (อ่านอย่างเดียว)
+  if (opts) opts.expose = { readReg: readReg, readR: readR, readS: readS, findR: findR, examTypeOf: examTypeOf, sessExamType: sessExamType,
+    openRegRounds: function () { return readR().filter(regOpenForReg).map(function (r) { return Object.assign(pubRound(r), { examType: examTypeOf(r) }); }); } };
   console.log('[x-visor] exam API mounted');
 };

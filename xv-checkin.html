@@ -349,6 +349,7 @@ function showResult(j,code){
     case 'wrong_round': case 'wrong_day': res={title:'QR นี้ไม่ใช่ของรอบนี้',detail:who+'<br>เป็นของ'+esc(roundTxt(j.round))}; break;
     case 'late': res={title:'เลยเวลาเริ่มสอบแล้ว',detail:who+'<br>หมดสิทธิ์เข้าสอบรอบนี้ (เริ่มสอบ '+esc(w.startsAt||'')+' น.)'}; break;
     case 'not_open_yet': res={title:'ยังไม่เปิดเช็กอิน',detail:'เปิดเช็กอินเวลา '+esc(w.opensAt||'06:00')+' น. ของวันสอบ<br>'+who}; break;
+    case 'no_registration': res={title:'ไม่มีใบสมัครสอบวันนี้',detail:who+'<br>สมาชิกคนนี้ไม่มีรอบสอบที่ลงทะเบียนไว้วันนี้'}; break;
     case 'not_paid': res={title:'ยังไม่พร้อมเข้าสอบ',detail:who+'<br>ยังไม่ชำระเงินหรือถูกยกเลิก กรุณาส่งต่อแอดมิน'}; break;
     default: res={title:'ไม่พบ QR นี้ในระบบ',detail:'ลองสแกนอีกครั้ง หรือพิมพ์เลขที่ผู้สมัครแทน'};
   }
@@ -376,7 +377,7 @@ function flush(){
   if(flushing||!S.queue.length)return; flushing=true;
   var item=S.queue[0];
   send(item).then(function(j){ S.queue.shift(); ls('xv_ck_queue',S.queue);
-      addRecent(j.result==='checked_in'?'ok':'bad',({checked_in:'เช็กอินสำเร็จ',duplicate:'เช็กอินไว้แล้ว',late:'มาหลังเวลาเริ่มสอบ',invalid:'QR ไม่ถูกต้อง',not_paid:'ยังไม่พร้อมเข้าสอบ',wrong_round:'ผิดรอบ',wrong_day:'ไม่ใช่วันนี้'}[j.result]||'ส่งแล้ว')+' (ส่งภายหลัง)',j.name||j.regNo||'',item.at);
+      addRecent(j.result==='checked_in'?'ok':'bad',({checked_in:'เช็กอินสำเร็จ',duplicate:'เช็กอินไว้แล้ว',late:'มาหลังเวลาเริ่มสอบ',invalid:'QR ไม่ถูกต้อง',not_paid:'ยังไม่พร้อมเข้าสอบ',wrong_round:'ผิดรอบ',wrong_day:'ไม่ใช่วันนี้',no_registration:'ไม่มีใบสมัครสอบวันนี้'}[j.result]||'ส่งแล้ว')+' (ส่งภายหลัง)',j.name||j.regNo||'',item.at);
       flushing=false; if(S.queue.length)flush(); else loadData(); })
     .catch(function(){ flushing=false; });
 }

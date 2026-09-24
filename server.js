@@ -219,7 +219,11 @@ app.use(function (req, res, next) {
 app.use(express.json({ limit: '10mb' }));
 
 // ---- X-VISOR exam backend (server-side shuffle + scoring) ----
-try { require('./xvisor_api')(app, DATA, { isStaff: function (req) { return !!currentStaff(req); }, staffName: function (req) { var c = currentStaff(req); return c ? (c.name || c.email) : ''; } }); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
+var XV_OPTS = { isStaff: function (req) { return !!currentStaff(req); }, staffName: function (req) { var c = currentStaff(req); return c ? (c.name || c.email) : ''; }, memberByQr: function (code) { return MEMBER_API ? MEMBER_API.memberByQr(code) : null; } };
+var MEMBER_API = null;
+try { require('./xvisor_api')(app, DATA, XV_OPTS); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
+// แอปสมาชิก (/app): สมัคร/ล็อกอิน หน้าแรก ข่าว คลิปอบรม การสอบ คำสั่งซื้อ QR สมาชิก
+try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
 
 // ---- Lean Lab membership & auth (email + LINE + Google) ----
 try { require('./leanlab_api')(app, DATA, { currentStaff: function (req) { return currentStaff(req); } }); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
@@ -1390,7 +1394,7 @@ app.get('/preorder', (req, res, next) => {
 // ---- block source & data files from being served publicly (PDPA / source protection) ----
 app.use(function (req, res, next) {
   var p = decodeURIComponent(req.path || '').toLowerCase().replace(/^\/+/, '');
-  var blocked = ['xvisor_app.html', 'xvisor_app', 'server.js', 'leanlab_api.js', 'xvisor_api.js', 'live_server.js', 'build_exam_deck.js', 'package.json', 'package-lock.json'];
+  var blocked = ['xvisor_app.html', 'xvisor_app', 'server.js', 'leanlab_api.js', 'xvisor_api.js', 'member_api.js', 'returns-alias.json', 'live_server.js', 'build_exam_deck.js', 'package.json', 'package-lock.json'];
   // ไฟล์ระดับ root ที่อ่อนไหว: เฉลยข้อสอบ (xvisor_questions*.json), รายชื่อ (roster/seed), ออเดอร์/นำเข้าลูกค้า (imported/order), และสคริปต์ .mjs
   var rootFile = p.indexOf('/') === -1;
   var sensitiveRoot = rootFile && (/\.mjs$/.test(p) || (/\.json$/.test(p) && /(question|roster|seed|order|import|audit|session|registration)/.test(p)));

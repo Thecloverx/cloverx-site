@@ -843,6 +843,15 @@ $('#tkSave').onclick=function(){
   c.toBlob(function(bl){ if(!bl)return; var u=URL.createObjectURL(bl), a=document.createElement('a'); a.href=u; a.download='QR-'+t.regNo+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},4000); toast('บันทึก QR แล้ว'); },'image/png');
 };
 
+/* ---------- มาจากแอปสมาชิก: เติมข้อมูลจากบัญชีให้อัตโนมัติ ---------- */
+var FROM_APP=/[?&]from=app/.test(location.search);
+if(FROM_APP){ var nb=$('.nav'); if(nb){ var bk=document.createElement('a'); bk.href='/app#exam'; bk.className='mylink'; bk.textContent='กลับไปแอป'; bk.style.marginRight='auto'; bk.style.marginLeft='12px'; var lg=$('#logoHome'); if(lg)lg.after(bk); } }
+fetch('/api/m/me',{cache:'no-store',credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+  if(!j||!j.ok||!j.member)return; var m=j.member;
+  var put=function(id,v){ var e=$('#'+id); if(e&&!e.value&&v){ e.value=v; e.dispatchEvent(new Event('input')); } };
+  put('firstName',m.firstName); put('lastName',m.lastName); put('phone',m.phone); put('email',m.email); put('leadPhone',m.phone);
+}).catch(function(){});
+
 /* ---------- เริ่มต้น ---------- */
 ME=load('xr_me'); if(ME&&!(ME.regNo&&ME.phone))ME=null;
 loadRounds();
