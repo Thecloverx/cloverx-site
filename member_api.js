@@ -127,7 +127,9 @@ module.exports = function (app, DATA, deps) {
     return deps.readOrders().filter(o => o && deps.ownsOrder(o, m.phone, m.email, name))
       .sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0))
       .map(o => ({ id: o.id, at: o.at, total: Number(o.total) || 0, status: o.status || '', pay: o.pay || '', ship: o.ship || '', tracking: o.tracking || o.trackingNo || '',
-        items: (o.items || []).map(it => ({ nm: String(it.nm || it.name || ''), qty: Number(it.qty) || 1, price: Number(it.price) || 0 })) }));
+        items: (o.items || []).map(it => ({ nm: String(it.nm || it.name || ''), qty: Number(it.qty) || 1, price: Number(it.price) || 0, fam: !!it.fam })),
+        hasSlip: !!o.slipUrl, slipCheck: (o.easyslip && o.easyslip.result) || '', note: o.note || '', addr: o.addr || '', name: o.name || '', phone: o.phone || '',
+        log: (Array.isArray(o.statusLog) ? o.statusLog : []).map(x => ({ s: x.s, at: x.at })), confirmedAt: o.confirmedAt || '' }));
   }
   function upcoming(m) {
     const today = bkkDate();
@@ -236,6 +238,64 @@ module.exports = function (app, DATA, deps) {
     if (!staff(req, res)) return; const all = readM(); const n = all.length; writeM(all.filter(x => x.id !== req.params.id));
     const s = readSess(); Object.keys(s).forEach(k => { if (s[k].id === req.params.id) delete s[k]; }); writeSess(s);
     res.json({ ok: true, removed: n - readM().length });
+  });
+
+
+  // ---------- ร้านค้า Pre-Order ในแอป (ราคาและสต๊อกคิดที่เซิร์ฟเวอร์เท่านั้น) ----------
+  const COLORS = { black: 'สีดำ', cream: 'สีครีม' };
+  const CATALOG = [
+    { id: 'triple', nm: 'TRIPLE SET', price: 12480, cat: 'set', colors: ['cream', 'black'], box: ['Xircle Band x1', 'Xircle Smart Scale x1', 'RoutineX Premium Daily Supplements (28 วัน) x1'] },
+    { id: 'duo', nm: 'DUO SET', price: 4990, cat: 'set', colors: ['black', 'cream'], box: ['Xircle Band x1', 'Xircle Smart Scale x1'] },
+    { id: 'band', nm: 'Xircle Band', price: 4590, cat: 'device', colors: ['black', 'cream'], box: ['Xircle Band x1'] },
+    { id: 'scale', nm: 'Xircle Scale', price: 1290, cat: 'device', colors: [], box: ['Xircle Smart Scale x1'] },
+    { id: 'routinex', nm: 'RoutineX', price: 7490, cat: 'supp', colors: [], box: ['RoutineX Premium Daily Supplements (28 วัน) x1'] },
+    { id: 'polo', nm: '[POLO] เสื้อยืดโปโล X-Visor สีกรมท่า', price: 290, was: 590, cat: 'fashion', colors: [], soon: true },
+    { id: 'fam-band', nm: 'Band ครอบครัว', price: 4360, was: 4590, cat: 'family', colors: ['black', 'cream'], fam: true, box: ['Xircle Band x1'] }
+  ];
+  const catById = (id) => CATALOG.find(p => p.id === id);
+  function stockLeft(nm) { // จำนวนชุดที่ยังสั่งได้ (null = ไม่จำกัด)
+    const sh = deps.shop; if (!sh) return null; const st = sh.stock(); const comp = sh.components(nm); let left = null;
+    comp.forEach(k => { if (typeof st[k] === 'number') left = left == null ? st[k] : Math.min(left, st[k]); }); return left == null ? null : Math.max(0, left);
+  }
+  const itemName = (p, c) => p.nm + (c ? ' (' + COLORS[c] + ')' : '');
+  app.get('/api/m/shop', (req, res) => {
+    res.set('Cache-Control', 'no-store'); const sh = deps.shop; const set = sh ? sh.settings() : {};
+    res.json({ ok: true, open: set.preorderOpen !== false, closedTitle: set.closedTitle || '', closedMsg: set.closedMsg || '', round: set.roundTitle || '', closeAt: set.roundCloseAt || '',
+      products: CATALOG.map(p => ({ id: p.id, nm: p.nm, price: p.price, was: p.was || 0, cat: p.cat, fam: !!p.fam, soon: !!p.soon, box: p.box || [],
+        colors: p.colors.map(c => ({ c: c, label: COLORS[c], left: stockLeft(itemName(p, c)) })), left: p.colors.length ? null : stockLeft(p.nm) })) });
+  });
+  app.post('/api/m/checkout', (req, res) => {
+    const m = needMember(req, res); if (!m) return; const sh = deps.shop; if (!sh) return res.status(503).json({ ok: false });
+    const b = req.body || {}; const lines = Array.isArray(b.items) ? b.items.slice(0, 20) : [];
+    const items = [], fam = [], seen = {};
+    for (const l of lines) {
+      const p = catById(String(l.id || '')); if (!p || p.soon) return res.status(400).json({ ok: false, error: 'bad_item' });
+      const c = p.colors.length ? (p.colors.indexOf(l.c) >= 0 ? l.c : '') : ''; if (p.colors.length && !c) return res.status(400).json({ ok: false, error: 'pick_color' });
+      const key = p.id + ':' + c; if (seen[key]) continue; seen[key] = 1;
+      const nm = itemName(p, c); items.push({ nm: nm, price: p.price, fam: !!p.fam });
+      if (p.fam) { const fn = String(l.famName || '').trim().slice(0, 80), fp = thPhone(l.famPhone || ''); if (!fn || fp.length !== 10) return res.status(400).json({ ok: false, error: 'fam_info' }); fam.push({ item: nm, name: fn, phone: fp }); }
+    }
+    if (!items.length) return res.status(400).json({ ok: false, error: 'empty' });
+    if (items.some(i => i.fam) && !items.some(i => !i.fam && /TRIPLE|DUO|Band/i.test(i.nm))) return res.status(400).json({ ok: false, error: 'fam_needs_main' });
+    const a = b.addr || {}; const rn = String(a.name || '').trim().slice(0, 120), rp = thPhone(a.phone || ''), line = String(a.line || '').trim().slice(0, 300);
+    const geo = ['sub', 'dist', 'prov', 'zip'].map(k => String(a[k] || '').trim().slice(0, 60));
+    if (!rn || rp.length !== 10 || !line || !geo[2] || !/^\d{5}$/.test(geo[3])) return res.status(400).json({ ok: false, error: 'bad_addr' });
+    const team = String(b.team || '').trim().slice(0, 40), ref = String(b.ref || '').trim().slice(0, 80);
+    if (!team || !ref) return res.status(400).json({ ok: false, error: 'need_ref' });
+    const pay = b.pay === 'card' ? 'card' : 'bank';
+    const full = line + (geo[0] ? ' ต.' + geo[0] : '') + (geo[1] ? ' อ.' + geo[1] : '') + ' จ.' + geo[2] + ' ' + geo[3];
+    // จำที่อยู่ไว้ใช้ครั้งถัดไป
+    const all = readM(); const x = all.find(y => y.id === m.id); if (x) { x.address = { name: rn, phone: rp, line: line, sub: geo[0], dist: geo[1], prov: geo[2], zip: geo[3] }; x.lastTeam = team; x.lastRef = ref; writeM(all); }
+    const total = items.reduce((t, i) => t + i.price, 0);
+    const o = { name: rn, phone: rp, email: m.email, addr: full, team: team, ref: ref, ship: 'post', pay: pay, items: items, total: total, famMembers: fam,
+      payEmail: pay === 'card' ? m.email : '', note: String(b.note || '').slice(0, 300), source: 'app', _memberId: m.id };
+    sh.placeOrder(o, req).then(r => res.status(r.code).json(r.body));
+  });
+  app.get('/api/m/address', (req, res) => { res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return; res.json({ ok: true, address: m.address || null, team: m.lastTeam || '', ref: m.lastRef || '' }); });
+  app.post('/api/m/orders/:id/slip', (req, res) => {
+    const m = needMember(req, res); if (!m) return; const sh = deps.shop; if (!sh) return res.status(503).json({ ok: false });
+    const id = String(req.params.id || ''); const mine = memberOrders(m).find(o => o.id === id); if (!mine) return res.status(404).json({ ok: false, error: 'not_found' });
+    const r = sh.attachSlip(id, (req.body || {}).image, req); res.status(r.ok ? 200 : 400).json(r);
   });
 
   // QR สมาชิก → ข้อมูลสมาชิก (ใช้ตอนทีมงานสแกนเช็กอิน)

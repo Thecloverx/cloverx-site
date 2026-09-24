@@ -3135,10 +3135,23 @@
       +(on
         ? 'ลูกค้าเปิดลิงก์/สแกน QR แล้วสั่งซื้อได้ตามปกติ — กดปุ่มเพื่อ<b>ปิดรับ</b>เมื่อสินค้าใกล้หมด'
         : 'ลูกค้าที่เปิดลิงก์/สแกน QR จะเห็นหน้า “ปิดรับพรีออเดอร์ชั่วคราว” และสั่งซื้อไม่ได้ — ทีมงานยังพรีวิวฟอร์มได้ที่ <code style="background:var(--soft);padding:1px 5px;border-radius:5px">'+PO_LINK+'?preview=1</code>')
-      +'</p>';
+      +'</p>'
+      +'<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px"><div style="font-weight:700;font-size:.9rem;margin-bottom:4px">รอบสั่งจองในแอปสมาชิก</div>'
+      +'<div style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.55">แสดงเป็นแถบด้านบนหน้าร้านค้าในแอป member.cloverxth.com เว้นว่างไว้ถ้าไม่ต้องการแสดง</div>'
+      +'<div style="display:flex;gap:9px;flex-wrap:wrap"><input id="poRndT" maxlength="60" placeholder="ชื่อรอบ เช่น PRE-ORDER รอบที่ 3" value="'+poEsc(PO_SET.roundTitle||'')+'" style="flex:2 1 200px;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.9rem;box-sizing:border-box">'
+      +'<input id="poRndC" type="datetime-local" value="'+poEsc(PO_SET.roundCloseAt||'')+'" style="flex:1 1 170px;padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.9rem;box-sizing:border-box">'
+      +'<button onclick="poRoundSave()" style="'+btnPri()+'">บันทึกรอบ</button></div>'
+      +'<div style="font-size:.74rem;color:var(--muted);margin-top:6px">วันเวลาปิดรับจอง (เวลาไทย) ใช้นับถอยหลังในแอป</div></div>';
+  }
+  var PO_SET={};
+  function poRoundSave(){
+    var t=document.getElementById('poRndT').value.trim(), c=document.getElementById('poRndC').value;
+    fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roundTitle:t,roundCloseAt:c})})
+      .then(function(r){return r.json();}).then(function(j){ if(!j||!j.ok){xvToast('บันทึกไม่สำเร็จ','bad');return;} PO_SET.roundTitle=j.roundTitle; PO_SET.roundCloseAt=j.roundCloseAt; xvToast('บันทึกรอบสั่งจองแล้ว','ok'); poRenderToggle(); })
+      .catch(function(){xvToast('บันทึกไม่สำเร็จ','bad');});
   }
   function poLoadToggle(){
-    fetch('/api/settings').then(function(r){return r.json();}).then(function(s){PO_OPEN=!!s.preorderOpen;poRenderToggle();}).catch(function(){poRenderToggle();});
+    fetch('/api/settings').then(function(r){return r.json();}).then(function(s){PO_OPEN=!!s.preorderOpen;PO_SET=s||{};poRenderToggle();}).catch(function(){poRenderToggle();});
   }
   /* ===== สต๊อกสินค้า Pre-Order ===== */
   var PO_STOCK=null;

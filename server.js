@@ -132,7 +132,7 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
       const o = list.find(function (x) { return x.id === oid; });
       if (o) {
         const was = o.status;
-        o.status = 'paid';
+        o.status = 'paid'; logStatus(o, 'paid');
         o.stripe = {
           sessionId: s.id || null,
           paymentIntent: s.payment_intent || null,
@@ -223,7 +223,7 @@ var XV_OPTS = { isStaff: function (req) { return !!currentStaff(req); }, staffNa
 var MEMBER_API = null;
 try { require('./xvisor_api')(app, DATA, XV_OPTS); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
 // แอปสมาชิก (/app): สมัคร/ล็อกอิน หน้าแรก ข่าว คลิปอบรม การสอบ คำสั่งซื้อ QR สมาชิก
-try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
+try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); }, shop: { placeOrder: function (o, req) { return placeOrder(o, req); }, attachSlip: function (id, d, req) { return attachSlip(id, d, req); }, settings: function () { return readSettings(); }, stock: function () { return readStock(); }, enforce: function () { return stockEnforceOn(); }, components: function (nm) { return itemComponents(nm); } } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
 
 // ---- Lean Lab membership & auth (email + LINE + Google) ----
 try { require('./leanlab_api')(app, DATA, { currentStaff: function (req) { return currentStaff(req); } }); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
@@ -396,8 +396,14 @@ function createCheckoutSession(o, base, opts) {
     // PromptPay: บังคับใช้ PromptPay อย่างเดียว → Stripe สร้าง QR ที่ "ล็อกยอด" ให้ลูกค้าสแกน (แก้ยอดเองไม่ได้ กันโอนเกิน/ขาด)
     if (opts.method === 'promptpay') { params.push(['payment_method_types[0]', 'promptpay']); }
     params.push(['client_reference_id', o.id]);
-    params.push(['success_url', base + '/preorder?paid=' + encodeURIComponent(o.id)]);
-    params.push(['cancel_url', base + '/preorder']);
+    if (o.source === 'app') { var mb = 'https://' + (process.env.MEMBER_HOST || 'member.cloverxth.com') + '/app';
+      if (/localhost|127\.0\.0\.1/.test(base)) mb = base + '/app';
+      params.push(['success_url', mb + '#order/' + encodeURIComponent(o.id)]);
+      params.push(['cancel_url', mb + '#order/' + encodeURIComponent(o.id)]);
+    } else {
+      params.push(['success_url', base + '/preorder?paid=' + encodeURIComponent(o.id)]);
+      params.push(['cancel_url', base + '/preorder']);
+    }
     params.push(['metadata[order_id]', o.id]);
     if (o.email) params.push(['customer_email', o.email]);
     else if (o.payEmail) params.push(['customer_email', o.payEmail]);
@@ -488,7 +494,7 @@ function autoVerifyBank(orderId, base64raw, base) {
     x.easyslip.amtOk = amtOk; x.easyslip.acctOk = acctOk; x.easyslip.nameOk = nameOk; x.easyslip.dup = dup;
     var autoOff = process.env.EASYSLIP_AUTOCONFIRM === '0';
     if (pass && !autoOff) {
-      x.status = 'confirmed';
+      x.status = 'confirmed'; logStatus(x, 'confirmed');
       if (!x.invoiceNo) { x.invoiceNo = nextInvoiceNo(); x.invoiceAt = new Date().toISOString(); }
       x.confirmedAt = new Date().toISOString();
       x.easyslip.result = 'confirmed';
@@ -503,12 +509,16 @@ function autoVerifyBank(orderId, base64raw, base) {
   });
 }
 
-app.post('/api/orders', (req, res) => {
+// ประวัติสถานะ (ใช้แสดงไทม์ไลน์ในแอปสมาชิก)
+function logStatus(o, st) { o.statusLog = Array.isArray(o.statusLog) ? o.statusLog : []; o.statusLog.push({ s: st, at: new Date().toISOString() }); if (o.statusLog.length > 30) o.statusLog = o.statusLog.slice(-30); }
+// สร้างคำสั่งซื้อ (ใช้ร่วมกันระหว่างหน้า /preorder และแอปสมาชิก) → Promise<{code, body}>
+function placeOrder(o, req) { return new Promise(function (done) {
+  var res = { status: function (c) { return { json: function (b) { done({ code: c, body: b }); } }; }, json: function (b) { done({ code: 200, body: b }); } };
   // ปิดรับพรีออเดอร์: ปฏิเสธคำสั่งซื้อใหม่ (กันออเดอร์หลุดเข้ามาระหว่างปิดรับ)
   if (!readSettings().preorderOpen) {
     return res.status(403).json({ ok: false, error: 'preorder_closed', message: readSettings().closedMsg });
   }
-  const o = req.body || {};
+  o = o || {};
 
   // ===== ตรวจสต๊อก: ถ้าเปิดตัดยอด และของไม่พอ ให้ปฏิเสธก่อนสร้างออเดอร์ =====
   const _need = orderComponents(o.items);
@@ -550,8 +560,10 @@ app.post('/api/orders', (req, res) => {
     pay: o.pay || 'bank', items: Array.isArray(o.items) ? o.items : [], total: Number(o.total) || 0,
     transfer: o.transfer || null, slipUrl,
     famMembers: Array.isArray(o.famMembers) ? o.famMembers : [],
-    payEmail: o.payEmail || '', tax: o.tax || null
+    payEmail: o.payEmail || '', tax: o.tax || null,
+    note: String(o.note || '').slice(0, 300), source: String(o.source || '').slice(0, 20)
   };
+  if (o._memberId) rec.memberId = String(o._memberId).slice(0, 40);
   // จองสต๊อก: บันทึกชิ้นส่วนที่ออเดอร์นี้กิน (เฉพาะ key ที่มีการนับสต๊อก) แล้วตัดจำนวน
   var _used = {};
   STOCK_ORDER.forEach(function (k) { if (typeof _stock[k] === 'number' && (_need[k] || 0) > 0) _used[k] = _need[k]; });
@@ -592,7 +604,20 @@ app.post('/api/orders', (req, res) => {
   } else {
     res.json({ ok: true, id: rec.id });
   }
-});
+}); }
+app.post('/api/orders', (req, res) => { var b = Object.assign({}, req.body || {}); delete b._memberId; placeOrder(b, req).then(function (r) { res.status(r.code).json(r.body); }); });
+// แนบสลิปภายหลัง (แอปสมาชิก): บันทึกไฟล์ + ส่งตรวจ EasySlip เหมือนตอนสั่งซื้อ
+function attachSlip(id, dataUrl, req) {
+  var m = String(dataUrl || '').match(/^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+/=]+)$/i); if (!m) return { ok: false, error: 'bad_image' };
+  var buf = Buffer.from(m[2], 'base64'); if (buf.length > 8 * 1024 * 1024) return { ok: false, error: 'image_too_big' };
+  var list = read(); var o = list.find(function (x) { return x.id === id; }); if (!o) return { ok: false, error: 'not_found' };
+  if (o.pay !== 'bank' || o.status !== 'pending') return { ok: false, error: 'not_pending' };
+  var ext = m[1].toLowerCase().replace('jpeg', 'jpg'); var fn = id + '-' + Date.now().toString(36) + '.' + ext;
+  try { var full = path.join(SLIPS, fn); fs.writeFileSync(full, buf); compressFileInPlace(full, ext); } catch (e) { return { ok: false, error: 'save_failed' }; }
+  o.slipUrl = '/api/slips/' + fn; o.slipAt = new Date().toISOString(); if (o.easyslip) delete o.easyslip.result; write(list);
+  if (easyslipConfigured()) { var base = process.env.PUBLIC_BASE_URL || (((req.headers['x-forwarded-proto'] || 'https')) + '://' + req.headers.host); try { autoVerifyBank(id, m[2], base); } catch (e) {} }
+  return { ok: true, slipUrl: o.slipUrl };
+}
 
 // ---- PDPA masking: หน้าเว็บ/รายงานต้องไม่มีเบอร์เต็ม อีเมล ที่อยู่เต็ม ----
 function maskName(n){ n=String(n||'').trim(); if(!n)return 'ลูกค้า'; var p=n.split(/\s+/); return p[0]+(p.length>1?(' '+p[p.length-1].charAt(0)+'.'):''); }
@@ -665,6 +690,7 @@ app.patch('/api/orders/:id', (req, res) => {
   if (!o) return res.status(404).json({ ok: false });
   const b = req.body || {};
   if (b.status) {
+    if (o.status !== b.status) logStatus(o, String(b.status));
     o.status = b.status;
     // สต๊อก: ยกเลิก/ปฏิเสธ/คืนเงิน → คืนของ; กลับมา active → จองใหม่
     if (STOCK_DEAD[o.status]) releaseStock(o); else reserveStockBack(o);
@@ -1307,7 +1333,7 @@ app.post('/api/orders/:id/invoice', (req, res) => {
 // ---- ตั้งค่า: เปิด/ปิดรับ Pre-Order ----
 app.get('/api/settings', (req, res) => {
   var s = readSettings();
-  res.json({ preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg, stock: readStock(), stockEnforce: s.stockEnforce !== false });
+  res.json({ preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg, stock: readStock(), stockEnforce: s.stockEnforce !== false, roundTitle: s.roundTitle || '', roundCloseAt: s.roundCloseAt || '' });
 });
 
 // ===== สต๊อก Pre-Order: อ่าน/ตั้งค่า จำนวนคงเหลือ (สำหรับหลังบ้าน + หน้าเว็บ) =====
@@ -1321,6 +1347,7 @@ app.get('/api/stock', (req, res) => {
     excluded: [{ key: 'polo', label: 'เสื้อยืดโปโล X-Visor', note: 'ไม่จำกัดสต๊อก' }] });
 });
 app.post('/api/stock', (req, res) => {
+  if (!staffOrKey(req, res)) return; // แก้สต๊อกได้เฉพาะทีมงาน
   var b = req.body || {}, cur = readStock(), next = Object.assign({}, cur), changed = false;
   if (b.stock && typeof b.stock === 'object') {
     STOCK_ORDER.forEach(function (k) {
@@ -1346,14 +1373,17 @@ app.post('/api/stock', (req, res) => {
   res.json({ ok: true, stock: readStock(), enforce: s.stockEnforce !== false });
 });
 app.post('/api/settings', (req, res) => {
+  if (!staffOrKey(req, res)) return; // เปิด/ปิดรับจองได้เฉพาะทีมงาน
   var b = req.body || {};
   var patch = {};
   if (typeof b.preorderOpen === 'boolean') patch.preorderOpen = b.preorderOpen;
   if (typeof b.closedTitle === 'string') patch.closedTitle = b.closedTitle.slice(0, 120);
   if (typeof b.closedMsg === 'string') patch.closedMsg = b.closedMsg.slice(0, 500);
+  if (typeof b.roundTitle === 'string') patch.roundTitle = b.roundTitle.slice(0, 60);
+  if (typeof b.roundCloseAt === 'string') patch.roundCloseAt = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(b.roundCloseAt) ? b.roundCloseAt : '';
   var s = writeSettings(patch);
   console.log('[settings] preorderOpen = ' + s.preorderOpen);
-  res.json({ ok: true, preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg });
+  res.json({ ok: true, preorderOpen: !!s.preorderOpen, closedTitle: s.closedTitle, closedMsg: s.closedMsg, roundTitle: s.roundTitle || '', roundCloseAt: s.roundCloseAt || '' });
 });
 
 // ---- หน้า Pre-Order: ถ้าปิดรับ ให้แสดงหน้า "ปิดรับชั่วคราว" แทนฟอร์มสั่งซื้อ ----

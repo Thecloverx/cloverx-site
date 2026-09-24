@@ -64,7 +64,7 @@ a{color:inherit;text-decoration:none}
 .chk input{width:20px;height:20px;margin:0;accent-color:var(--blue);flex:none}
 .chk.consent{background:#fff;border-radius:14px;padding:14px 16px;margin:6px 0 18px;font-size:13.5px;line-height:1.7;color:var(--mut);border:1px solid transparent;transition:border-color .15s}
 .chk.consent input{margin-top:2px}
-.chk.consent b{color:var(--ink);font-weight:600}
+.chk.consent .ctx{color:#334155;font-size:13.5px;line-height:1.7}
 .chk.consent:has(input:checked){border-color:rgba(37,99,235,.35)}
 .back{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:#fff;margin:20px 0 0 -4px;color:var(--ink)}
 
@@ -338,7 +338,7 @@ a{color:inherit;text-decoration:none}
     <div class="fld"><label for="rgLn">นามสกุล</label><input class="inp" id="rgLn" autocomplete="family-name" placeholder="นามสกุล"></div>
     <div class="fld"><label for="rgEmail">อีเมล</label><input class="inp" id="rgEmail" type="email" inputmode="email" autocomplete="email" placeholder="example@cloverx.com"></div>
     <div class="fld"><label for="rgPhone">เบอร์โทรศัพท์</label><input class="inp" id="rgPhone" inputmode="tel" autocomplete="tel" placeholder="0xx-xxx-xxxx"><div class="hint">เบอร์โทรศัพท์นี้จะใช้เป็นรหัสผ่านสำหรับเข้าสู่ระบบ</div></div>
-    <label class="chk consent"><input type="checkbox" id="rgOk"><span><span class="ln">ข้าพเจ้ายอมรับ<b>เงื่อนไขการใช้งาน</b></span> <span class="ln"><b>การเก็บข้อมูลทางการตลาด</b></span> <span class="ln">และ<b>นโยบายความเป็นส่วนตัว (PDPA)</b></span></span></label>
+    <label class="chk consent"><input type="checkbox" id="rgOk"><span class="ctx"><span class="ln">ข้าพเจ้า</span><span class="ln">ยอมรับ</span><span class="ln">เงื่อนไข</span><span class="ln">การใช้งาน</span> <span class="ln">การเก็บข้อมูลทางการตลาด</span> <span class="ln">และ</span><span class="ln">นโยบาย</span><span class="ln">ความเป็นส่วนตัว (PDPA)</span></span></label>
     <div class="errmsg hide" id="rgErr"></div>
     <button class="btn" type="submit" id="rgGo">สมัครสมาชิก</button>
   </form>
@@ -359,7 +359,7 @@ a{color:inherit;text-decoration:none}
       <h2>การบริการ (Service)</h2>
       <div class="svc-grid">
         <a class="svc-it" href="#news"><span class="ic"><i data-ic="news" data-s="26"></i></span><span>NEWS</span></a>
-        <a class="svc-it" href="#preorder"><span class="ic"><i data-ic="bag" data-s="26"></i></span><span>PRE-ORDER</span></a>
+        <a class="svc-it" href="#shop"><span class="ic"><i data-ic="bag" data-s="26"></i></span><span>PRE-ORDER</span></a>
         <a class="svc-it" href="#learn"><span class="ic"><i data-ic="cap" data-s="28"></i></span><span>E-LEARNING</span></a>
         <a class="svc-it" href="#exam"><span class="ic"><i data-ic="exam" data-s="26"></i></span><span>E-XAM</span></a>
       </div>
@@ -377,14 +377,19 @@ a{color:inherit;text-decoration:none}
 <section class="view has-tab hide" id="v-learn"><div class="bar2w"><a class="bk" href="#home" aria-label="กลับ"><i data-ic="back" data-s="20"></i></a><h1>เรียนออนไลน์ <small>(E-Learning)</small></h1></div><div class="pad" id="learnList"></div></section>
 <section class="view has-tab hide" id="v-lesson"><div class="bar2w"><a class="bk" href="#learn" aria-label="กลับ"><i data-ic="back" data-s="20"></i></a><h1>เรียนออนไลน์ <small>(E-Learning)</small></h1></div><div id="lessonBox"></div></section>
 
-<!-- ===== Pre-Order ===== -->
-<section class="view has-tab hide" id="v-preorder"><div class="bar2w"><a class="bk" href="#home" aria-label="กลับ"><i data-ic="back" data-s="20"></i></a><h1>สั่งจองล่วงหน้า <small>(Pre-Order)</small></h1></div><div class="pad" id="poBox"></div></section>
+<!-- ===== ร้านค้า Pre-Order (app-shop.js) ===== -->
+<section class="view sv has-tab hide" id="v-shop"></section>
+<section class="view sv hide" id="v-product"></section>
+<section class="view sv hide" id="v-cart"></section>
+<section class="view sv hide" id="v-checkout"></section>
+<section class="view sv hide" id="v-done"></section>
+<section class="view sv hide" id="v-order"></section>
 
 <!-- ===== E-XAM ===== -->
 <section class="view has-tab hide" id="v-exam"><div class="xbar"><a href="#home" aria-label="กลับ"><img src="/xm-arrow.svg" width="24" height="24" alt=""></a><h1>E-XAM</h1><button type="button" id="exBell" aria-label="การแจ้งเตือน"><img src="/xm-bell.svg" width="24" height="24" alt=""></button></div><div class="xbody" id="examBox"></div></section>
 
 <!-- ===== คำสั่งซื้อ ===== -->
-<section class="view has-tab hide" id="v-orders"><div class="bar root"><h1>คำสั่งซื้อ</h1></div><div class="pad" id="ordList"></div></section>
+<section class="view sv has-tab hide" id="v-orders"></section>
 
 <!-- ===== โปรไฟล์ ===== -->
 <section class="view has-tab hide" id="v-profile"><div class="bar root"><h1>โปรไฟล์</h1></div><div class="pad" id="profBox"></div></section>
@@ -402,7 +407,7 @@ a{color:inherit;text-decoration:none}
 <nav class="tabbar hide" id="tabbar" aria-label="เมนูหลัก">
   <div class="tabs">
     <a class="tab" href="#home" data-t="home"><i data-ic="home" data-s="22"></i><span>หน้าแรก</span></a>
-    <a class="tab" href="#preorder" data-t="shop"><i data-ic="bag" data-s="22"></i><span>ช้อปปิ้ง</span></a>
+    <a class="tab" href="#shop" data-t="shop"><i data-ic="bag" data-s="22"></i><span>ช้อปปิ้ง</span></a>
     <a class="tab qr" href="#qr" data-t="qr" aria-label="QR CODE"><span class="fab"><i data-ic="clover" data-s="40"></i></span><span>QR CODE</span></a>
     <a class="tab" href="#orders" data-t="orders"><i data-ic="list" data-s="22"></i><span>คำสั่งซื้อ</span></a>
     <a class="tab" href="#profile" data-t="profile"><i data-ic="user" data-s="22"></i><span>โปรไฟล์</span></a>
@@ -471,7 +476,7 @@ var STX={PENDING_PAYMENT:['รอชำระเงิน','warn'],PAYMENT_REVIE
 function ordPill(o){ var s=String(o.status||'').toLowerCase(), sh=String(o.ship||'').toLowerCase();
   if(/refund/.test(s))return ['คืนเงินแล้ว','mut']; if(/reject|cancel/.test(s))return ['ยกเลิก','bad'];
   if(/deliver|success|done|complete/.test(sh))return ['สำเร็จ','ok']; if(/ship|transit|sent/.test(sh))return ['จัดส่งแล้ว','blue'];
-  if(s==='pending')return ['รอชำระเงิน','warn']; if(s==='paid'||s==='confirmed'||s==='no_payment_required')return ['ชำระแล้ว','ok']; return [o.status||'-','mut']; }
+  if(s==='pending')return o.hasSlip?['รอตรวจสอบสลิป','warn']:['รอชำระเงิน','warn']; if(s==='paid'||s==='confirmed'||s==='no_payment_required')return ['ชำระแล้ว','ok']; return [o.status||'-','mut']; }
 function pill(p){return '<span class="pill '+p[1]+'">'+esc(p[0])+'</span>';}
 
 /* ---------- เปลี่ยนหน้า ---------- */
@@ -480,15 +485,20 @@ function route(){
   var h=(location.hash||'#home').slice(1), parts=h.split('/'), v=parts[0]||'home', id=parts[1]||'';
   if(!ME && v!=='register') v='login';
   if(ME && (v==='login'||v==='register')){ location.replace('#home'); return; }
-  var map={login:'login',register:'register',home:'home',news:id?'article':'news',learn:id?'lesson':'learn',preorder:'preorder',exam:'exam',orders:'orders',profile:'profile',qr:'qr'};
+  if(v==='preorder'){ location.replace('#shop'); return; }
+  var SH=window.CXSHOP||{views:[],tabbed:{}};
+  var map={login:'login',register:'register',home:'home',news:id?'article':'news',learn:id?'lesson':'learn',exam:'exam',profile:'profile',qr:'qr'};
+  SH.views.forEach(function(k){ map[k]=k; });
   var sec=map[v]||'home';
   $$('.view').forEach(function(s){s.classList.toggle('hide',s.id!=='v-'+sec);});
-  $('#tabbar').classList.toggle('hide',!ME||sec==='qr');
-  $$('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.t===(v==='preorder'?'shop':(ROOTS[v]?v:'home')));});
+  var shopSub=SH.views.indexOf(sec)>=0&&!SH.tabbed[sec];
+  $('#tabbar').classList.toggle('hide',!ME||sec==='qr'||shopSub);
+  $$('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.t===((sec==='shop'||sec==='product')?'shop':(sec==='order'?'orders':(ROOTS[v]?v:'home'))));});
   stopScan(); if(sec!=='lesson')stopPlayer();
   try{window.scrollTo(0,0);}catch(e){}
-  if(sec==='home')renderHome(); else if(sec==='news')renderNews(); else if(sec==='article')renderArticle(id); else if(sec==='learn')renderLearn(); else if(sec==='lesson')renderLesson(id); else if(sec==='preorder')renderPreorder();
-  else if(sec==='exam')renderExam(); else if(sec==='orders')renderOrders(); else if(sec==='profile')renderProfile(); else if(sec==='qr')renderQR();
+  if(sec==='home')renderHome(); else if(sec==='news')renderNews(); else if(sec==='article')renderArticle(id); else if(sec==='learn')renderLearn(); else if(sec==='lesson')renderLesson(id);
+  else if(SH.views.indexOf(sec)>=0)SH.render(sec,id);
+  else if(sec==='exam')renderExam(); else if(sec==='profile')renderProfile(); else if(sec==='qr')renderQR();
 }
 window.addEventListener('hashchange',route);
 
@@ -507,7 +517,7 @@ $('#loginForm').onsubmit=function(e){ e.preventDefault(); var em=$('#lgEmail').v
 ['lgEmail','lgPhone'].forEach(function(k){ $('#'+k).addEventListener('input',function(){ showErr('lgErr',''); }); });
 $('#forgot').onclick=function(){ sheet('ลืมรหัสผ่าน','<span class="ln">รหัสผ่านคือเบอร์โทรศัพท์ที่ใช้สมัครสมาชิก</span> <span class="ln">หากจำอีเมลหรือเบอร์ที่ใช้สมัครไม่ได้</span> <span class="ln">ติดต่อทีมงานทาง LINE @cloverxth</span>','<a class="btn" href="'+LINE_URL+'" target="_blank" rel="noopener">ติดต่อทาง LINE</a>'); };
 $('#regForm').onsubmit=function(e){ e.preventDefault(); var b={firstName:$('#rgFn').value.trim(),lastName:$('#rgLn').value.trim(),email:$('#rgEmail').value.trim(),phone:$('#rgPhone').value.trim(),consent:$('#rgOk').checked}, btn=$('#rgGo');
-  var d=b.phone.replace(/\D/g,'');
+  var d=b.phone.replace(/\D/g,'').replace(/^66(?=[689]\d{8}$)/,'0'); b.phone=d;
   if(!b.firstName||!b.lastName)return showErr('rgErr','กรุณากรอกชื่อและนามสกุล');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email))return showErr('rgErr','กรุณากรอกอีเมลให้ถูกต้อง');
   if(!/^0[689]\d{8}$/.test(d))return showErr('rgErr','กรุณากรอกเบอร์มือถือ 10 หลัก');
@@ -547,7 +557,7 @@ function renderHome(){
     $('#hmUp').innerHTML=up;
     var o=HOME.latestOrder;
     $('#hmOrd').innerHTML=o?('<a class="card row-card" href="#orders"><div class="tile pk">'+ic('pkg',44,1.6)+'</div><div class="meta"><div class="t">#'+esc(o.id)+'</div><div class="s">'+esc(thDT(Date.parse(o.at)))+' ('+HOME.orderCount+' คำสั่งซื้อ)</div></div>'+pill(ordPill(o))+'</a>')
-      :'<div class="card empty"><span class="ln">ยังไม่มีคำสั่งซื้อ</span> <a class="link" href="#preorder">สั่งซื้อสินค้า</a></div>';
+      :'<div class="card empty"><span class="ln">ยังไม่มีคำสั่งซื้อ</span> <a class="link" href="#shop">สั่งซื้อสินค้า</a></div>';
   };
   if(HOME)paintH(); else $('#hmUp').innerHTML=$('#hmOrd').innerHTML='<div class="card empty">กำลังโหลด…</div>';
   loadHome().then(paintH).catch(function(){ toast('เชื่อมต่อไม่สำเร็จ'); });
@@ -636,30 +646,6 @@ window.addEventListener('pagehide',function(){ saveProg(true); });
 document.addEventListener('visibilitychange',function(){ if(document.hidden)saveProg(true); });
 
 /* ---------- Pre-Order (ข้อมูลสินค้าชุดเดียวกับหน้า /preorder) ---------- */
-var PRODUCTS=[
-  {id:'triple',nm:'TRIPLE SET',desc:'Band + Scale + RoutineX',price:12480,img:'/xr-prod-triple.jpg',cat:'xircle',hot:1},
-  {id:'duo',nm:'DUO SET',desc:'Band + Scale',price:4990,img:'/xr-prod-duo.jpg',cat:'xircle'},
-  {id:'routinex',nm:'RoutineX',desc:'ชุดโภชนาการประจำวัน',price:7490,img:'/xr-prod-routinex.jpg',cat:'routine'},
-  {id:'band',nm:'Xircle Band',desc:'สายรัดข้อมืออัจฉริยะ',price:4590,img:'/xr-prod-band.jpg',cat:'xircle'},
-  {id:'scale',nm:'Xircle Scale',desc:'เครื่องชั่งวิเคราะห์ร่างกาย',price:1290,img:'/xr-prod-scale.jpg',cat:'xircle'},
-  {id:'fam-band',nm:'Band ครอบครัว',desc:'รับส่วนลด 5%',price:4360,was:4590,img:'/xr-prod-fam-band.jpg',cat:'xircle'},
-  {id:'polo',nm:'เสื้อโปโล X-Visor',desc:'สีกรมท่า ระบุไซซ์',price:290,was:590,img:'/polo.jpg',cat:'other',hot:1}
-];
-var PTAB='all', PO_SET=null;
-function renderPreorder(){ var box=$('#poBox');
-  var paintP=function(){ var open=!PO_SET||PO_SET.preorderOpen!==false;
-    var list=PRODUCTS.filter(function(p){ return PTAB==='all'||p.cat===PTAB; });
-    box.innerHTML='<div class="ptabs" role="tablist">'+[['all','ALL'],['xircle','XIRCLE'],['routine','ROUTINE']].map(function(t){ return '<button type="button" data-pt="'+t[0]+'" class="'+(PTAB===t[0]?'on':'')+'">'+t[1]+'</button>'; }).join('')+'</div>'
-      +(open?'':'<div class="closed"><b>'+esc(PO_SET.closedTitle||'ปิดรับสั่งจองชั่วคราว')+'</b><br>'+esc(PO_SET.closedMsg||'ติดตามรอบถัดไปได้ทาง LINE @cloverxth')+'</div>')
-      +'<div class="pgrid">'+list.map(function(p){ return '<div class="card prod"><div class="img" style="'+bgImg(p.img)+'">'+(p.was?'<span class="tag promo">ลดราคา</span>':(p.hot?'<span class="tag pin">ขายดี</span>':''))+'</div><div class="body"><h3>'+esc(p.nm)+'</h3><div class="d">'+esc(p.desc)+'</div><div class="pr"><b>'+baht(p.price)+' ฿</b>'+(p.was?'<s>'+baht(p.was)+'</s>':'')+'</div>'
-        +(open?'<a class="btn" href="/preorder">จองเลย</a>':'<button class="btn" type="button" disabled>ปิดรับจอง</button>')+'</div></div>'; }).join('')+'</div>'
-      +'<div class="hint" style="text-align:center"><span class="ln">กด “จองเลย” เพื่อเลือกสีและชำระเงิน</span> <span class="ln">ในหน้าสั่งจองของ CloverX</span></div>';
-    $$('[data-pt]',box).forEach(function(b){ b.onclick=function(){ PTAB=b.dataset.pt; paintP(); }; });
-  };
-  paintP();
-  api('/api/settings').then(function(j){ if(j&&j._s===200){ PO_SET=j; if(!$('#v-preorder').classList.contains('hide'))paintP(); } }).catch(function(){});
-}
-
 /* ---------- E-XAM ---------- */
 function renderExam(){ var box=$('#examBox'); box.innerHTML='<div class="loading">กำลังโหลด…</div>';
   api('/api/m/exams').then(function(j){ if(j._s===401){ME=null;location.hash='#login';return;} if(!j.ok){box.innerHTML='<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';return;}
@@ -677,16 +663,6 @@ function renderExam(){ var box=$('#examBox'); box.innerHTML='<div class="loading
     $$('[data-reg]',box).forEach(function(b){ b.onclick=function(){ try{ localStorage.setItem('xr_me',JSON.stringify({regNo:b.dataset.reg,phone:ME.phone})); }catch(e){} location.href='/exam-register?from=app#my'; }; });
   }).catch(function(){ box.innerHTML='<div class="card empty">เชื่อมต่อไม่สำเร็จ</div>'; }); }
 
-/* ---------- คำสั่งซื้อ ---------- */
-function renderOrders(){ var box=$('#ordList'); box.innerHTML='<div class="loading">กำลังโหลด…</div>';
-  api('/api/m/orders').then(function(j){ if(j._s===401){ME=null;location.hash='#login';return;} var l=j.orders||[];
-    box.innerHTML=l.length?l.map(function(o){ return '<div class="card ord"><div class="top"><div><div class="id">#'+esc(o.id)+'</div><div class="date" style="margin-top:2px">'+esc(thDT(Date.parse(o.at)))+'</div></div>'+pill(ordPill(o))+'</div>'
-        +'<ul>'+o.items.map(function(it){return '<li>'+esc(it.nm)+(it.qty>1?(' x'+it.qty):'')+'</li>';}).join('')+'</ul>'
-        +(o.tracking?'<div class="date">เลขพัสดุ '+esc(o.tracking)+'</div>':'')+'<div class="tot"><span>ยอดรวม</span><b>'+baht(o.total)+' บาท</b></div></div>'; }).join('')
-      +'<div style="text-align:center;padding:4px 0 8px"><a class="link" href="/return">ขอคืนสินค้า / คืนเงิน</a></div>'
-      :'<div class="card empty"><span class="ln">ยังไม่มีคำสั่งซื้อ</span><div class="cta-row"><a class="btn sm" href="#preorder">สั่งซื้อสินค้า Pre-Order</a></div></div>';
-  }).catch(function(){ box.innerHTML='<div class="card empty">เชื่อมต่อไม่สำเร็จ</div>'; }); }
-
 /* ---------- โปรไฟล์ ---------- */
 function renderProfile(){ var m=ME||{}, tier=(HOME&&HOME.member&&HOME.member.tier)||'PRE X-VISOR';
   $('#profBox').innerHTML='<div class="card prof-top"><button class="av" id="pfAv" aria-label="เปลี่ยนรูปโปรไฟล์">'+avHtml(16)+'</button><div class="nm">'+esc(m.name)+'</div><span class="pill blue">'+esc(tier)+'</span><button class="link" id="pfAv2" type="button" style="margin-top:4px">เปลี่ยนรูปโปรไฟล์</button></div>'
@@ -695,7 +671,7 @@ function renderProfile(){ var m=ME||{}, tier=(HOME&&HOME.member&&HOME.member.tie
     +'<button class="btn danger" type="button" id="pfOut">'+ic('out',18)+'ออกจากระบบ</button>'
     +'<div class="hint" style="text-align:center"><span class="ln">หากต้องการแก้ไขชื่อ อีเมล หรือเบอร์โทรศัพท์</span> <span class="ln">กรุณาติดต่อทีมงานทาง LINE</span></div>';
   $('#pfAv').onclick=pickAvatar; $('#pfAv2').onclick=pickAvatar;
-  $('#pfOut').onclick=function(){ api('/api/m/logout',{method:'POST'}).then(function(){ ME=null; HOME=null; location.hash='#login'; route(); }); };
+  $('#pfOut').onclick=function(){ doLogout(); };
 }
 
 /* ---------- QR ---------- */
@@ -739,6 +715,8 @@ function checkin(code){ SCAN.busy=true; var out=$('#scRes');
   }).catch(function(){ SCAN.busy=false; if(out)out.innerHTML='<div class="result bad"><i>'+ic('x',22,2.6)+'</i><div><b>เชื่อมต่อไม่สำเร็จ</b><small>กรุณาสแกนอีกครั้ง</small></div></div>'; }); }
 
 /* ---------- แผ่นล่าง ---------- */
+function doLogout(){ api('/api/m/logout',{method:'POST'}).then(function(){ if(window.CXSHOP)window.CXSHOP.clearCart(); ME=null; HOME=null; location.hash='#login'; route(); }); }
+window.CXAPP={esc:esc,api:api,toast:toast,baht:baht,thDate:thDate,thDT:thDT,me:function(){return ME;},LINE:LINE_URL,sheet:function(){return sheet.apply(null,arguments);},logout:function(){ ME=null; HOME=null; location.hash='#login'; route(); }};
 function sheet(t,body,act){ var bg=document.createElement('div'); bg.className='sheet-bg'; bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>'+esc(t)+'</h3><p>'+body+'</p>'+(act||'')+'<button class="btn ghost" type="button" style="margin-top:10px">ปิด</button></div>';
   bg.onclick=function(e){ if(e.target===bg||e.target.textContent==='ปิด')bg.remove(); }; document.body.appendChild(bg); }
 
@@ -746,5 +724,6 @@ function sheet(t,body,act){ var bg=document.createElement('div'); bg.className='
 api('/api/m/me').then(function(j){ if(j.ok){ ME=j.member; HOME=j; } route(); }).catch(function(){ route(); });
 })();
 </script>
+<script src="/app-shop.js"></script>
 </body>
 </html>
