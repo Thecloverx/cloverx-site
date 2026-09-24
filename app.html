@@ -310,6 +310,7 @@ a{color:inherit;text-decoration:none}
 @keyframes qlz{0%,100%{top:24px}50%{top:212px}}
 @media (prefers-reduced-motion:reduce){.qframe .laser{animation:none}}
 .qframe .msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;font-size:13px;line-height:1.6;color:#475569;background:#fff}
+.qframe .msg .mb{display:block;width:100%;border:0;border-radius:10px;padding:9px 10px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:#0ea5e9;color:#fff;margin-top:2px}.qframe .msg .mb.ol{background:#fff;color:#0369a1;border:1.5px solid #7dd3fc}
 .qcap{margin-top:16px;color:#e2e8f0;font-size:14px;font-weight:500;text-align:center}
 .qtools{display:flex;gap:48px;margin-top:44px}
 .qtools button{width:54px;height:54px;border-radius:27px;background:#1e293b;color:#fff;display:grid;place-items:center}
@@ -785,21 +786,42 @@ function startScanTab(){ var box=$('#qrScan');
   startCam(); }
 function camMsg(h){ var f=$('#scFr'); if(f)f.innerHTML='<div class="msg">'+h+'</div>'; }
 function loadJsQR(){ return new Promise(function(ok,no){ if(window.jsQR)return ok(); var s=document.createElement('script'); s.src='/xv-jsqr.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
+/* เปิดกล้องสแกน QR: ลองกล้องหลังก่อน ถ้าไม่ได้ลองกล้องใดก็ได้ แล้วแจ้งสาเหตุให้ชัด พร้อมทางเลือกถ่ายรูป QR ด้วยแอปกล้องของเครื่อง */
+function inAppBrowser(){ var u=navigator.userAgent||''; return /Line\/|FBAN|FBAV|FB_IAB|Instagram|TikTok|musical_ly|; wv\)/i.test(u); }
+function camFail(kind){ var inapp=inAppBrowser(), why;
+  if(kind==='lib') why='<span class="ln">โหลดตัวสแกนไม่สำเร็จ</span> <span class="ln">ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่</span>';
+  else if(kind==='nosupport'||inapp) why='<span class="ln">แอปที่เปิดลิงก์นี้</span> <span class="ln">ไม่อนุญาตให้ใช้กล้องสด</span><br><span class="ln">กด "ถ่ายรูป QR" ด้านล่างได้เลย</span> <span class="ln">หรือเปิดลิงก์นี้ใน</span> <span class="ln">Chrome หรือ Safari</span>';
+  else if(kind==='NotAllowedError'||kind==='SecurityError') why='<span class="ln">ยังไม่ได้อนุญาตให้ใช้กล้อง</span><br><span class="ln">แตะไอคอนข้างช่องลิงก์ด้านบน</span> <span class="ln">เลือก "สิทธิ์" แล้วอนุญาตกล้อง</span>';
+  else if(kind==='NotReadableError'||kind==='AbortError') why='<span class="ln">กล้องกำลังถูกใช้งานโดยแอปอื่น</span> <span class="ln">ปิดแอปนั้นแล้วลองใหม่</span>';
+  else if(kind==='NotFoundError'||kind==='OverconstrainedError') why='<span class="ln">ไม่พบกล้องในเครื่องนี้</span>';
+  else why='<span class="ln">เปิดกล้องไม่ได้</span>';
+  camMsg('<p style="margin:0 0 6px">'+why+'</p><button type="button" class="mb" id="scShot">ถ่ายรูป QR</button>'+(kind==='lib'||kind==='nosupport'||inapp?'':'<button type="button" class="mb ol" id="scRetry">ลองเปิดกล้องอีกครั้ง</button>'));
+  var s=$('#scShot'); if(s)s.onclick=function(){ pickQrImage(true); };
+  var r=$('#scRetry'); if(r)r.onclick=function(){ var f=$('#scFr'); if(f)f.innerHTML='<video id="scVid" playsinline muted></video><div class="laser"></div>'; startCam(); }; }
+function getCam(){ var md=navigator.mediaDevices;
+  return md.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false}).catch(function(e){
+    if(e&&(e.name==='NotAllowedError'||e.name==='SecurityError'))throw e;
+    return md.getUserMedia({video:true,audio:false}); }); }
 function startCam(){ var v=$('#scVid'); if(!v)return;
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ camMsg('<span class="ln">เครื่องนี้เปิดกล้องจากเบราว์เซอร์ไม่ได้</span> <span class="ln">กดปุ่มรูปภาพเพื่อเลือกรูป QR แทน</span>'); return; }
-  Promise.all([loadJsQR(),navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})]).then(function(r){
-    if(QTAB!=='scan'||$('#v-qr').classList.contains('hide')){ r[1].getTracks().forEach(function(t){t.stop();}); return; }
-    SCAN.stream=r[1]; v.srcObject=r[1]; v.play(); var c=document.createElement('canvas'), g=c.getContext('2d',{willReadFrequently:true});
-    try{ var t=r[1].getVideoTracks()[0], cap=t.getCapabilities&&t.getCapabilities(); if(cap&&cap.torch)$('#scTorch').disabled=false; }catch(e){}
-    (function tick(){ if(!SCAN.stream)return; if(v.readyState>=2&&!SCAN.busy){ var w=Math.min(640,v.videoWidth), h=Math.round(v.videoHeight*w/v.videoWidth); c.width=w; c.height=h; g.drawImage(v,0,0,w,h);
-        var q=window.jsQR(g.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'}); if(q&&q.data&&!(q.data===SCAN.last&&Date.now()-SCAN.lastAt<4000)){ SCAN.last=q.data; SCAN.lastAt=Date.now(); onScan(q.data); } }
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ camFail('nosupport'); return; }
+  loadJsQR().then(function(){ return getCam().then(function(st){
+    if(QTAB!=='scan'||$('#v-qr').classList.contains('hide')){ st.getTracks().forEach(function(t){t.stop();}); return; }
+    v=$('#scVid'); SCAN.stream=st; v.setAttribute('playsinline',''); v.muted=true; v.srcObject=st; var pl=v.play(); if(pl&&pl.catch)pl.catch(function(){});
+    var c=document.createElement('canvas'), g=c.getContext('2d',{willReadFrequently:true}), n=0;
+    try{ var t=st.getVideoTracks()[0], cap=t.getCapabilities&&t.getCapabilities(); if(cap&&cap.torch)$('#scTorch').disabled=false; }catch(e){}
+    (function tick(){ if(!SCAN.stream)return; if(v.readyState>=2&&v.videoWidth&&!SCAN.busy){ var w=Math.min(720,v.videoWidth), h=Math.round(v.videoHeight*w/v.videoWidth); c.width=w; c.height=h; g.drawImage(v,0,0,w,h);
+        var q=window.jsQR(g.getImageData(0,0,w,h).data,w,h,{inversionAttempts:(++n%4===0)?'attemptBoth':'dontInvert'}); if(q&&q.data&&!(q.data===SCAN.last&&Date.now()-SCAN.lastAt<4000)){ SCAN.last=q.data; SCAN.lastAt=Date.now(); onScan(q.data); } }
       SCAN.raf=requestAnimationFrame(tick); })();
-  }).catch(function(){ camMsg('<span class="ln">เปิดกล้องไม่ได้</span> <span class="ln">กรุณาอนุญาตการใช้กล้องในเบราว์เซอร์</span> <span class="ln">หรือกดปุ่มรูปภาพเพื่อเลือกรูป QR</span>'); }); }
-function pickQrImage(){ var f=document.createElement('input'); f.type='file'; f.accept='image/*';
+  }).catch(function(e){ camFail((e&&e.name)||'other'); }); }, function(){ camFail('lib'); }); }
+/* อ่าน QR จากรูป (ถ่ายด้วยแอปกล้อง หรือเลือกจากคลังภาพ) — ลองหลายขนาดเพื่อให้อ่านรูปจากมือถือได้แม่นขึ้น */
+function decodeQrImage(im){ var sizes=[1000,700,1400,500], c=document.createElement('canvas'), g=c.getContext('2d',{willReadFrequently:true});
+  for(var i=0;i<sizes.length;i++){ var s=Math.min(1,sizes[i]/Math.max(im.width,im.height)); c.width=Math.max(1,Math.round(im.width*s)); c.height=Math.max(1,Math.round(im.height*s)); g.drawImage(im,0,0,c.width,c.height);
+    var q=window.jsQR(g.getImageData(0,0,c.width,c.height).data,c.width,c.height,{inversionAttempts:'attemptBoth'}); if(q&&q.data)return q.data; }
+  return null; }
+function pickQrImage(shoot){ var f=document.createElement('input'); f.type='file'; f.accept='image/*'; if(shoot===true)f.setAttribute('capture','environment');
   f.onchange=function(){ var file=f.files[0]; if(!file)return; var u=URL.createObjectURL(file), im=new Image();
-    im.onload=function(){ loadJsQR().then(function(){ var s=Math.min(1,1200/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s); var g=c.getContext('2d'); g.drawImage(im,0,0,c.width,c.height);
-        var q=window.jsQR(g.getImageData(0,0,c.width,c.height).data,c.width,c.height,{inversionAttempts:'attemptBoth'}); URL.revokeObjectURL(u);
-        if(q&&q.data)onScan(q.data); else showRes('bad','x','ไม่พบ QR ในรูปนี้','ลองเลือกรูปที่เห็น QR ชัดเจน'); }); };
+    im.onload=function(){ loadJsQR().then(function(){ var d=decodeQrImage(im); URL.revokeObjectURL(u);
+        if(d)onScan(d); else showRes('bad','x','ไม่พบ QR ในรูปนี้','ถ่ายให้ QR อยู่กลางภาพ ชัด และไม่สะท้อนแสง แล้วลองใหม่'); }, function(){ showRes('bad','x','โหลดตัวสแกนไม่สำเร็จ','ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }); };
     im.onerror=function(){ showRes('bad','x','เปิดรูปไม่ได้','ลองเลือกรูปอื่น'); }; im.src=u; };
   f.click(); }
 function showRes(kind,icn,title,sub,btns){ var out=$('#scRes'); if(!out)return;
