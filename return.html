@@ -158,15 +158,17 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
 .other-box.on{display:block}
 
 /* ---- item cards ---- */
-.ck{display:flex;align-items:center;gap:16px;background:var(--card);border:2px solid var(--bd);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .15s;box-shadow:0 2px 4px rgba(0,0,0,.01)}
+.ck{display:flex;align-items:center;gap:14px;background:var(--card);border:2px solid var(--bd);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .15s;box-shadow:0 2px 4px rgba(0,0,0,.01)}
 .ck.on{border-color:var(--pri-ink)}
-.ck .box{width:32px;height:32px;border-radius:8px;border:2px solid var(--bd);background:var(--card);flex:0 0 auto;display:grid;place-items:center;color:#fff;transition:.15s}
+.ck .box{width:24px;height:24px;border-radius:7px;border:2px solid var(--bd);background:var(--card);flex:0 0 auto;display:grid;place-items:center;color:#fff;transition:.15s}
 .ck.on .box{background:var(--pri);border-color:var(--pri)}
-.ck .box svg.i{width:20px;height:20px;opacity:0}
+.ck .box svg.i{width:15px;height:15px;stroke-width:3;opacity:0}
 .ck.on .box svg.i{opacity:1}
-.ck .ptile{width:64px;height:64px;border-radius:8px}
-.ck .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:16px;line-height:24px;font-weight:700}
-.ck .info .pr{color:var(--pri-ink)}
+.ck .ptile{width:60px;height:60px;border-radius:10px;flex:0 0 auto}
+.ck .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ck .info .t1{font-size:15px;line-height:21px;font-weight:700;color:var(--ink,inherit);text-wrap:balance}
+.ck .info .t2{font-size:13px;line-height:18px;font-weight:500;color:var(--sub2)}
+.ck .info .pr{color:var(--pri-ink);font-size:16px;line-height:22px;font-weight:700;margin-top:3px}
 .ck .info .pr.zero{color:var(--sub2)}
 .tot-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .tot-row .k{font-size:16px;line-height:24px;font-weight:600}
@@ -344,6 +346,7 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
         <p class="p-sub">แตะเครื่องหมายถูกเฉพาะชิ้นที่ท่านจะคืน</p>
       </div>
       <div id="itemList" style="display:flex;flex-direction:column;gap:16px"></div>
+      <p class="p-sub" style="color:#b91c1c;font-size:13px;line-height:20px">รับคืนเฉพาะ Xircle Band และ Xircle Scale<br>RoutineX คืนไม่ได้ทุกกรณี (เก็บ RoutineX ไว้)<br>ยอดคืนตามราคาที่ชำระจริง</p>
     </div>
     <div class="cta panel">
       <div class="tot-row"><span class="k">ยอดคืนเงิน</span><span class="v num" id="itemTotal">฿0</span></div>
@@ -533,7 +536,10 @@ var RET_ST={awaiting_shipment:{l:'รอจัดส่งสินค้าค�
 function retForOrder(oid){return MYRET.filter(function(r){return r.orderId===oid&&r.status!=='cancelled';})[0];}
 function fmtDate(iso){try{var d=new Date(iso);var M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return d.getDate()+' '+M[d.getMonth()]+' '+(d.getFullYear()+543);}catch(e){return '';}}
 function fmtDateTime(iso){try{var d=new Date(iso);function p(n){return('0'+n).slice(-2);}return fmtDate(iso)+' - '+p(d.getHours())+':'+p(d.getMinutes());}catch(e){return '';}}
-function setPrice(s){return (s.comps||[]).reduce(function(a,c){return a+(Number(c.est)||0);},0);}
+/* ยอดคืนตามราคาที่ชำระจริง ไม่เฉลี่ย / RoutineX คืนไม่ได้ทุกกรณี */
+function setPrice(s){return Number(s.refund)||0;}
+function setAble(s){return s.returnable!==false&&setPrice(s)>0;}
+function setPart(s){var cs=s.comps||[];if(!cs.some(function(c){return c.key==='routinex';}))return '';return cs.filter(function(c){return c.key!=='routinex';}).map(function(c){return compLabel(c.key,c.label);}).join(' + ');}
 function renderOrders(){
   var h='';
   var active=MYRET.filter(function(r){return r.status!=='cancelled';});
@@ -542,15 +548,16 @@ function renderOrders(){
     var ret=retForOrder(o.id);
     var sets=o.sets&&o.sets.length?o.sets:[{nm:'',comps:[]}];
     var items=sets.map(function(s){
-      var pp=parseProd(s.nm||'');var price=sets.length===1?o.total:(setPrice(s)||0);
-      return '<div class="oc-item">'+ptile(setImgKey(s.nm)||(s.comps[0]||{}).key||'')+'<div class="inf"><div class="nm">'+esc(prodTitle(pp))+'</div>'+(pp.tag?('<div class="cl">'+esc(colorLine(pp.tag))+'</div>'):'')+'<div class="pr num">'+baht(price)+'</div></div></div>';
+      var pp=parseProd(s.nm||'');var price=setPrice(s);
+      return '<div class="oc-item">'+ptile(setImgKey(s.nm)||(s.comps[0]||{}).key||'')+'<div class="inf"><div class="nm">'+esc(prodTitle(pp))+'</div>'+(pp.tag?('<div class="cl">'+esc(colorLine(pp.tag))+'</div>'):'')+'<div class="pr num">'+(setAble(s)?('ยอดคืนได้ '+baht(price)):'<span style="color:#b91c1c">คืนไม่ได้</span>')+'</div></div></div>';
     }).join('<div class="hr"></div>');
     var foot;
     if(ret){var st=RET_ST[ret.status]||{l:ret.status,c:'pend'};
       foot='<button class="oc-track" onclick="viewTrack()"><span class="rid"><span>คำขอคืน <span class="num">'+esc(ret.rid)+'</span></span><span class="tag '+st.c+'">'+st.l+'</span></span>'+ic('chev')+'</button>';
     }else{
       foot='<div class="oc-acts">'
-        +(RET_OPEN?'<button class="btn outline" onclick=\'startReturn("'+o.id+'","return")\'>ขอคืนสินค้า / คืนเงิน</button>'
+        +(!sets.some(setAble)?'<div class="note warn">'+ic('clock')+'<span>คำสั่งซื้อนี้ไม่มีรายการที่รับคืนได้ (รับคืนเฉพาะ Xircle Band และ Xircle Scale)</span></div>'
+          :RET_OPEN?'<button class="btn outline" onclick=\'startReturn("'+o.id+'","return")\'>ขอคืนสินค้า / คืนเงิน</button>'
           :'<div class="note warn">'+ic('clock')+'<span>หมดเขตยื่นคำขอคืนสินค้าแล้ว (ต้องยื่นและส่งคืนภายในวันที่ '+RETURN_DEADLINE+')</span></div>')
         +'<button class="btn gray" onclick=\'startReturn("'+o.id+'","wait")\'>รับสินค้าไว้ รอการปรับปรุงระบบ</button></div>';
     }
@@ -587,10 +594,9 @@ function syncReason(){var ok=!!REASON&&(REASON!==OTHER_R||!!document.getElementB
 
 /* ---------- items ---------- */
 function returnGroups(o){
-  return o.sets.map(function(s){
-    if(s.splittable){return {split:true,comps:s.comps.map(function(c){return {name:compLabel(c.key,c.label),disp:compDisp(c.key,c.label),key:c.key,price:c.est};})};}
-    var price=s.comps.reduce(function(a,c){return a+(c.est||0);},0);var pp=parseProd(s.nm);
-    return {split:false,comps:[{name:dsep(s.nm),disp:prodTitle(pp)+(pp.tag?(' '+pp.tag):''),key:'set',imgKey:setImgKey(s.nm)||(s.comps[0]||{}).key,price:price}]};
+  return o.sets.filter(setAble).map(function(s,i){
+    var pp=parseProd(s.nm),part=setPart(s);
+    return {split:false,comps:[{si:s.si!=null?s.si:i,name:s.nm,disp:part?(part+' จาก '+prodTitle(pp).replace(/\s*:.*$/,'')):(prodTitle(pp)+(pp.tag?(' '+pp.tag):'')),t1:part||prodTitle(pp),t2:part?('จาก '+prodTitle(pp).replace(/\s*:.*$/,'')):(pp.tag?colorLine(pp.tag):''),key:'set',imgKey:setImgKey(s.nm)||(s.comps[0]||{}).key,price:setPrice(s)}]};
   });
 }
 var SEL={};
@@ -599,9 +605,9 @@ function buildItems(){
   var groups=returnGroups(CUR);var idx=0;SEL={};
   groups.forEach(function(g){
     g.comps.forEach(function(c){
-      var id='it'+(idx++);SEL[id]={name:c.name,disp:c.disp,key:c.key,price:c.price,on:true};
+      var id='it'+(idx++);SEL[id]={si:c.si,name:c.name,disp:c.disp,t1:c.t1,t2:c.t2,key:c.key,price:c.price,on:true};
       var el=document.createElement('div');el.className='ck on';el.setAttribute('data-id',id);el.setAttribute('role','checkbox');el.setAttribute('aria-checked','true');el.tabIndex=0;
-      el.innerHTML='<span class="box">'+ic('checks')+'</span>'+ptile(c.imgKey||c.key)+'<span class="info"><span>'+esc(c.disp||c.name)+'</span><span class="pr num'+(c.price?'':' zero')+'">'+(c.price?bahtD(c.price):baht(0))+'</span></span>';
+      el.innerHTML='<span class="box">'+ic('check')+'</span>'+ptile(c.imgKey||c.key)+'<span class="info"><span class="t1">'+esc(c.t1||c.disp||c.name)+'</span>'+(c.t2?'<span class="t2">'+esc(c.t2)+'</span>':'')+'<span class="pr num'+(c.price?'':' zero')+'">'+(c.price?bahtD(c.price):baht(0))+'</span></span>';
       var tog=function(){SEL[id].on=!SEL[id].on;el.classList.toggle('on',SEL[id].on);el.setAttribute('aria-checked',SEL[id].on);syncItems();};
       el.onclick=tog;el.onkeydown=function(e){if(e.key===' '||e.key==='Enter'){e.preventDefault();tog();}};
       box.appendChild(el);
@@ -614,7 +620,7 @@ function syncItems(){
   document.getElementById('itemTotal').innerHTML=baht(sum);
   document.getElementById('btnItems').disabled=(n===0);
 }
-function selectedItems(){var a=[];for(var k in SEL){if(SEL[k].on)a.push({name:SEL[k].name,key:SEL[k].key,price:SEL[k].price});}return a;}
+function selectedItems(){var a=[];for(var k in SEL){if(SEL[k].on)a.push({si:SEL[k].si,name:SEL[k].name,key:SEL[k].key,price:SEL[k].price});}return a;}
 function selectedDisp(){var a=[];for(var k in SEL){if(SEL[k].on)a.push(SEL[k]);}return a;}
 function selectedTotal(){return selectedItems().reduce(function(a,it){return a+it.price;},0);}
 
@@ -640,7 +646,7 @@ function buildShip(){
   document.getElementById('evTitle').textContent=dmg?'ถ่ายภาพ/แนบหลักฐานความเสียหาย':'ถ่ายภาพ/แนบหลักฐานสินค้า';
   document.getElementById('evSub').textContent=dmg?'กรุณาแนบภาพถ่ายจุดที่ชำรุดอย่างน้อย 1 ภาพ (สูงสุด 10 ภาพ)':'กรุณาแนบภาพถ่ายสินค้าที่จะส่งคืนอย่างน้อย 1 ภาพ (สูงสุด 10 ภาพ)';
   document.getElementById('shipAddr').innerHTML=addrCard();
-  document.getElementById('shipDead').innerHTML=ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+'</span>';
+  document.getElementById('shipDead').innerHTML=ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+' ลูกค้าเป็นผู้ชำระค่าจัดส่งคืนเอง</span>';
   renderEv();
 }
 function renderEv(){
@@ -735,7 +741,7 @@ function trackCard(r){
   var act='';
   if(r.status==='awaiting_shipment'){
     var bankNeed=(r.channel==='bank')&&!acct.no; /* โอนคืนยอดสินค้าเข้าบัญชี (ลูกค้าชำระด้วยการโอน) */
-    var acctF=(!acct.no)?('<div class="acct-slip'+(bankNeed?' on':'')+'" id="acw_'+r.rid+'">'
+    var acctF=(!acct.no&&bankNeed)?('<div class="acct-slip'+(bankNeed?' on':'')+'" id="acw_'+r.rid+'">'
         +(bankNeed?'':'<p class="p-sub">ค่าจัดส่งคืนจะโอนเข้าบัญชีธนาคารของท่านโดยตรง กรุณาระบุบัญชีรับเงิน</p>')
         +'<div class="fld"><label for="an_'+r.rid+'">ชื่อบัญชีรับเงินคืน</label><input class="inp" type="text" id="an_'+r.rid+'" placeholder="ชื่อ-นามสกุล" value="'+esc(acct.name||ACCT.name||'')+'"></div>'
         +'<div class="fld"><label for="bk_'+r.rid+'">ธนาคาร</label><input class="inp" type="text" id="bk_'+r.rid+'" placeholder="เช่น กสิกรไทย (KBANK)" value="'+esc(acct.bank||ACCT.bank||'')+'"></div>'
@@ -743,12 +749,9 @@ function trackCard(r){
     act='<div class="trk-act">'+addrCard()+'<div class="ncard"><h2 class="h-sec">แจ้งการส่งคืนพัสดุ</h2>'
       +'<div class="fld"><label for="tk_'+r.rid+'">เลขพัสดุ (Tracking Number)</label><input class="inp" type="text" id="tk_'+r.rid+'" placeholder="กรอกเลขพัสดุคืน" autocapitalize="characters"></div>'
       +'<div class="fld"><label for="cr_'+r.rid+'">บริษัทขนส่ง</label><select class="inp" id="cr_'+r.rid+'">'+CARRIERS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></div>'
-      +'<div class="fld"><span class="flbl">ใบเสร็จค่าจัดส่ง <span class="opt-t">(ถ้ามี)</span></span>'
-      +'<label class="slip-up" id="slz_'+r.rid+'"><span class="su-ic">'+ic('upload')+'</span><span class="su-t"><b id="sln_'+r.rid+'">แนบใบเสร็จค่าจัดส่ง</b><small id="sls_'+r.rid+'"><span class="ln">เพื่อรับค่าส่งคืน</span> <span class="ln">รองรับไฟล์ JPG หรือ PNG</span></small></span>'
-      +'<input type="file" accept="image/*" data-rid="'+r.rid+'" onchange="trackSlip(this,\''+r.rid+'\')"></label></div>'
       +acctF
       +'<button class="btn" id="shipbtn_'+r.rid+'" onclick="shipSubmit(\''+r.rid+'\')">แจ้งส่งคืนสินค้า</button>'
-      +'</div><div class="note">'+ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+'</span></div></div>';
+      +'</div><div class="note">'+ic('alert')+'<span>กรุณาส่งสินค้าคืนภายในวันที่ '+RETURN_DEADLINE+' ลูกค้าเป็นผู้ชำระค่าจัดส่งคืนเอง บริษัทฯ ไม่ได้สำรองหรือคืนค่าจัดส่ง</span></div></div>';
   }else if(acct.no||r.returnTracking){
     act='<div class="trk-act"><h2 class="h-sec">ข้อมูลการส่งคืน</h2><div class="kv">'
       +(r.returnTracking?'<div class="r"><span class="k">เลขพัสดุ</span><span class="v num">'+esc(r.returnTracking)+'</span></div>':'')

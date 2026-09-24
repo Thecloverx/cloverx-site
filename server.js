@@ -223,7 +223,7 @@ var XV_OPTS = { isStaff: function (req) { return !!currentStaff(req); }, staffNa
 var MEMBER_API = null;
 try { require('./xvisor_api')(app, DATA, XV_OPTS); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
 // แอปสมาชิก (/app): สมัคร/ล็อกอิน หน้าแรก ข่าว คลิปอบรม การสอบ คำสั่งซื้อ QR สมาชิก
-try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); }, returns: function (ph, em, nm) { ph = digitsOnly(ph); em = String(em || '').trim().toLowerCase(); nm = String(nm || ''); return { orders: read().filter(function (o) { return ownsOrder(o, ph, em, nm); }).map(pubOrder), myReturns: readReturns().filter(function (r) { return retOwns(r, ph, em, nm); }), returnDeadline: RETURN_DEADLINE_ISO, returnOpen: !retDeadlinePassed() }; }, shop: { placeOrder: function (o, req) { return placeOrder(o, req); }, attachSlip: function (id, d, req) { return attachSlip(id, d, req); }, settings: function () { return readSettings(); }, stock: function () { return readStock(); }, enforce: function () { return stockEnforceOn(); }, components: function (nm) { return itemComponents(nm); } } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
+try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); }, returns: function (ph, em, nm, ids) { ph = digitsOnly(ph); em = String(em || '').trim().toLowerCase(); nm = String(nm || ''); ids = ids || []; var os = read().filter(function (o) { return ids.indexOf(o.id) >= 0 || ownsOrder(o, ph, em, nm); }), oid = os.map(function (o) { return o.id; }); return { orders: os.map(pubOrder), myReturns: readReturns().filter(function (r) { return oid.indexOf(r.orderId) >= 0 || retOwns(r, ph, em, nm); }), returnDeadline: RETURN_DEADLINE_ISO, returnOpen: !retDeadlinePassed() }; }, shop: { placeOrder: function (o, req) { return placeOrder(o, req); }, attachSlip: function (id, d, req) { return attachSlip(id, d, req); }, settings: function () { return readSettings(); }, stock: function () { return readStock(); }, enforce: function () { return stockEnforceOn(); }, components: function (nm) { return itemComponents(nm); } } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
 
 // ---- Lean Lab membership & auth (email + LINE + Google) ----
 try { require('./leanlab_api')(app, DATA, { currentStaff: function (req) { return currentStaff(req); } }); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
@@ -786,7 +786,6 @@ app.post('/api/orders/:id/refund', (req, res) => {
 const RET = path.join(DATA, 'returns.json');
 function readReturns() { try { return JSON.parse(fs.readFileSync(RET, 'utf8')); } catch (e) { return []; } }
 function writeReturns(d) { try { fs.mkdirSync(DATA, { recursive: true }); } catch (e) {} try { fs.writeFileSync(RET, JSON.stringify(d, null, 2)); } catch (e) {} }
-const RET_W = { 'band-cream': 4590, 'band-black': 4590, 'scale': 1290, 'routinex': 7490 };
 function digitsOnly(s) { return String(s || '').replace(/\D/g, ''); }
 // แปลงเบอร์ไทยให้เป็นรูปแบบมาตรฐาน (0XXXXXXXXX) — รองรับ +66 / 66 / เบอร์ที่ลืมเลข 0 นำหน้า เพื่อให้เทียบตรงกัน
 function thaiLocal(s) {
@@ -796,24 +795,22 @@ function thaiLocal(s) {
   else if (d.length === 9) d = '0' + d;                                  // 61xxxxxxx (ลืม 0 นำหน้า) -> 061xxxxxxx
   return d;
 }
-// แตกออเดอร์เป็นเซต/ชิ้น + ประมาณยอดคืนต่อชิ้น (เฉลี่ยจากยอดรวมตามน้ำหนักราคาอ้างอิง)
+// แตกออเดอร์เป็นเซต + ยอดคืนเงินตามราคาที่ชำระจริงของแต่ละรายการ (ไม่เฉลี่ย)
+// รับคืน Xircle Band และ Xircle Scale / RoutineX คืนไม่ได้ / เซตที่มี RoutineX คืนได้เฉพาะชิ้นอื่นในเซต ยอดคืน = ราคาเซตที่ชำระ - ราคา RoutineX
+// เช่น TRIPLE 12,480 คืน Band + Scale ได้ 4,990 / TWIN ครอบครัว 11,850 คืน Band ได้ 4,360 / RoutineX เดี่ยว คืนไม่ได้
+const RET_ROUTINE_PRICE = 7490;
 function returnSets(o) {
-  var comps = [];
-  var sets = (Array.isArray(o.items) ? o.items : []).map(function (it, si) {
+  return (Array.isArray(o.items) ? o.items : []).map(function (it, si) {
     var nm = String(it && it.nm || '');
     var ks = itemComponents(nm);
-    var splittable = /TRIPLE/i.test(nm);
-    var cs = ks.map(function (k) { comps.push({ si: si, key: k }); return { key: k, label: STOCK_LABELS[k] || k }; });
-    return { nm: nm, splittable: splittable, comps: cs };
+    var price = Math.max(0, Number(it && it.price) || 0);
+    var nR = ks.filter(function (k) { return k === 'routinex'; }).length;
+    var rk = ks.filter(function (k) { return k !== 'routinex'; });
+    var hasBand = ks.some(function (k) { return /^band/.test(k) || k === 'scale'; });   // รับคืน Xircle Band และ Xircle Scale
+    var refund = hasBand ? Math.max(0, price - RET_ROUTINE_PRICE * nR) : 0;   // Band 4,590 / Band ครอบครัว 4,360 / Band + Scale 4,990 / Scale 1,290
+    var comps = ks.map(function (k) { return { key: k, label: STOCK_LABELS[k] || k, returnable: hasBand && k !== 'routinex' }; });
+    return { si: si, nm: nm, price: price, refund: refund, returnable: refund > 0, splittable: false, comps: comps };
   });
-  var wsum = comps.reduce(function (a, c) { return a + (RET_W[c.key] || 1); }, 0) || 1;
-  var total = Number(o.total) || 0;
-  var alloc = comps.map(function (c) { return Math.floor(total * (RET_W[c.key] || 1) / wsum); });
-  var rem = total - alloc.reduce(function (a, b) { return a + b; }, 0);
-  var ord = comps.map(function (_, i) { return i; }).sort(function (a, b) { return (RET_W[comps[b].key] || 1) - (RET_W[comps[a].key] || 1); });
-  for (var k = 0; k < rem; k++) alloc[ord[k % ord.length]]++;
-  var ci = 0; sets.forEach(function (s) { s.comps.forEach(function (c) { c.est = alloc[ci++] || 0; }); });
-  return sets;
 }
 function pubOrder(o) {
   return { id: o.id, at: o.at, name: o.name || '', total: Number(o.total) || 0, pay: o.pay || '', ship: o.ship || '', status: o.status || '', refundedTotal: Number(o.refundedTotal) || 0, sets: returnSets(o) };
@@ -870,6 +867,8 @@ function retDeadlinePassed() { var t = Date.parse(RETURN_DEADLINE_ISO); return i
 function retOverdue(r) { return retDeadlinePassed() && r && r.choice !== 'wait' && r.status === 'awaiting_shipment'; }
 function retLog(r, text) { r.history = Array.isArray(r.history) ? r.history : []; r.history.unshift({ at: new Date().toISOString(), text: text }); }
 function retOwns(r, ph, em, nm) { return identityOwns(r.phone, r.email, r.name, ph, em, nm); }
+// สมาชิกที่ล็อกอินในแอปและเป็นเจ้าของคำสั่งซื้อนี้ (รวมคำสั่งซื้อที่ผูกจากชีต)
+function memberOwnsOrder(req, orderId) { try { return !!(MEMBER_API && MEMBER_API.ownsOrderId && MEMBER_API.ownsOrderId(req, orderId)); } catch (e) { return false; } }
 function saveDataImage(dataUrl, prefix) {
   if (typeof dataUrl !== 'string' || !/^data:image\//.test(dataUrl)) return null;
   var m = dataUrl.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.*)$/); if (!m) return null;
@@ -889,14 +888,27 @@ app.post('/api/returns', function (req, res) {
   var list = read(); var o = list.find(function (x) { return x.id === b.orderId; });
   if (!o) return res.status(404).json({ ok: false, error: 'order_not_found' });
   var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
-  if (!ownsOrder(o, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  if (!ownsOrder(o, ph, em, nm) && !memberOwnsOrder(req, o.id)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   var choice = b.choice === 'wait' ? 'wait' : 'return';
   if (choice === 'return' && retDeadlinePassed()) return res.status(403).json({ ok: false, error: 'return_closed', deadline: RETURN_DEADLINE_ISO });
   var opay = String(o.pay || '').toLowerCase();
   var channel = (b.channel === 'bank' || b.channel === 'card') ? b.channel : (opay === 'bank' ? 'bank' : 'card'); // เคารพช่องทางที่ลูกค้าเลือก (บัตร/บัญชี) มิฉะนั้นอิงวิธีชำระเดิม
   var refundAccount = (b.refundAccount && typeof b.refundAccount === 'object') ? { name: String(b.refundAccount.name || '').slice(0, 80), bank: String(b.refundAccount.bank || '').slice(0, 60), no: String(b.refundAccount.no || '').slice(0, 40) } : null;
-  var items = (Array.isArray(b.selected) ? b.selected : []).map(function (s) { return { name: String(s.name || '').slice(0, 120), key: String(s.key || '').slice(0, 40), price: Number(s.price) || 0 }; });
+  // ยอดคืนคำนวณฝั่งเซิร์ฟเวอร์จากราคาที่ชำระจริง ไม่เชื่อราคาที่ส่งมาจากหน้าเว็บ
+  var rsets = returnSets(o), usedSi = {};
+  var items = [];
+  (Array.isArray(b.selected) ? b.selected : []).forEach(function (x) {
+    var st = null;
+    if (x && x.si != null && rsets[Number(x.si)]) st = rsets[Number(x.si)];
+    else if (x && x.name) st = rsets.find(function (r) { return !usedSi[r.si] && r.nm === String(x.name); });
+    if (!st || usedSi[st.si] || !st.returnable) return;
+    usedSi[st.si] = true;
+    items.push({ si: st.si, name: st.nm.slice(0, 120), key: 'set', price: st.refund, comps: st.comps.filter(function (c) { return c.returnable; }).map(function (c) { return c.label; }) });
+  });
+  if (choice === 'return' && !items.length) return res.status(400).json({ ok: false, error: 'no_returnable_items' });
   var amount = items.reduce(function (a, it) { return a + it.price; }, 0);
+  var cap = Math.max(0, (Number(o.total) || 0) - (Number(o.refundedTotal) || 0));
+  if (amount > cap) amount = cap;
   var slip = (choice === 'return' && channel === 'bank') ? saveDataImage(b.slip, 'RSP-' + o.id) : null;
   var reason = String(b.reason || '').slice(0, 200);
   var note = String(b.note || '').slice(0, 500);
@@ -907,7 +919,7 @@ app.post('/api/returns', function (req, res) {
   var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
   var rid = (choice === 'wait' ? 'WAIT-' : 'RT-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
   var initStatus = choice === 'wait' ? 'wait' : 'awaiting_shipment';
-  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, evidence: evidence, items: items, amount: amount, slip: slip, refundAccount: refundAccount, status: initStatus, history: [] };
+  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, returnCarrierPlan: String(b.carrier || '').slice(0, 40), source: String(b.source || '').slice(0, 10), evidence: evidence, items: items, amount: amount, slip: slip, refundAccount: refundAccount, status: initStatus, history: [] };
   retLog(rec, choice === 'wait' ? 'ลูกค้าเลือกรอการปรับปรุง Application' : ('ลูกค้ายื่นคำขอคืนสินค้า' + (reason ? (' · เหตุผล: ' + reason) : '') + ' — รอจัดส่งสินค้าคืน'));
   rlist.unshift(rec); writeReturns(rlist);
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
@@ -919,7 +931,7 @@ app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
-  if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  if (!retOwns(r, ph, em, nm) && !memberOwnsOrder(req, r.orderId)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   if (r.choice === 'wait') return res.status(400).json({ ok: false, error: 'not_applicable' });
   var tracking = String(b.trackingNo || '').trim().slice(0, 60), carrier = String(b.carrier || '').trim().slice(0, 60);
   var rslip = saveDataImage(b.returnSlip, 'RTN-' + r.orderId);
@@ -939,7 +951,7 @@ app.post('/api/returns/:rid/cancel', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(); var nm = String(b.name || '');
-  if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+  if (!retOwns(r, ph, em, nm) && !memberOwnsOrder(req, r.orderId)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   if (['refunded', 'rejected', 'cancelled'].indexOf(r.status) >= 0) return res.status(400).json({ ok: false, error: 'not_cancelable' });
   r.status = 'cancelled'; r.cancelledAt = new Date().toISOString();
   retLog(r, 'ลูกค้ายกเลิกคำขอคืนสินค้า/คืนเงิน');
@@ -1123,7 +1135,7 @@ app.post('/api/returns/:rid/track', function (req, res) {
   var staff = false; try { staff = !!currentStaff(req); } catch (e) {}
   if (!staff) {
     var ph = digitsOnly(b.phone), em = String(b.email || '').trim().toLowerCase(), nm = String(b.name || '');
-    if (!retOwns(r, ph, em, nm)) return res.status(403).json({ ok: false, error: 'verify_failed' });
+    if (!retOwns(r, ph, em, nm) && !memberOwnsOrder(req, r.orderId)) return res.status(403).json({ ok: false, error: 'verify_failed' });
   }
   if (!r.returnTracking) return res.json({ ok: true, track: null, configured: trackConfigured() });
   var force = b.force === true || b.force === '1' || b.force === 1;
