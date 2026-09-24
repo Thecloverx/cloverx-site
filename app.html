@@ -241,6 +241,40 @@ a{color:inherit;text-decoration:none}
 .closed{padding:14px 16px;background:var(--warn-bg);color:#92400e;border-radius:14px;font-size:13px;line-height:1.6}
 @media(max-width:360px){.nrow .th{width:80px;height:80px}.lrow .th{width:104px}.cont .th{width:96px}.prod .pr b{font-size:15px}}
 
+/* ---------- E-XAM (ตาม Figma exam-main 65:5) ---------- */
+#v-exam{background:#f8fafc}
+.xbar{position:sticky;top:0;z-index:10;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.xbar a,.xbar button{width:40px;height:50px;display:flex;align-items:center}
+.xbar button{justify-content:flex-end}
+.xbar h1{margin:0;font-size:18px;font-weight:700;color:#1e293b;line-height:1}
+.xbody{padding:20px 20px 24px;display:flex;flex-direction:column;gap:24px}
+.xtier{position:relative;overflow:hidden;height:160px;border-radius:20px;background:linear-gradient(90deg,#0b1b3a,#1d4ed8 55%,#3b82f6);box-shadow:0 0 24px -8px rgba(59,130,246,.2),0 8px 16px rgba(37,99,235,.2);color:#fff}
+.xtier .d{position:absolute;display:block;pointer-events:none}
+.xtier .d img{display:block;max-width:none;width:100%;height:100%}
+.xtier .gl{position:absolute;inset:-33.33%}.xtier .gl2{position:absolute;inset:-35.71%}
+.xtier .ln45{position:absolute;left:50%;top:50%;width:140px;height:1px;margin:-.5px 0 0 -70px}
+.xtier .emb{position:absolute;left:24px;top:52px;width:56px;height:56px;border-radius:28px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);box-shadow:0 0 12px rgba(255,255,255,.15);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+.xtier .emb img{position:absolute;left:11px;top:11px;width:32px;height:32px}
+.xtier .txt{position:absolute;left:96px;top:52.5px;right:16px;white-space:nowrap}
+.xtier .k{font-size:12px;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:1.2px;line-height:1.2}
+.xtier .v{margin-top:4px;font-size:28px;font-weight:800;letter-spacing:.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.xbtns{display:grid;grid-template-columns:168.5fr 171.5fr;gap:10px;margin-top:0}
+.xbtns .xb{height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;white-space:nowrap;overflow:hidden;padding:0 8px}
+.xbtns .xb.on{background:#2563eb;color:#fff;font-weight:700}
+.xbtns .xb.lk{border:1.5px solid #e2e8f0;color:#94a3b8;font-weight:600;background:transparent}
+.xbtns .xb.op{border:1.5px solid #2563eb;color:#2563eb;font-weight:700;background:#fff}
+.xbtns .xb img{width:16px;height:16px;flex:none}
+.xsec{display:flex;flex-direction:column;gap:24px}
+.xsec>.xl{display:flex;flex-direction:column;gap:10px}
+.xsec h2{margin:0;font-size:16px;font-weight:700;color:#1e293b;line-height:19px}
+.xempty{background:#fff;border:1px solid #e2e8f0;border-radius:16px;filter:drop-shadow(0 4px 6px rgba(15,23,42,.03));padding:24.5px 15px 26px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.xempty .ic{width:40px;height:40px;border-radius:20px;background:#eff6ff;display:grid;place-items:center}
+.xempty .ic img{width:20px;height:20px}
+.xempty b{margin-top:12px;font-size:14px;font-weight:700;color:#1e293b;line-height:17px}
+.xempty .sb{margin-top:2px;font-size:12px;color:#94a3b8;line-height:15px}
+.xempty .xa{margin-top:12px;height:31px;border-radius:8px;background:#2563eb;color:#fff;font-size:12px;font-weight:700;padding:0 16px;display:inline-flex;align-items:center;white-space:nowrap}
+@media(max-width:360px){.xtier .v{font-size:25px}.xbtns .xb{font-size:13px}}
+
 /* ---------- QR ---------- */
 .qrv{min-height:100vh;min-height:100dvh;background:linear-gradient(180deg,var(--sky1),#1e5fd9 55%,#1a4fb8);color:#fff;padding:0 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
 .qrv .bar2{display:flex;align-items:center;height:56px}
@@ -347,7 +381,7 @@ a{color:inherit;text-decoration:none}
 <section class="view has-tab hide" id="v-preorder"><div class="bar2w"><a class="bk" href="#home" aria-label="กลับ"><i data-ic="back" data-s="20"></i></a><h1>สั่งจองล่วงหน้า <small>(Pre-Order)</small></h1></div><div class="pad" id="poBox"></div></section>
 
 <!-- ===== E-XAM ===== -->
-<section class="view has-tab hide" id="v-exam"><div class="bar"><a class="bk" href="#home" aria-label="กลับ"><i data-ic="back" data-s="20"></i></a><h1>E-XAM</h1></div><div class="pad" id="examBox"></div></section>
+<section class="view has-tab hide" id="v-exam"><div class="xbar"><a href="#home" aria-label="กลับ"><img src="/xm-arrow.svg" width="24" height="24" alt=""></a><h1>E-XAM</h1><button type="button" id="exBell" aria-label="การแจ้งเตือน"><img src="/xm-bell.svg" width="24" height="24" alt=""></button></div><div class="xbody" id="examBox"></div></section>
 
 <!-- ===== คำสั่งซื้อ ===== -->
 <section class="view has-tab hide" id="v-orders"><div class="bar root"><h1>คำสั่งซื้อ</h1></div><div class="pad" id="ordList"></div></section>
@@ -405,6 +439,9 @@ var IC={
   out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   chat:'<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 20l1.1-4.3A8.4 8.4 0 1 1 21 11.5Z"/>',
   lock:'<rect width="16" height="11" x="4" y="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  arrow:'<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  clip:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
   clover:''
 };
@@ -516,6 +553,7 @@ function renderHome(){
   loadHome().then(paintH).catch(function(){ toast('เชื่อมต่อไม่สำเร็จ'); });
 }
 $('#hmAv').onclick=pickAvatar;
+$('#exBell').onclick=function(){ toast('ยังไม่มีการแจ้งเตือนใหม่'); };
 var bTimer=null;
 function paintBanner(){
   var list=(CONTENT&&CONTENT.banners)||[], box=$('#slides'), dots=$('#dots');
@@ -626,13 +664,14 @@ function renderPreorder(){ var box=$('#poBox');
 function renderExam(){ var box=$('#examBox'); box.innerHTML='<div class="loading">กำลังโหลด…</div>';
   api('/api/m/exams').then(function(j){ if(j._s===401){ME=null;location.hash='#login';return;} if(!j.ok){box.innerHTML='<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';return;}
     var regs=j.registrations||[], res=j.results||[];
-    var h='<div class="card tier-card"><span style="flex:none">'+clover(44,'#fff')+'</span><div><div class="k">ระดับของคุณ</div><b>'+esc(j.tier)+'</b></div></div>';
-    var acc=j.access||{xvisor:true,lead:false};
-    h+='<div class="btn-row"><a class="btn sm" href="/exam-register?from=app">สมัครสอบ X-Visor</a>'+(acc.lead?'<a class="btn sm ghost" href="/exam-register?c=lead&from=app">สมัครสอบ X-Lead</a>':'<button class="btn sm ghost" type="button" id="leadLock" style="opacity:.55">'+ic('lock',16)+'สมัครสอบ X-Lead</button>')+'</div>';
-    h+='<div class="sec"><h2>การสมัครสอบของฉัน</h2>'+(regs.length?regs.map(function(r){ var lead=/lead/i.test(r.examType||'');
-        return '<button type="button" class="card row-card" style="width:100%;text-align:left" data-reg="'+esc(r.regNo)+'"><div class="tile cal"><b>'+(dP(r.round.date)?THM[dP(r.round.date).m-1]:'')+'</b><strong>'+((dP(r.round.date)||{}).d||'-')+'</strong></div><div class="meta"><div class="t">'+(lead?'สอบเลื่อนระดับ X-Lead':'สอบวัดระดับ X-Visor')+'</div><div class="s">'+esc(r.regNo)+'<br>'+(r.mode==='onsite'?'On Site':'Online')+(r.round.timeslot?' เวลา '+esc(slotTxt(r.round.timeslot)):'')+'</div></div>'+pill(STX[r.status]||[r.status,'mut'])+'</button>'; }).join('')
-      :'<div class="card empty">ยังไม่มีการสมัครสอบ</div>')+'</div>';
-    if(res.length) h+='<div class="sec"><h2>ผลสอบ</h2><div class="card">'+res.slice(0,6).map(function(x){ return '<div class="kv"><span>'+esc(/lead/i.test(x.examType)?'X-Lead':'X-Visor')+' <span class="nb">'+esc(thDT(x.at))+'</span></span>'+pill(x.passed?['ผ่าน','ok']:(/remedial/.test(x.status)?['รอสอบซ่อม','warn']:(x.status==='awaiting_verify'?['รอยืนยันผล','warn']:['ไม่ผ่าน','bad'])))+'</div>'; }).join('')+'</div></div>';
+    var acc=j.access||{xvisor:true,lead:false}, isVisor=j.tier==='X-VISOR'||j.tier==='X-LEAD';
+    var h='<div class="xtier" aria-label="ระดับของคุณ '+esc(j.tier)+'"><span aria-hidden="true"><span class="d" style="right:-40px;top:-30px;width:180px;height:180px"><span class="gl"><img src="/xm-glow.svg" alt=""></span></span><span class="d" style="left:-30px;bottom:-40px;width:140px;height:140px"><span class="gl2"><img src="/xm-glow1.svg" alt=""></span></span><span class="d" style="right:-30px;top:-20px;width:120px;height:120px"><img src="/xm-circle.svg" alt=""></span><span class="d" style="right:40px;bottom:-30px;width:90px;height:90px"><img src="/xm-circle1.svg" alt=""></span><span class="d" style="left:-20px;bottom:10px;width:80px;height:80px"><img src="/xm-circle2.svg" alt=""></span><span class="d" style="right:-20px;top:-10px;width:110px;height:55px"><img src="/xm-arc.svg" alt=""></span><span class="d" style="right:10px;bottom:-20px;width:90px;height:45px"><img src="/xm-arc1.svg" alt=""></span><span class="d" style="left:-10px;top:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(45deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="left:-109px;top:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(135deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="right:31px;bottom:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(-45deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="right:130px;bottom:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(-135deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="left:40px;top:24px;width:4px;height:4px"><img src="/xm-sp.svg" alt=""></span><span class="d" style="left:118px;top:34px;width:3px;height:3px"><img src="/xm-sp1.svg" alt=""></span><span class="d" style="left:286px;top:28px;width:4px;height:4px"><img src="/xm-sp2.svg" alt=""></span><span class="d" style="left:312px;top:96px;width:3px;height:3px"><img src="/xm-sp3.svg" alt=""></span><span class="d" style="left:248px;top:118px;width:4px;height:4px"><img src="/xm-sp4.svg" alt=""></span><span class="d" style="left:58px;top:126px;width:3px;height:3px"><img src="/xm-sp5.svg" alt=""></span></span><span class="emb"><img src="/xm-clover.svg" alt=""></span><div class="txt"><div class="k">ระดับของคุณ</div><div class="v">'+esc(j.tier)+'</div></div></div>';
+    h+='<div class="xbtns"><a class="xb on" href="/exam-register?from=app">สมัครสอบ X-Visor</a>'+(acc.lead?'<a class="xb op" href="/exam-register?c=lead&from=app">สมัครสอบ X-Lead</a>':'<button class="xb lk" type="button" id="leadLock"><img src="/xm-lock.svg" width="16" height="16" alt="">สมัครสอบ X-Lead</button>')+'</div>';
+    var cta=(isVisor&&acc.lead)?'<a class="xa" href="/exam-register?c=lead&from=app">สมัครสอบ X-Lead</a>':'<a class="xa" href="/exam-register?from=app">สมัครสอบ X-Visor</a>';
+    h+='<div class="xl" style="display:flex;flex-direction:column;gap:24px"><h2 style="margin:0;font-size:16px;font-weight:700;color:#1e293b;line-height:19px">การสมัครสอบของฉัน</h2>'+(regs.length?'<div style="display:flex;flex-direction:column;gap:10px">'+regs.map(function(r){ var lead=/lead/i.test(r.examType||'');
+        return '<button type="button" class="card row-card" style="width:100%;text-align:left;border:1px solid #e2e8f0" data-reg="'+esc(r.regNo)+'"><div class="tile cal"><b>'+(dP(r.round.date)?THM[dP(r.round.date).m-1]:'')+'</b><strong>'+((dP(r.round.date)||{}).d||'-')+'</strong></div><div class="meta"><div class="t">'+(lead?'สอบเลื่อนระดับ X-Lead':'สอบวัดระดับ X-Visor')+'</div><div class="s">'+esc(r.regNo)+'<br>'+(r.mode==='onsite'?'On Site':'Online')+(r.round.timeslot?' เวลา '+esc(slotTxt(r.round.timeslot)):'')+'</div></div>'+pill(STX[r.status]||[r.status,'mut'])+'</button>'; }).join('')+'</div>'
+      :'<div class="xempty"><span class="ic"><img src="/xm-clip.svg" width="20" height="20" alt=""></span><b>ยังไม่มีการสมัครสอบ</b><span class="sb"><span class="ln">เมื่อคุณสมัครสอบแล้ว</span> <span class="ln">รายละเอียดจะแสดงที่นี่</span></span>'+cta+'</div>')+'</div>';
+    if(res.length) h+='<div class="xl" style="display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font-size:16px;font-weight:700;color:#1e293b">ผลสอบ</h2><div class="card">'+res.slice(0,6).map(function(x){ return '<div class="kv"><span>'+esc(/lead/i.test(x.examType)?'X-Lead':'X-Visor')+' <span class="nb">'+esc(thDT(x.at))+'</span></span>'+pill(x.passed?['ผ่าน','ok']:(/remedial/.test(x.status)?['รอสอบซ่อม','warn']:(x.status==='awaiting_verify'?['รอยืนยันผล','warn']:['ไม่ผ่าน','bad'])))+'</div>'; }).join('')+'</div></div>';
     box.innerHTML=h;
     var ll=$('#leadLock'); if(ll)ll.onclick=function(){ sheet('สอบ X-Lead ยังไม่ปลดล็อก','<span class="ln">สอบ X-Lead เปิดให้ผู้ที่ผ่านการสอบ X-Visor แล้ว</span> <span class="ln">หากคิดว่าสิทธิ์ไม่ถูกต้อง ติดต่อทีมงานทาง LINE @cloverxth</span>','<a class="btn" href="'+LINE_URL+'" target="_blank" rel="noopener">ติดต่อทาง LINE</a>'); };
     $$('[data-reg]',box).forEach(function(b){ b.onclick=function(){ try{ localStorage.setItem('xr_me',JSON.stringify({regNo:b.dataset.reg,phone:ME.phone})); }catch(e){} location.href='/exam-register?from=app#my'; }; });
