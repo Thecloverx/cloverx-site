@@ -55,13 +55,31 @@ module.exports = function (app, DATA, deps) {
     all[crypto.createHash('sha256').update(tok).digest('hex')] = { id: m.id, at: now, exp: now + SESSION_TTL };
     writeSess(all); setCookie(req, res, tok, Math.floor(SESSION_TTL / 1000));
   }
-  function pubMember(m) { return { id: m.id, firstName: m.firstName, lastName: m.lastName, name: (m.firstName + ' ' + m.lastName).trim(), email: m.email, phone: m.phone, avatar: m.avatar || '', createdAt: m.createdAt, qr: 'CXM1.' + m.qr, unlock: { xvisor: !!(m.unlock || {}).xvisor, lead: !!(m.unlock || {}).lead } }; }
+  function pubMember(m) { return { id: m.id, firstName: m.firstName, lastName: m.lastName, name: (m.firstName + ' ' + m.lastName).trim(), email: m.email, phone: m.phone, avatar: m.avatar || '', createdAt: m.createdAt, qr: 'CXM1.' + m.qr, unlock: { xvisor: !!(m.unlock || {}).xvisor, lead: !!(m.unlock || {}).lead }, needConsent: !m.consentAt }; }
   function examAccess(m, tier) { const u = m.unlock || {}; return { xvisor: true, lead: !!u.lead || tier === 'X-VISOR' || tier === 'X-LEAD' }; }
 
   // ---------- rate limit (กันเดารหัส) ----------
   const RL = {};
   function limited(key, max, winMs) { const now = Date.now(); const a = (RL[key] || []).filter(t => now - t < winMs); a.push(now); RL[key] = a; return a.length > max; }
   const ip = (req) => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+
+  // ---------- ลูกค้าที่มีคำสั่งซื้อในระบบอยู่แล้ว เข้าสู่ระบบด้วยอีเมล + เบอร์ ได้เลยโดยไม่ต้องสมัคร ----------
+  // login-alias.json: คีย์เป็นแฮชของ (อีเมล|เบอร์) ชื่อเข้ารหัสด้วยกุญแจที่ได้จากอีเมล+เบอร์ของลูกค้าเอง (ไม่มีข้อมูลส่วนบุคคลแบบอ่านได้)
+  let LALIAS = {};
+  try { LALIAS = (JSON.parse(fs.readFileSync(path.join(__dirname, 'login-alias.json'), 'utf8')) || {}).m || {}; } catch (e) { LALIAS = {}; }
+  function aliasFor(email, phone) {
+    const e = LALIAS[crypto.createHash('sha256').update('cxid1|' + email + '|' + phone).digest('hex')]; if (!e) return null;
+    let name = '';
+    try { const raw = Buffer.from(e.n, 'base64'), key = crypto.createHash('sha256').update('cxkey1|' + email + '|' + phone).digest();
+      const d = crypto.createDecipheriv('aes-256-gcm', key, raw.slice(0, 12)); d.setAuthTag(raw.slice(12, 28)); name = Buffer.concat([d.update(raw.slice(28)), d.final()]).toString('utf8'); } catch (x) { name = ''; }
+    return { orders: (e.o || []).slice(), name: name };
+  }
+  function orderIdentity(email, phone) {
+    const a = aliasFor(email, phone); if (a) return a;
+    const os = (deps.readOrders ? deps.readOrders() : []).filter(o => o && String(o.email || '').trim().toLowerCase() === email && thPhone(o.phone).length === 10 && ph9(o.phone) === ph9(phone));
+    if (!os.length) return null; return { orders: os.map(o => o.id), name: String(os[0].name || '').trim() };
+  }
+  function splitName(n) { n = cleanName(n, 120); const i = n.indexOf(' '); return i > 0 ? [n.slice(0, i), n.slice(i + 1).trim()] : [n, '']; }
 
   // ---------- สมัครสมาชิก / เข้าสู่ระบบ ----------
   app.post('/api/m/register', (req, res) => {
@@ -84,12 +102,27 @@ module.exports = function (app, DATA, deps) {
     const b = req.body || {}; const email = cleanEmail(b.email), phone = thPhone(b.phone);
     if (limited('login:' + ip(req), 30, 15 * 60 * 1000) || limited('login:' + email, 10, 15 * 60 * 1000)) return res.status(429).json({ ok: false, error: 'too_many' });
     if (!email || !phone) return res.status(400).json({ ok: false, error: 'missing' });
-    const m = readM().find(x => x.email === email && ph9(x.phone) === ph9(phone));
+    let m = readM().find(x => x.email === email && ph9(x.phone) === ph9(phone));
+    if (!m && validEmail(email) && phone.length === 10) {
+      // ยังไม่มีบัญชี แต่มีคำสั่งซื้อด้วยอีเมล + เบอร์นี้ → สร้างบัญชีให้อัตโนมัติ (ต้องกดยอมรับเงื่อนไขในแอปก่อนใช้งาน)
+      const idn = orderIdentity(email, phone), all = readM();
+      if (idn && !all.some(x => x.email === email || ph9(x.phone) === ph9(phone))) {
+        const nm = splitName(idn.name || email.split('@')[0]);
+        m = { id: genId(), firstName: nm[0] || 'ลูกค้า', lastName: nm[1] || '', email, phone, qr: crypto.randomBytes(12).toString('base64url'), createdAt: Date.now(), consentAt: null, source: 'orders', linkedOrders: idn.orders };
+        all.push(m); writeM(all);
+      }
+    }
     if (!m) return res.status(401).json({ ok: false, error: 'invalid' });
     if (m.disabled) return res.status(403).json({ ok: false, error: 'disabled' });
     const all = readM(); const x = all.find(y => y.id === m.id); if (x) { x.lastLoginAt = Date.now(); writeM(all); }
     openSession(req, res, m);
     res.json({ ok: true, member: pubMember(m) });
+  });
+  app.post('/api/m/consent', (req, res) => {
+    const m = needMember(req, res); if (!m) return;
+    if (!(req.body || {}).consent) return res.status(400).json({ ok: false, error: 'consent_required' });
+    const all = readM(); const x = all.find(y => y.id === m.id); if (!x) return res.status(404).json({ ok: false });
+    x.consentAt = Date.now(); x.consentScope = ['terms', 'marketing', 'privacy']; writeM(all); res.json({ ok: true, member: pubMember(x) });
   });
   app.post('/api/m/logout', (req, res) => {
     const t = cookieTok(req);
@@ -135,7 +168,8 @@ module.exports = function (app, DATA, deps) {
   }
   function memberOrders(m) {
     const name = m.firstName + ' ' + m.lastName;
-    return deps.readOrders().filter(o => o && deps.ownsOrder(o, m.phone, m.email, name))
+    const linked = m.linkedOrders || [];
+    return deps.readOrders().filter(o => o && (linked.indexOf(o.id) >= 0 || deps.ownsOrder(o, m.phone, m.email, name)))
       .sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0))
       .map(o => ({ id: o.id, at: o.at, total: Number(o.total) || 0, status: o.status || '', pay: o.pay || '', ship: o.ship || '', tracking: o.tracking || o.trackingNo || '',
         items: (o.items || []).map(it => ({ nm: String(it.nm || it.name || ''), qty: Number(it.qty) || 1, price: Number(it.price) || 0, fam: !!it.fam })),
@@ -306,7 +340,7 @@ module.exports = function (app, DATA, deps) {
   app.get('/api/m/returns', (req, res) => {
     res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return;
     if (!deps.returns) return res.status(503).json({ ok: false });
-    const name = (m.firstName + ' ' + m.lastName).trim(); const r = deps.returns(m.phone, m.email, name);
+    const name = (m.firstName + ' ' + m.lastName).trim(); const r = deps.returns(m.phone, m.email, name, m.linkedOrders || []);
     res.json(Object.assign({ ok: true, me: { phone: m.phone, email: m.email, name: name } }, r));
   });
   app.get('/api/m/address', (req, res) => { res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return; res.json({ ok: true, address: m.address || null, team: m.lastTeam || '', ref: m.lastRef || '' }); });
@@ -319,6 +353,8 @@ module.exports = function (app, DATA, deps) {
   // QR สมาชิก → ข้อมูลสมาชิก (ใช้ตอนทีมงานสแกนเช็กอิน)
   return {
     memberByQr: function (code) { const t = String(code || '').replace(/^CXM1\./, ''); if (!t) return null; const m = readM().find(x => x.qr === t && !x.disabled); return m ? { id: m.id, name: (m.firstName + ' ' + m.lastName).trim(), phone: m.phone, email: m.email } : null; },
-    currentMember: currentMember
+    currentMember: currentMember,
+    ownsOrderId: function (req, orderId) { const m = currentMember(req); if (!m || !orderId) return null; if ((m.linkedOrders || []).indexOf(orderId) >= 0) return m;
+      const o = (deps.readOrders ? deps.readOrders() : []).find(x => x && x.id === orderId); return o && deps.ownsOrder(o, m.phone, m.email, (m.firstName + ' ' + m.lastName).trim()) ? m : null; }
   };
 };

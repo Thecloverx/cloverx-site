@@ -58,6 +58,10 @@ a{color:inherit;text-decoration:none}
 .btn.danger{background:#fff;color:var(--red);border:1.5px solid #fecaca}
 .spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;animation:sp .8s linear infinite;flex:none}
 @keyframes sp{to{transform:rotate(360deg)}}
+.lghint{margin:18px 0 0;padding:12px 14px;border-radius:12px;background:#eff6ff;color:#1e40af;font-size:13px;line-height:1.6;text-align:center}
+.cons-bg{position:fixed;inset:0;z-index:70;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center}
+.cons{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.cons h3{margin:0;font-size:18px}.cons p{margin:0;font-size:14px;color:var(--mut);line-height:1.6}
 .auth .foot{margin-top:auto;padding-top:28px;text-align:center;color:var(--mut);font-size:14px}
 .auth .foot a{color:var(--blue);font-weight:700;text-decoration:underline;margin-left:6px}
 .chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut);margin:4px 0 18px;cursor:pointer;line-height:1.5}
@@ -260,7 +264,7 @@ a{color:inherit;text-decoration:none}
 .xtier .v{margin-top:4px;font-size:28px;font-weight:800;letter-spacing:.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
 .xbtns{display:grid;grid-template-columns:168.5fr 171.5fr;gap:10px;margin-top:0}
 .xbtns .xb{height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;white-space:nowrap;overflow:hidden;padding:0 8px}
-.xbtns .xb.on{background:#2563eb;color:#fff;font-weight:700}
+.xbtns .xb.on{background:linear-gradient(90deg,#3b82f6,#1d4ed8);color:#fff;font-weight:700}
 .xbtns .xb.lk{border:1.5px solid #e2e8f0;color:#94a3b8;font-weight:600;background:transparent}
 .xbtns .xb.op{border:1.5px solid #2563eb;color:#2563eb;font-weight:700;background:#fff}
 .xbtns .xb img{width:16px;height:16px;flex:none}
@@ -272,32 +276,53 @@ a{color:inherit;text-decoration:none}
 .xempty .ic img{width:20px;height:20px}
 .xempty b{margin-top:12px;font-size:14px;font-weight:700;color:#1e293b;line-height:17px}
 .xempty .sb{margin-top:2px;font-size:12px;color:#94a3b8;line-height:15px}
-.xempty .xa{margin-top:12px;height:31px;border-radius:8px;background:#2563eb;color:#fff;font-size:12px;font-weight:700;padding:0 16px;display:inline-flex;align-items:center;white-space:nowrap}
+.xlive{display:flex;flex-direction:column;gap:2px;margin:0 16px 16px;padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 14px rgba(37,99,235,.25)}.xlive b{font-size:15px}.xlive span{font-size:13px;opacity:.9}
+.xempty .xa{margin-top:12px;height:31px;border-radius:8px;background:linear-gradient(90deg,#3b82f6,#1d4ed8);color:#fff;font-size:12px;font-weight:700;padding:0 16px;display:inline-flex;align-items:center;white-space:nowrap}
 @media(max-width:360px){.xtier .v{font-size:25px}.xbtns .xb{font-size:13px}}
 
-/* ---------- QR ---------- */
-.qrv{min-height:100vh;min-height:100dvh;background:linear-gradient(180deg,var(--sky1),#1e5fd9 55%,#1a4fb8);color:#fff;padding:0 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
-.qrv .bar2{display:flex;align-items:center;height:56px}
-.qrv .bar2 button{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;color:#fff}
-.qrv .bar2 h1{flex:1;text-align:center;margin:0;font-size:17px;font-weight:700;padding-right:40px}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.18);border-radius:12px;padding:4px;margin:4px 0 18px}
-.seg button{height:40px;border-radius:9px;color:#fff;font-weight:700;font-size:14px}
-.seg button.on{background:#fff;color:var(--blue)}
-.qcard{background:#fff;color:var(--ink);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.2)}
-.qcard .who2{display:flex;align-items:center;gap:10px;align-self:stretch;padding-bottom:14px;border-bottom:1px dashed var(--line);margin-bottom:16px;text-align:left}
-.qcard .who2 .av{width:44px;height:44px;box-shadow:none;background:#f1f5f9}
-.qcard .who2 b{display:block;font-size:15px}
-.qcard .who2 small{color:var(--blue);font-weight:700;font-size:12px}
-.qbox{width:236px;height:236px;padding:10px;border:1px solid var(--line);border-radius:16px;display:grid;place-items:center;background:#fff}
-.qbox canvas{width:100%;height:100%;image-rendering:pixelated}
-.qcard p{margin:14px 0 0;color:var(--mut);font-size:13px;line-height:1.6}
-.scan{position:relative;border-radius:20px;overflow:hidden;background:#0b1220;aspect-ratio:3/4;width:100%}
-.scan video{width:100%;height:100%;object-fit:cover;display:block}
-.scan .frame{position:absolute;inset:18% 14%;border:3px solid rgba(255,255,255,.9);border-radius:18px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
-.scan .msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;font-size:14px;line-height:1.6}
-.result{margin-top:14px;background:#fff;color:var(--ink);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center}
-.result i{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;flex:none}
-.result.ok i{background:var(--ok-bg);color:var(--ok)}.result.bad i{background:#fee2e2;color:#dc2626}
+/* ---------- QR (Figma 108:7 / 108:55) ---------- */
+.qrv{min-height:100vh;min-height:100dvh;background:#f1f5f9;display:flex;flex-direction:column;padding-bottom:calc(var(--tab) + 40px + env(safe-area-inset-bottom))}
+.qrv.dk{background:#0f172a}
+.qhd{background:linear-gradient(90deg,#2e8cfa,#59bfff 50%,#87e0ff);height:64px;padding:0 16px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5}
+.qhd button{width:24px;height:24px;display:grid;place-items:center;color:#fff;flex:none}
+.qhd h1{margin:0;font-size:20px;font-weight:700;color:#fff;letter-spacing:.01em}
+.qseg{align-self:center;width:280px;height:40px;border-radius:20px;background:#e2e8f0;padding:4px;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:44px 0 24px}
+.qseg button{border-radius:16px;font-size:14px;font-weight:500;color:#64748b}
+.qseg button.on{background:#2e8cfa;color:#fff;font-weight:700}
+.qrv.dk .qseg{background:#1e293b}.qrv.dk .qseg button{color:#94a3b8}.qrv.dk .qseg button.on{background:#38bdf8;color:#0f172a}
+.qmain{padding:0 24px;display:flex;flex-direction:column;align-items:stretch}
+.qcard{background:#fff;border-radius:24px;padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 10px 12px rgba(0,0,0,.06)}
+.qcard .nm{font-size:18px;font-weight:700;color:#0f172a;line-height:1.3;text-wrap:balance}
+.qcard .id{font-size:14px;font-weight:500;color:#64748b;margin-top:6px;font-variant-numeric:tabular-nums}
+.qbox{position:relative;width:180px;height:180px;margin:20px 0}
+.qbox canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
+.qbox .lg{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;background:#fff;border-radius:8px;display:grid;place-items:center}
+.qbadge{height:28px;border-radius:100px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:13px;font-weight:700;padding:0 15px;display:inline-flex;align-items:center;white-space:nowrap}
+.qhint{margin:28px 0 16px;text-align:center;color:#64748b;font-size:13px;font-weight:500;line-height:1.6}
+.qacts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.qacts button{height:48px;border-radius:12px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.qacts .sv2{background:#fff;border:1px solid #d1d5db;color:#4b5563}
+.qacts .sh2{background:#2e8cfa;color:#fff}
+.qscan{display:flex;flex-direction:column;align-items:center}
+.qframe{position:relative;width:240px;height:240px;border:2px solid #38bdf8;border-radius:24px;background:#fff;overflow:hidden;margin-top:22px}
+.qframe video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.qframe .laser{position:absolute;left:10px;right:10px;top:118px;height:3px;background:#38bdf8;filter:blur(2px);animation:qlz 2.4s ease-in-out infinite}
+@keyframes qlz{0%,100%{top:24px}50%{top:212px}}
+@media (prefers-reduced-motion:reduce){.qframe .laser{animation:none}}
+.qframe .msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;font-size:13px;line-height:1.6;color:#475569;background:#fff}
+.qcap{margin-top:16px;color:#e2e8f0;font-size:14px;font-weight:500;text-align:center}
+.qtools{display:flex;gap:48px;margin-top:44px}
+.qtools button{width:54px;height:54px;border-radius:27px;background:#1e293b;color:#fff;display:grid;place-items:center}
+.qtools button.on{background:#38bdf8;color:#0f172a}
+.qtools button:disabled{opacity:.35}
+.qres{width:100%;max-width:342px;margin-top:24px;padding:0 24px;box-sizing:content-box}
+.result{background:#fff;color:#0f172a;border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.result i{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;flex:none;font-style:normal}
+.result.ok i{background:var(--ok-bg);color:var(--ok)}.result.bad i{background:#fee2e2;color:#dc2626}.result.info i{background:#eff6ff;color:#2563eb}
+.result .m{flex:1;min-width:0}.result b{display:block;font-size:15px}.result small{display:block;color:#64748b;font-size:12px;margin-top:2px;line-height:1.5;overflow-wrap:anywhere}
+.result .rb{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.result .rb a,.result .rb button{height:34px;border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;background:#2563eb;color:#fff}
+.result .rb .gh{background:#f1f5f9;color:#334155}
 .result b{display:block;font-size:15px}.result small{display:block;color:var(--mut);font-size:13px;line-height:1.5}
 .note-w{margin-top:14px;font-size:13px;opacity:.9;text-align:center;line-height:1.6}
 
@@ -325,6 +350,7 @@ a{color:inherit;text-decoration:none}
     <div class="errmsg hide" id="lgErr"></div>
     <button class="btn" type="submit" id="lgGo">เข้าสู่ระบบ</button>
   </form>
+  <p class="lghint"><span class="ln">เคยสั่งซื้อสินค้า Pre-Order กับเรา?</span> <span class="ln">เข้าสู่ระบบด้วยอีเมลและเบอร์โทรที่ใช้สั่งซื้อได้เลย</span> <span class="ln">ไม่ต้องสมัครใหม่</span></p>
   <div class="foot">ยังไม่มีบัญชี?<a href="#register">สมัครสมาชิก</a></div>
 </section>
 
@@ -388,6 +414,29 @@ a{color:inherit;text-decoration:none}
 <!-- ===== E-XAM ===== -->
 <section class="view has-tab hide" id="v-exam"><div class="xbar"><a href="#home" aria-label="กลับ"><img src="/xm-arrow.svg" width="24" height="24" alt=""></a><h1>E-XAM</h1><button type="button" id="exBell" aria-label="การแจ้งเตือน"><img src="/xm-bell.svg" width="24" height="24" alt=""></button></div><div class="xbody" id="examBox"></div></section>
 
+<!-- ===== คืนสินค้า / คืนเงิน (app-return.js) ===== -->
+<section class="view rv hide" id="v-rtlist"></section>
+<section class="view rv hide" id="v-rtreason"></section>
+<section class="view rv hide" id="v-rtitems"></section>
+<section class="view rv hide" id="v-rtsum"></section>
+<section class="view rv hide" id="v-rtevid"></section>
+<section class="view rv hide" id="v-rtdone"></section>
+<section class="view rv hide" id="v-rttrack"></section>
+
+<!-- ===== ระบบสอบ (app-exam.js) ===== -->
+<section class="view xs hide" id="v-xr"></section>
+<section class="view xs hide" id="v-xrform"></section>
+<section class="view xs hide" id="v-xrpay"></section>
+<section class="view xs hide" id="v-xrdone"></section>
+<section class="view xs hide" id="v-xrstat"></section>
+<section class="view xs hide" id="v-xrticket"></section>
+<section class="view xs hide" id="v-xrstamped"></section>
+<section class="view xs hide" id="v-xsel"></section>
+<section class="view xs hide" id="v-xver"></section>
+<section class="view xs hide" id="v-xrules"></section>
+<section class="view xs hide" id="v-xroom"></section>
+<section class="view xs hide" id="v-xres"></section>
+
 <!-- ===== คำสั่งซื้อ ===== -->
 <section class="view sv has-tab hide" id="v-orders"></section>
 
@@ -396,11 +445,11 @@ a{color:inherit;text-decoration:none}
 
 <!-- ===== QR ===== -->
 <section class="view hide" id="v-qr">
-  <div class="qrv">
-    <div class="bar2"><button type="button" id="qrBack" aria-label="กลับ"><i data-ic="back" data-s="20"></i></button><h1>QR CODE</h1></div>
-    <div class="seg" role="tablist"><button type="button" data-q="mine" class="on">QR ของฉัน</button><button type="button" data-q="scan">สแกน QR</button></div>
-    <div id="qrMine"></div>
-    <div id="qrScan" class="hide"></div>
+  <div class="qrv" id="qrWrap">
+    <div class="qhd"><button type="button" id="qrBack" aria-label="กลับ"><i data-ic="arrow" data-s="24"></i></button><h1>CloverX Scan</h1></div>
+    <div class="qseg" role="tablist"><button type="button" role="tab" data-q="scan">สแกน QR</button><button type="button" role="tab" data-q="mine">QR ของฉัน</button></div>
+    <div id="qrMine" class="qmain"></div>
+    <div id="qrScan" class="qscan hide"></div>
   </div>
 </section>
 
@@ -448,6 +497,11 @@ var IC={
   bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
   clip:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  flash:'<path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/><path d="M6 6h12"/><path d="M12 12v.01"/>',
+  image:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   clover:''
 };
 /* ใบโคลเวอร์ 4 ใบ (หัวใจชี้เข้าหากลาง) */
@@ -472,6 +526,7 @@ function api(u,o){ o=o||{}; var opt={method:o.method||'GET',headers:{},credentia
 
 /* ---------- สถานะ ---------- */
 var ME=null, CONTENT=null, HOME=null;
+var PAIDS2=['CONFIRMED','CHECKED_IN','EXAM_STARTED','COMPLETED','TRANSFERRED_TO_EXAM'];
 var STX={PENDING_PAYMENT:['รอชำระเงิน','warn'],PAYMENT_REVIEW:['รอตรวจสลิป','warn'],WAITLISTED:['รายชื่อสำรอง','warn'],CONFIRMED:['ยืนยันแล้ว','ok'],CHECKED_IN:['เช็กอินแล้ว','ok'],EXAM_STARTED:['เข้าสอบแล้ว','ok'],TRANSFERRED_TO_EXAM:['เข้าสอบแล้ว','ok'],COMPLETED:['สอบเสร็จแล้ว','ok'],REJECTED:['สลิปไม่ผ่าน','bad'],CANCELLED:['ยกเลิกแล้ว','bad'],REFUNDED:['คืนเงินแล้ว','mut']};
 function ordPill(o){ var s=String(o.status||'').toLowerCase(), sh=String(o.ship||'').toLowerCase();
   if(/refund/.test(s))return ['คืนเงินแล้ว','mut']; if(/reject|cancel/.test(s))return ['ยกเลิก','bad'];
@@ -489,15 +544,20 @@ function route(){
   var SH=window.CXSHOP||{views:[],tabbed:{}};
   var map={login:'login',register:'register',home:'home',news:id?'article':'news',learn:id?'lesson':'learn',exam:'exam',profile:'profile',qr:'qr'};
   SH.views.forEach(function(k){ map[k]=k; });
+  var XE=window.CXEXAM||{views:[]}; XE.views.forEach(function(k){ map[k]=k; });
+  var RT=window.CXRET||{views:[]}; RT.views.forEach(function(k){ map[k]=k; });
   var sec=map[v]||'home';
+  if(ME&&ME.needConsent)setTimeout(askConsent,0);
   $$('.view').forEach(function(s){s.classList.toggle('hide',s.id!=='v-'+sec);});
-  var shopSub=SH.views.indexOf(sec)>=0&&!SH.tabbed[sec];
-  $('#tabbar').classList.toggle('hide',!ME||sec==='qr'||shopSub);
-  $$('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.t===((sec==='shop'||sec==='product')?'shop':(sec==='order'?'orders':(ROOTS[v]?v:'home'))));});
-  stopScan(); if(sec!=='lesson')stopPlayer();
+  var shopSub=(SH.views.indexOf(sec)>=0&&!SH.tabbed[sec])||XE.views.indexOf(sec)>=0||RT.views.indexOf(sec)>=0;
+  $('#tabbar').classList.toggle('hide',!ME||shopSub);
+  $$('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.t===((sec==='shop'||sec==='product')?'shop':((sec==='order'||sec.indexOf('rt')===0)?'orders':(sec==='qr'?'qr':(ROOTS[v]?v:'home')))));});
+  stopScan(); if(sec!=='lesson')stopPlayer(); if(sec!=='xroom'&&window.CXEXAM)window.CXEXAM.leaving();
   try{window.scrollTo(0,0);}catch(e){}
   if(sec==='home')renderHome(); else if(sec==='news')renderNews(); else if(sec==='article')renderArticle(id); else if(sec==='learn')renderLearn(); else if(sec==='lesson')renderLesson(id);
   else if(SH.views.indexOf(sec)>=0)SH.render(sec,id);
+  else if(XE.views.indexOf(sec)>=0)XE.render(sec,id);
+  else if(RT.views.indexOf(sec)>=0)RT.render(sec,id);
   else if(sec==='exam')renderExam(); else if(sec==='profile')renderProfile(); else if(sec==='qr')renderQR();
 }
 window.addEventListener('hashchange',route);
@@ -647,20 +707,24 @@ document.addEventListener('visibilitychange',function(){ if(document.hidden)save
 
 /* ---------- Pre-Order (ข้อมูลสินค้าชุดเดียวกับหน้า /preorder) ---------- */
 /* ---------- E-XAM ---------- */
-function renderExam(){ var box=$('#examBox'); box.innerHTML='<div class="loading">กำลังโหลด…</div>';
+function exU(k){ return window.CXEXAM?('#xr/'+k):('/exam-register?from=app'+(k==='lead'?'&c=lead':'')); }
+function renderExam(){ var XON=!!window.CXEXAM; var box=$('#examBox'); box.innerHTML='<div class="loading">กำลังโหลด…</div>';
   api('/api/m/exams').then(function(j){ if(j._s===401){ME=null;location.hash='#login';return;} if(!j.ok){box.innerHTML='<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';return;}
     var regs=j.registrations||[], res=j.results||[];
     var acc=j.access||{xvisor:true,lead:false}, isVisor=j.tier==='X-VISOR'||j.tier==='X-LEAD';
     var h='<div class="xtier" aria-label="ระดับของคุณ '+esc(j.tier)+'"><span aria-hidden="true"><span class="d" style="right:-40px;top:-30px;width:180px;height:180px"><span class="gl"><img src="/xm-glow.svg" alt=""></span></span><span class="d" style="left:-30px;bottom:-40px;width:140px;height:140px"><span class="gl2"><img src="/xm-glow1.svg" alt=""></span></span><span class="d" style="right:-30px;top:-20px;width:120px;height:120px"><img src="/xm-circle.svg" alt=""></span><span class="d" style="right:40px;bottom:-30px;width:90px;height:90px"><img src="/xm-circle1.svg" alt=""></span><span class="d" style="left:-20px;bottom:10px;width:80px;height:80px"><img src="/xm-circle2.svg" alt=""></span><span class="d" style="right:-20px;top:-10px;width:110px;height:55px"><img src="/xm-arc.svg" alt=""></span><span class="d" style="right:10px;bottom:-20px;width:90px;height:45px"><img src="/xm-arc1.svg" alt=""></span><span class="d" style="left:-10px;top:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(45deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="left:-109px;top:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(135deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="right:31px;bottom:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(-45deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="right:130px;bottom:-10px;width:99px;height:99px"><span class="ln45" style="transform:rotate(-135deg)"><img src="/xm-line.svg" alt=""></span></span><span class="d" style="left:40px;top:24px;width:4px;height:4px"><img src="/xm-sp.svg" alt=""></span><span class="d" style="left:118px;top:34px;width:3px;height:3px"><img src="/xm-sp1.svg" alt=""></span><span class="d" style="left:286px;top:28px;width:4px;height:4px"><img src="/xm-sp2.svg" alt=""></span><span class="d" style="left:312px;top:96px;width:3px;height:3px"><img src="/xm-sp3.svg" alt=""></span><span class="d" style="left:248px;top:118px;width:4px;height:4px"><img src="/xm-sp4.svg" alt=""></span><span class="d" style="left:58px;top:126px;width:3px;height:3px"><img src="/xm-sp5.svg" alt=""></span></span><span class="emb"><img src="/xm-clover.svg" alt=""></span><div class="txt"><div class="k">ระดับของคุณ</div><div class="v">'+esc(j.tier)+'</div></div></div>';
-    h+='<div class="xbtns"><a class="xb on" href="/exam-register?from=app">สมัครสอบ X-Visor</a>'+(acc.lead?'<a class="xb op" href="/exam-register?c=lead&from=app">สมัครสอบ X-Lead</a>':'<button class="xb lk" type="button" id="leadLock"><img src="/xm-lock.svg" width="16" height="16" alt="">สมัครสอบ X-Lead</button>')+'</div>';
-    var cta=(isVisor&&acc.lead)?'<a class="xa" href="/exam-register?c=lead&from=app">สมัครสอบ X-Lead</a>':'<a class="xa" href="/exam-register?from=app">สมัครสอบ X-Visor</a>';
+    h+='<div class="xbtns"><a class="xb on" href="'+exU('visor')+'">สมัครสอบ X-Visor</a>'+(acc.lead?'<a class="xb op" href="'+exU('lead')+'">สมัครสอบ X-Lead</a>':'<button class="xb lk" type="button" id="leadLock"><img src="/xm-lock.svg" width="16" height="16" alt="">สมัครสอบ X-Lead</button>')+'</div>';
+    var liveReg=regs.filter(function(r){ return PAIDS2.indexOf(r.status)>=0&&r.round&&r.round.live&&!(r.session&&r.session.status!=='in_progress'); })[0];
+    if(XON&&j.live) h+='<a class="xlive" href="#xroom"><b>กำลังสอบอยู่</b><span>แตะเพื่อกลับเข้าห้องสอบ</span></a>';
+    else if(XON&&liveReg) h+='<a class="xlive" href="#xsel/'+(/lead/i.test(liveReg.examType)?'lead':'visor')+'"><b>ห้องสอบเปิดแล้ว</b><span>แตะเพื่อเข้าห้องสอบ '+(/lead/i.test(liveReg.examType)?'X-Lead':'X-Visor')+'</span></a>';
+    var cta=(isVisor&&acc.lead)?'<a class="xa" href="'+exU('lead')+'">สมัครสอบ X-Lead</a>':'<a class="xa" href="'+exU('visor')+'">สมัครสอบ X-Visor</a>';
     h+='<div class="xl" style="display:flex;flex-direction:column;gap:24px"><h2 style="margin:0;font-size:16px;font-weight:700;color:#1e293b;line-height:19px">การสมัครสอบของฉัน</h2>'+(regs.length?'<div style="display:flex;flex-direction:column;gap:10px">'+regs.map(function(r){ var lead=/lead/i.test(r.examType||'');
         return '<button type="button" class="card row-card" style="width:100%;text-align:left;border:1px solid #e2e8f0" data-reg="'+esc(r.regNo)+'"><div class="tile cal"><b>'+(dP(r.round.date)?THM[dP(r.round.date).m-1]:'')+'</b><strong>'+((dP(r.round.date)||{}).d||'-')+'</strong></div><div class="meta"><div class="t">'+(lead?'สอบเลื่อนระดับ X-Lead':'สอบวัดระดับ X-Visor')+'</div><div class="s">'+esc(r.regNo)+'<br>'+(r.mode==='onsite'?'On Site':'Online')+(r.round.timeslot?' เวลา '+esc(slotTxt(r.round.timeslot)):'')+'</div></div>'+pill(STX[r.status]||[r.status,'mut'])+'</button>'; }).join('')+'</div>'
       :'<div class="xempty"><span class="ic"><img src="/xm-clip.svg" width="20" height="20" alt=""></span><b>ยังไม่มีการสมัครสอบ</b><span class="sb"><span class="ln">เมื่อคุณสมัครสอบแล้ว</span> <span class="ln">รายละเอียดจะแสดงที่นี่</span></span>'+cta+'</div>')+'</div>';
-    if(res.length) h+='<div class="xl" style="display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font-size:16px;font-weight:700;color:#1e293b">ผลสอบ</h2><div class="card">'+res.slice(0,6).map(function(x){ return '<div class="kv"><span>'+esc(/lead/i.test(x.examType)?'X-Lead':'X-Visor')+' <span class="nb">'+esc(thDT(x.at))+'</span></span>'+pill(x.passed?['ผ่าน','ok']:(/remedial/.test(x.status)?['รอสอบซ่อม','warn']:(x.status==='awaiting_verify'?['รอยืนยันผล','warn']:['ไม่ผ่าน','bad'])))+'</div>'; }).join('')+'</div></div>';
+    if(res.length) h+='<div class="xl" style="display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font-size:16px;font-weight:700;color:#1e293b">ผลสอบ</h2><div class="card">'+res.slice(0,6).map(function(x){ return '<a class="kv" '+(XON?'href="#xres/'+esc(x.id)+'"':'')+' style="color:inherit"><span>'+esc(/lead/i.test(x.examType)?'X-Lead':'X-Visor')+' <span class="nb">'+esc(thDT(x.at))+'</span></span>'+pill(x.passed?['ผ่าน','ok']:(/remedial/.test(x.status)?['รอสอบซ่อม','warn']:(x.status==='awaiting_verify'?['รอยืนยันผล','warn']:['ไม่ผ่าน','bad'])))+'</a>'; }).join('')+'</div></div>';
     box.innerHTML=h;
     var ll=$('#leadLock'); if(ll)ll.onclick=function(){ sheet('สอบ X-Lead ยังไม่ปลดล็อก','<span class="ln">สอบ X-Lead เปิดให้ผู้ที่ผ่านการสอบ X-Visor แล้ว</span> <span class="ln">หากคิดว่าสิทธิ์ไม่ถูกต้อง ติดต่อทีมงานทาง LINE @cloverxth</span>','<a class="btn" href="'+LINE_URL+'" target="_blank" rel="noopener">ติดต่อทาง LINE</a>'); };
-    $$('[data-reg]',box).forEach(function(b){ b.onclick=function(){ try{ localStorage.setItem('xr_me',JSON.stringify({regNo:b.dataset.reg,phone:ME.phone})); }catch(e){} location.href='/exam-register?from=app#my'; }; });
+    $$('[data-reg]',box).forEach(function(b){ b.onclick=function(){ if(XON){ location.hash='#xrstat/'+b.dataset.reg; return; } try{ localStorage.setItem('xr_me',JSON.stringify({regNo:b.dataset.reg,phone:ME.phone})); }catch(e){} location.href='/exam-register?from=app#my'; }; });
   }).catch(function(){ box.innerHTML='<div class="card empty">เชื่อมต่อไม่สำเร็จ</div>'; }); }
 
 /* ---------- โปรไฟล์ ---------- */
@@ -676,47 +740,105 @@ function renderProfile(){ var m=ME||{}, tier=(HOME&&HOME.member&&HOME.member.tie
 
 /* ---------- QR ---------- */
 var _qr=null; function qrLib(){ if(_qr)return _qr; _qr=new Promise(function(ok,no){ if(window.qrcode)return ok(); var s=document.createElement('script'); s.src='/xv-qrgen.js'; s.onload=function(){ok();}; s.onerror=function(){_qr=null;no();}; document.head.appendChild(s); }); return _qr; }
-function drawQr(text,px){ var q=qrcode(0,'M'); q.addData(text); q.make(); var n=q.getModuleCount(), m=2, cell=Math.max(4,Math.floor(px/(n+m*2))), size=cell*(n+m*2);
+function drawQr(text,px,ec){ var q=qrcode(0,ec||'M'); q.addData(text); q.make(); var n=q.getModuleCount(), m=2, cell=Math.max(4,Math.floor(px/(n+m*2))), size=cell*(n+m*2);
   var c=document.createElement('canvas'); c.width=size; c.height=size; var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,size,size); g.fillStyle='#0f172a';
   for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))g.fillRect((k+m)*cell,(r+m)*cell,cell,cell); return c; }
 var QTAB='mine';
-$$('.seg button').forEach(function(b){ b.onclick=function(){ QTAB=b.dataset.q; renderQR(); }; });
+$$('.qseg button').forEach(function(b){ b.onclick=function(){ QTAB=b.dataset.q; renderQR(); }; });
 $('#qrBack').onclick=function(){ if(history.length>1)history.back(); else location.hash='#home'; };
+function memCode(m){ return 'CLX-'+String(m.id||'').slice(-6).toUpperCase(); }
 function renderQR(){
-  $$('.seg button').forEach(function(b){b.classList.toggle('on',b.dataset.q===QTAB);});
+  $$('.qseg button').forEach(function(b){ var on=b.dataset.q===QTAB; b.classList.toggle('on',on); b.setAttribute('aria-selected',on?'true':'false'); });
+  $('#qrWrap').classList.toggle('dk',QTAB==='scan');
   $('#qrMine').classList.toggle('hide',QTAB!=='mine'); $('#qrScan').classList.toggle('hide',QTAB!=='scan');
   if(QTAB==='mine'){ stopScan(); var m=ME||{}, tier=(HOME&&HOME.member&&HOME.member.tier)||'PRE X-VISOR';
-    $('#qrMine').innerHTML='<div class="qcard"><div class="who2"><span class="av">'+avHtml(0)+'</span><div><b>'+esc(m.name)+'</b><small>'+esc(tier)+'</small></div></div><div class="qbox" id="myQr"></div><p><span class="ln">แสดง QR นี้ให้ทีมงานสแกน</span> <span class="ln">เพื่อเช็กอินเข้าสอบ</span></p></div><div class="note-w"><span class="ln">เพิ่มความสว่างหน้าจอ</span> <span class="ln">ก่อนให้ทีมงานสแกน</span></div>';
-    qrLib().then(function(){ var el=$('#myQr'); if(el&&m.qr){ el.innerHTML=''; el.appendChild(drawQr(m.qr,440)); } }).catch(function(){ var el=$('#myQr'); if(el)el.innerHTML='<span style="color:var(--mut)">โหลด QR ไม่สำเร็จ</span>'; });
+    $('#qrMine').innerHTML='<div class="qcard"><div class="nm">'+esc(m.name)+'</div><div class="id">รหัสสมาชิก: #'+esc(memCode(m))+'</div><div class="qbox" id="myQr"></div><span class="qbadge">สถานะ : '+esc(tier)+'</span></div>'
+      +'<p class="qhint"><span class="ln">ให้ทีมงานสแกน QR นี้</span> <span class="ln">เพื่อยืนยันตัวตนของคุณ</span></p>'
+      +'<div class="qacts"><button type="button" class="sv2" id="qrSave">'+ic('dl',18)+'บันทึก QR</button><button type="button" class="sh2" id="qrShare">'+ic('share',18)+'แชร์</button></div>';
+    qrLib().then(function(){ var el=$('#myQr'); if(el&&m.qr){ el.innerHTML=''; el.appendChild(drawQr(m.qr,360,'H')); var lg=document.createElement('span'); lg.className='lg'; lg.innerHTML=clover(28); el.appendChild(lg); } }).catch(function(){ var el=$('#myQr'); if(el)el.innerHTML='<span style="color:var(--mut)">โหลด QR ไม่สำเร็จ</span>'; });
+    $('#qrSave').onclick=function(){ qrCardPng().then(function(c){ var a=document.createElement('a'); a.download='CloverX-QR-'+memCode(m)+'.png'; a.href=c.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); toast('บันทึก QR แล้ว'); }).catch(function(){ toast('บันทึก QR ไม่สำเร็จ'); }); };
+    $('#qrShare').onclick=function(){ qrCardPng().then(function(c){ c.toBlob(function(bl){ var f=null; try{ f=new File([bl],'CloverX-QR.png',{type:'image/png'}); }catch(e){}
+        if(f&&navigator.canShare&&navigator.canShare({files:[f]})){ navigator.share({files:[f],title:'QR สมาชิก CloverX'}).catch(function(){}); }
+        else { var a=document.createElement('a'); a.download='CloverX-QR-'+memCode(m)+'.png'; a.href=c.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); toast('เครื่องนี้แชร์รูปไม่ได้ บันทึกรูปให้แทนแล้ว'); } },'image/png'); }).catch(function(){ toast('แชร์ไม่สำเร็จ'); }); };
   } else startScanTab();
 }
-var SCAN={stream:null,raf:0,busy:false,last:'',lastAt:0};
-function stopScan(){ if(SCAN.raf)cancelAnimationFrame(SCAN.raf); SCAN.raf=0; if(SCAN.stream){ SCAN.stream.getTracks().forEach(function(t){t.stop();}); SCAN.stream=null; } }
-function startScanTab(){ var box=$('#qrScan'); box.innerHTML='<div class="scan"><div class="msg">กำลังตรวจสอบสิทธิ์…</div></div>';
-  api('/api/staff/me').then(function(s){
-    if(!s.loggedIn){ box.innerHTML='<div class="scan"><div class="msg">'+ic('scan',44,1.6)+'<b style="font-size:16px">สำหรับทีมงานเท่านั้น</b><span><span class="ln">ใช้สแกน QR ของผู้เข้าสอบ</span> <span class="ln">เพื่อเช็กอินเข้าสอบ On Site</span></span><span style="opacity:.8"><span class="ln">ทีมงานกรุณาเข้าสู่ระบบพนักงาน</span> <span class="ln">ในเบราว์เซอร์นี้ก่อน</span></span></div></div>'; return; }
-    box.innerHTML='<div class="scan"><video id="scVid" playsinline muted></video><div class="frame"></div></div><div id="scRes"></div><div class="note-w">ทีมงาน: '+esc(s.name||s.email)+'</div>';
-    startCam();
-  }).catch(function(){ box.innerHTML='<div class="scan"><div class="msg">เชื่อมต่อไม่สำเร็จ</div></div>'; }); }
+/* รูป QR สำหรับบันทึก/แชร์: การ์ดชื่อ รหัส และ QR */
+function qrCardPng(){ var m=ME||{}, tier=(HOME&&HOME.member&&HOME.member.tier)||'PRE X-VISOR';
+  return qrLib().then(function(){ var W=720,H=900,c=document.createElement('canvas'); c.width=W; c.height=H; var g=c.getContext('2d');
+    var gr=g.createLinearGradient(0,0,W,0); gr.addColorStop(0,'#2e8cfa'); gr.addColorStop(.5,'#59bfff'); gr.addColorStop(1,'#87e0ff'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+    g.fillStyle='#fff'; if(g.roundRect){ g.beginPath(); g.roundRect(48,120,W-96,H-168,40); g.fill(); } else g.fillRect(48,120,W-96,H-168);
+    g.fillStyle='#fff'; g.font='700 40px "Noto Sans Thai",sans-serif'; g.textAlign='center'; g.fillText('CloverX',W/2,80);
+    g.fillStyle='#0f172a'; g.font='700 36px "Noto Sans Thai",sans-serif'; g.fillText(m.name||'',W/2,200);
+    g.fillStyle='#64748b'; g.font='500 26px "Noto Sans Thai",sans-serif'; g.fillText('รหัสสมาชิก: #'+memCode(m),W/2,246);
+    var q=drawQr(m.qr||'',420,'H'); g.imageSmoothingEnabled=false; g.drawImage(q,(W-420)/2,280,420,420);
+    g.fillStyle='#fff'; g.fillRect(W/2-44,490-44,88,88);
+    var img=new Image(); var svg=clover(64); return new Promise(function(ok){ img.onload=function(){ g.drawImage(img,W/2-32,490-32,64,64); fin(); }; img.onerror=fin; img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));
+      function fin(){ g.fillStyle='#1e40af'; g.font='700 26px "Noto Sans Thai",sans-serif'; g.fillText('สถานะ : '+tier,W/2,760); g.fillStyle='#64748b'; g.font='500 22px "Noto Sans Thai",sans-serif'; g.fillText('ให้ทีมงานสแกน QR นี้เพื่อยืนยันตัวตน',W/2,800); ok(c); } }); }); }
+var SCAN={stream:null,raf:0,busy:false,last:'',lastAt:0,staff:null,torch:false};
+function stopScan(){ if(SCAN.raf)cancelAnimationFrame(SCAN.raf); SCAN.raf=0; if(SCAN.stream){ SCAN.stream.getTracks().forEach(function(t){t.stop();}); SCAN.stream=null; } SCAN.torch=false; }
+function startScanTab(){ var box=$('#qrScan');
+  box.innerHTML='<div class="qframe" id="scFr"><video id="scVid" playsinline muted></video><div class="laser"></div></div><div class="qcap">วาง QR Code ไว้ในกรอบเพื่อสแกน</div>'
+    +'<div class="qtools"><button type="button" id="scTorch" aria-label="ไฟฉาย" disabled>'+ic('flash',24)+'</button><button type="button" id="scPick" aria-label="เลือกรูปจากเครื่อง">'+ic('image',24)+'</button></div><div class="qres" id="scRes"></div>';
+  $('#scPick').onclick=pickQrImage;
+  $('#scTorch').onclick=function(){ var t=SCAN.stream&&SCAN.stream.getVideoTracks()[0]; if(!t)return; SCAN.torch=!SCAN.torch; t.applyConstraints({advanced:[{torch:SCAN.torch}]}).then(function(){ $('#scTorch').classList.toggle('on',SCAN.torch); }).catch(function(){ SCAN.torch=false; toast('เปิดไฟฉายไม่ได้ในเครื่องนี้'); }); };
+  if(SCAN.staff===null) api('/api/staff/me').then(function(s){ SCAN.staff=!!(s&&s.loggedIn); }).catch(function(){ SCAN.staff=false; });
+  startCam(); }
+function camMsg(h){ var f=$('#scFr'); if(f)f.innerHTML='<div class="msg">'+h+'</div>'; }
 function loadJsQR(){ return new Promise(function(ok,no){ if(window.jsQR)return ok(); var s=document.createElement('script'); s.src='/xv-jsqr.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 function startCam(){ var v=$('#scVid'); if(!v)return;
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ $('#qrScan .scan').innerHTML='<div class="msg">เครื่องนี้เปิดกล้องจากเบราว์เซอร์ไม่ได้</div>'; return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ camMsg('<span class="ln">เครื่องนี้เปิดกล้องจากเบราว์เซอร์ไม่ได้</span> <span class="ln">กดปุ่มรูปภาพเพื่อเลือกรูป QR แทน</span>'); return; }
   Promise.all([loadJsQR(),navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})]).then(function(r){
+    if(QTAB!=='scan'||$('#v-qr').classList.contains('hide')){ r[1].getTracks().forEach(function(t){t.stop();}); return; }
     SCAN.stream=r[1]; v.srcObject=r[1]; v.play(); var c=document.createElement('canvas'), g=c.getContext('2d',{willReadFrequently:true});
+    try{ var t=r[1].getVideoTracks()[0], cap=t.getCapabilities&&t.getCapabilities(); if(cap&&cap.torch)$('#scTorch').disabled=false; }catch(e){}
     (function tick(){ if(!SCAN.stream)return; if(v.readyState>=2&&!SCAN.busy){ var w=Math.min(640,v.videoWidth), h=Math.round(v.videoHeight*w/v.videoWidth); c.width=w; c.height=h; g.drawImage(v,0,0,w,h);
-        var q=window.jsQR(g.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'}); if(q&&q.data&&!(q.data===SCAN.last&&Date.now()-SCAN.lastAt<4000)){ SCAN.last=q.data; SCAN.lastAt=Date.now(); checkin(q.data); } }
+        var q=window.jsQR(g.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'}); if(q&&q.data&&!(q.data===SCAN.last&&Date.now()-SCAN.lastAt<4000)){ SCAN.last=q.data; SCAN.lastAt=Date.now(); onScan(q.data); } }
       SCAN.raf=requestAnimationFrame(tick); })();
-  }).catch(function(){ var s=$('#qrScan .scan'); if(s)s.innerHTML='<div class="msg"><span class="ln">เปิดกล้องไม่ได้</span> <span class="ln">กรุณาอนุญาตการใช้กล้องในเบราว์เซอร์</span></div>'; }); }
+  }).catch(function(){ camMsg('<span class="ln">เปิดกล้องไม่ได้</span> <span class="ln">กรุณาอนุญาตการใช้กล้องในเบราว์เซอร์</span> <span class="ln">หรือกดปุ่มรูปภาพเพื่อเลือกรูป QR</span>'); }); }
+function pickQrImage(){ var f=document.createElement('input'); f.type='file'; f.accept='image/*';
+  f.onchange=function(){ var file=f.files[0]; if(!file)return; var u=URL.createObjectURL(file), im=new Image();
+    im.onload=function(){ loadJsQR().then(function(){ var s=Math.min(1,1200/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s); var g=c.getContext('2d'); g.drawImage(im,0,0,c.width,c.height);
+        var q=window.jsQR(g.getImageData(0,0,c.width,c.height).data,c.width,c.height,{inversionAttempts:'attemptBoth'}); URL.revokeObjectURL(u);
+        if(q&&q.data)onScan(q.data); else showRes('bad','x','ไม่พบ QR ในรูปนี้','ลองเลือกรูปที่เห็น QR ชัดเจน'); }); };
+    im.onerror=function(){ showRes('bad','x','เปิดรูปไม่ได้','ลองเลือกรูปอื่น'); }; im.src=u; };
+  f.click(); }
+function showRes(kind,icn,title,sub,btns){ var out=$('#scRes'); if(!out)return;
+  out.innerHTML='<div class="result '+kind+'" role="status"><i>'+ic(icn,22,2.6)+'</i><div class="m"><b>'+esc(title)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+(btns?'<div class="rb">'+btns+'</div>':'')+'</div></div>'; }
 var CK={checked_in:'เช็กอินสำเร็จ',duplicate:'เช็กอินไว้แล้ว',late:'มาหลังเวลาเริ่มสอบ',invalid:'QR ไม่ถูกต้อง',not_paid:'ยังไม่พร้อมเข้าสอบ',wrong_round:'ผิดรอบ',wrong_day:'ไม่ใช่วันสอบของผู้สมัครนี้',not_open_yet:'ยังไม่เปิดเช็กอิน',no_registration:'ไม่มีใบสมัครสอบวันนี้'};
-function checkin(code){ SCAN.busy=true; var out=$('#scRes');
+var OUR=/^(?:[a-z0-9-]+\.)*(?:cloverxth\.com|cloverx\.co\.th)$|^cloverx-site-production\.up\.railway\.app$|^localhost$/i;
+function onScan(code){ code=String(code||'').trim(); try{ if(navigator.vibrate)navigator.vibrate(40); }catch(e){}
+  var isTicket=/^(CXM1|XV1)\./.test(code)||/^RG\d{6,}$/.test(code);
+  if(isTicket&&SCAN.staff) return checkin(code);
+  if(/^CXM1\./.test(code)) return showRes('info','user','QR สมาชิก CloverX','ให้ทีมงานสแกนเพื่อเช็กอิน');
+  if(/^XV1\./.test(code)||/^RG\d{6,}$/.test(code)) return showRes('info','exam','บัตรเข้าสอบ CloverX','ให้ทีมงานสแกนที่จุดเช็กอิน');
+  var u=null; try{ u=new URL(code); }catch(e){}
+  if(u&&/^https?:$/.test(u.protocol)){
+    if(OUR.test(u.hostname)){ var rc=u.searchParams.get('round');
+      if(/^\/xvisor/.test(u.pathname)&&rc) return showRes('ok','exam','QR ห้องสอบ','รอบ '+rc,'<a href="'+esc(u.href)+'">เข้าห้องสอบ</a>');
+      if(u.hostname===location.hostname&&u.pathname==='/app'&&u.hash){ stopScan(); location.hash=u.hash; return; }
+      return showRes('ok','link','ลิงก์ของ CloverX',u.hostname+u.pathname,'<a href="'+esc(u.href)+'">เปิดลิงก์</a>'); }
+    showRes('info','link','ลิงก์ภายนอก',u.href,'<a href="'+esc(u.href)+'" target="_blank" rel="noopener noreferrer">เปิดลิงก์</a><button type="button" class="gh" id="scCopy">คัดลอก</button>'); }
+  else showRes('info','scan','ข้อความใน QR',code.slice(0,300),'<button type="button" class="gh" id="scCopy">คัดลอก</button>');
+  var cp=$('#scCopy'); if(cp)cp.onclick=function(){ try{ navigator.clipboard.writeText(code); toast('คัดลอกแล้ว'); }catch(e){} }; }
+function checkin(code){ SCAN.busy=true;
   api('/api/xv/checkin',{method:'POST',body:{code:code}}).then(function(j){ SCAN.busy=false; var ok=j.result==='checked_in';
     try{ if(navigator.vibrate)navigator.vibrate(ok?60:[60,60,60]); }catch(e){}
-    if(out)out.innerHTML='<div class="result '+(ok?'ok':'bad')+'"><i>'+ic(ok?'ok':'x',22,2.6)+'</i><div><b>'+esc(CK[j.result]||(j._s===403?'ไม่มีสิทธิ์สแกน':'สแกนไม่สำเร็จ'))+'</b><small>'+esc(j.name||j.regNo||'')+(j.round&&j.round.date?(' '+thDate(j.round.date)):'')+'</small></div></div>';
-  }).catch(function(){ SCAN.busy=false; if(out)out.innerHTML='<div class="result bad"><i>'+ic('x',22,2.6)+'</i><div><b>เชื่อมต่อไม่สำเร็จ</b><small>กรุณาสแกนอีกครั้ง</small></div></div>'; }); }
+    showRes(ok?'ok':'bad',ok?'ok':'x',CK[j.result]||(j._s===403?'ไม่มีสิทธิ์สแกนเช็กอิน':'สแกนไม่สำเร็จ'),(j.name||j.regNo||'')+(j.round&&j.round.date?(' '+thDate(j.round.date)):''));
+  }).catch(function(){ SCAN.busy=false; showRes('bad','x','เชื่อมต่อไม่สำเร็จ','กรุณาสแกนอีกครั้ง'); }); }
 
 /* ---------- แผ่นล่าง ---------- */
-function doLogout(){ api('/api/m/logout',{method:'POST'}).then(function(){ if(window.CXSHOP)window.CXSHOP.clearCart(); ME=null; HOME=null; location.hash='#login'; route(); }); }
-window.CXAPP={esc:esc,api:api,toast:toast,baht:baht,thDate:thDate,thDT:thDT,me:function(){return ME;},LINE:LINE_URL,sheet:function(){return sheet.apply(null,arguments);},logout:function(){ ME=null; HOME=null; location.hash='#login'; route(); }};
+/* บัญชีที่ระบบสร้างให้จากคำสั่งซื้อเดิม: ต้องยอมรับเงื่อนไขก่อนใช้งาน */
+var CONS_ON=false;
+function askConsent(){ if(CONS_ON||!ME||!ME.needConsent)return; CONS_ON=true; var bg=document.createElement('div'); bg.className='cons-bg';
+  bg.innerHTML='<div class="cons" role="dialog" aria-modal="true" aria-labelledby="consT"><h3 id="consT">ยินดีต้อนรับ '+esc(ME.name)+'</h3><p><span class="ln">ระบบเตรียมบัญชีสมาชิกให้แล้ว</span> <span class="ln">จากคำสั่งซื้อของคุณ</span></p>'
+    +'<label class="chk consent"><input type="checkbox" id="consOk"><span class="ctx"><span class="ln">ข้าพเจ้า</span><span class="ln">ยอมรับ</span><span class="ln">เงื่อนไข</span><span class="ln">การใช้งาน</span> <span class="ln">การเก็บข้อมูลทางการตลาด</span> <span class="ln">และ</span><span class="ln">นโยบาย</span><span class="ln">ความเป็นส่วนตัว (PDPA)</span></span></label>'
+    +'<div class="errmsg hide" id="consErr"></div><button class="btn" type="button" id="consGo">ยอมรับและเริ่มใช้งาน</button><button class="link" type="button" id="consOut" style="align-self:center">ออกจากระบบ</button></div>';
+  document.body.appendChild(bg);
+  $('#consGo').onclick=function(){ if(!$('#consOk').checked){ showErr('consErr','กรุณายอมรับเงื่อนไขก่อนเริ่มใช้งาน'); return; } var b=this; b.disabled=true;
+    api('/api/m/consent',{method:'POST',body:{consent:true}}).then(function(j){ b.disabled=false; if(j.ok){ ME=j.member; bg.remove(); CONS_ON=false; toast('พร้อมใช้งานแล้ว'); } else showErr('consErr','บันทึกไม่สำเร็จ กรุณาลองใหม่'); }).catch(function(){ b.disabled=false; showErr('consErr','เชื่อมต่อไม่สำเร็จ'); }); };
+  $('#consOut').onclick=function(){ bg.remove(); CONS_ON=false; doLogout(); }; }
+function doLogout(){ api('/api/m/logout',{method:'POST'}).then(function(){ if(window.CXSHOP)window.CXSHOP.clearCart(); if(window.CXRET)window.CXRET.clear(); if(window.CXEXAM)window.CXEXAM.clear(); ME=null; HOME=null; location.hash='#login'; route(); }); }
+window.CXAPP={esc:esc,api:api,toast:toast,baht:baht,thDate:thDate,thDT:thDT,me:function(){return ME;},LINE:LINE_URL,sheet:function(){return sheet.apply(null,arguments);},clover:function(sz,c){return clover(sz,c);},qrLib:function(){return qrLib();},drawQr:function(t,px,ec){return drawQr(t,px,ec);},tier:function(){return (HOME&&HOME.member&&HOME.member.tier)||'PRE X-VISOR';},logout:function(){ ME=null; HOME=null; location.hash='#login'; route(); }};
 function sheet(t,body,act){ var bg=document.createElement('div'); bg.className='sheet-bg'; bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>'+esc(t)+'</h3><p>'+body+'</p>'+(act||'')+'<button class="btn ghost" type="button" style="margin-top:10px">ปิด</button></div>';
   bg.onclick=function(e){ if(e.target===bg||e.target.textContent==='ปิด')bg.remove(); }; document.body.appendChild(bg); }
 
@@ -725,5 +847,7 @@ api('/api/m/me').then(function(j){ if(j.ok){ ME=j.member; HOME=j; } route(); }).
 })();
 </script>
 <script src="/app-shop.js"></script>
+<script src="/app-return.js"></script>
+<script>/* ระบบสอบในแอป: เปิดเฉพาะเครื่องที่เปิดด้วย ?xexam=1 (ใช้ทดสอบก่อนเปิดจริง) */(function(){ var on=false; try{ if(/[?&]xexam=1/.test(location.search))localStorage.setItem("cx_xexam","1"); if(/[?&]xexam=0/.test(location.search))localStorage.removeItem("cx_xexam"); on=localStorage.getItem("cx_xexam")==="1"; }catch(e){} if(on)document.write("<script src=\"/app-exam.js\"><\/script>"); })();</script>
 </body>
 </html>

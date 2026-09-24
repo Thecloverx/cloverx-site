@@ -539,21 +539,21 @@ function retCard(){ if(!RET||!((RET.orders||[]).length||(RET.myReturns||[]).leng
   var dl=(function(){ var d=new Date(RET.returnDeadline); if(isNaN(d))return ''; var M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; var b=new Date(d.getTime()+7*3600000); return b.getUTCDate()+' '+M[b.getUTCMonth()]+' '+(b.getUTCFullYear()+543); })();
   return '<div class="rcard"><div class="rh"><span class="ri">'+sv('refund',20,'#fff')+'</span><div><b>คืนสินค้า / คืนเงิน</b><small>'+(open?('<span class="ln">ยื่นคำขอและส่งสินค้าคืน</span> <span class="ln">ภายในวันที่ '+esc(dl)+'</span>'):'<span class="ln">หมดเขตยื่นคำขอคืนสินค้าแล้ว</span> <span class="ln">(ภายในวันที่ '+esc(dl)+')</span>')+'</small></div></div>'
     +(mine.length?'<div class="rl">'+mine.map(function(r){ var x=RETST[r.status]||[r.status,'m']; return '<div><span>'+esc(r.rid)+'</span><em class="c-'+x[1]+'">'+esc(x[0])+'</em></div>'; }).join('')+'</div>':'')
-    +'<a class="rb" href="/return?from=app">'+(mine.length?(open?'ติดตามหรือยื่นคำขอเพิ่ม':'ติดตามคำขอคืน'):(open?'ยื่นคำขอคืนสินค้า':'ดูรายละเอียด'))+'</a></div>'; }
+    +'<a class="rb" href="#rtlist">'+(mine.length?(open?'ติดตามหรือยื่นคำขอเพิ่ม':'ติดตามคำขอคืน'):(open?'ยื่นคำขอคืนสินค้า':'ดูรายละเอียด'))+'</a></div>'; }
 
 /* ---------- 92:350 คำสั่งซื้อของฉัน ---------- */
 var OTAB='all', OT=[['all','ทั้งหมด'],['wait','รอชำระ'],['prep','กำลังจัดส่ง'],['done','สำเร็จ'],['refund','คืนเงิน']];
 function renderOrders(){ var v=$('#v-orders');
   var paint=function(){ var l=(ORD||[]).filter(function(o){ var k=ostat(o).k; return OTAB==='all'||(OTAB==='prep'?(k==='prep'||k==='ship'):k===OTAB); });
     v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="otabs" role="tablist">'+OT.map(function(t){return '<button type="button" data-ot="'+t[0]+'" class="'+(OTAB===t[0]?'on':'')+'">'+t[1]+'</button>';}).join('')+'</div>'
-      +'<div class="sbody"><div id="ordRet">'+retCard()+'</div>'+(l.length?l.map(function(o){ var S=ostat(o), imgs=o.items.map(function(it){return imgForName(it.nm);}).filter(Boolean).slice(0,3);
+      +'<div class="sbody">'+(OTAB==='refund'&&window.CXRET?'<div id="ordRt">'+window.CXRET.refundTab()+'</div>':'<div id="ordRet">'+retCard()+'</div>'+(l.length?l.map(function(o){ var S=ostat(o), imgs=o.items.map(function(it){return imgForName(it.nm);}).filter(Boolean).slice(0,3);
         var btns=S.k==='wait'&&o.pay==='bank'?'<button class="sb2 g" type="button" data-slip="'+esc(o.id)+'">'+(o.hasSlip?'อัปโหลดสลิปใหม่':'อัปโหลดสลิป')+'</button>'
           :(S.k==='done'?'<button class="sb2 m" type="button" data-again="'+esc(o.id)+'">ซื้ออีกครั้ง</button>':'<a class="sb2 o" href="#order/'+esc(o.id)+'">ติดตามพัสดุ</a>');
         return '<div class="ocard"><div class="h"><span>'+sv('store',14,'#0f172a')+'CloverX Official Store</span><em class="c-'+S.c+'">'+esc(S.t)+'</em></div>'
           +'<a class="mid" href="#order/'+esc(o.id)+'"><span class="th">'+(imgs.map(function(u){return '<img src="'+u+'" alt="">';}).join('')||'<span style="font-size:12px;color:#64748b">'+esc((o.items[0]||{}).nm||'')+'</span>')+'</span><span class="sum"><small>ทั้งหมด '+o.items.length+' ชิ้น</small><b>'+money(o.total)+'</b></span></a>'
           +'<div class="ft"><small>หมายเลข: '+esc(o.id)+'</small><div class="bs">'+btns+'</div></div></div>'; }).join('')
         :'<div class="cardw"><div class="sempty">'+(OTAB==='all'?'ยังไม่มีคำสั่งซื้อ':'ไม่มีคำสั่งซื้อในหมวดนี้')+'<div style="margin-top:14px"><a class="sb2 o" href="#shop" style="height:34px;font-size:13px">เลือกซื้อสินค้า</a></div></div></div>')
-      +'</div>';
+      )+'</div>';
     $$('[data-ot]',v).forEach(function(b){ b.onclick=function(){ OTAB=b.dataset.ot; paint(); }; });
     $$('[data-slip]',v).forEach(function(b){ b.onclick=function(){ pickSlip(b.dataset.slip,function(){ loadOrders(true).then(paint); }); }; });
     $$('[data-again]',v).forEach(function(b){ b.onclick=function(){ var o=findOrd(b.dataset.again); if(!o)return; loadShop().then(function(){ var n=0;
@@ -563,7 +563,8 @@ function renderOrders(){ var v=$('#v-orders');
   };
   v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="sempty">กำลังโหลด…</div>';
   loadOrders(true).then(paint).catch(function(){ v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="sempty">เชื่อมต่อไม่สำเร็จ</div>'; });
-  loadRet().then(function(){ var b=$('#ordRet'); if(b)b.innerHTML=retCard(); }).catch(function(){}); }
+  loadRet().then(function(){ var b=$('#ordRet'); if(b)b.innerHTML=retCard(); }).catch(function(){});
+  if(window.CXRET)window.CXRET.load().then(function(){ var b=$('#ordRt'); if(b)b.innerHTML=window.CXRET.refundTab(); }).catch(function(){}); }
 
 window.CXSHOP={ views:['shop','product','cart','checkout','done','order','orders'], tabbed:{shop:1,orders:1},
   render:function(sec,id){ if(sec!=='shop')clearInterval(TIMER); ({shop:renderShop,product:renderProduct,cart:renderCart,checkout:renderCheckout,done:renderDone,order:renderOrder,orders:renderOrders})[sec](id); },
