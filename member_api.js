@@ -105,8 +105,11 @@ module.exports = function (app, DATA, deps) {
     const x = XV(); if (!x) return [];
     return x.readReg().filter(r => ph9((r.candidate || {}).phone) === ph9(m.phone)).map(r => {
       const rd = x.findR(r.roundId) || {};
+      const ses = x.readS().filter(s => s.roundId === r.roundId && ph9((s.candidate || {}).phone) === ph9(m.phone)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0];
       return { regNo: r.regNo, status: r.status, mode: r.mode || rd.mode || 'online', createdAt: r.createdAt, examType: x.examTypeOf(rd),
-        round: { no: rd.no, date: rd.date, timeslot: rd.timeslot, venue: rd.venue, mode: rd.mode }, attended: !!(r.attendance || r.status === 'CHECKED_IN') };
+        round: { id: rd.id, no: rd.no, date: rd.date, timeslot: rd.timeslot, venue: rd.venue, mode: rd.mode, topic: rd.topic, live: x.examLive ? !!x.examLive(rd) : false },
+        attended: !!(r.attendance || r.status === 'CHECKED_IN'), attendance: r.attendance ? { at: r.attendance.at, method: r.attendance.method } : null,
+        coachTeam: r.coachTeam || '', paid: PAID.indexOf(r.status) >= 0, session: ses ? { status: ses.status, phase: ses.phase } : null };
     }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }
   function memberTier(m) {
@@ -119,8 +122,16 @@ module.exports = function (app, DATA, deps) {
   function examResults(m) {
     const x = XV(); if (!x) return [];
     return x.readS().filter(s => ph9((s.candidate || {}).phone) === ph9(m.phone) && s.status !== 'in_progress')
-      .map(s => ({ examType: x.sessExamType(s), status: s.status, at: s.submittedAt || s.startedAt || s.createdAt || 0, passed: s.status === 'verified' || s.status === 'submitted' }))
+      .map(s => { const rd = x.findR(s.roundId) || {}; return { examType: x.sessExamType(s), status: s.status, at: s.submittedAt || s.startedAt || s.createdAt || 0, passed: s.status === 'verified' || s.status === 'submitted',
+        id: s.id, token: s.token, phase: s.phase, roundId: s.roundId, roundDate: rd.date || '', results: x.pubResults ? x.pubResults(s) : [], remedialQueue: s.remedialQueue || [], staffVerified: !!s.staffVerified && s.status !== 'disqualified' }; })
       .sort((a, b) => b.at - a.at);
+  }
+  // ห้องสอบที่ยังทำค้างอยู่ของสมาชิกคนนี้ (ให้แอปกลับเข้าห้องสอบต่อได้ แม้เปลี่ยนเครื่อง)
+  function liveSession(m) {
+    const x = XV(); if (!x) return null;
+    const s = x.readS().filter(s => s.status === 'in_progress' && ph9((s.candidate || {}).phone) === ph9(m.phone)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0];
+    if (!s) return null; const rd = x.findR(s.roundId) || {};
+    return { id: s.id, token: s.token, phase: s.phase, examType: x.sessExamType(s), roundCode: rd.code || '', roundId: s.roundId };
   }
   function memberOrders(m) {
     const name = m.firstName + ' ' + m.lastName;
@@ -151,7 +162,7 @@ module.exports = function (app, DATA, deps) {
   app.get('/api/m/orders', (req, res) => { res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return; res.json({ ok: true, orders: memberOrders(m) }); });
   app.get('/api/m/exams', (req, res) => {
     res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return;
-    const tier = memberTier(m); res.json({ ok: true, tier: tier, access: examAccess(m, tier), registrations: memberRegs(m), results: examResults(m), next: upcoming(m) });
+    const tier = memberTier(m); res.json({ ok: true, tier: tier, access: examAccess(m, tier), registrations: memberRegs(m), results: examResults(m), live: liveSession(m), next: upcoming(m) });
   });
 
   // รูปโปรไฟล์ (ย่อขนาดจากเครื่องลูกค้าแล้ว) ชื่อไฟล์สุ่ม เดาไม่ได้
@@ -290,6 +301,13 @@ module.exports = function (app, DATA, deps) {
     const o = { name: rn, phone: rp, email: m.email, addr: full, team: team, ref: ref, ship: 'post', pay: pay, items: items, total: total, famMembers: fam,
       payEmail: pay === 'card' ? m.email : '', note: String(b.note || '').slice(0, 300), source: 'app', _memberId: m.id };
     sh.placeOrder(o, req).then(r => res.status(r.code).json(r.body));
+  });
+  // คืนสินค้า/คืนเงิน: ใช้ตัวตนของสมาชิกที่ล็อกอินอยู่ ค้นหาคำสั่งซื้อ (รวมข้อมูลนำเข้าจากชีต) และคำขอคืนของตัวเอง
+  app.get('/api/m/returns', (req, res) => {
+    res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return;
+    if (!deps.returns) return res.status(503).json({ ok: false });
+    const name = (m.firstName + ' ' + m.lastName).trim(); const r = deps.returns(m.phone, m.email, name);
+    res.json(Object.assign({ ok: true, me: { phone: m.phone, email: m.email, name: name } }, r));
   });
   app.get('/api/m/address', (req, res) => { res.set('Cache-Control', 'no-store'); const m = needMember(req, res); if (!m) return; res.json({ ok: true, address: m.address || null, team: m.lastTeam || '', ref: m.lastRef || '' }); });
   app.post('/api/m/orders/:id/slip', (req, res) => {

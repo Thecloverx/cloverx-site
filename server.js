@@ -210,8 +210,8 @@ app.use(function (req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // กล้องเปิดได้เฉพาะหน้าสแกน QR เช็กอินของทีมงาน (xv-checkin) — หน้าอื่นปิดกล้องทั้งหมด
-  res.setHeader('Permissions-Policy', /^\/xv-checkin(\.html)?\/?$/i.test(req.path) ? 'geolocation=(), microphone=(), camera=(self)' : 'geolocation=(), microphone=(), camera=()');
+  // กล้องเปิดได้เฉพาะหน้าสแกน QR: xv-checkin (ทีมงาน) และ /app (สแกน QR ในแอปสมาชิก) หน้าอื่นปิดกล้องทั้งหมด
+  res.setHeader('Permissions-Policy', /^\/(xv-checkin(\.html)?|app(\.html)?)\/?$/i.test(req.path) ? 'geolocation=(), microphone=(), camera=(self)' : 'geolocation=(), microphone=(), camera=()');
   res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
   next();
 });
@@ -223,7 +223,7 @@ var XV_OPTS = { isStaff: function (req) { return !!currentStaff(req); }, staffNa
 var MEMBER_API = null;
 try { require('./xvisor_api')(app, DATA, XV_OPTS); } catch (e) { console.error('[x-visor] failed to mount:', e.message); }
 // แอปสมาชิก (/app): สมัคร/ล็อกอิน หน้าแรก ข่าว คลิปอบรม การสอบ คำสั่งซื้อ QR สมาชิก
-try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); }, shop: { placeOrder: function (o, req) { return placeOrder(o, req); }, attachSlip: function (id, d, req) { return attachSlip(id, d, req); }, settings: function () { return readSettings(); }, stock: function () { return readStock(); }, enforce: function () { return stockEnforceOn(); }, components: function (nm) { return itemComponents(nm); } } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
+try { MEMBER_API = require('./member_api')(app, DATA, { xv: function () { return XV_OPTS.expose; }, readOrders: function () { return read(); }, ownsOrder: function (o, ph, em, nm) { return ownsOrder(o, ph, em, nm); }, staffOrKey: function (req, res) { return staffOrKey(req, res); }, returns: function (ph, em, nm) { ph = digitsOnly(ph); em = String(em || '').trim().toLowerCase(); nm = String(nm || ''); return { orders: read().filter(function (o) { return ownsOrder(o, ph, em, nm); }).map(pubOrder), myReturns: readReturns().filter(function (r) { return retOwns(r, ph, em, nm); }), returnDeadline: RETURN_DEADLINE_ISO, returnOpen: !retDeadlinePassed() }; }, shop: { placeOrder: function (o, req) { return placeOrder(o, req); }, attachSlip: function (id, d, req) { return attachSlip(id, d, req); }, settings: function () { return readSettings(); }, stock: function () { return readStock(); }, enforce: function () { return stockEnforceOn(); }, components: function (nm) { return itemComponents(nm); } } }); console.log('[member] app API mounted'); } catch (e) { console.error('[member] failed to mount:', e.message); }
 
 // ---- Lean Lab membership & auth (email + LINE + Google) ----
 try { require('./leanlab_api')(app, DATA, { currentStaff: function (req) { return currentStaff(req); } }); } catch (e) { console.error('[lean-lab] failed to mount:', e.message); }
@@ -864,8 +864,8 @@ function ownsOrder(o, ph, em, nm) {
   return retAliasOwns(o, digitsOnly(ph), nm);   // ผู้สั่ง/ผู้ซื้อร่วมตามชีต
 }
 // ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล/ชื่อ) — คืนเฉพาะออเดอร์ที่ตรง
-// ---- กำหนดส่งคืนสินค้า: ลูกค้าต้องส่งคืนภายในวันที่ 30 ก.ย. 2569 (เวลาไทย) — ปรับได้ด้วย ENV RETURN_DEADLINE (ISO) ----
-var RETURN_DEADLINE_ISO = process.env.RETURN_DEADLINE || '2026-09-30T23:59:59+07:00';
+// ---- กำหนดส่งคืนสินค้า: ลูกค้าต้องส่งคืนภายในวันที่ 28 ก.ย. 2569 (เวลาไทย) — ปรับได้ด้วย ENV RETURN_DEADLINE (ISO) ----
+var RETURN_DEADLINE_ISO = process.env.RETURN_DEADLINE || '2026-09-28T23:59:59+07:00';
 function retDeadlinePassed() { var t = Date.parse(RETURN_DEADLINE_ISO); return isFinite(t) && Date.now() > t; }
 function retOverdue(r) { return retDeadlinePassed() && r && r.choice !== 'wait' && r.status === 'awaiting_shipment'; }
 function retLog(r, text) { r.history = Array.isArray(r.history) ? r.history : []; r.history.unshift({ at: new Date().toISOString(), text: text }); }

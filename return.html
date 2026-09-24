@@ -463,7 +463,7 @@ function copyAddr(btn){var t=addrText();var done=function(){var sp=btn.querySele
 /* ข้อความเหตุผลเก็บเหมือนเดิม (หลังบ้านจัดกลุ่มจากข้อความนี้) — เปลี่ยนเฉพาะป้ายของตัวเลือก "อื่น ๆ" */
 var REASONS=[{r:'คืนสินค้าตามเงื่อนไขบริษัทฯ',i:'shield'},{r:'คืนสินค้าชำรุด เสียหาย',i:'heartc'},{r:'ได้รับสินค้าไม่ครบ',i:'box'},{r:'เปลี่ยนใจ ไม่ต้องการสินค้าแล้ว',i:'refresh'},{r:'อื่น ๆ (โปรดระบุ)',i:'edit'}];
 var OTHER_R=REASONS[4].r;
-var RETURN_DEADLINE='30 กันยายน 2569';
+var RETURN_DEADLINE='28 กันยายน 2569';
 var RET_OPEN=true; // เซิร์ฟเวอร์แจ้งผ่าน /api/returns/lookup ว่ายังยื่นคำขอคืนได้หรือไม่
 var COMP_LABEL={'band-black':'Xircle Band (Black)','band-cream':'Xircle Band (Cream)','scale':'Xircle Scale','routinex':'RoutineX','flavor':'Flavor+'};
 var COMP_DISP={'band-black':'Xircle Band สีดำ','band-cream':'Xircle Band สีครีม','scale':'Xircle Scale','routinex':'RoutineX','flavor':'Flavor+'};
@@ -525,7 +525,8 @@ function lookup(){
 }
 function refreshThen(cb){fetch('/api/returns/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ME)}).then(function(r){return r.json();}).then(function(j){ORDERS=(j&&j.orders)||[];MYRET=(j&&j.myReturns)||[];RET_OPEN=!(j&&j.returnOpen===false);cb&&cb();}).catch(function(){cb&&cb();});}
 function logout(){location.reload();}
-function menu(){if(confirm('ออกจากระบบและกลับหน้าแรก?'))logout();}
+var FROM_APP=/[?&]from=app(&|$)/.test(location.search);
+function menu(){if(FROM_APP){location.href='/app#orders';return;}if(confirm('ออกจากระบบและกลับหน้าแรก?'))logout();}
 
 /* ---------- order list ---------- */
 var RET_ST={awaiting_shipment:{l:'รอจัดส่งสินค้าคืน',c:'wait'},in_transit:{l:'กำลังส่งคืน / รอตรวจรับ',c:'pend'},refund_review:{l:'รออนุมัติคืนเงิน',c:'pend'},refunded:{l:'คืนเงินสำเร็จ',c:'ok'},rejected:{l:'ปฏิเสธการรับคืน',c:'bad'},cancelled:{l:'ยกเลิกแล้ว',c:'bad'},wait:{l:'รอการปรับปรุง',c:'wait'}};
@@ -793,6 +794,15 @@ function toggleTheme(){var t=isDark()?'light':'dark';document.documentElement.se
   var s1=document.getElementById('s1');if(s1){var b=document.createElement('button');b.className='theme-btn';b.type='button';b.onclick=toggleTheme;s1.appendChild(b);}
   try{matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(!document.documentElement.getAttribute('data-theme'))applyThemeUi();});}catch(e){}
   hydrateIcons();applyThemeUi();})();
+
+/* เปิดจากแอปสมาชิก: ใช้ตัวตนของสมาชิกที่ล็อกอินอยู่ ไม่ต้องกรอกยืนยันตัวตนซ้ำ */
+(function(){ if(!FROM_APP)return;
+  fetch('/api/m/returns',{credentials:'same-origin',cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.ok||!j.me)return; ME={phone:j.me.phone||'',email:j.me.email||'',name:j.me.name||''}; ORDERS=j.orders||[]; MYRET=j.myReturns||[]; RET_OPEN=j.returnOpen!==false;
+    if(!ORDERS.length&&!MYRET.length)return; renderOrders();
+    var b=document.querySelector('#s_orders .ab-btn'); if(b){ b.setAttribute('aria-label','กลับไปแอป'); }
+  }).catch(function(){});
+})();
 </script>
 </body>
 </html>

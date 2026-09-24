@@ -28,6 +28,7 @@ var I={
   store:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
   clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
+  refund:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>',
   upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>'
 };
 function sv(n,s,col,w){ return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+(col||'currentColor')+'" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+I[n]+'</svg>'; }
@@ -232,6 +233,12 @@ var css=''
 +'.ocard .ft .bs{display:flex;gap:8px}'
 +'.sb2{height:28px;border-radius:14px;font-size:11px;font-weight:700;padding:0 14px;white-space:nowrap;display:inline-flex;align-items:center}'
 +'.sb2.o{border:1px solid #2563eb;color:#2563eb}.sb2.m{border:1px solid #cbd5e1;color:#0f172a;font-weight:600}.sb2.g{background:linear-gradient(90deg,#1e3a8a,#3b82f6);color:#fff}'
++'.rcard{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:12px}'
++'.rcard .rh{display:flex;gap:12px;align-items:center}.rcard .ri{width:40px;height:40px;border-radius:20px;background:linear-gradient(90deg,#3b82f6,#1d4ed8);display:grid;place-items:center;flex:none}'
++'.rcard .rh b{display:block;font-size:15px;color:#0f172a}.rcard .rh small{display:block;font-size:12px;color:#64748b;margin-top:2px;line-height:1.5}'
++'.rcard .rl{display:flex;flex-direction:column;gap:6px;border-top:1px solid #f1f5f9;padding-top:10px}.rcard .rl div{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#475569}.rcard .rl em{font-style:normal;font-weight:700}'
++'.rcard .rl .c-w{color:#d97706}.rcard .rl .c-b{color:#2563eb}.rcard .rl .c-g{color:#059669}.rcard .rl .c-r{color:#dc2626}.rcard .rl .c-m{color:#64748b}'
++'.rcard .rb{height:40px;border-radius:10px;background:linear-gradient(90deg,#3b82f6,#1d4ed8);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}'
 +'@media(max-width:360px){.sgrid{gap:10px}.pd .price b{font-size:25px}.b2{padding:0 10px;font-size:13px}}';
 var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
@@ -523,19 +530,30 @@ function renderOrder(id){ var v=$('#v-order'); v.innerHTML=barHtml('รายล
     var s=$('#odSlip'); if(s)s.onclick=function(){ pickSlip(o.id,function(){ renderOrder(id); }); };
   }).catch(function(){ toast('เชื่อมต่อไม่สำเร็จ'); }); }
 
+/* ---------- คืนสินค้า / คืนเงิน (ผูกกับระบบ Return & Refund เดิม) ---------- */
+var RET=null, retAt=0;
+var RETST={awaiting_shipment:['รอส่งสินค้าคืน','w'],in_transit:['กำลังส่งคืน รอตรวจรับ','b'],refund_review:['รออนุมัติคืนเงิน','b'],refunded:['คืนเงินสำเร็จ','g'],rejected:['ปฏิเสธการรับคืน','r'],cancelled:['ยกเลิกแล้ว','m'],wait:['รอการปรับปรุง','m']};
+function loadRet(){ if(RET&&Date.now()-retAt<20000)return Promise.resolve(RET); return api('/api/m/returns').then(function(j){ if(j&&j.ok){ RET=j; retAt=Date.now(); } return RET; }); }
+function retCard(){ if(!RET||!((RET.orders||[]).length||(RET.myReturns||[]).length))return '';
+  var mine=(RET.myReturns||[]).filter(function(r){return r.status!=='cancelled';}), open=RET.returnOpen!==false;
+  var dl=(function(){ var d=new Date(RET.returnDeadline); if(isNaN(d))return ''; var M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; var b=new Date(d.getTime()+7*3600000); return b.getUTCDate()+' '+M[b.getUTCMonth()]+' '+(b.getUTCFullYear()+543); })();
+  return '<div class="rcard"><div class="rh"><span class="ri">'+sv('refund',20,'#fff')+'</span><div><b>คืนสินค้า / คืนเงิน</b><small>'+(open?('<span class="ln">ยื่นคำขอและส่งสินค้าคืน</span> <span class="ln">ภายในวันที่ '+esc(dl)+'</span>'):'<span class="ln">หมดเขตยื่นคำขอคืนสินค้าแล้ว</span> <span class="ln">(ภายในวันที่ '+esc(dl)+')</span>')+'</small></div></div>'
+    +(mine.length?'<div class="rl">'+mine.map(function(r){ var x=RETST[r.status]||[r.status,'m']; return '<div><span>'+esc(r.rid)+'</span><em class="c-'+x[1]+'">'+esc(x[0])+'</em></div>'; }).join('')+'</div>':'')
+    +'<a class="rb" href="/return?from=app">'+(mine.length?(open?'ติดตามหรือยื่นคำขอเพิ่ม':'ติดตามคำขอคืน'):(open?'ยื่นคำขอคืนสินค้า':'ดูรายละเอียด'))+'</a></div>'; }
+
 /* ---------- 92:350 คำสั่งซื้อของฉัน ---------- */
 var OTAB='all', OT=[['all','ทั้งหมด'],['wait','รอชำระ'],['prep','กำลังจัดส่ง'],['done','สำเร็จ'],['refund','คืนเงิน']];
 function renderOrders(){ var v=$('#v-orders');
   var paint=function(){ var l=(ORD||[]).filter(function(o){ var k=ostat(o).k; return OTAB==='all'||(OTAB==='prep'?(k==='prep'||k==='ship'):k===OTAB); });
     v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="otabs" role="tablist">'+OT.map(function(t){return '<button type="button" data-ot="'+t[0]+'" class="'+(OTAB===t[0]?'on':'')+'">'+t[1]+'</button>';}).join('')+'</div>'
-      +'<div class="sbody">'+(l.length?l.map(function(o){ var S=ostat(o), imgs=o.items.map(function(it){return imgForName(it.nm);}).filter(Boolean).slice(0,3);
+      +'<div class="sbody"><div id="ordRet">'+retCard()+'</div>'+(l.length?l.map(function(o){ var S=ostat(o), imgs=o.items.map(function(it){return imgForName(it.nm);}).filter(Boolean).slice(0,3);
         var btns=S.k==='wait'&&o.pay==='bank'?'<button class="sb2 g" type="button" data-slip="'+esc(o.id)+'">'+(o.hasSlip?'อัปโหลดสลิปใหม่':'อัปโหลดสลิป')+'</button>'
           :(S.k==='done'?'<button class="sb2 m" type="button" data-again="'+esc(o.id)+'">ซื้ออีกครั้ง</button>':'<a class="sb2 o" href="#order/'+esc(o.id)+'">ติดตามพัสดุ</a>');
         return '<div class="ocard"><div class="h"><span>'+sv('store',14,'#0f172a')+'CloverX Official Store</span><em class="c-'+S.c+'">'+esc(S.t)+'</em></div>'
           +'<a class="mid" href="#order/'+esc(o.id)+'"><span class="th">'+(imgs.map(function(u){return '<img src="'+u+'" alt="">';}).join('')||'<span style="font-size:12px;color:#64748b">'+esc((o.items[0]||{}).nm||'')+'</span>')+'</span><span class="sum"><small>ทั้งหมด '+o.items.length+' ชิ้น</small><b>'+money(o.total)+'</b></span></a>'
           +'<div class="ft"><small>หมายเลข: '+esc(o.id)+'</small><div class="bs">'+btns+'</div></div></div>'; }).join('')
         :'<div class="cardw"><div class="sempty">'+(OTAB==='all'?'ยังไม่มีคำสั่งซื้อ':'ไม่มีคำสั่งซื้อในหมวดนี้')+'<div style="margin-top:14px"><a class="sb2 o" href="#shop" style="height:34px;font-size:13px">เลือกซื้อสินค้า</a></div></div></div>')
-      +(ORD&&ORD.length?'<div style="text-align:center;padding:4px 0 8px"><a class="link" href="/return">ขอคืนสินค้า / คืนเงิน</a></div>':'')+'</div>';
+      +'</div>';
     $$('[data-ot]',v).forEach(function(b){ b.onclick=function(){ OTAB=b.dataset.ot; paint(); }; });
     $$('[data-slip]',v).forEach(function(b){ b.onclick=function(){ pickSlip(b.dataset.slip,function(){ loadOrders(true).then(paint); }); }; });
     $$('[data-again]',v).forEach(function(b){ b.onclick=function(){ var o=findOrd(b.dataset.again); if(!o)return; loadShop().then(function(){ var n=0;
@@ -544,7 +562,8 @@ function renderOrders(){ var v=$('#v-orders');
       toast(n?'เพิ่มลงตะกร้าแล้ว':'สินค้านี้สั่งซ้ำในแอปไม่ได้'); if(n)location.hash='#cart'; }); }; });
   };
   v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="sempty">กำลังโหลด…</div>';
-  loadOrders(true).then(paint).catch(function(){ v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="sempty">เชื่อมต่อไม่สำเร็จ</div>'; }); }
+  loadOrders(true).then(paint).catch(function(){ v.innerHTML=barHtml('คำสั่งซื้อของฉัน','#home',{small:true})+'<div class="sempty">เชื่อมต่อไม่สำเร็จ</div>'; });
+  loadRet().then(function(){ var b=$('#ordRet'); if(b)b.innerHTML=retCard(); }).catch(function(){}); }
 
 window.CXSHOP={ views:['shop','product','cart','checkout','done','order','orders'], tabbed:{shop:1,orders:1},
   render:function(sec,id){ if(sec!=='shop')clearInterval(TIMER); ({shop:renderShop,product:renderProduct,cart:renderCart,checkout:renderCheckout,done:renderDone,order:renderOrder,orders:renderOrders})[sec](id); },

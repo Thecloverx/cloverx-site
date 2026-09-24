@@ -1647,6 +1647,7 @@ module.exports = function (app, DATA, opts) {
 
   // ให้แอปสมาชิก (member_api) อ่านข้อมูลการสมัคร/ผลสอบได้ (อ่านอย่างเดียว)
   if (opts) opts.expose = { readReg: readReg, readR: readR, readS: readS, findR: findR, examTypeOf: examTypeOf, sessExamType: sessExamType,
+    examLive: function (r) { return xvExamLive(r); }, pubResults: function (x) { return pubResults(x); }, pubAttempts: function (x) { return pubAttempts(x); }, remaining: function (x) { return xvRemaining(x); },
     openRegRounds: function () { return readR().filter(regOpenForReg).map(function (r) { return Object.assign(pubRound(r), { examType: examTypeOf(r) }); }); } };
   console.log('[x-visor] exam API mounted');
 };
