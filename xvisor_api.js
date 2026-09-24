@@ -1034,8 +1034,9 @@ module.exports = function (app, DATA, opts) {
       regCloseAt: String(b.regCloseAt || '').slice(0, 10),
       createdAt: Date.now()
     };
-    // สร้างรอบ = เปิดรับสมัครเท่านั้น · นาฬิกาสอบเริ่มเมื่อทีมงานกด "เริ่มจับเวลาสอบ" ในวันสอบ
-    if (b.startClock) { r.status = 'open'; r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }
+    // สร้างรอบแบบเปิดสอบทันที = เริ่มนาฬิกาสอบ 120 นาทีตอนสร้าง (แบบเดิม) · นาฬิกาสอบเริ่มเมื่อทีมงานกด "เริ่มจับเวลาสอบ" ในวันสอบ
+    if (b.startClock) r.status = 'open';
+    if (r.status === 'open' && (b.startClock || !r.date || r.date === xvBkkDate())) { r.examOpenedAt = Date.now(); r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000; }   // เปิดรอบของวันนี้ = เริ่มจับเวลา (รอบวันอื่น = เปิดรับสมัครเฉย ๆ)
     const all = readR(); all.push(r); writeR(all);
     logAudit('round_create', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, 'สร้างรอบ ' + r.date + ' (' + r.mode + ')', 'staff');
     res.json({ ok: true, round: pubRound(r) });
@@ -1061,7 +1062,7 @@ module.exports = function (app, DATA, opts) {
     if (b.regCloseAt != null) r.regCloseAt = String(b.regCloseAt).slice(0, 10);
     // กดเปิดสอบ (closed → open) หรือกด "เริ่มจับเวลาสอบ" (startClock ตอนรอบเปิดรับสมัครอยู่แล้ว) = เริ่มนาฬิการวมของห้อง 120 นาที
     if (b.startClock) r.status = 'open';
-    if (r.status === 'open' && b.startClock) {
+    if (r.status === 'open' && (b.startClock || (!wasOpen && b.status === 'open' && (!r.date || r.date === xvBkkDate())))) {   // กดเปิดสอบ = เริ่มจับเวลาทันที (แบบเดิม)
       r.examOpenedAt = Date.now();
       r.examDeadlineAt = r.examOpenedAt + TOTAL * 1000;
       // คนที่กำลังสอบด้วยนาฬิกาห้อง (รอบแรก) รีเซ็ตเวลาตามนาฬิกาห้องใหม่ด้วย
@@ -1075,7 +1076,7 @@ module.exports = function (app, DATA, opts) {
       if (touched) writeS(allS);
     }
     writeR(all);
-    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, (b.startClock ? 'เริ่มจับเวลาสอบ' : (b.status === 'open') ? 'เปิดรอบ (รับสมัคร)' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
+    logAudit('round_update', 'round', r.id, 'ครั้งที่ ' + r.no, null, r.status, ((b.startClock || (!wasOpen && b.status === 'open' && (!r.date || r.date === xvBkkDate()))) ? 'เปิดสอบ (เริ่มจับเวลา)' : (b.status === 'open') ? 'เปิดรอบ' : (b.status === 'closed' ? 'ปิดสอบ' : 'แก้ไขข้อมูลรอบ')), 'staff');
     res.json({ ok: true, round: pubRound(r) });
   });
 
