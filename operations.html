@@ -3380,7 +3380,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     return (list||[]).filter(function(o){
       if(!poDateInRange(o.at))return false;
       if(PO_PRODF!=='all'){ if(!(o.items||[]).some(function(it){return poBaseName(it.nm)===PO_PRODF;}))return false; }
-      if(q){ var hay=[o.id,o.name,o.phone,o.email,o.team,o.ref,(o.items||[]).map(function(it){return it.nm;}).join(' ')].join(' '); if(!srchHit(hay,q))return false; }
+      if(q){ var hay=[o.id,o.name,o.phone,o.team,o.ref,(o.items||[]).map(function(it){return it.nm;}).join(' ')].join(' ').toLowerCase(); if(hay.indexOf(q)<0)return false; }
       return true;
     });
   }
@@ -3764,7 +3764,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var hc=h.replace(/ /g,''), nc=n.replace(/ /g,''); if(hc.indexOf(nc)>=0)return true;
     var hd=h.replace(/\D/g,''), nd=n.replace(/\D/g,''); if(nd.length>=4&&nd.length===n.replace(/[\s-]/g,'').length&&hd.indexOf(nd)>=0)return true;
     return n.split(' ').every(function(t){return hc.indexOf(t)>=0;}); }
-  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
+  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.orderFamily,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
   function retInRange(at){ return drpIn('ret',at); }
   function retInRangeLegacy(at){
     if(RET_RANGE==='all')return true;

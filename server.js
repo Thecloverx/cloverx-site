@@ -655,6 +655,7 @@ app.post('/api/admin/import', (req, res) => {
 
 // ---- update status (confirm / reject) ----
 app.patch('/api/orders/:id', (req, res) => {
+  if (!staffOrKey(req, res)) return;   // แก้ไขออเดอร์ได้เฉพาะทีมงาน
   const list = read();
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ ok: false });
@@ -790,7 +791,7 @@ function pubOrder(o) {
 // ---- ยืนยันตัวตนลูกค้า ----
 // ข้อมูลออเดอร์ที่นำเข้าเก็บเบอร์แบบปิดบัง (4 ตัวท้าย) และไม่มีอีเมล
 // จึงเทียบได้ 2 แบบ: (1) ตรงทั้งเบอร์/อีเมล  (2) เบอร์ 4 ตัวท้ายตรงกัน + ชื่อ-นามสกุลตรงกัน (กันชนกรณีเลขท้ายซ้ำ)
-function normName(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function normName(s) { s = String(s || ''); try { s = s.normalize('NFC'); } catch (e) {} return s.replace(/[\u200b-\u200f\u2060\ufeff\u00ad]/g, '').replace(/[\s\u00a0]+/g, ' ').trim().toLowerCase(); }   // ตัดอักขระล่องหนที่ติดมากับข้อมูลนำเข้า
 function nameFactorOk(storedName, enteredName) {
   var s = normName(storedName), e = normName(enteredName);
   if (!s || !e) return false;
@@ -817,7 +818,26 @@ function identityOwns(recPhone, recEmail, recName, ph, em, nm) {
   if (pf === 'suffix' && nameFactorOk(recName, nm)) return true;
   return false;
 }
-function ownsOrder(o, ph, em, nm) { return identityOwns(o.phone, o.email, o.name, ph, em, nm); }
+// รายชื่อติดต่อจากชีต Order Master (ชื่อเต็ม เบอร์เต็ม อีเมล ผู้ซื้อร่วม) ใช้ยืนยันตัวตนในระบบคืนสินค้าเท่านั้น
+// ไม่แก้ข้อมูลออเดอร์ Pre-Order   ไฟล์ returns-contacts.json จับคู่ด้วยเลข PO
+var RET_CONTACTS = (function () {
+  var m = {};
+  try {
+    var fix0 = function (d) { return (d.length === 9 && /^[689]/.test(d)) ? '0' + d : d; };
+    var rows = JSON.parse(fs.readFileSync(path.join(__dirname, 'returns-contacts.json'), 'utf8'));
+    (Array.isArray(rows) ? rows : []).forEach(function (r) { if (!r || !r.id) return;
+      m[r.id] = { name: String(r.name || ''), phone: fix0(digitsOnly(r.phone)), email: String(r.email || '').trim().toLowerCase(), familyName: String(r.familyName || ''), familyPhone: fix0(digitsOnly(r.familyPhone)) }; });
+    console.log('[returns] contacts loaded: ' + Object.keys(m).length);
+  } catch (e) {}
+  return m;
+})();
+function ownsOrder(o, ph, em, nm) {
+  if (identityOwns(o.phone, o.email, o.name, ph, em, nm)) return true;
+  var c = RET_CONTACTS[o.id]; if (!c) return false;
+  if (identityOwns(c.phone, c.email, c.name, ph, em, nm)) return true;                               // ผู้สั่งตามชีต
+  if (c.familyPhone && identityOwns(c.familyPhone, '', c.familyName, ph, em, nm)) return true;      // ผู้ซื้อร่วม (Family)
+  return false;
+}
 // ค้นหาคำสั่งซื้อของลูกค้าเอง (ด้วยเบอร์/อีเมล/ชื่อ) — คืนเฉพาะออเดอร์ที่ตรง
 // ---- กำหนดส่งคืนสินค้า: ลูกค้าต้องส่งคืนภายในวันที่ 30 ก.ย. 2569 (เวลาไทย) — ปรับได้ด้วย ENV RETURN_DEADLINE (ISO) ----
 var RETURN_DEADLINE_ISO = process.env.RETURN_DEADLINE || '2026-09-30T23:59:59+07:00';
@@ -868,7 +888,7 @@ app.post('/api/returns', function (req, res) {
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderFamily: (function (c) { return c ? [c.name, c.phone, c.email, c.familyName, c.familyPhone].join(' ') : ''; })(RET_CONTACTS[r.orderId]), orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
@@ -1087,6 +1107,7 @@ app.post('/api/returns/:rid/track', function (req, res) {
 
 // ---- ADMIN: delete an order (guarded by ADMIN_KEY) ----
 app.delete("/api/orders/:id", (req, res) => {
+  if (!staffOrKey(req, res)) return;   // ลบออเดอร์ได้เฉพาะทีมงาน
   const list = read();
   const i = list.findIndex(x => x.id === req.params.id);
   if (i < 0) return res.status(404).json({ ok: false, error: "not_found" });
@@ -1130,6 +1151,7 @@ app.get('/api/admin/emailtest', function (req, res) {
 // ---- serve slip images ----
 // ตรวจสลิปอีกครั้งด้วย EasySlip (ออเดอร์โอนที่แนบสลิปแล้วแต่ยังไม่ยืนยัน) — ใช้ตอนแก้ตรรกะจับคู่แล้วอยากเช็กซ้ำ
 app.post('/api/orders/:id/reverify', (req, res) => {
+  if (!staffOrKey(req, res)) return;
   const list = read();
   const o = list.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ ok: false, error: 'not_found' });
