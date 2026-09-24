@@ -75,7 +75,7 @@ module.exports = function (app, DATA, deps) {
     const all = readM();
     if (all.some(x => x.email === email)) return res.status(409).json({ ok: false, error: 'email_taken' });
     if (all.some(x => ph9(x.phone) === ph9(phone))) return res.status(409).json({ ok: false, error: 'phone_taken' });
-    const m = { id: genId(), firstName, lastName, email, phone, qr: crypto.randomBytes(12).toString('base64url'), createdAt: Date.now(), consentAt: Date.now() };
+    const m = { id: genId(), firstName, lastName, email, phone, qr: crypto.randomBytes(12).toString('base64url'), createdAt: Date.now(), consentAt: Date.now(), consentScope: ['terms', 'marketing', 'privacy'] };
     all.push(m); writeM(all);
     openSession(req, res, m);
     res.json({ ok: true, member: pubMember(m) });

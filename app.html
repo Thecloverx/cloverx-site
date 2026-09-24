@@ -62,14 +62,18 @@ a{color:inherit;text-decoration:none}
 .auth .foot a{color:var(--blue);font-weight:700;text-decoration:underline;margin-left:6px}
 .chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut);margin:4px 0 18px;cursor:pointer;line-height:1.5}
 .chk input{width:20px;height:20px;margin:0;accent-color:var(--blue);flex:none}
+.chk.consent{background:#fff;border-radius:14px;padding:14px 16px;margin:6px 0 18px;font-size:13.5px;line-height:1.7;color:var(--mut);border:1px solid transparent;transition:border-color .15s}
+.chk.consent input{margin-top:2px}
+.chk.consent b{color:var(--ink);font-weight:600}
+.chk.consent:has(input:checked){border-color:rgba(37,99,235,.35)}
 .back{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:#fff;margin:20px 0 0 -4px;color:var(--ink)}
 
 /* ---------- home ---------- */
 .hero{position:relative;background:linear-gradient(90deg,var(--sky1),var(--sky2) 50%,var(--sky3));height:128px;padding:14px 16px 0}
 .who{display:flex;align-items:center;gap:12px}
-.av{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 6px 16px rgba(15,23,42,.18),inset 0 -6px 12px rgba(15,23,42,.06);overflow:hidden;flex:none;position:relative;display:grid;place-items:center;color:#cbd5e1}
-.av img{width:100%;height:100%;object-fit:cover;display:block}
-.av .cam{position:absolute;right:0;bottom:0;width:22px;height:22px;border-radius:11px;background:var(--blue);color:#fff;display:grid;place-items:center;border:2px solid #fff}
+.av{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 6px 16px rgba(15,23,42,.18),inset 0 -6px 12px rgba(15,23,42,.06);overflow:visible;flex:none;position:relative;display:grid;place-items:center;color:#cbd5e1}
+.av img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.av .cam{position:absolute;right:-3px;bottom:-3px;width:24px;height:24px;border-radius:12px;background:var(--blue);color:#fff;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(15,23,42,.25);z-index:1}
 .who .nm{font-size:18px;font-weight:700;line-height:1.25;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who .tier{display:flex;align-items:center;gap:6px;color:#fff;font-size:12px;font-weight:600;letter-spacing:.04em;margin-top:2px;text-shadow:0 1px 2px rgba(15,23,42,.25)}
 .who .txt{min-width:0}
@@ -159,7 +163,7 @@ a{color:inherit;text-decoration:none}
 .kv b{font-weight:600;text-align:right;word-break:break-all}
 .prof-top{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 16px 18px;text-align:center}
 .prof-top .av{width:96px;height:96px}
-.prof-top .av .cam{width:30px;height:30px;border-radius:15px}
+.prof-top .av .cam{width:32px;height:32px;border-radius:16px;right:-2px;bottom:-2px}
 .prof-top .nm{font-size:19px;font-weight:800}
 .menu a,.menu button{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-top:1px solid #f1f5f9;text-align:left;font-size:14px;font-weight:600}
 .menu>:first-child{border-top:0}
@@ -300,7 +304,7 @@ a{color:inherit;text-decoration:none}
     <div class="fld"><label for="rgLn">นามสกุล</label><input class="inp" id="rgLn" autocomplete="family-name" placeholder="นามสกุล"></div>
     <div class="fld"><label for="rgEmail">อีเมล</label><input class="inp" id="rgEmail" type="email" inputmode="email" autocomplete="email" placeholder="example@cloverx.com"></div>
     <div class="fld"><label for="rgPhone">เบอร์โทรศัพท์</label><input class="inp" id="rgPhone" inputmode="tel" autocomplete="tel" placeholder="0xx-xxx-xxxx"><div class="hint">เบอร์โทรศัพท์นี้จะใช้เป็นรหัสผ่านสำหรับเข้าสู่ระบบ</div></div>
-    <label class="chk"><input type="checkbox" id="rgOk"><span><span class="ln">ข้าพเจ้ายอมรับเงื่อนไขการใช้งาน</span> <span class="ln">และนโยบายความเป็นส่วนตัว (PDPA)</span></span></label>
+    <label class="chk consent"><input type="checkbox" id="rgOk"><span><span class="ln">ข้าพเจ้ายอมรับ<b>เงื่อนไขการใช้งาน</b></span> <span class="ln"><b>การเก็บข้อมูลทางการตลาด</b></span> <span class="ln">และ<b>นโยบายความเป็นส่วนตัว (PDPA)</b></span></span></label>
     <div class="errmsg hide" id="rgErr"></div>
     <button class="btn" type="submit" id="rgGo">สมัครสมาชิก</button>
   </form>
@@ -312,7 +316,7 @@ a{color:inherit;text-decoration:none}
   <div class="hero">
     <div class="who">
       <button class="av" id="hmAv" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
-      <div class="txt"><div class="nm" id="hmName">-</div><div class="tier"><i data-ic="clover" data-s="16"></i><span id="hmTier">PRE X-VISOR</span></div></div>
+      <div class="txt"><div class="nm" id="hmName">-</div><div class="tier"><span class="tcl" style="display:inline-flex;filter:drop-shadow(0 1px 1px rgba(15,23,42,.25))"></span><span id="hmTier">PRE X-VISOR</span></div></div>
     </div>
   </div>
   <div class="home-body">
@@ -411,6 +415,7 @@ function clover(s,col){ if(col==='#fff')return '<svg width="'+s+'" height="'+s+'
 function ic(n,s,w){ if(n==='clover')return clover(s); return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>'; }
 function paint(root){ $$('i[data-ic]',root).forEach(function(el){ el.outerHTML=ic(el.getAttribute('data-ic'),+el.getAttribute('data-s')||20); }); }
 paint(document);
+$('.tcl').innerHTML=clover(16,'#fff');
 
 /* ---------- วันที่ / ตัวช่วย ---------- */
 var THM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -461,13 +466,15 @@ $('#loginForm').onsubmit=function(e){ e.preventDefault(); var em=$('#lgEmail').v
     if(j.ok){ ME=j.member; HOME=null; location.hash='#home'; route(); return; }
     showErr('lgErr',j.error==='too_many'?'ลองหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่':(j.error==='disabled'?'บัญชีนี้ถูกระงับ กรุณาติดต่อ LINE @cloverxth':'<span class="ln">อีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้อง</span> <span class="ln">กรุณาตรวจสอบอีกครั้ง</span>'));
   }).catch(function(){ busy(btn,false,'เข้าสู่ระบบ'); showErr('lgErr','เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่'); }); };
+['rgFn','rgLn','rgEmail','rgPhone','rgOk'].forEach(function(k){ $('#'+k).addEventListener(k==='rgOk'?'change':'input',function(){ showErr('rgErr',''); }); });
+['lgEmail','lgPhone'].forEach(function(k){ $('#'+k).addEventListener('input',function(){ showErr('lgErr',''); }); });
 $('#forgot').onclick=function(){ sheet('ลืมรหัสผ่าน','<span class="ln">รหัสผ่านคือเบอร์โทรศัพท์ที่ใช้สมัครสมาชิก</span> <span class="ln">หากจำอีเมลหรือเบอร์ที่ใช้สมัครไม่ได้</span> <span class="ln">ติดต่อทีมงานทาง LINE @cloverxth</span>','<a class="btn" href="'+LINE_URL+'" target="_blank" rel="noopener">ติดต่อทาง LINE</a>'); };
 $('#regForm').onsubmit=function(e){ e.preventDefault(); var b={firstName:$('#rgFn').value.trim(),lastName:$('#rgLn').value.trim(),email:$('#rgEmail').value.trim(),phone:$('#rgPhone').value.trim(),consent:$('#rgOk').checked}, btn=$('#rgGo');
   var d=b.phone.replace(/\D/g,'');
   if(!b.firstName||!b.lastName)return showErr('rgErr','กรุณากรอกชื่อและนามสกุล');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email))return showErr('rgErr','กรุณากรอกอีเมลให้ถูกต้อง');
   if(!/^0[689]\d{8}$/.test(d))return showErr('rgErr','กรุณากรอกเบอร์มือถือ 10 หลัก');
-  if(!b.consent)return showErr('rgErr','กรุณายอมรับเงื่อนไขก่อนสมัคร');
+  if(!b.consent)return showErr('rgErr','กรุณาติ๊กยอมรับเงื่อนไขก่อนสมัคร');
   showErr('rgErr',''); busy(btn,true);
   api('/api/m/register',{method:'POST',body:b}).then(function(j){ busy(btn,false,'สมัครสมาชิก');
     if(j.ok){ ME=j.member; HOME=null; toast('สมัครสมาชิกสำเร็จ'); location.hash='#home'; route(); return; }
@@ -492,7 +499,7 @@ function loadHome(){ return Promise.all([api('/api/m/me'),CONTENT?Promise.resolv
   if(r[0].ok){ HOME=r[0]; ME=Object.assign(ME||{},r[0].member); } if(r[1]&&r[1].ok)CONTENT=r[1]; return HOME; }); }
 function renderHome(){
   var paintH=function(){ if(!HOME)return; var m=HOME.member;
-    $('#hmAv').innerHTML=avHtml(12); $('#hmName').textContent=m.name; $('#hmTier').textContent=m.tier;
+    $('#hmAv').innerHTML=avHtml(14); $('#hmName').textContent=m.name; $('#hmTier').textContent=m.tier;
     paintBanner();
     var u=HOME.upcoming, up='';
     if(u){ var p=dP(u.round.date)||{}, lead=/lead/i.test(u.examType||''), title=lead?'สอบเลื่อนระดับ <span class="nb">X-Lead</span>':'สอบวัดระดับการเป็น <span class="nb">X-Visor</span>';
