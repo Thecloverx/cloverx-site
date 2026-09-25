@@ -111,7 +111,11 @@ input{font-family:inherit}
 .appbar .info b{display:block;color:var(--text-primary);font-size:13px}
 .status{display:inline-flex;align-items:center;gap:var(--space-2);padding:7px var(--space-3);border-radius:var(--radius-pill);background:rgba(20,166,109,0.10);color:var(--success);font-weight:600;font-size:13px}
 .status .dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:livedot 2s var(--ease) infinite}
-.pill-rem{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--radius-pill);background:var(--grad-danger);color:#fff;font-weight:700;font-size:12px;box-shadow:0 8px 18px -10px rgba(229,72,77,.6)}
+.pill-rem{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--radius-pill);background:#EAF2FF;color:var(--primary-600);border:1px solid rgba(20,120,255,.22);font-weight:700;font-size:12px;white-space:nowrap}
+/* ปุ่มหยุดเวลา: สีหลักของระบบ (CI) ตัวเลขในวงกลม = จำนวนครั้งที่หยุดได้อีก */
+.pzbtn{display:inline-flex;align-items:center;gap:6px;margin-left:var(--space-2);padding:0 6px 0 12px;height:36px;border-radius:var(--radius-pill);background:var(--surface-solid);border:1px solid rgba(20,120,255,.35);color:var(--primary-600);font-weight:700;font-size:13px;white-space:nowrap;box-shadow:none}
+.pzbtn svg{width:15px;height:15px}
+.pzbtn .pzc{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--grad-primary);color:#fff;font-size:12px;font-weight:800}
 .timer{display:inline-flex;align-items:center;gap:var(--space-3);padding:8px var(--space-4);border-radius:var(--radius-control);background:var(--surface-solid);border:1px solid var(--border)}
 .timer .clk{width:22px;height:22px;color:var(--primary-500)}
 .timer .tlab{font-size:11px;color:var(--text-secondary);line-height:1.15}
@@ -580,7 +584,9 @@ body.t-low .timer{background:#FEF2F2;border-color:#FCA5A5}body.t-low .timer .tva
 @media (max-width:760px){
   #fbFab{display:none!important}#xvFsBtn{display:none!important}
   .apbtn{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface-solid);color:var(--text-secondary);font:600 13px/1 inherit;font-family:inherit;cursor:pointer;white-space:nowrap}
-  .appbar{flex-wrap:nowrap;gap:8px}.appbar .brand{margin-right:auto;letter-spacing:.06em}.appbar .status{display:none}.appbar .pill-rem{font-size:12px;padding:5px 9px;white-space:nowrap}
+  .appbar{flex-wrap:nowrap;gap:8px;padding:10px 12px 10px 16px}.appbar .brand{margin-right:auto;letter-spacing:.04em;font-size:18px;white-space:nowrap;flex:none}.appbar .status{display:none}.appbar .pill-rem{font-size:12px;padding:5px 10px;flex:none}
+  .appbar .pzbtn{margin-left:0;height:34px;font-size:12.5px;padding:0 5px 0 10px;flex:none}.appbar .pzbtn .pzc{min-width:22px;height:22px;font-size:11.5px}
+  .fbbtn{width:34px;padding:0!important;flex:none;color:var(--primary-600)!important}.fbbtn .fbtx{display:none}
   .fsbtn{display:none}body.fs-need .fsbtn{display:inline-flex;background:#E5484D;border-color:#E5484D;color:#fff}
   .appbar .timer{display:none}
   .tabhint{display:none!important}
@@ -596,6 +602,8 @@ body.t-low .timer{background:#FEF2F2;border-color:#FCA5A5}body.t-low .timer .tva
   .toast.show{transform:translateX(-50%) translateY(0)!important}
   .orbwrap .ringwrap.orb{width:150px!important;height:150px!important}.orbwrap .ringwrap.orb svg{width:150px;height:150px}.orbwrap .rc b{font-size:30px}
 }
+@media (max-width:380px){.appbar .brand{font-size:16px}}
+@media (max-width:372px){.appbar .pzbtn>span:not(.pzc){display:none}.appbar .pzbtn{padding:0 5px 0 9px}}
 @media (max-width:380px){.mbtns{flex-direction:column}.mbtns .btn{width:100%}.navrow.exam #mainbtn,.mbtns .btn{white-space:normal;line-height:1.25}.navrow.exam #mainbtn .mainlbl{font-size:13px}}
 @media (prefers-reduced-motion:reduce){.medal,.medal::after,.confetti i{animation:none!important}}
 </style>
@@ -790,7 +798,7 @@ function appbar(extra){const c=S.candidate;
  return `<header class="appbar card"><span class="brand">${xvBrand().name}</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span>
    ${extra||''}<span class="spacer"></span>
    <span class="info"><span class="ii">${I.user}</span><span><b class="num">${c.id}</b>${c.firstName?c.firstName+' '+c.lastName:'ผู้เข้าสอบ'}</span></span>
-   <span class="status"><span class="dot"></span>ปลอดภัยและถูกต้อง</span>${S.phase==='active_exam'?'<button type="button" class="apbtn fsbtn" onclick="xvEnterFS()">เต็มจอ</button>':''}<button type="button" class="apbtn fbbtn" onclick="xvOpenFeedback()">แจ้งปัญหา</button></header>`;}
+   <span class="status"><span class="dot"></span>ปลอดภัยและถูกต้อง</span>${S.phase==='active_exam'?'<button type="button" class="apbtn fsbtn" onclick="xvEnterFS()">เต็มจอ</button>':''}<button type="button" class="apbtn fbbtn" onclick="xvOpenFeedback()" aria-label="แจ้งปัญหา" title="แจ้งปัญหา"><svg class="fbic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/><path d="M12 8v4M12 15.5v.01"/></svg><span class="fbtx">แจ้งปัญหา</span></button></header>`;}
 
 /* ---------- 01 registration ---------- */
 const _THMON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -807,7 +815,7 @@ function roundBanner(){const r=S.round;if(!r)return '';
 function renderRegistration(){const c=S.candidate;const onsiteRound=roundOnsite();if(onsiteRound)c.mode='onsite';
  app.innerHTML=`
  <header class="appbar card"><span class="brand">${xvBrand().name}</span><span class="divider"></span><span class="title">ระบบสอบออนไลน์</span><span class="spacer"></span>
-   <span class="status"><span class="dot"></span>พร้อมเริ่มสอบ</span><button type="button" class="apbtn fbbtn" onclick="xvOpenFeedback()">แจ้งปัญหา</button></header>
+   <span class="status"><span class="dot"></span>พร้อมเริ่มสอบ</span><button type="button" class="apbtn fbbtn" onclick="xvOpenFeedback()" aria-label="แจ้งปัญหา" title="แจ้งปัญหา"><svg class="fbic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/><path d="M12 8v4M12 15.5v.01"/></svg><span class="fbtx">แจ้งปัญหา</span></button></header>
  <div class="card wrap-mid" style="padding:var(--space-6) var(--space-6)">
    <div class="stepper" style="display:none">
      <div class="step on"><span class="sn">1</span>ข้อมูลผู้สอบ</div><span class="dash"></span>
@@ -897,7 +905,7 @@ function renderExam(){if(S.phase!=='active_exam'||!S.session)return;const c=S.ca
  let tabs='';ap.forEach((p,ix)=>{const done=partComplete(p),lk=ix>uIdx;tabs+=`<button class="tab ${p===ss.currentPart?'active':''} ${done?'done':''} ${lk?'locked':''}" data-part="${p}"><b class="num">${p}</b><span>${done?'✓ ':(lk?'🔒 ':'')}พาร์ต</span></button>`;});
  let cells='';for(let i=0;i<QPP;i++){const a=S.answers[key(ss.currentPart,i)]!=null;cells+=`<button class="cell ${a?'answered':''} ${i===ss.currentQ?'current':''}" data-q="${i}">${i+1}</button>`;}
  app.innerHTML=`
- ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn btn-danger-ghost" id="pauseBtn" style="margin-left:var(--space-2);padding:9px 14px;font-size:13px">${I.pause} หยุดเวลา  เหลือ ${PAUSE_MAX-ss.pauseUsed}</button>`:''}`)}
+ ${appbar(`${isRem?'<span class="pill-rem">รอบสอบซ่อม</span>':''}<span class="timer" style="margin-left:var(--space-3)"><span class="clk">${I.clock}</span><span><span class="tlab">เวลาที่เหลือ</span><br><span class="tval tv num">${fmt(ss.remaining)}</span></span></span>${onsite?`<button class="btn pzbtn" id="pauseBtn" aria-label="หยุดเวลา เหลือ ${PAUSE_MAX-ss.pauseUsed} ครั้ง" title="หยุดเวลาได้อีก ${PAUSE_MAX-ss.pauseUsed} ครั้ง">${I.pause}<span>หยุดเวลา</span><span class="pzc num">${PAUSE_MAX-ss.pauseUsed}</span></button>`:''}`)}
  <div class="tabbar"><div class="tabhint">${I.eye} แตะที่พาร์ตด้านบนเพื่อสลับ/ย้อนดูพาร์ตที่ทำแล้ว</div><nav class="tabs">${tabs}</nav></div>
  <div class="mprogress card"><span class="mpct num">${pct}%</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="mtime tv num">${fmt(ss.remaining)}</span></div>
  <div class="layout">

@@ -7,6 +7,8 @@
 <title>CloverX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="/vendor/three-r149.min.js" defer></script>
+<script src="/cx-splash3d.js" defer></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
@@ -335,10 +337,25 @@ a{color:inherit;text-decoration:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .loading{padding:40px 0;text-align:center;color:var(--mut2)}
 @media(max-width:360px){:root{--gut:10px}.svc-it .ic{width:50px;height:50px}.tile{width:68px;height:68px}.tile.cal strong{font-size:28px}.lesson .th{width:112px}}
+.cxsp{position:fixed;inset:0;z-index:100;background:#0d1f73 linear-gradient(145.65deg,#050d33 0%,#0d1f73 32%,#1a40a6 60%,#2666d9 80%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .35s;color:#fff}
+.cxsp.out{opacity:0;pointer-events:none}
+.cxsp canvas{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none}
+.cxsp .mid{display:flex;flex-direction:column;align-items:center;margin-bottom:16vh}
+.cxsp img{width:72.5vw;max-width:300px;height:auto;animation:cxspin .9s cubic-bezier(.16,1,.3,1) .2s both}
+.cxsp .tag{margin-top:10px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:500;color:#fff;animation:cxup .7s cubic-bezier(.16,1,.3,1) .5s both}
+.cxsp .ft{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 49px);text-align:center;font-family:'Inter',system-ui,sans-serif;font-size:12px;color:#8a99ad;opacity:.6;animation:cxup .7s cubic-bezier(.16,1,.3,1) .8s both}
+.cxsp.wait .mid,.cxsp.wait .ft{visibility:hidden;animation:none}.cxsp.wait .mid *{animation:none}
+.cxsp.is3d canvas{display:block}.cxsp.is3d img{display:none}
+.cxsp.is3d .mid{position:absolute;left:0;right:0;top:42%;margin:0;pointer-events:none}
+.cxsp.is3d .tag{margin-top:0;animation-delay:1.55s}.cxsp.is3d .ft{animation-delay:1.8s}
+@keyframes cxup{from{opacity:0;translate:0 15px}to{translate:0 0}}
+@keyframes cxspin{from{opacity:0;scale:.8}to{opacity:1;scale:1}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01s!important}}
 </style>
 </head>
 <body>
+<!-- ===== Splash เปิดแอป: โลโก้ CloverX แบบ 3D (เครื่องไม่รองรับ ใช้ภาพโลโก้ 2D) ===== -->
+<div class="cxsp wait" id="cxsp" aria-hidden="true"><canvas id="cxsp3d"></canvas><div class="mid"><img src="/cloverx_logo_d.png" alt="" width="1695" height="375"><div class="tag">WHOEVER FINDS US IS LUCKY.</div></div><div class="ft">CLOVERX THAILAND</div></div>
 <div class="app" id="app">
 
 <!-- ===== เข้าสู่ระบบ ===== -->
@@ -871,5 +888,17 @@ api('/api/m/me').then(function(j){ if(j.ok){ ME=j.member; HOME=j; } route(); }).
 <script src="/app-shop.js"></script>
 <script src="/app-return.js"></script>
 <script>/* ระบบสอบในแอป: เปิดเฉพาะเครื่องที่เปิดด้วย ?xexam=1 (ใช้ทดสอบก่อนเปิดจริง) */(function(){ var on=false; try{ if(/[?&]xexam=1/.test(location.search))localStorage.setItem("cx_xexam","1"); if(/[?&]xexam=0/.test(location.search))localStorage.removeItem("cx_xexam"); on=localStorage.getItem("cx_xexam")==="1"; }catch(e){} if(on)document.write("<script src=\"/app-exam.js\"><\/script>"); })();</script>
+<script>/* Splash เปิดแอป ทุกครั้งที่เปิด: โลโก้ 3D ราว 2.6 วินาที แตะเพื่อข้ามได้ โหลด 3D ไม่ทันใน 1.5 วินาทีใช้แบบ 2D และปิดเองไม่เกิน 4.5 วินาที */
+(function(){ var SP=document.getElementById('cxsp'); if(!SP)return; var mode='',shown=false,fx=null,pdn=null;
+  function finish(){ if(shown)return; shown=true; SP.classList.add('out'); setTimeout(function(){ if(fx)fx.stop(); SP.remove(); },400); }
+  function use2d(){ if(mode)return; mode='2d'; SP.classList.remove('wait','is3d'); setTimeout(finish,1800); }
+  function try3d(){ if(mode)return; SP.classList.add('is3d');
+    fx=window.CX3D?window.CX3D.start(document.getElementById('cxsp3d'),{widthFrac:.725,centerY:.42,gap:10,tagH:17,onLayout:function(o){SP.querySelector('.mid').style.top=Math.round(o.tagTop)+'px';},onDone:finish}):false;
+    if(!fx)return use2d(); mode='3d'; SP.classList.remove('wait'); }
+  SP.addEventListener('pointerdown',function(e){pdn=[e.clientX,e.clientY];});
+  SP.addEventListener('click',function(e){ if(pdn&&Math.hypot(e.clientX-pdn[0],e.clientY-pdn[1])>8)return; finish(); });
+  setTimeout(use2d,1500); setTimeout(finish,4500);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',try3d); else try3d();
+})();</script>
 </body>
 </html>
