@@ -225,7 +225,7 @@ module.exports = function (app, DATA_DIR, opts) {
   const EVENT = {
     season: 1,
     fee: 3900,
-    minAge: 18,
+    minAge: 0,   // ไม่จำกัดอายุ (เดิม 18 ปีขึ้นไป) ยังต้องใส่วันเกิดที่ถูกต้อง
     startLaterLabel: '8 พ.ย. 2569',      // choice "เริ่มวันที่ 08/11/69"
     promoQuota: 100,                     // โปรโมชั่นพิเศษ: 100 สิทธิ์ (นับเฉพาะที่ยืนยัน+ชำระแล้ว)
     bank: { bankName: 'กสิกรไทย (KBank)', accountNo: '231-1-71119-1', accountName: 'บริษัท โคลเวอร์เอ็กซ์ (ไทยแลนด์) จำกัด' }

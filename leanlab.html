@@ -659,7 +659,7 @@ document.addEventListener('click',function(e){
       rs_q:'“ไม่ใช่แค่ตัวเลข แต่คือชีวิตที่ดีขึ้นจริง”',rs_f1:'วัดสัดส่วนร่างกาย',rs_f2:'ติดตามทุกการเปลี่ยนแปลง',rs_f3:'วิเคราะห์โดยผู้เชี่ยวชาญ',
       jn_eye:'Join The Change',jn_h1:'เริ่มต้นเส้นทาง',jn_h2:'สู่สุขภาพที่ดีกว่า',jn_h3:'วันนี้',
       jb1:'ดูแลโดยผู้เชี่ยวชาญตลอดโปรแกรม',jb2:'พบเพื่อนร่วมเส้นทางที่มีเป้าหมายเดียวกัน',jb3:'วัดผลจริง เห็นการเปลี่ยนแปลงจริง',jb4:'สร้างสุขภาพที่ดีในระยะยาว',
-      fq_h:'คำถามที่พบบ่อย',fq1q:'ใครสามารถเข้าร่วมได้บ้าง?',fq1a:'เปิดรับทุกคนที่อายุ 18 ปีขึ้นไป ไม่ว่าจะเพิ่งเริ่มหรือออกกำลังกายอยู่แล้ว โปรแกรมออกแบบให้เหมาะกับทุกระดับ',
+      fq_h:'คำถามที่พบบ่อย',fq1q:'ใครสามารถเข้าร่วมได้บ้าง?',fq1a:'เปิดรับทุกคน ไม่จำกัดอายุ ไม่ว่าจะเพิ่งเริ่มหรือออกกำลังกายอยู่แล้ว โปรแกรมออกแบบให้เหมาะกับทุกระดับ',
       fq2q:'ไม่เคยออกกำลังกายเลย เข้าร่วมได้ไหม?',fq2a:'ได้แน่นอน ทีมผู้เชี่ยวชาญจะดูแลและปรับให้เหมาะกับร่างกายและเป้าหมายของคุณตั้งแต่เริ่มต้น',
       fq3q:'มีค่าใช้จ่ายหรือไม่?',fq3a:'มีค่าสมัครเข้าร่วมโครงการ เลือกชำระเต็มจำนวนหรือผ่อนได้ รายละเอียดแสดงในขั้นตอนการสมัคร',
       ft_priv:'นโยบายความเป็นส่วนตัว',ft_terms:'ข้อกำหนดการใช้งาน',ft_about:'เกี่ยวกับเรา',ft_contact:'ติดต่อเรา',ft_tag:'Better Health · A Brighter Tomorrow'},
@@ -685,7 +685,7 @@ document.addEventListener('click',function(e){
       rs_q:'“Not just numbers — a genuinely better life.”',rs_f1:'Body composition',rs_f2:'Track every change',rs_f3:'Expert analysis',
       jn_eye:'Join The Change',jn_h1:'Start your journey',jn_h2:'to a healthier you',jn_h3:'today',
       jb1:'Guided by experts throughout the program',jb2:'Meet others on the same journey',jb3:'Measure it, see real change',jb4:'Build lasting health',
-      fq_h:'Frequently asked questions',fq1q:'Who can join?',fq1a:'Open to anyone 18 and over — whether you are just starting or already active. The program is designed for every level.',
+      fq_h:'Frequently asked questions',fq1q:'Who can join?',fq1a:'Open to everyone, any age, whether you are just starting or already active. The program is designed for every level.',
       fq2q:'I have never worked out. Can I join?',fq2a:'Absolutely. Our expert team will guide and tailor everything to your body and goals from day one.',
       fq3q:'Is there a fee?',fq3a:'There is a program fee — pay in full or in installments. Details are shown during sign-up.',
       ft_priv:'Privacy Policy',ft_terms:'Terms of Use',ft_about:'About',ft_contact:'Contact',ft_tag:'Better Health · A Brighter Tomorrow'}
@@ -903,7 +903,7 @@ document.addEventListener('click',function(e){
     + '<div class="field" id="fPhone"><label>เบอร์โทรศัพท์ <span class="req">*</span></label><input class="in" id="j_phone" type="tel" inputmode="tel" placeholder="08x-xxx-xxxx" value="'+esc(W.phone||(ME.member&&ME.member.phone)||'')+'"><div class="err">กรอกเบอร์โทรให้ถูกต้อง</div></div>'
     + '<div class="field" id="fEmail"><label>อีเมล <span class="req">*</span></label><input class="in" id="j_email" type="email" inputmode="email" placeholder="you@email.com" value="'+esc(W.email||(ME.member&&ME.member.email)||'')+'"><div class="err">กรุณากรอกอีเมลให้ถูกต้อง</div></div>'
     + '<div class="grid2">'
-    +   '<div class="field" id="fDob"><label>วัน/เดือน/ปีเกิด <span class="req">*</span></label><input class="in" id="j_dob" type="date" value="'+esc(W.dob||'')+'"><div class="hint" id="ageHint"></div><div class="err">อายุ 18 ปีขึ้นไป</div></div>'
+    +   '<div class="field" id="fDob"><label>วัน/เดือน/ปีเกิด <span class="req">*</span></label><input class="in" id="j_dob" type="date" value="'+esc(W.dob||'')+'"><div class="hint" id="ageHint"></div><div class="err">กรุณาระบุวันเกิดให้ถูกต้อง</div></div>'
     +   '<div class="field" id="fHeight"><label>ส่วนสูง (ซม.) <span class="req">*</span></label><input class="in" id="j_height" type="number" inputmode="decimal" placeholder="เช่น 170" value="'+esc(W.heightCm||'')+'"><div class="err">กรอกส่วนสูง</div></div>'
     + '</div>'
     + '<div class="field" id="fGender"><label>เพศโดยกำเนิด <span class="req">*</span></label><div class="chips" id="genderChips"><button type="button" class="chip'+(W.gender==='ชาย'?' on':'')+'" data-g="ชาย">ชาย</button><button type="button" class="chip'+(W.gender==='หญิง'?' on':'')+'" data-g="หญิง">หญิง</button></div><div class="err">เลือกเพศ</div></div>'
@@ -964,7 +964,7 @@ document.addEventListener('click',function(e){
     ok=bad($('#fName'),name.length<2)&&ok;
     ok=bad($('#fPhone'),!/^[0-9+\-\s()]{9,15}$/.test(phone))&&ok;
     ok=bad($('#fEmail'),!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))&&ok;
-    ok=bad($('#fDob'),!(age!=null&&age>=18))&&ok;
+    ok=bad($('#fDob'),!(age!=null&&age>=0))&&ok;
     ok=bad($('#fHeight'),!(Number(height)>=100&&Number(height)<=250))&&ok;
     ok=bad($('#fGender'),!W.gender)&&ok;
     var coach=$('#j_coach')?$('#j_coach').value:(W.coach||'');
@@ -1034,7 +1034,7 @@ document.addEventListener('click',function(e){
     +'<h2 class="tt">ข้อมูลผู้สมัคร</h2><p class="sub">กรอกข้อมูลพื้นฐานเพื่อสมัครเข้าร่วม Lean Lab</p>'
     +'<div class="field" id="fName"><label>ชื่อ–นามสกุล <span class="req">*</span></label><input class="in" id="w_name" placeholder="ชื่อ นามสกุล" value="'+esc(W.name||'')+'"><div class="err">กรุณากรอกชื่อ</div></div>'
     +'<div class="grid2">'
-    + '<div class="field" id="fDob"><label>วัน/เดือน/ปีเกิด <span class="req">*</span></label><input class="in" id="w_dob" type="date" value="'+esc(W.dob||'')+'"><div class="hint" id="ageHint"></div><div class="err">กรุณาระบุวันเกิด (อายุ 18 ปีขึ้นไป)</div></div>'
+    + '<div class="field" id="fDob"><label>วัน/เดือน/ปีเกิด <span class="req">*</span></label><input class="in" id="w_dob" type="date" value="'+esc(W.dob||'')+'"><div class="hint" id="ageHint"></div><div class="err">กรุณาระบุวันเกิดให้ถูกต้อง</div></div>'
     + '<div class="field" id="fHeight"><label>ส่วนสูง (ซม.) <span class="req">*</span></label><input class="in" id="w_height" type="number" inputmode="decimal" placeholder="เช่น 170" value="'+esc(W.heightCm||'')+'"><div class="err">กรอกส่วนสูง</div></div>'
     +'</div>'
     +'<div class="field" id="fGender"><label>เพศโดยกำเนิด <span class="req">*</span></label><div class="chips" id="genderChips"><button type="button" class="chip'+(W.gender==='ชาย'?' on':'')+'" data-g="ชาย">ชาย</button><button type="button" class="chip'+(W.gender==='หญิง'?' on':'')+'" data-g="หญิง">หญิง</button></div><div class="err">เลือกเพศ</div></div>'
@@ -1047,7 +1047,7 @@ document.addEventListener('click',function(e){
       W.name=$('#w_name').value.trim();W.dob=$('#w_dob').value;W.heightCm=$('#w_height').value;
       var age=calcAge(W.dob),ok=true;
       ok=bad($('#fName'),W.name.length<2)&&ok;
-      ok=bad($('#fDob'),!(age!=null&&age>=18))&&ok;
+      ok=bad($('#fDob'),!(age!=null&&age>=0))&&ok;
       ok=bad($('#fHeight'),!(Number(W.heightCm)>=100&&Number(W.heightCm)<=250))&&ok;
       ok=bad($('#fGender'),!W.gender)&&ok;
       if(!ok)return;W.age=age;vStep2();
@@ -1152,7 +1152,7 @@ document.addEventListener('click',function(e){
       .then(function(r){return r.json();})
       .then(function(j){
         if(y){y.disabled=false;y.textContent='ยืนยันการชำระเงิน';}
-        if(!j||!j.ok){var m={underage:'ต้องอายุ 18 ปีขึ้นไป',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว',too_many_requests:'ทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่',not_logged_in:'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
+        if(!j||!j.ok){var m={underage:'กรุณาตรวจสอบวันเกิดอีกครั้ง',bad_photo:'กรุณาแนบรูป Before',already_registered:'คุณสมัครและยืนยันแล้ว',too_many_requests:'ทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่',not_logged_in:'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'}[j&&j.error]||'ส่งข้อมูลไม่สำเร็จ ลองใหม่';return msg($('#cfMsg'),'err',m);}
         REG=j.registration; vChoosePay();
       })
       .catch(function(){if(y){y.disabled=false;y.textContent='ยืนยันการชำระเงิน';}msg($('#cfMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
