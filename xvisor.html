@@ -367,6 +367,15 @@ input{font-family:inherit}
 
 /* message screen */
 .msg{max-width:640px;margin:var(--space-6) auto;padding:var(--space-6) var(--space-5);text-align:center}
+/* คอม/จอกว้าง: หน้าสถานะที่มีประวัติคะแนน (รอยืนยันผล / ไม่ผ่านในรอบนี้ / ถูกยุติ) แบ่ง 2 คอลัมน์ ซ้ายสถานะ ขวาคะแนน */
+@media (min-width:900px){
+  .card.msg:has(> .hx){max-width:1080px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);column-gap:40px;align-items:start;padding:36px 40px}
+  .card.msg:has(> .hx) > *{grid-column:1}
+  .card.msg:has(> .hx) > .hx{grid-column:2;grid-row:1 / span 30;margin-top:0;padding-left:40px;border-left:1px solid var(--border);align-self:stretch}
+  .card.msg:has(> .hx) .tl{max-width:420px;margin-left:auto;margin-right:auto}
+}
+.hx-tot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:12px 16px;border-radius:14px;background:linear-gradient(135deg,#0649D8,#1478FF 60%,#27C8FF 140%);color:#fff}
+.hx-tot span{font-size:13px;opacity:.92}.hx-tot b{font-family:var(--num);font-size:26px;font-weight:800;line-height:1}.hx-tot b small{font-size:13px;font-weight:700;opacity:.8;margin-left:2px}
 .mic{width:84px;height:84px;border-radius:var(--radius-pill);margin:0 auto var(--space-4);display:flex;align-items:center;justify-content:center}
 .mic svg{width:42px;height:42px}
 /* submit modal: even vertical rhythm via one flex gap */
@@ -1179,7 +1188,7 @@ function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRe
        <div class="rp-bar" aria-hidden="true"><i style="width:${pct}%"></i><em style="left:${passPct}%"></em></div>
        <div class="rp-s num">${r.score}<span> / ${QPP}</span></div></div>`;}).join('')}</div>
    <div class="rs-lock"><span class="li">${I.lock}</span><span><b>ดูข้อที่ตอบผิดได้เมื่อผ่านครบทั้ง 5 พาร์ต</b>${onsite?'':'และทีมงานยืนยันผลแล้ว '}ผ่านเมื่อได้ ${PASS} คะแนนขึ้นไปจาก ${QPP}</span></div>
-   ${xvHistory()}
+   ${xvHistory({noTotal:true})}
    <div class="rs-foot">${allPass?`<span class="note">${I.info} ผ่านครบทั้ง 5 พาร์ต</span><span class="grow"></span><button class="btn btn-primary lg" id="toVerify">ดำเนินการต่อ ${I.next}</button>`
      :`<button class="btn btn-ghost" id="exit">ออกจากระบบ</button><span class="grow"></span><button class="btn btn-primary lg" id="toRem">เตรียมสอบซ่อม ${I.next}</button>`}</div></div>`;
  if(allPass){$('#toVerify').onclick=()=>{const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';if(onsite){S.staffVerified=true;S.phase='all_passed';}else{S.phase='waiting_verification';}render();};}
@@ -1234,7 +1243,7 @@ function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div c
 
 /* ---------- คะแนนของผู้สอบทุกครั้ง (สอบครั้งแรก / สอบซ่อม 1 / สอบซ่อม 2 / รอบพิเศษ / ทีมงานปรับคะแนน) ---------- */
 function xvAttemptLabel(a){if(a.kind==='first')return 'สอบครั้งแรก';if(a.kind==='remedial')return 'สอบซ่อมครั้งที่ '+(a.no||1);if(a.kind==='special')return 'สอบรอบพิเศษ (ทีมงานอนุมัติ)';if(a.kind==='edit')return 'ทีมงานปรับคะแนน';return 'ครั้งที่ '+(a.no||'');}
-function xvHistory(){var L=(S.attempts||[]).slice().sort(function(x,y){return (x.at||0)-(y.at||0);});if(!L.length)return '';
+function xvHistory(o){o=o||{};var L=(S.attempts||[]).slice().sort(function(x,y){return (x.at||0)-(y.at||0);});if(!L.length)return '';
  var cnt={};L.forEach(function(a){cnt[a.kind]=(cnt[a.kind]||0)+1;if(!a.no)a.no=cnt[a.kind];});
  var rows=L.map(function(a){var ps=(a.parts||[]).slice().sort(function(x,y){return x-y;});
    var chips=ps.map(function(pt){var v=(a.perPart&&a.perPart[pt]!=null)?a.perPart[pt]:null;var cls=v==null?'na':(v>=PASS?'ok':'no');
@@ -1242,7 +1251,9 @@ function xvHistory(){var L=(S.attempts||[]).slice().sort(function(x,y){return (x
    var d=a.at?new Date(a.at):null;var tm=d?(('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' น.'):'';
    var sum=ps.length===PARTS&&ps.every(function(pt){return a.perPart&&a.perPart[pt]!=null;})?ps.reduce(function(t,pt){return t+Number(a.perPart[pt]);},0):null;
    return '<div class="hx-i"><div class="hx-h"><b>'+xvAttemptLabel(a)+'</b>'+(sum!=null?'<span class="sum">รวม <b>'+sum+'</b>/'+(PARTS*QPP)+'</span>':'')+'<span>'+tm+(a.expired?'  หมดเวลา':'')+'</span></div><div class="hx-g">'+chips+'</div></div>';}).join('');
- return '<section class="hx"><h3>คะแนนของคุณทุกครั้ง<small>ผ่านเมื่อได้ '+PASS+' คะแนนขึ้นไป</small></h3><div class="hx-l">'+rows+'</div></section>';}
+ var R5=(S.results||[]).slice(0,PARTS), tot=(R5.length===PARTS&&R5.every(function(r){return r&&r.score!=null;}))?R5.reduce(function(t,r){return t+Number(r.score||0);},0):null;
+ var totHtml=(tot!=null&&!o.noTotal)?'<div class="hx-tot"><span>คะแนนรวมล่าสุด (5 พาร์ต)</span><b>'+tot+'<small>/'+(PARTS*QPP)+'</small></b></div>':'';
+ return '<section class="hx"><h3>คะแนนของคุณทุกครั้ง<small>ผ่านเมื่อได้ '+PASS+' คะแนนขึ้นไป</small></h3>'+totHtml+'<div class="hx-l">'+rows+'</div></section>';}
 /* ---------- ถูกยุติการสอบโดยทีมงาน ---------- */
 function renderDisqualified(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
    <h2>การสอบของคุณถูกยุติโดยทีมงาน</h2><p><span style="display:block">ทีมงานพบพฤติกรรมที่ผิดกติกาการสอบ</span><span style="display:block">จึงยุติการสอบในรอบนี้</span></p><p><span style="display:block">หากมีข้อสงสัย</span><span style="display:block;white-space:nowrap">ติดต่อทาง LINE @cloverxth</span></p>${xvHistory()}</div>`;}
