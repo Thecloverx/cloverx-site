@@ -886,6 +886,14 @@
   </div>
 </div>
 <script>
+/* วางเมนู ⋮ ให้อยู่ในจอเสมอ: ถ้าด้านล่างไม่พอ เปิดขึ้นด้านบน ถ้ายังไม่พอ ให้เลื่อนดูในเมนูได้ */
+function xvPlaceMenu(m,btn){ var r=btn.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
+  m.style.maxHeight='';m.style.overflowY='';var w=m.offsetWidth||220,h=m.offsetHeight||200;
+  var left=Math.max(8,Math.min(r.right-w,vw-w-8)),below=vh-8-(r.bottom+6),above=r.top-6-8,top;
+  if(h<=below)top=r.bottom+6; else if(h<=above)top=r.top-6-h;
+  else if(below>=above){top=r.bottom+6;m.style.maxHeight=below+'px';m.style.overflowY='auto';}
+  else{top=8;m.style.maxHeight=above+'px';m.style.overflowY='auto';}
+  m.style.left=left+'px';m.style.top=Math.max(8,top)+'px'; }
 /* หมดเวลาเข้าสู่ระบบพนักงาน (เช่น หลังขึ้นเว็บใหม่): ระบบตอบ 403 → แจ้งและพาไปเข้าสู่ระบบใหม่ แทนที่ปุ่มจะกดแล้วเงียบ */
 (function(){ if(!window.fetch)return; var _f=window.fetch.bind(window), shown=false;
   window.fetch=function(u,o){ return _f(u,o).then(function(r){ try{ var url=String((u&&u.url)||u||'');
@@ -1557,7 +1565,7 @@
       +'<div style="height:1px;background:var(--line);margin:4px 6px"></div>'
       +mi('del',ic('<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'),'ลบรอบสอบ','var(--bad)');
     document.body.appendChild(m);
-    var r=btn.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,r.right-(m.offsetWidth||212))+'px';
+    xvPlaceMenu(m,btn);
     m.querySelectorAll('.rmenu button, button[data-act]').forEach(function(b){b.addEventListener('mouseenter',function(){b.style.background='var(--soft)';});b.addEventListener('mouseleave',function(){b.style.background='none';});});
     m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){
       var act=b.getAttribute('data-act');closeRoundMenus();
@@ -1834,7 +1842,7 @@
       +'<div style="height:1px;background:var(--line);margin:4px 6px"></div>'
       +mi('del',ic('<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'),'ลบชุดนี้','var(--bad)');
     document.body.appendChild(m);
-    var r=btn.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,r.right-(m.offsetWidth||222))+'px';
+    xvPlaceMenu(m,btn);
     m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('mouseenter',function(){b.style.background='var(--soft)';});b.addEventListener('mouseleave',function(){b.style.background='none';});});
     m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){
       var act=b.getAttribute('data-act');closeRoundMenus();
@@ -2715,7 +2723,7 @@
     else html+=mi('archive','🗂️','จัดเก็บ','var(--brand)');
     html+=mi('del','🗑','ลบรายการนี้','var(--bad)');
     m.innerHTML=html;document.body.appendChild(m);
-    var r=btn.getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,r.right-(m.offsetWidth||214))+'px';
+    xvPlaceMenu(m,btn);
     m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('mouseenter',function(){b.style.background='var(--soft)';});b.addEventListener('mouseleave',function(){b.style.background='none';});});
     m.querySelectorAll('button[data-act]').forEach(function(b){b.addEventListener('click',function(){
       var act=b.getAttribute('data-act');closeResMenus();
