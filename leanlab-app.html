@@ -74,7 +74,8 @@ form{margin-top:38px}
 .splash canvas{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none}
 .splash.wait .mid,.splash.wait .ver span{visibility:hidden;animation:none}
 .splash.is3d canvas{display:block}
-.splash.is3d .mid{position:absolute;left:0;right:0;top:calc(50% + 104px);margin:0;pointer-events:none}
+.splash.is3d .mid{position:absolute;left:0;right:0;top:calc(48% + 40px);margin:0;pointer-events:none}
+.splash.is3d .tag{margin-top:0}
 .splash.is3d .mid img{display:none}
 .splash.is3d .tag{animation-delay:1.55s;letter-spacing:.06em}
 .splash.is3d .ver span{animation-delay:1.8s}
@@ -182,7 +183,7 @@ var SP=document.getElementById('splash'),mode='',ready=false,animDone=false,show
 function finish(){if(shown||!animDone||!ready)return;shown=true;SP.classList.add('out');setTimeout(function(){if(fx)fx.stop();SP.remove();},400);render();}
 function use2d(){if(mode)return;mode='2d';SP.classList.remove('wait','is3d');setTimeout(function(){animDone=true;finish();},1800);}
 function try3d(){if(mode)return;SP.classList.add('is3d');
-  fx=window.LL3D?window.LL3D.start(document.getElementById('ll3d'),{onDone:function(){animDone=true;finish();}}):false;
+  fx=window.LL3D?window.LL3D.start(document.getElementById('ll3d'),{gap:12,tagH:17,onLayout:function(o){SP.querySelector('.mid').style.top=Math.round(o.tagTop)+'px';},onDone:function(){animDone=true;finish();}}):false;
   if(!fx)return use2d();
   mode='3d';SP.classList.remove('wait');}
 var pdn=null;SP.addEventListener('pointerdown',function(e){pdn=[e.clientX,e.clientY];});

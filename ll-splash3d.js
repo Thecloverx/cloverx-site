@@ -77,14 +77,14 @@ function start(canvas,opt){
   flare.position.set(xc.x,xc.y,.5); logo.add(flare);
 
   /* ---- เงาสะท้อนบนพื้น (สำเนากลับหัว จางลง) ---- */
-  var refl=new T.Group(); scene.add(refl);
+  var refl=new T.Group();                                           // เงาสะท้อนปิดไว้ (คำ REAL PEOPLE อยู่ชิดใต้โลโก้ตาม Figma)
   var reflMatT=matText.clone(); reflMatT.transparent=true; reflMatT.opacity=.1; reflMatT.depthWrite=false;
   var reflMatX=new T.MeshBasicMaterial({vertexColors:true}); reflMatX.transparent=true; reflMatX.opacity=.14; reflMatX.depthWrite=false;
   var fc=document.createElement('canvas');fc.width=4;fc.height=256;var fx2=fc.getContext('2d'),fg=fx2.createLinearGradient(0,0,0,256);
   fg.addColorStop(0,'rgba(3,8,15,0)');fg.addColorStop(.5,'rgba(3,8,15,.75)');fg.addColorStop(1,'rgba(3,8,15,1)');fx2.fillStyle=fg;fx2.fillRect(0,0,4,256);
   var ft=new T.CanvasTexture(fc);ft.encoding=T.sRGBEncoding;
   var fog=new T.Mesh(new T.PlaneGeometry(40,2.6),new T.MeshBasicMaterial({map:ft,transparent:true,depthWrite:false,toneMapped:false}));
-  fog.position.set(0,-2.35,.9);fog.renderOrder=5;scene.add(fog);                      // ทำให้เงาสะท้อนจางลงด้านล่าง
+  fog.position.set(0,-2.35,.9);fog.renderOrder=5;                      // ทำให้เงาสะท้อนจางลงด้านล่าง
   var mirrors=[];
   logo.children.forEach(function(m){ if(!m.isMesh)return; var r=new T.Mesh(m.geometry,m.material===matText?reflMatT:reflMatX); refl.add(r); mirrors.push([m,r]); });
 
@@ -98,9 +98,13 @@ function start(canvas,opt){
   /* ---- ขนาดจอ: โลโก้กว้าง 10 หน่วย ให้กินราว 78% ของความกว้างจอ ---- */
   var W=0,H=0;
   function fit(){W=canvas.clientWidth;H=canvas.clientHeight;if(!W||!H)return;renderer.setSize(W,H,false);cam.aspect=W/H;
-    var visW=Math.max(12.8,10*W/520);                                   // มือถือ: โลโก้กว้าง 78% ของจอ  จอใหญ่: ไม่เกินราว 520px
+    var visW=Math.max(12.8,10*W/520);                                  // มือถือ: โลโก้กว้าง 78% ของจอ  จอใหญ่: ไม่เกินราว 520px
     var dist=(visW/cam.aspect)/2/Math.tan(T.MathUtils.degToRad(cam.fov/2));
-    cam.position.set(0,.35,dist);cam.lookAt(0,-.25,0);cam.updateProjectionMatrix();}
+    // จัดกลุ่ม โลโก้ + ช่องว่าง + คำ REAL PEOPLE ให้อยู่กลางจอ (ค่อนบนเล็กน้อยตาม Figma)
+    var ppu=W/visW, logoPx=1.82*ppu, gap=opt.gap||12, tagH=opt.tagH||17;
+    var groupTop=H*.48-(logoPx+gap+tagH)/2, logoMid=groupTop+logoPx/2, dy=(logoMid-H/2)/ppu;
+    cam.position.set(0,dy,dist);cam.lookAt(0,dy,0);cam.updateProjectionMatrix();
+    if(opt.onLayout)opt.onLayout({tagTop:groupTop+logoPx+gap});}
   fit(); window.addEventListener('resize',fit);
 
   /* ---- ลากเพื่อหมุน (สปริงกลับเอง) ---- */
