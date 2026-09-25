@@ -286,6 +286,9 @@ input{font-family:inherit}
 .rs-big small{font-size:22px;font-weight:700;opacity:.75;margin-left:2px}
 .rs-main .t b{display:block;font-size:20px;font-weight:700;line-height:1.35}
 .rs-main .t span{display:block;font-size:14px;opacity:.9;margin-top:2px}
+.rs-tot{margin-left:auto;text-align:right;padding-left:18px;border-left:1px solid rgba(255,255,255,.28);flex:none}
+.rs-tot span{display:block;font-size:13px;opacity:.9}.rs-tot b{display:block;font-family:var(--num);font-size:36px;font-weight:800;line-height:1.1}.rs-tot b small{font-size:16px;font-weight:700;opacity:.75;margin-left:2px}
+.hx-h .sum{margin-left:auto;margin-right:10px;color:var(--text-primary);font-size:13px;font-weight:700;white-space:nowrap}.hx-h .sum b{font-family:var(--num)}
 .rs-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:18px}
 .rs-seg i{height:8px;border-radius:999px;background:rgba(255,255,255,.28)}
 .rs-seg i.ok{background:#fff}.rs-seg i.no{background:rgba(255,255,255,.28);box-shadow:inset 0 0 0 1.5px rgba(255,210,210,.9)}
@@ -321,6 +324,7 @@ input{font-family:inherit}
 @media (max-width:760px){
   .rs{gap:12px}
   .rs-hero{padding:18px 18px 16px;border-radius:20px}
+  .rs-tot{padding-left:12px}.rs-tot span{font-size:11.5px}.rs-tot b{font-size:26px}.rs-tot b small{font-size:13px}
   .rs-big{font-size:46px}.rs-main{gap:14px;margin-top:12px}.rs-main .t b{font-size:17px}.rs-main .t span{font-size:13px}
   .rs-parts,.rs-parts.n1,.rs-parts.n2,.rs-parts.n3,.rs-parts.n4{grid-template-columns:1fr;gap:8px}
   .rp{flex-direction:row;align-items:center;gap:12px;padding:12px 14px;border-radius:16px}
@@ -1158,13 +1162,15 @@ function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRe
  const onsite=S.candidate&&S.candidate.mode==='onsite';
  const q=(S.remedialQueue||[]).slice().sort((a,b)=>a-b);
  const passPct=Math.round(PASS/QPP*100);
+ const totScore=S.results.reduce((a,r)=>a+(Number(r&&r.score)||0),0), totMax=PARTS*QPP;   // คะแนนรวมล่าสุดของทั้ง 5 พาร์ต
  const seg=[1,2,3,4,5].map(p=>{const r=S.results[p-1]||{};return `<i class="${r.status==='passed'?'ok':'no'}" title="พาร์ต ${p}"></i>`;}).join('');
  const segL=[1,2,3,4,5].map(p=>`<span>พาร์ต ${p}</span>`).join('');
  app.innerHTML=`${appbar()}<div class="wrap-mid rs">
    <section class="rs-hero ${allPass?'ok':''}" aria-label="สรุปผลการสอบ">
      <div class="rs-eye"><b>${isRem?'ผลการสอบซ่อม':'ผลการสอบครั้งแรก'}</b><span class="id">${S.candidate.id}</span></div>
      <div class="rs-main"><div class="rs-big">${passed}<small>/5</small></div>
-       <div class="t"><b>${allPass?'ผ่านครบทั้ง 5 พาร์ต':'ผ่าน '+passed+' จาก 5 พาร์ต'}</b><span>${allPass?'ขั้นต่อไป ยืนยันผลการสอบ':'ต้องสอบซ่อมพาร์ต '+q.join(', ')}</span></div></div>
+       <div class="t"><b>${allPass?'ผ่านครบทั้ง 5 พาร์ต':'ผ่าน '+passed+' จาก 5 พาร์ต'}</b><span>${allPass?'ขั้นต่อไป ยืนยันผลการสอบ':'ต้องสอบซ่อมพาร์ต '+q.join(', ')}</span></div>
+       <div class="rs-tot"><span>คะแนนรวม</span><b>${totScore}<small>/${totMax}</small></b></div></div>
      <div class="rs-seg" aria-hidden="true">${seg}</div><div class="rs-seg-l" aria-hidden="true">${segL}</div>
    </section>
    <div class="rs-parts n${shown.length}">${shown.map(p=>{const r=S.results[p-1],pass=r.status==='passed',pct=Math.round(r.score/QPP*100);
@@ -1234,7 +1240,8 @@ function xvHistory(){var L=(S.attempts||[]).slice().sort(function(x,y){return (x
    var chips=ps.map(function(pt){var v=(a.perPart&&a.perPart[pt]!=null)?a.perPart[pt]:null;var cls=v==null?'na':(v>=PASS?'ok':'no');
      return '<span class="hc '+cls+'"><small>พาร์ต '+pt+'</small><b class="num">'+(v==null?'-':v)+'<em>/'+QPP+'</em></b></span>';}).join('');
    var d=a.at?new Date(a.at):null;var tm=d?(('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' น.'):'';
-   return '<div class="hx-i"><div class="hx-h"><b>'+xvAttemptLabel(a)+'</b><span>'+tm+(a.expired?'  หมดเวลา':'')+'</span></div><div class="hx-g">'+chips+'</div></div>';}).join('');
+   var sum=ps.length===PARTS&&ps.every(function(pt){return a.perPart&&a.perPart[pt]!=null;})?ps.reduce(function(t,pt){return t+Number(a.perPart[pt]);},0):null;
+   return '<div class="hx-i"><div class="hx-h"><b>'+xvAttemptLabel(a)+'</b>'+(sum!=null?'<span class="sum">รวม <b>'+sum+'</b>/'+(PARTS*QPP)+'</span>':'')+'<span>'+tm+(a.expired?'  หมดเวลา':'')+'</span></div><div class="hx-g">'+chips+'</div></div>';}).join('');
  return '<section class="hx"><h3>คะแนนของคุณทุกครั้ง<small>ผ่านเมื่อได้ '+PASS+' คะแนนขึ้นไป</small></h3><div class="hx-l">'+rows+'</div></section>';}
 /* ---------- ถูกยุติการสอบโดยทีมงาน ---------- */
 function renderDisqualified(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
