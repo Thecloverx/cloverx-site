@@ -1464,7 +1464,14 @@ app.use(function (req, res, next) {
 // ================= STAFF LOGIN (พนักงาน CloverX — กั้นหน้าหลังบ้าน center/operations/support) =================
 const STAFF = path.join(DATA, 'staff.json');
 const STAFF_TTL = 30 * 24 * 3600 * 1000; // ล็อกอินค้าง 30 วัน
-const STAFF_SECRET = process.env.STAFF_SECRET || crypto.randomBytes(32).toString('hex');
+// ไม่ได้ตั้ง STAFF_SECRET: สร้างรหัสลับครั้งเดียวแล้วเก็บในโฟลเดอร์ข้อมูล (ถาวรข้ามการ deploy) พนักงานจะไม่หลุดจากระบบทุกครั้งที่ขึ้นเว็บใหม่
+const STAFF_SECRET = process.env.STAFF_SECRET || (function () {
+  var f = path.join(DATA, '.staff_secret');
+  try { var v = fs.readFileSync(f, 'utf8').trim(); if (v.length >= 32) return v; } catch (e) {}
+  var n = crypto.randomBytes(32).toString('hex');
+  try { fs.mkdirSync(DATA, { recursive: true }); fs.writeFileSync(f, n, { mode: 0o600 }); } catch (e) {}
+  return n;
+})();
 if (!process.env.STAFF_SECRET) console.log('[staff] ⚠ STAFF_SECRET ไม่ได้ตั้ง — ใช้ค่าสุ่ม (พนักงานจะถูกล็อกเอาต์เมื่อรีสตาร์ท). แนะนำตั้ง STAFF_SECRET ใน Railway');
 function staffRead() { try { return JSON.parse(fs.readFileSync(STAFF, 'utf8')) || []; } catch (e) { return []; } }
 function staffWrite(l) { try { fs.writeFileSync(STAFF, JSON.stringify(l, null, 2)); } catch (e) {} }

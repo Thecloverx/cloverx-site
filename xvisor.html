@@ -1149,7 +1149,7 @@ function renderAttempts(){app.innerHTML=`${appbar()}<div class="card msg"><div c
    ${xvHistory()}
    <p style="margin-top:var(--space-5)"><span style="display:block">หากระบบมีปัญหาระหว่างสอบ</span><span style="display:block;white-space:nowrap">ติดต่อทีมงานทาง LINE @cloverxth</span><span style="display:block">ถ้าทีมงานเปิดให้สอบเพิ่ม</span><span style="display:block">หน้านี้จะพาเข้าสอบให้เอง</span></p>
    <div style="margin-top:var(--space-5)"><button class="btn btn-ghost lg" id="home">รับทราบและปิดหน้าจอ</button></div></div>`;
- $('#home').onclick=()=>{app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ ${xvBrand().name}<br>แล้วพบกันใหม่ในรอบถัดไป</p></div>`;};
+ $('#home').onclick=()=>{clearResume();/* สอบจบแล้ว: ล้างข้อมูลที่จำไว้ในเครื่อง เปิดลิงก์ครั้งหน้าจะเริ่มที่หน้าลงทะเบียน (คนถัดไปใช้เครื่องนี้สอบได้) */app.innerHTML=`${appbar()}<div class="card msg" style="text-align:center"><div class="mic info">${I.shield}</div><h2>ปิดหน้าจอนี้ได้เลย</h2><p>ขอบคุณที่เข้าร่วมการสอบ ${xvBrand().name}<br>แล้วพบกันใหม่ในรอบถัดไป</p></div>`;};
 }
 
 /* ---------- คะแนนของผู้สอบทุกครั้ง (สอบครั้งแรก / สอบซ่อม 1 / สอบซ่อม 2 / รอบพิเศษ / ทีมงานปรับคะแนน) ---------- */

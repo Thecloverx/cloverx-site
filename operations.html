@@ -886,6 +886,18 @@
   </div>
 </div>
 <script>
+/* หมดเวลาเข้าสู่ระบบพนักงาน (เช่น หลังขึ้นเว็บใหม่): ระบบตอบ 403 → แจ้งและพาไปเข้าสู่ระบบใหม่ แทนที่ปุ่มจะกดแล้วเงียบ */
+(function(){ if(!window.fetch)return; var _f=window.fetch.bind(window), shown=false;
+  window.fetch=function(u,o){ return _f(u,o).then(function(r){ try{ var url=String((u&&u.url)||u||'');
+      if(r.status===403 && /\/api\/(xv\/admin|staff|ops|ret|m\/admin)/.test(url) && !shown){ r.clone().json().then(function(j){ if(j&&(j.error==='forbidden'||j.error==='staff_login_required'||j.ok===false))relogin(); }).catch(function(){}); }
+    }catch(e){} return r; }); };
+  function relogin(){ if(shown)return; shown=true; var next=location.pathname.replace(/\.html$/,'')||'/operations';
+    var bg=document.createElement('div'); bg.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:16px';
+    bg.innerHTML='<div role="alertdialog" aria-modal="true" style="background:#fff;border-radius:16px;max-width:380px;width:100%;padding:22px 22px 18px;font-family:inherit;box-shadow:0 24px 60px -20px rgba(0,0,0,.4)"><h3 style="margin:0 0 8px;font-size:1.1rem">กรุณาเข้าสู่ระบบอีกครั้ง</h3><p style="margin:0 0 18px;color:#64748b;font-size:.9rem;line-height:1.6">การเข้าสู่ระบบหมดอายุ จึงยังบันทึกรายการนี้ไม่ได้<br>เข้าสู่ระบบใหม่แล้วทำรายการอีกครั้ง</p><div style="display:flex;justify-content:flex-end;gap:10px"><button type="button" id="rlLater" style="border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:9px 14px;font:inherit;cursor:pointer">ไว้ทีหลัง</button><a id="rlGo" href="/login?next='+encodeURIComponent(next)+'" style="background:#2563eb;color:#fff;border-radius:10px;padding:9px 16px;font-weight:600;text-decoration:none">เข้าสู่ระบบ</a></div></div>';
+    document.body.appendChild(bg); bg.querySelector('#rlLater').onclick=function(){ bg.remove(); shown=false; }; }
+})();
+</script>
+<script>
   function toggleSide(){document.getElementById('side').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');}
   function staffLogout(){ fetch('/api/staff/logout',{method:'POST',credentials:'same-origin'}).then(function(){location.href='/';}).catch(function(){location.href='/';}); }
 
