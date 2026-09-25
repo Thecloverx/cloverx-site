@@ -1573,7 +1573,7 @@ function xvPlaceMenu(m,btn){ var r=btn.getBoundingClientRect(),vw=window.innerWi
       else if(act==='final')roundFinalize(d.id,d.no);
       else if(act==='toggle'){ if(open)roundToggle(d.id,'closed',d.no); else roundStartClock(d.id,d.no); }
       else if(act==='edit')roundEditOpen({id:d.id,no:d.no,date:d.date,topic:d.topic,mode:d.mode,venue:d.venue,fee:d.fee,regCloseAt:d.close,setId:d.set});
-      else if(act==='share')roundShareOpen(d.code,d.no,d.date);
+      else if(act==='share')roundShareOpen(d.code,d.no,d.date,d.topic);
       else if(act==='dup')roundDupOpen(d.id,d.no,d.date,d.topic);
       else if(act==='del')roundDelete(d.id,d.no);
     });});
@@ -1704,11 +1704,12 @@ function xvPlaceMenu(m,btn){ var r=btn.getBoundingClientRect(),vw=window.innerWi
       }).catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
     };
   }
-  function roundShareOpen(code,no,date){
+  function roundShareOpen(code,no,date,topic){
     var link=roundLink(code);
     xvSheet('<h3 style="font-size:1.12rem">แชร์ลิงก์เข้าสอบ<span class=mdiv></span>ครั้งที่ '+no+'</h3>'
       +'<p style="color:var(--muted);font-size:.86rem;margin:6px 0 0">'+fmtDateTH(date)+'</p>'
-      +'<div id="xvQR" style="display:flex;justify-content:center;margin:16px 0;min-height:190px;align-items:center"></div>'
+      +'<div id="xvQR" style="display:flex;justify-content:center;margin:16px 0 10px;min-height:190px;align-items:center"></div>'
+      +'<div style="display:flex;justify-content:center;margin-bottom:16px"><button id="rsSave" type="button" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--brand);font:inherit;font-size:.84rem;font-weight:700;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>บันทึกรูป QR</button></div>'
       +'<label style="'+lblCss()+'">ลิงก์สำหรับผู้สอบ</label>'
       +'<div style="display:flex;gap:8px"><input id="rsLink" readonly value="'+link+'" style="'+fieldCss()+';font-size:.82rem"><button id="rsCopy" style="'+btnPri()+';white-space:nowrap">คัดลอก</button></div>'
       +'<p style="color:var(--muted);font-size:.78rem;margin-top:10px">ผู้สอบสแกน QR หรือเปิดลิงก์นี้เพื่อเข้าสอบรอบครั้งที่ '+no+' โดยตรง (ต้อง<b>เปิดสอบ</b>ก่อนถึงจะเข้าได้)</p>'
@@ -1716,7 +1717,40 @@ function xvPlaceMenu(m,btn){ var r=btn.getBoundingClientRect(),vw=window.innerWi
     var qel=document.getElementById('xvQR');
     if(window.QRCode){try{new QRCode(qel,{text:link,width:190,height:190,correctLevel:QRCode.CorrectLevel.M});}catch(e){qel.innerHTML='<span style="color:var(--muted);font-size:.82rem">แสดง QR ไม่ได้ — ใช้ลิงก์ด้านล่างได้</span>';}}
     else qel.innerHTML='<span style="color:var(--muted);font-size:.82rem">กำลังโหลด QR… ใช้ลิงก์ด้านล่างได้เลย</span>';
+    document.getElementById('rsSave').onclick=function(){xvSaveRoundQR(qel,link,no,date,topic);};
     document.getElementById('rsCopy').onclick=function(){var v=link;var done=function(){xvToast('คัดลอกลิงก์แล้ว','ok');};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(done,function(){var i=document.getElementById('rsLink');i.select();document.execCommand('copy');done();});}else{var i=document.getElementById('rsLink');i.select();document.execCommand('copy');done();}};
+  }
+
+  /* บันทึก QR เข้าสอบเป็นรูป PNG (การ์ดขาว: หัวข้อ ครั้งที่ วันที่ QR ลิงก์) สำหรับส่งต่อใน LINE/พิมพ์ติดหน้าห้อง */
+  function xvSaveRoundQR(qel,link,no,date,topic){
+    var src=null;
+    if(window.QRCode){try{var tmp=document.createElement('div');new QRCode(tmp,{text:link,width:620,height:620,correctLevel:QRCode.CorrectLevel.M});src=tmp.querySelector('canvas');}catch(e){}}
+    if(!src)src=qel&&(qel.querySelector('canvas')||qel.querySelector('img'));
+    if(!src){xvToast('ยังไม่มี QR ให้บันทึก','bad');return;}
+    var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d');
+    var ff=(getComputedStyle(document.body).fontFamily||'sans-serif');
+    g.fillStyle='#EEF4FF';g.fillRect(0,0,W,H);
+    function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+    g.save();g.shadowColor='rgba(7,40,110,.14)';g.shadowBlur=60;g.shadowOffsetY=18;g.fillStyle='#fff';rr(80,80,W-160,H-160,48);g.fill();g.restore();
+    g.save();rr(80,80,W-160,H-160,48);g.clip();var grd=g.createLinearGradient(80,0,W-80,0);grd.addColorStop(0,'#075BFF');grd.addColorStop(1,'#27C8FF');g.fillStyle=grd;g.fillRect(80,80,W-160,16);g.restore();
+    g.textAlign='center';g.textBaseline='alphabetic';
+    g.fillStyle='#075BFF';g.font='700 34px '+ff;g.fillText('สแกนเพื่อเข้าสอบ',W/2,205);
+    g.fillStyle='#0B1B3F';g.font='800 64px '+ff;g.fillText('ครั้งที่ '+no,W/2,290);
+    g.fillStyle='#5B6B86';g.font='500 34px '+ff;g.fillText(fmtDateTH(date),W/2,345);
+    var t=String(topic||'').trim();if(t){g.font='600 30px '+ff;g.fillStyle='#34445F';var tt=t;while(g.measureText(tt).width>W-280&&tt.length>4)tt=tt.slice(0,-2);if(tt!==t)tt=tt.replace(/\s+\S*$/,'')+'…';g.fillText(tt,W/2,395);}
+    var q=580,qx=(W-q)/2,qy=t?475:445;
+    g.fillStyle='#fff';g.strokeStyle='#DCE6F7';g.lineWidth=3;rr(qx-30,qy-30,q+60,q+60,32);g.fill();g.stroke();
+    g.imageSmoothingEnabled=false;g.drawImage(src,qx,qy,q,q);
+    g.fillStyle='#34445F';g.font='600 30px '+ff;g.fillText('เปิดกล้องมือถือสแกน แล้วกรอกข้อมูลเข้าสอบ',W/2,qy+q+105);
+    g.fillStyle='#8A97AD';g.font='500 24px '+ff;var lk=link.replace(/^https?:\/\//,'');while(g.measureText(lk).width>W-260&&lk.length>10)lk=lk.slice(0,-1);if(lk!==link.replace(/^https?:\/\//,''))lk+='…';g.fillText(lk,W/2,qy+q+150);
+    var fn='QR-exam-round'+no+'-'+String(date||'').replace(/[^0-9-]/g,'')+'.png';
+    c.toBlob(function(blob){
+      if(!blob){xvToast('บันทึกรูปไม่สำเร็จ','bad');return;}
+      var mobile=(window.matchMedia&&matchMedia('(pointer:coarse)').matches);var file=null;try{file=new File([blob],fn,{type:'image/png'});}catch(e){}
+      if(mobile&&file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'QR เข้าสอบ ครั้งที่ '+no}).catch(function(){});return;}
+      var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove();},1500);
+      xvToast('บันทึกรูป QR แล้ว','ok');
+    },'image/png');
   }
 
   /* ---------- นำเข้าชุดข้อสอบ (CSV) ---------- */
