@@ -155,6 +155,10 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
 .opt .radio{width:24px;height:24px;border-radius:50%;border:2px solid var(--bd);flex:0 0 auto;background:var(--card);transition:border .15s}
 .opt.sel .radio{border:6px solid var(--pri-ink)}
 .other-box{display:none;margin-top:-4px}
+/* ---- ผู้แนะนำ + โค้ชทีม ---- */
+select.inp:invalid{color:var(--sub2)}
+select.inp option{color:var(--ink)}
+.fld .hint{font-size:13px;line-height:18px;font-weight:500;color:var(--sub2)}
 .other-box.on{display:block}
 
 /* ---- item cards ---- */
@@ -333,6 +337,10 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:44px;background
       <h2 class="h-sec">เลือกเหตุผลการคืนสินค้า</h2>
       <div id="reasonList" style="display:flex;flex-direction:column;gap:16px"></div>
       <div class="other-box" id="otherBox"><textarea class="ta" id="reasonNote" maxlength="300" placeholder="โปรดระบุเหตุผลการคืนสินค้า..."></textarea></div>
+      <h2 class="h-sec" style="margin-top:8px">ผู้แนะนำและโค้ชทีม</h2>
+      <div class="fld"><label for="refName">ชื่อผู้แนะนำ</label><input class="inp" type="text" id="refName" maxlength="120" autocomplete="off" placeholder="ชื่อ-นามสกุล ผู้แนะนำ"></div>
+      <div class="fld"><label for="coachSel">โค้ชทีม</label><select class="inp" id="coachSel" required></select>
+        <div class="other-box" id="coachOtherBox"><input class="inp" type="text" id="coachOther" maxlength="60" autocomplete="off" placeholder="ระบุชื่อโค้ชทีม"></div></div>
     </div>
     <div class="cta"><button class="btn" id="btnReason" disabled onclick="go('items')">ถัดไป</button></div>
   </section>
@@ -475,6 +483,7 @@ var COLEN={'ดำ':'Black','ครีม':'Cream','ขาว':'White','เง�
 var CARRIERS=['ไปรษณีย์ไทย (EMS)','ไปรษณีย์ไทย (ลงทะเบียน)','Kerry Express','Flash Express','J&T Express','อื่น ๆ'];
 
 var ME={phone:'',email:'',name:''},ORDERS=[],MYRET=[];
+var COACHES=['โค้ชซิง','โค้ชนุ่น','โค้ชจา','โค้ชต๊ะ'],COACH_OTHER='อื่น ๆ',REFR='',COACH='',COACH_O='';
 var CUR=null,REASON=null,REASON_OTHER='',NOTE='',PAY=null,METHOD='dropoff',EVID=[],ACCT={name:'',bank:'',no:''};
 
 var digits=function(s){return (s||'').replace(/\D/g,'');};
@@ -571,7 +580,7 @@ function goOrders(){refreshThen(function(){renderOrders();});}
 
 function startReturn(oid,path){
   CUR=ORDERS.filter(function(o){return o.id===oid;})[0];if(!CUR)return;
-  REASON=null;REASON_OTHER='';NOTE='';PAY=null;METHOD='dropoff';EVID=[];ACCT={name:'',bank:'',no:''};
+  REASON=null;REASON_OTHER='';NOTE='';REFR='';COACH='';COACH_O='';PAY=null;METHOD='dropoff';EVID=[];ACCT={name:'',bank:'',no:''};
   if(path==='wait'){buildWait();show('s_wait');return;}
   if(!RET_OPEN){alert('หมดเขตยื่นคำขอคืนสินค้าแล้ว — ต้องยื่นและส่งคืนภายในวันที่ '+RETURN_DEADLINE);renderOrders();return;}
   go('reason');
@@ -584,13 +593,24 @@ function buildReason(){
   var nb=document.getElementById('reasonNote');nb.value=REASON_OTHER||'';
   nb.oninput=function(){REASON_OTHER=nb.value;NOTE=nb.value;syncReason();};
   document.getElementById('otherBox').classList.toggle('on',REASON===OTHER_R);
+  var rf=document.getElementById('refName');rf.value=REFR;rf.oninput=function(){REFR=rf.value;syncReason();};
+  var cs=document.getElementById('coachSel');
+  cs.innerHTML='<option value="" disabled'+(COACH?'':' selected')+'>เลือกโค้ชทีม</option>'+COACHES.concat([COACH_OTHER]).map(function(c){return '<option value="'+esc(c)+'"'+(COACH===c?' selected':'')+'>'+esc(c===COACH_OTHER?'อื่น ๆ (โปรดระบุ)':c)+'</option>';}).join('');
+  cs.onchange=function(){pickCoach(cs.value);};
+  var co=document.getElementById('coachOther');co.value=COACH_O;co.oninput=function(){COACH_O=co.value;syncReason();};
+  document.getElementById('coachOtherBox').classList.toggle('on',COACH===COACH_OTHER);
   syncReason();
 }
+function pickCoach(v){COACH=v||'';
+  var o=(COACH===COACH_OTHER);document.getElementById('coachOtherBox').classList.toggle('on',o);
+  if(o){var co=document.getElementById('coachOther');setTimeout(function(){co.focus();},60);}
+  syncReason();}
+function coachVal(){return COACH===COACH_OTHER?(COACH_OTHER+': '+COACH_O.trim()):COACH;}
 function pickReason(el){REASON=el.getAttribute('data-r');document.querySelectorAll('#reasonList .opt').forEach(function(x){var on=(x===el);x.classList.toggle('sel',on);x.setAttribute('aria-checked',on);});
   var other=(REASON===OTHER_R);document.getElementById('otherBox').classList.toggle('on',other);
   if(!other){NOTE='';}else{var nb=document.getElementById('reasonNote');setTimeout(function(){nb.focus();},60);}
   syncReason();}
-function syncReason(){var ok=!!REASON&&(REASON!==OTHER_R||!!document.getElementById('reasonNote').value.trim());document.getElementById('btnReason').disabled=!ok;}
+function syncReason(){var ok=!!REASON&&(REASON!==OTHER_R||!!document.getElementById('reasonNote').value.trim())&&!!REFR.trim()&&!!COACH&&(COACH!==COACH_OTHER||!!COACH_O.trim());document.getElementById('btnReason').disabled=!ok;}
 
 /* ---------- items ---------- */
 function returnGroups(o){
@@ -663,7 +683,7 @@ function delEv(i){EVID.splice(i,1);renderEv();}
 function submitReturn(){
   if(EVID.length<1){alert('กรุณาแนบรูปอย่างน้อย 1 ภาพ');return;}
   var btn=document.getElementById('btnShip');btn.innerHTML='<span class="spin"></span> กำลังส่งคำขอ...';btn.disabled=true;
-  var body={orderId:CUR.id,name:ME.name,phone:ME.phone,email:ME.email,choice:'return',reason:finalReason(),note:NOTE,
+  var body={orderId:CUR.id,name:ME.name,phone:ME.phone,email:ME.email,choice:'return',reason:finalReason(),note:NOTE,referrer:REFR.trim(),coach:coachVal(),
     evidence:EVID,returnMethod:METHOD,selected:selectedItems(),channel:PAY,
     refundAccount:(PAY==='bank'?{name:ACCT.name,bank:ACCT.bank,no:ACCT.no}:null)};
   var reset=function(){btn.innerHTML='ยืนยันคำขอ';btn.disabled=false;};

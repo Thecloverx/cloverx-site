@@ -914,6 +914,8 @@ app.post('/api/returns', function (req, res) {
   var slip = (choice === 'return' && channel === 'bank') ? saveDataImage(b.slip, 'RSP-' + o.id) : null;
   var reason = String(b.reason || '').slice(0, 200);
   var note = String(b.note || '').slice(0, 500);
+  var referrer = String(b.referrer || '').replace(/\s+/g, ' ').trim().slice(0, 120);   // ผู้แนะนำ (ลูกค้ากรอก)
+  var coach = String(b.coach || '').replace(/\s+/g, ' ').trim().slice(0, 80);          // โค้ชทีม: โค้ชซิง / โค้ชนุ่น / โค้ชจา / โค้ชต๊ะ / อื่น ๆ: ชื่อ
   var returnMethod = b.returnMethod === 'pickup' ? 'pickup' : 'dropoff';
   var evidence = (Array.isArray(b.evidence) ? b.evidence : []).slice(0, 10).map(function (d) { return saveDataImage(d, 'EVD-' + o.id); }).filter(Boolean);
   var rlist = readReturns();
@@ -921,13 +923,13 @@ app.post('/api/returns', function (req, res) {
   var d = new Date(); function pad(n) { return ('0' + n).slice(-2); }
   var rid = (choice === 'wait' ? 'WAIT-' : 'RT-') + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(1000 + seq).slice(-4);
   var initStatus = choice === 'wait' ? 'wait' : 'awaiting_shipment';
-  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, returnMethod: returnMethod, returnCarrierPlan: String(b.carrier || '').slice(0, 40), source: String(b.source || '').slice(0, 10), evidence: evidence, items: items, amount: amount, slip: slip, refundAccount: refundAccount, status: initStatus, history: [] };
+  var rec = { seq: seq, rid: rid, at: new Date().toISOString(), orderId: o.id, orderTotal: Number(o.total) || 0, name: (b.name || o.name || '').slice(0, 120), phone: (b.phone ? String(b.phone).slice(0, 40) : (o.phone || '')), email: (b.email ? String(b.email).trim().slice(0, 120) : (o.email || '')), maskedPhone: o.phone || '', choice: choice, channel: channel, reason: reason, note: note, referrer: referrer, coach: coach, returnMethod: returnMethod, returnCarrierPlan: String(b.carrier || '').slice(0, 40), source: String(b.source || '').slice(0, 10), evidence: evidence, items: items, amount: amount, slip: slip, refundAccount: refundAccount, status: initStatus, history: [] };
   retLog(rec, choice === 'wait' ? 'ลูกค้าเลือกรอการปรับปรุง Application' : ('ลูกค้ายื่นคำขอคืนสินค้า' + (reason ? (' · เหตุผล: ' + reason) : '') + ' — รอจัดส่งสินค้าคืน'));
   rlist.unshift(rec); writeReturns(rlist);
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderTeam: o.team || '', orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });

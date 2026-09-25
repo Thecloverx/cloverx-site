@@ -3827,7 +3827,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var hc=h.replace(/ /g,''), nc=n.replace(/ /g,''); if(hc.indexOf(nc)>=0)return true;
     var hd=h.replace(/\D/g,''), nd=n.replace(/\D/g,''); if(nd.length>=4&&nd.length===n.replace(/[\s-]/g,'').length&&hd.indexOf(nd)>=0)return true;
     return n.split(' ').every(function(t){return hc.indexOf(t)>=0;}); }
-  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
+  function retHay(r){ return [r.rid,r.orderId,r.name,r.orderName,r.orderRef,r.referrer,r.coach,r.phone,r.orderPhone,r.email,r.orderEmail].join(' '); }
   function retInRange(at){ return drpIn('ret',at); }
   function retInRangeLegacy(at){
     if(RET_RANGE==='all')return true;
@@ -3863,11 +3863,11 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var rows=RET_ALL||[];
     if(!rows.length){xvToast('ยังไม่มีข้อมูลให้ส่งออก','bad');return;}
     var STL={awaiting_shipment:'รอลูกค้าส่งคืน',in_transit:'รอตรวจรับ',refund_review:'รออนุมัติคืนเงิน',refunded:'คืนเงินแล้ว',rejected:'ปฏิเสธ'};
-    var head=['เลขคำขอคืน','ออเดอร์','ลูกค้า','เบอร์','อีเมล','สินค้า','ยอดขอคืน','ช่องทาง','ธนาคาร','สถานะ','วันที่ยื่น'];
+    var head=['เลขคำขอคืน','ออเดอร์','ลูกค้า','เบอร์','อีเมล','ผู้แนะนำ','โค้ชทีม','สินค้า','ยอดขอคืน','ช่องทาง','ธนาคาร','สถานะ','วันที่ยื่น'];
     function esc(v){v=String(v==null?'':v).replace(/"/g,'""');return '"'+v+'"';}
     var lines=[head.map(esc).join(',')];
     rows.forEach(function(r){
-      lines.push([r.rid,r.orderId,r.name||'',r.phone||'',r.email||'',(r.items||[]).map(function(i){return i.name;}).join(' | '),r.amount||0,(RET_CHLBL[r.channel]||''),(r.refundAccount&&r.refundAccount.bank)||'',(STL[r.status]||r.status),poTime(r.at)].map(esc).join(','));
+      lines.push([r.rid,r.orderId,r.name||'',r.phone||'',r.email||'',r.referrer||r.orderRef||'',r.coach||r.orderTeam||'',(r.items||[]).map(function(i){return i.name;}).join(' | '),r.amount||0,(RET_CHLBL[r.channel]||''),(r.refundAccount&&r.refundAccount.bank)||'',(STL[r.status]||r.status),poTime(r.at)].map(esc).join(','));
     });
     var csv='﻿'+lines.join('\r\n');
     var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
@@ -4339,6 +4339,8 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +'<div><div class="k">เบอร์โทรศัพท์</div><div class="v num">'+poEsc(r.phone||'-')+'</div></div>'
       +'<div><div class="k">อีเมล</div><div class="v" title="'+poEsc(r.email||'')+'">'+poEsc(r.email||'-')+'</div></div>'
       +'<div><div class="k">หมายเลขคำสั่งซื้อ</div><div class="v num" style="color:var(--brand)" title="'+poEsc(r.orderId||'')+'">'+poEsc(r.orderId||'-')+'</div></div>'
+      +'<div><div class="k">ผู้แนะนำ</div><div class="v" title="'+poEsc(r.referrer||r.orderRef||'')+'">'+poEsc(r.referrer||r.orderRef||'-')+'</div></div>'
+      +'<div><div class="k">โค้ชทีม</div><div class="v" title="'+poEsc(r.coach||r.orderTeam||'')+'">'+poEsc(r.coach||r.orderTeam||'-')+'</div></div>'
       +'</div></div>';
     var itemRows=items.map(function(it,i){
       var on=received?(received.indexOf(it.name)>=0):true;
