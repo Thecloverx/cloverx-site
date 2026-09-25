@@ -1512,7 +1512,7 @@ app.post('/api/staff/admin/delete', function (req, res) {
 // หน้า login (ต้องมาก่อน guard/static)
 app.get('/login', function (req, res) { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'login.html')); });
 // ประตูกั้น: หน้าหลังบ้านต้องล็อกอินพนักงานก่อน (เข้าตรงผ่าน URL ก็ถูกกั้น)
-var STAFF_GATED = /^\/(center|operations|support|exam|xv-checkin|xvisor_roster)(\.html)?\/?$/i;
+var STAFF_GATED = /^\/(center|operations|ops|support|exam|xv-checkin|xvisor_roster)(\.html)?\/?$/i;
 app.use(function (req, res, next) {
   if (req.method !== 'GET' || !STAFF_GATED.test(req.path)) return next();
   if (currentStaff(req)) return next();
@@ -1521,6 +1521,8 @@ app.use(function (req, res, next) {
 });
 // ทางเข้าลัดระบบสอบ: /exam → เปิด Operations แล้วเด้งไปหน้า Exam · Session ทันที (กั้นด้วย staff login เหมือน /operations)
 app.get('/exam', function (req, res) { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'operations.html')); });
+// แผนก Operation (ใหม่): หน้าเดียวกับ Operations แต่แสดงเฉพาะเมนูใหม่ (RT, E-Xam, แอปสมาชิก)
+app.get('/ops', function (req, res) { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'operations.html')); });
 
 // ---- ซ่อนโดเมน railway สำหรับ Lean Lab: เข้าหน้า Lean Lab ผ่านโดเมน railway → เด้งไปโดเมนสวย ----
 // (เฉพาะหน้า /leanlab เท่านั้น · ไม่แตะ /preorder เพราะ QR พรีออเดอร์เดิมยังชี้ railway อยู่ และ shopping ยังไม่ live)

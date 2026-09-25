@@ -4578,7 +4578,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
         }
       } else { var m=META[v]; pageLabel=m?m.t:v; }
     }
-    var arr=['Operations']; if(groupLabel)arr.push(groupLabel); if(pageLabel)arr.push(pageLabel);
+    var arr=[window.OPS2?'Operation (ใหม่)':'Operations']; if(groupLabel)arr.push(groupLabel); if(pageLabel)arr.push(pageLabel);
     var html=''; arr.forEach(function(p,i){ if(i)html+='<span class="sep">›</span>'; html+=(i===arr.length-1?'<span class="cur">'+p+'</span>':'<span>'+p+'</span>'); });
     el.innerHTML=html;
   }
@@ -4684,7 +4684,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v.indexOf('rn-')===0){ if(window.CXRN)CXRN.render(v); } else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v.indexOf('rn-')===0){ if(window.CXRN)CXRN.render(v); else window.addEventListener('DOMContentLoaded',function(){ if(window.CXRN)CXRN.render(v); }); } else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)
@@ -4913,8 +4913,19 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     document.body.appendChild(fab);xvFbBadge();setInterval(xvFbBadge,20000);
   }
 
+  /* ===== แผนก Operation (ใหม่) — เข้าผ่าน /ops ใช้หน้าเดียวกันแต่แสดงเฉพาะเมนูใหม่ ===== */
+  (function(){ if(!/^\/ops\/?$/i.test(location.pathname))return; window.OPS2=true; document.body.classList.add('ops2');
+    var keep={'g-returns-new':'คืนสินค้า / คืนเงิน','g-examnew':'E-Xam','g-mapp':'แอปสมาชิก'};
+    document.querySelectorAll('#nav > .group').forEach(function(g){ if(!keep[g.id]){ g.remove(); return; }
+      g.classList.add('open'); var l=g.querySelector(':scope > .ghead .lbl'); if(l)l.textContent=keep[g.id]; });
+    var nav=document.getElementById('nav'); ['g-returns-new','g-examnew','g-mapp'].forEach(function(id){ var g=document.getElementById(id), f=nav.querySelector('.navfoot'); if(g)nav.insertBefore(g,f); });
+    var wb=document.querySelector('.wsbadge b'), ws=document.querySelector('.wsbadge span:not(.ic)'); if(wb)wb.textContent='Operation (ใหม่)'; if(ws)ws.textContent='เมนูใหม่ของฝ่ายปฏิบัติการ';
+    var cr=document.querySelector('.topbar .crumb'); if(cr&&cr.firstChild&&cr.firstChild.nodeType===3)cr.firstChild.textContent='Operation (ใหม่)';
+    var st=document.createElement('style'); st.textContent='body.ops2 .nav>.group>.children{display:flex!important}body.ops2 .nav>.group>.ghead{pointer-events:none;margin-top:14px;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-height:0;padding-top:6px;padding-bottom:6px}body.ops2 .nav>.group>.ghead .caret{display:none}body.ops2 .nav>.group>.ghead .i{width:15px;height:15px}body.ops2 .nav>.group:first-child>.ghead{margin-top:4px}body.ops2 .nav .item.lvl3,body.ops2 .nav>.group>.children>.item{padding-left:14px}';
+    document.head.appendChild(st); document.title='Operation (ใหม่) · CloverX'; })();
+
   // เปิดหน้าเริ่มต้น: ปกติ = Dashboard<span class=mdiv></span>ถ้าเข้าผ่าน /exam หรือ ?v=<view> → เปิดหน้านั้นเลย (ทางเข้าลัด)
-  (function(){ var v='podash';
+  (function(){ var v=window.OPS2?'rn-overview':'podash';
     try{
       if(/\/exam\/?$/i.test(location.pathname)) v='exam-session';
       var q=new URLSearchParams(location.search).get('v');
