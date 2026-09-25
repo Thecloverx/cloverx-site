@@ -1548,6 +1548,24 @@ function siteForHost(req) {
   return 'career';                                    // career(s).cloverxth.com, โดเมน railway, apex → หน้าเว็บสมัครงาน
 }
 
+// ---- แอป Lean Lab ใหม่: leanlab.cloverxth.com/app → leanlab-app.html (โดเมนอื่นเปิดที่ /leanlab-app) — หน้าเดิม /leanlab ไม่เปลี่ยน ----
+app.get(['/app', '/app.html'], function (req, res, next) { if (siteForHost(req) !== 'leanlab') return next(); res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'leanlab-app.html')); });
+// ---- ไฟล์ไลบรารี (vendor/) ชื่อไฟล์มีเลขเวอร์ชัน จึงให้เบราว์เซอร์จำไว้ 30 วัน และบีบอัด gzip ไว้ล่วงหน้า (Splash 3D ของ Lean Lab X เปิดไวขึ้น) ----
+var VENDOR_GZ = {};
+app.get('/vendor/:f', function (req, res, next) {
+  var f = String(req.params.f || '');
+  if (!/^[a-z0-9.\-]+\.js$/i.test(f)) return next();
+  var fp = path.join(__dirname, 'vendor', f);
+  if (!fs.existsSync(fp)) return next();
+  res.set('Cache-Control', 'public, max-age=2592000, immutable');
+  res.type('application/javascript');
+  if (/\bgzip\b/.test(req.headers['accept-encoding'] || '')) {
+    if (!VENDOR_GZ[f]) VENDOR_GZ[f] = require('zlib').gzipSync(fs.readFileSync(fp), { level: 9 });
+    res.set('Content-Encoding', 'gzip'); res.set('Vary', 'Accept-Encoding');
+    return res.send(VENDOR_GZ[f]);
+  }
+  res.sendFile(fp);
+});
 // ---- static site (index.html, center.html, operations.html, preorder.html) ----
 // index:false → ไม่ให้ static เสิร์ฟ index.html ที่ "/" อัตโนมัติ จะได้ให้ตัวแยกตาม subdomain ด้านล่างทำงาน
 app.use(express.static(__dirname, { extensions: ['html'], index: false }));

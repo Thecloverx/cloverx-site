@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8fafc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Lean Lab X</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="/vendor/three-r149.min.js" defer></script>
+<script src="/ll-splash3d.js" defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Lean Lab X ระยะที่ 1: Splash (Figma 7:6) + เข้าสู่ระบบ (7:24) + สมัครสมาชิก (7:72) */
+:root{--bg:#f8fafc;--line:#e2e8f0;--ink:#03080f;--mut:#8a99ad;--lime:#c8f56a;--bad:#dc2626;--r:12px;--ff:'Inter','Noto Sans Thai',system-ui,sans-serif;
+  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
+  --out:cubic-bezier(.16,1,.3,1);
+  --spring:linear(0,.0188,.0679,.1374,.2195,.308,.3978,.4856,.5686,.6452,.7142,.7753,.8283,.8735,.9113,.9423,.9671,.9866,1.0014,1.0123,1.0198,1.0247,1.0274,1.0283,1.0281,1.0268,1.025,1.0227,1.0202,1.0177,1.0152,1.0128,1.0106,1.0085,1.0068,1.0052,1.0039,1.0028,1.0018,1.0011,1.0005,1,.9997,.9995,.9993,.9992,.9992,.9992,.9992,.9993,.9993)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ff);font-size:14px;line-height:normal}
+h1,p,button,a{word-break:keep-all;overflow-wrap:break-word}
+button{font:inherit;color:inherit}
+.shell{max-width:430px;min-height:100vh;min-height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column}
+@media(min-width:560px){html,body{background:#e9edf2}.shell{box-shadow:0 0 0 1px var(--line),0 20px 60px -30px rgba(3,8,15,.35)}}
+/* ระยะตาม frame 390x844 ของ Figma (ตัดแถบสถานะ 44px ออก ใช้ safe-area ของเครื่องแทน) */
+.scr{flex:1;display:flex;flex-direction:column;padding:calc(var(--top) + 136px) 24px calc(var(--bot) + 28px);position:relative}
+.scr.reg{padding-top:calc(var(--top) + 73px)}
+.back{position:absolute;left:19px;top:calc(var(--top) + 7px);width:40px;height:40px;border:0;background:none;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.back:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.logo{display:block;width:302px;max-width:100%;height:auto;margin:0 auto 9px}
+h1{margin:0;font-size:22px;font-weight:700;text-align:center}
+.lead{margin:8px 0 0;color:var(--mut);text-align:center}
+form{margin-top:38px}
+.fld{position:relative}
+.fld+.fld{margin-top:16px}
+.reg .fld+.fld{margin-top:14px}
+.fld svg{position:absolute;left:15px;top:15px;pointer-events:none}
+.in{display:block;width:100%;height:48px;border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:0 16px 0 45px;font:inherit;font-size:14px;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+.in::placeholder{color:var(--mut);opacity:1}
+.in:focus{border-color:#9bc93b;box-shadow:0 0 0 3px rgba(200,245,106,.35)}
+.fld.bad .in{border-color:#f3a5a8}
+.err{display:none;font-size:12px;color:var(--bad);margin:6px 2px 0}
+.fld.bad .err{display:block}
+.msg{margin:14px 0 0;font-size:13px;color:var(--bad);text-align:center}
+.msg:empty{display:none}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;height:50px;margin-top:37px;border:0;border-radius:var(--r);background:var(--lime);color:var(--ink);font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 6px rgba(200,245,106,.12);text-decoration:none}
+.reg .btn{margin-top:35px}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.6;cursor:progress}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn.ghost{background:#fff;border:1px solid var(--line);box-shadow:none;margin-top:12px}
+.sw{margin:16px 0 0;text-align:center;color:var(--mut)}
+.reg .sw{margin-top:23px}
+.sw button{background:none;border:0;padding:0;font-weight:700;color:var(--ink);text-decoration:underline;cursor:pointer}
+.help{margin:auto 0 0;padding-top:28px;text-align:center;color:var(--mut);font-size:12px}
+.help a{color:inherit;text-decoration:none}
+/* ท่าเข้าตาม Figma motion (เล่นครั้งเดียว) */
+.a{animation:up var(--d,.4s) var(--out) both;animation-delay:var(--w,0s)}
+.a.pop{animation:up .4s var(--out) both,pop .5s var(--spring) both;animation-delay:var(--w),var(--w)}
+.a.fade{animation-name:fade}
+@keyframes up{from{opacity:0;translate:0 var(--y,18px)}to{opacity:1;translate:0 0}}
+@keyframes pop{from{scale:.88}to{scale:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+/* splash */
+.splash{position:fixed;inset:0;z-index:50;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .35s}
+.splash.out{opacity:0;pointer-events:none}
+.splash .mid{display:flex;flex-direction:column;align-items:center;margin-bottom:128px}
+.splash img{width:290px;max-width:76vw;height:auto;animation:fade .7s var(--out) .3s both,sc .9s var(--spring) .3s both}
+.splash .tag{margin-top:8px;color:var(--mut);font-weight:500;font-size:14px;--y:15px;animation:up .7s var(--out) .5s both}
+.splash .tag i{display:inline-block;width:.9em}
+.splash .ver{position:absolute;bottom:calc(var(--bot) + 49px);color:var(--mut);opacity:.6;font-size:12px}
+.splash .ver span{display:block;--y:30px;animation:up .7s var(--out) .8s both}
+/* โลโก้ 3D (ll-splash3d.js) ถ้าเครื่องไม่รองรับจะใช้โลโก้ภาพ 2D ด้านบนแทน */
+.splash canvas{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none}
+.splash.wait .mid,.splash.wait .ver span{visibility:hidden;animation:none}
+.splash.is3d canvas{display:block}
+.splash.is3d .mid{position:absolute;left:0;right:0;top:calc(50% + 104px);margin:0;pointer-events:none}
+.splash.is3d .mid img{display:none}
+.splash.is3d .tag{animation-delay:1.55s;letter-spacing:.06em}
+.splash.is3d .ver span{animation-delay:1.8s}
+@keyframes sc{from{scale:.7}to{scale:1}}
+/* หลังเข้าสู่ระบบ: หน้าชั่วคราวระหว่างรอเฟสถัดไป */
+.hi{margin-top:30px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.hi .k{font-size:12px;color:var(--mut)}
+.hi .v{font-size:15px;font-weight:600;margin-top:2px;overflow-wrap:anywhere}
+.hi .v+.k{margin-top:12px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell"><main class="scr" id="view"></main></div>
+<div class="splash wait" id="splash" aria-hidden="true">
+  <canvas id="ll3d"></canvas>
+  <div class="mid"><img src="/ll-app-logo-dark.png" alt="" width="900" height="165"><div class="tag">REAL PEOPLE<i></i>REAL CHANGE</div></div>
+  <div class="ver"><span>Lean Lab X v1.4.0</span></div>
+</div>
+<script>
+(function(){
+'use strict';
+var LINE='https://line.me/R/ti/p/@cloverxth';
+var V=document.getElementById('view'), ME={loggedIn:false};
+function $(s){return V.querySelector(s);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function api(u,body){var o={credentials:'same-origin',method:body?'POST':'GET',headers:{}};if(body){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
+  return fetch(u,o).then(function(r){return r.json().catch(function(){return {};});});}
+/* ไอคอนตาม Figma: mail / lock / user / phone 18px สี #8a99ad และ arrow-left 16px */
+var IC={mail:'<rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 7 9 6 9-6"/>',lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',back:'<path d="M19 12H5M12 19l-7-7 7-7"/>'};
+function sv(n,s,c){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>';}
+function fld(id,icon,ph,type,attr,anim){return '<div class="fld a" id="f_'+id+'" style="'+anim+'">'+sv(icon,18,'#8a99ad')+'<input class="in" id="'+id+'" type="'+type+'" placeholder="'+esc(ph)+'" aria-label="'+esc(ph)+'"'+attr+'><div class="err" role="alert"></div></div>';}
+function mark(id,msg){var f=$('#f_'+id);f.classList.toggle('bad',!!msg);f.querySelector('.err').textContent=msg||'';return !msg;}
+var EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function okPhone(s){var d=String(s||'').replace(/\D/g,'');return d.length>=9&&d.length<=12;}
+var HELP='<p class="help a fade" style="--w:.75s;--d:.45s">กรณีไม่สามารถเข้าสู่ระบบได้ สามารถติดต่อ <a href="'+LINE+'" target="_blank" rel="noopener">@cloverxth</a></p>';
+function show(html,cls){V.className='scr'+(cls?' '+cls:'');V.innerHTML=html;window.scrollTo(0,0);}
+function go(r){if(location.hash!=='#'+r)history.pushState(null,'','#'+r);render();}
+window.addEventListener('popstate',render);
+function render(){if(ME.loggedIn)return done();if(location.hash==='#register')return register();login();}
+function busy(b,on,txt){b.disabled=on;b.textContent=txt;}
+
+/* ---------- เข้าสู่ระบบ (Figma 7:24) ---------- */
+function login(){
+  show('<h1>เข้าสู่ระบบ</h1><p class="lead">ยินดีต้อนรับกลับสู่ Lean Lab X</p>'
+    +'<form id="lf" novalidate>'
+    +fld('lEmail','mail','อีเมลของคุณ','email',' autocomplete="email" inputmode="email" autocapitalize="off"','--w:.2s')
+    +fld('lPhone','lock','เบอร์โทรศัพท์','tel',' autocomplete="tel" inputmode="tel"','--w:.3s')
+    +'<p class="msg" id="lMsg" role="alert"></p>'
+    +'<button class="btn a pop" id="lGo" type="submit" style="--w:.45s;--y:12px">เข้าสู่ระบบ</button></form>'
+    +'<p class="sw a" style="--w:.6s;--y:10px">ยังไม่มีบัญชี? <button type="button" id="toReg">สมัครสมาชิก</button></p>'+HELP);
+  $('#toReg').onclick=function(){go('register');};
+  $('#lf').onsubmit=function(e){e.preventDefault();
+    var em=$('#lEmail').value.trim(),ph=$('#lPhone').value.trim(),ok=true;
+    ok=mark('lEmail',EMAIL.test(em)?'':'กรุณากรอกอีเมลให้ถูกต้อง')&&ok;
+    ok=mark('lPhone',okPhone(ph)?'':'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง')&&ok;
+    if(!ok)return;
+    var b=$('#lGo'),m=$('#lMsg');m.textContent='';busy(b,true,'กำลังเข้าสู่ระบบ…');
+    api('/api/leanlab/auth/login',{email:em,phone:ph}).then(function(j){
+      if(!j.ok){busy(b,false,'เข้าสู่ระบบ');m.textContent=j.error==='too_many_requests'?'ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่':'อีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้อง หรือยังไม่ได้สมัครสมาชิก';return;}
+      ME={loggedIn:true,member:j.member};go('home');
+    }).catch(function(){busy(b,false,'เข้าสู่ระบบ');m.textContent='เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';});
+  };
+}
+
+/* ---------- สมัครสมาชิก (Figma 7:72) ---------- */
+function register(){
+  show('<button class="back" id="bk" type="button" aria-label="ย้อนกลับไปหน้าเข้าสู่ระบบ">'+sv('back',16,'#03080f')+'</button>'
+    +'<img class="logo" src="/ll-app-logo-light.png" alt="Lean Lab X" width="900" height="164">'
+    +'<h1>สมัครสมาชิก</h1><p class="lead">เริ่มต้นดูแลสุขภาพและความฟิตของคุณวันนี้</p>'
+    +'<form id="rf" novalidate>'
+    +fld('rName','user','ชื่อ-นามสกุลของคุณ','text',' autocomplete="name"','--w:.15s;--y:20px')
+    +fld('rEmail','mail','อีเมลติดต่อ','email',' autocomplete="email" inputmode="email" autocapitalize="off"','--w:.25s;--y:20px')
+    +fld('rPhone','phone','เบอร์โทรศัพท์','tel',' autocomplete="tel" inputmode="tel"','--w:.35s;--y:20px')
+    +'<p class="msg" id="rMsg" role="alert"></p>'
+    +'<button class="btn a pop" id="rGo" type="submit" style="--w:.5s;--y:12px">สมัครสมาชิก</button></form>'
+    +'<p class="sw a" style="--w:.75s;--y:10px">มีบัญชีอยู่แล้ว? <button type="button" id="toLog">เข้าสู่ระบบ</button></p>'+HELP,'reg');
+  $('#bk').onclick=$('#toLog').onclick=function(){go('login');};
+  $('#rf').onsubmit=function(e){e.preventDefault();
+    var nm=$('#rName').value.trim(),em=$('#rEmail').value.trim(),ph=$('#rPhone').value.trim(),ok=true;
+    ok=mark('rName',nm.length>=2?'':'กรุณากรอกชื่อ-นามสกุล')&&ok;
+    ok=mark('rEmail',EMAIL.test(em)?'':'กรุณากรอกอีเมลให้ถูกต้อง')&&ok;
+    ok=mark('rPhone',okPhone(ph)?'':'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง')&&ok;
+    if(!ok)return;
+    var b=$('#rGo'),m=$('#rMsg');m.textContent='';busy(b,true,'กำลังสมัครสมาชิก…');
+    api('/api/leanlab/auth/join',{name:nm,email:em,phone:ph}).then(function(j){
+      if(!j.ok){busy(b,false,'สมัครสมาชิก');m.textContent=j.error==='bad_email'?'อีเมลไม่ถูกต้อง':(j.error==='too_many_requests'?'ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่':'สมัครไม่สำเร็จ กรุณาลองใหม่');return;}
+      ME={loggedIn:true,member:j.member,fresh:true};go('home');
+    }).catch(function(){busy(b,false,'สมัครสมาชิก');m.textContent='เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';});
+  };
+}
+
+/* ---------- หลังเข้าสู่ระบบ: หน้าชั่วคราว ส่งต่อไปกรอกใบสมัครที่ระบบเดิม ---------- */
+function done(){var mb=ME.member||{};
+  show('<img class="logo" src="/ll-app-logo-light.png" alt="Lean Lab X" width="900" height="164">'
+    +'<h1>'+(ME.fresh?'สมัครสมาชิกเรียบร้อย':'เข้าสู่ระบบแล้ว')+'</h1><p class="lead">ขั้นต่อไปคือกรอกใบสมัครเข้าร่วม Lean Lab</p>'
+    +'<div class="hi a" style="--w:.1s"><div class="k">ชื่อ-นามสกุล</div><div class="v">'+esc(mb.name||'-')+'</div><div class="k">อีเมล</div><div class="v">'+esc(mb.email||'-')+'</div><div class="k">เบอร์โทรศัพท์</div><div class="v">'+esc(mb.phone||'-')+'</div></div>'
+    +'<a class="btn a pop" href="/leanlab" style="--w:.25s;--y:12px;margin-top:24px">กรอกใบสมัครต่อ</a>'
+    +'<button class="btn ghost a" id="lo" type="button" style="--w:.35s">ออกจากระบบ</button>'+HELP,'reg');
+  $('#lo').onclick=function(){var b=this;b.disabled=true;api('/api/leanlab/auth/logout',{}).then(function(){ME={loggedIn:false};go('login');}).catch(function(){b.disabled=false;});};
+}
+
+/* ---------- เปิดแอป: splash โลโก้ 3D (ราว 2.6 วินาที แตะเพื่อข้ามได้) ถ้าไม่รองรับ 3D ใช้แบบ 2D ตาม Figma ---------- */
+var SP=document.getElementById('splash'),mode='',ready=false,animDone=false,shown=false,fx=null;
+function finish(){if(shown||!animDone||!ready)return;shown=true;SP.classList.add('out');setTimeout(function(){if(fx)fx.stop();SP.remove();},400);render();}
+function use2d(){if(mode)return;mode='2d';SP.classList.remove('wait','is3d');setTimeout(function(){animDone=true;finish();},1800);}
+function try3d(){if(mode)return;SP.classList.add('is3d');
+  fx=window.LL3D?window.LL3D.start(document.getElementById('ll3d'),{onDone:function(){animDone=true;finish();}}):false;
+  if(!fx)return use2d();
+  mode='3d';SP.classList.remove('wait');}
+var pdn=null;SP.addEventListener('pointerdown',function(e){pdn=[e.clientX,e.clientY];});
+SP.addEventListener('click',function(e){if(pdn&&Math.hypot(e.clientX-pdn[0],e.clientY-pdn[1])>8)return;animDone=true;finish();});   // แตะเพื่อข้าม (ลากเพื่อหมุนโลโก้ไม่นับ)
+setTimeout(use2d,1500);                                  // โหลด 3D ไม่ทันใน 1.5 วินาที ใช้แบบ 2D
+setTimeout(function(){animDone=true;finish();},4500);    // กันค้าง: เครื่องช้ามาก ปิด splash ไม่เกิน 4.5 วินาที
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',try3d);else try3d();
+api('/api/leanlab/me').then(function(j){if(j&&j.loggedIn)ME={loggedIn:true,member:j.member};}).catch(function(){}).then(function(){ready=true;finish();});
+})();
+</script>
+</body>
+</html>
