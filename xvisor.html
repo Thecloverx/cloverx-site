@@ -273,6 +273,72 @@ input{font-family:inherit}
 .rfoot{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
 .note{display:flex;align-items:center;gap:var(--space-2);color:var(--text-secondary);font-size:13px}
 .note svg{width:18px;height:18px;color:var(--primary-500)}
+/* ===== หน้าผลคะแนน (ออกแบบใหม่): สรุปบนสุด แยกพาร์ต ประวัติทุกครั้ง ใช้ได้ทั้งมือถือและคอม ===== */
+.rs{display:flex;flex-direction:column;gap:var(--space-4)}
+.rs-hero{position:relative;overflow:hidden;padding:22px 24px;border-radius:24px;color:#fff;background:linear-gradient(135deg,#0649D8 0%,#1478FF 55%,#27C8FF 130%);box-shadow:0 18px 40px -22px rgba(6,73,216,.7)}
+.rs-hero.ok{background:linear-gradient(135deg,#0b7a52 0%,#14A66D 55%,#5fe0a8 130%);box-shadow:0 18px 40px -22px rgba(11,122,82,.7)}
+.rs-hero::after{content:"";position:absolute;right:-60px;top:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 65%);pointer-events:none}
+.rs-eye{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;opacity:.92}
+.rs-eye b{font-weight:700;font-size:14px}
+.rs-eye .id{padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-family:var(--num);font-weight:700;font-size:12px;letter-spacing:.02em}
+.rs-main{display:flex;align-items:center;gap:16px;margin-top:14px}
+.rs-big{font-family:var(--num);font-weight:800;font-size:54px;line-height:1;letter-spacing:-.02em}
+.rs-big small{font-size:22px;font-weight:700;opacity:.75;margin-left:2px}
+.rs-main .t b{display:block;font-size:20px;font-weight:700;line-height:1.35}
+.rs-main .t span{display:block;font-size:14px;opacity:.9;margin-top:2px}
+.rs-seg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:18px}
+.rs-seg i{height:8px;border-radius:999px;background:rgba(255,255,255,.28)}
+.rs-seg i.ok{background:#fff}.rs-seg i.no{background:rgba(255,255,255,.28);box-shadow:inset 0 0 0 1.5px rgba(255,210,210,.9)}
+.rs-seg-l{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px;font-size:11.5px;opacity:.85;text-align:center}
+.rs-parts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--space-3)}
+.rs-parts.n2{grid-template-columns:repeat(2,minmax(0,220px))}.rs-parts.n1{grid-template-columns:minmax(0,220px)}.rs-parts.n3{grid-template-columns:repeat(3,minmax(0,220px))}.rs-parts.n4{grid-template-columns:repeat(4,minmax(0,220px))}
+.rp{padding:16px 12px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;border-radius:20px}
+.rp-h{display:flex;align-items:center;justify-content:space-between;width:100%;gap:6px;padding:0 4px}
+.rp-n{font-weight:700;color:var(--text-primary);font-size:14px;white-space:nowrap}
+.rp-b{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.rp-b svg{width:13px;height:13px}
+.rp.ok .rp-b{color:var(--success);background:rgba(20,166,109,.10)}.rp.no .rp-b{color:var(--danger);background:rgba(229,72,77,.10)}
+.rp .ringwrap{width:96px;height:96px}.rp .rc b{font-size:26px}.rp .rc span{font-size:11px}
+.rp-bar,.rp-s{display:none}
+.rs-lock{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;background:rgba(255,255,255,.7);border:1px dashed rgba(45,136,255,.28);color:var(--text-secondary);font-size:13px}
+.rs-lock .li{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;background:#EDF2F9;color:#8ea0ba}.rs-lock .li svg{width:18px;height:18px}
+.rs-lock b{display:block;color:var(--text-primary);font-size:14px}
+.rs-foot{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:4px}
+.rs-foot .grow{flex:1}
+/* ประวัติคะแนนทุกครั้ง */
+.hx{margin-top:var(--space-5);text-align:left}
+.rs .hx{margin-top:0}
+.hx h3{font-size:15px;font-weight:700;color:var(--text-primary);margin:0 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hx h3 small{font-weight:500;font-size:12px;color:var(--text-secondary)}
+.hx-l{display:flex;flex-direction:column;gap:8px}
+.hx-i{background:#fff;border:1px solid #E1E9F5;border-radius:16px;padding:12px 14px}
+.hx-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.hx-h b{color:var(--text-primary);font-size:14px}.hx-h span{color:#6B7A93;font-size:12.5px;white-space:nowrap}
+.hx-g{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.hc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:7px 4px;border-radius:12px;min-width:0}
+.hc small{font-size:11px;font-weight:600;white-space:nowrap;opacity:.85}.hc b{font-family:var(--num);font-size:17px;font-weight:800;line-height:1.15}.hc b em{font-style:normal;font-size:11px;font-weight:700;opacity:.7}
+.hc.ok{background:#E7F8EF;color:#0B7A45}.hc.no{background:#FDECEC;color:#C0352B}.hc.na{background:#F1F5F9;color:#64748b}
+@media (max-width:760px){
+  .rs{gap:12px}
+  .rs-hero{padding:18px 18px 16px;border-radius:20px}
+  .rs-big{font-size:46px}.rs-main{gap:14px;margin-top:12px}.rs-main .t b{font-size:17px}.rs-main .t span{font-size:13px}
+  .rs-parts,.rs-parts.n1,.rs-parts.n2,.rs-parts.n3,.rs-parts.n4{grid-template-columns:1fr;gap:8px}
+  .rp{flex-direction:row;align-items:center;gap:12px;padding:12px 14px;border-radius:16px}
+  .rp .ringwrap{display:none}
+  .rp-h{flex-direction:column;align-items:flex-start;width:auto;padding:0;gap:4px;flex:none;min-width:74px}
+  .rp-bar{display:block;position:relative;flex:1;height:8px;border-radius:999px;background:#E6EEF9}
+  .rp-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--cyan-400),var(--primary-500))}
+  .rp.no .rp-bar i{background:linear-gradient(90deg,#ff9a9d,var(--danger))}
+  .rp-bar em{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:#8ea0ba}
+  .rp-s{display:block;font-family:var(--num);font-weight:800;font-size:20px;color:var(--text-primary);flex:none;min-width:52px;text-align:right}
+  .rp-s span{font-size:12px;font-weight:700;color:var(--text-secondary)}
+  .rp.no .rp-s{color:var(--danger)}
+  .rs-lock{padding:12px 14px}
+  .hc b{font-size:16px}.hc{padding:6px 2px}
+  .rs-foot{position:sticky;bottom:0;z-index:5;margin:4px calc(-1*var(--space-3)) 0;padding:12px var(--space-3) calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--background) 72%,rgba(244,249,255,0));flex-direction:column-reverse;align-items:stretch;gap:8px}
+  .rs-foot .btn{width:100%;justify-content:center}.rs-foot .grow{display:none}
+  .rs-foot .note{justify-content:center}
+}
 
 /* remedial prep */
 .rem-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:var(--space-5);align-items:start}
@@ -1087,21 +1153,29 @@ function renderChecking(){scoreActive();
 
 /* ---------- 06/08 results ---------- */
 function renderResult(){const isRem=S.phase==='remedial_result';const shown=isRem?((S.remedialAttempted&&S.remedialAttempted.length?S.remedialAttempted:S.remedialQueue)||[]).slice():[1,2,3,4,5];
- const passed=S.results.filter(r=>r.status==='passed').length,failed=S.results.filter(r=>r.status==='failed').length;
+ const passed=S.results.filter(r=>r.status==='passed').length;
  const allPass=S.results.every(r=>r.status==='passed');
- app.innerHTML=`${appbar()}<div class="wrap-mid" style="display:flex;flex-direction:column;gap:var(--space-5)">
-   <div><h1 class="hero-h" style="text-align:left">${isRem?'ผลการสอบซ่อม':'ผลการสอบครั้งแรก'}</h1><div class="hero-sub" style="text-align:left">รหัสผู้เข้าสอบ ${S.candidate.id}</div></div>
-   <div class="pgrid">${shown.map(p=>{const r=S.results[p-1],pass=r.status==='passed';
-     return `<div class="card pcard"><div class="pp">พาร์ต ${p}</div><div class="ringwrap ${pass?'':'danger'}" style="width:104px;height:104px">${ringSVG(Math.round(r.score/QPP*100),{size:104,danger:!pass,static:true,track:'#DCE7F5',w:10})}<div class="rc"><b class="num">${r.score}</b><span>/ ${QPP}</span></div></div>
-       <span class="badge ${pass?'pass':'fail'}">${pass?I.checkc:I.xc} ${pass?'ผ่าน':'ไม่ผ่าน'}</span></div>`;}).join('')}</div>
-   <div class="rsplit">
-     <div class="card rpanel"><div class="rpt">สรุปผลการสอบ</div><div class="rsum">
-       <div class="ri ok"><span class="ric">${I.checkc}</span><span><b>${passed}</b><span>พาร์ตที่ผ่าน</span></span></div><span class="rdiv"></span>
-       <div class="ri no"><span class="ric">${I.xc}</span><span><b>${failed}</b><span>ต้องสอบซ่อม</span></span></div></div></div>
-     <div class="card rpanel"><div class="lockp"><span class="li">${I.lock}</span><span><b>ยังไม่สามารถดูข้อที่ตอบผิดได้</b><span>${(S.candidate&&S.candidate.mode==='onsite')?'ดูได้เมื่อผ่านครบทั้ง 5 พาร์ต':'ดูได้เมื่อผ่านครบทั้ง 5 พาร์ตและทีมงานยืนยันผลแล้ว'}</span></span></div></div></div>
+ const onsite=S.candidate&&S.candidate.mode==='onsite';
+ const q=(S.remedialQueue||[]).slice().sort((a,b)=>a-b);
+ const passPct=Math.round(PASS/QPP*100);
+ const seg=[1,2,3,4,5].map(p=>{const r=S.results[p-1]||{};return `<i class="${r.status==='passed'?'ok':'no'}" title="พาร์ต ${p}"></i>`;}).join('');
+ const segL=[1,2,3,4,5].map(p=>`<span>พาร์ต ${p}</span>`).join('');
+ app.innerHTML=`${appbar()}<div class="wrap-mid rs">
+   <section class="rs-hero ${allPass?'ok':''}" aria-label="สรุปผลการสอบ">
+     <div class="rs-eye"><b>${isRem?'ผลการสอบซ่อม':'ผลการสอบครั้งแรก'}</b><span class="id">${S.candidate.id}</span></div>
+     <div class="rs-main"><div class="rs-big">${passed}<small>/5</small></div>
+       <div class="t"><b>${allPass?'ผ่านครบทั้ง 5 พาร์ต':'ผ่าน '+passed+' จาก 5 พาร์ต'}</b><span>${allPass?'ขั้นต่อไป ยืนยันผลการสอบ':'ต้องสอบซ่อมพาร์ต '+q.join(', ')}</span></div></div>
+     <div class="rs-seg" aria-hidden="true">${seg}</div><div class="rs-seg-l" aria-hidden="true">${segL}</div>
+   </section>
+   <div class="rs-parts n${shown.length}">${shown.map(p=>{const r=S.results[p-1],pass=r.status==='passed',pct=Math.round(r.score/QPP*100);
+     return `<div class="card rp ${pass?'ok':'no'}"><div class="rp-h"><span class="rp-n">พาร์ต ${p}</span><span class="rp-b">${pass?I.checkc:I.xc}${pass?'ผ่าน':'ไม่ผ่าน'}</span></div>
+       <div class="ringwrap ${pass?'':'danger'}">${ringSVG(pct,{size:96,danger:!pass,static:true,track:'#DCE7F5',w:10})}<div class="rc"><b class="num">${r.score}</b><span>/ ${QPP}</span></div></div>
+       <div class="rp-bar" aria-hidden="true"><i style="width:${pct}%"></i><em style="left:${passPct}%"></em></div>
+       <div class="rp-s num">${r.score}<span> / ${QPP}</span></div></div>`;}).join('')}</div>
+   <div class="rs-lock"><span class="li">${I.lock}</span><span><b>ดูข้อที่ตอบผิดได้เมื่อผ่านครบทั้ง 5 พาร์ต</b>${onsite?'':'และทีมงานยืนยันผลแล้ว '}ผ่านเมื่อได้ ${PASS} คะแนนขึ้นไปจาก ${QPP}</span></div>
    ${xvHistory()}
-   <div class="rfoot"><span class="note">${I.info} ${allPass?'ผ่านครบทั้ง 5 พาร์ต':'สอบซ่อมเฉพาะพาร์ต '+S.remedialQueue.join(', ')}</span><span class="spacer" style="flex:1"></span>
-     ${allPass?`<button class="btn btn-primary lg" id="toVerify">ดำเนินการต่อ ${I.next}</button>`:`<button class="btn btn-ghost" id="exit">ออกจากระบบ</button><button class="btn btn-primary lg" id="toRem">เตรียมสอบซ่อม ${I.next}</button>`}</div></div>`;
+   <div class="rs-foot">${allPass?`<span class="note">${I.info} ผ่านครบทั้ง 5 พาร์ต</span><span class="grow"></span><button class="btn btn-primary lg" id="toVerify">ดำเนินการต่อ ${I.next}</button>`
+     :`<button class="btn btn-ghost" id="exit">ออกจากระบบ</button><span class="grow"></span><button class="btn btn-primary lg" id="toRem">เตรียมสอบซ่อม ${I.next}</button>`}</div></div>`;
  if(allPass){$('#toVerify').onclick=()=>{const onsite=(S.candidate&&S.candidate.mode==='onsite')||S.serverStatus==='verified'||S.serverStatus==='submitted';if(onsite){S.staffVerified=true;S.phase='all_passed';}else{S.phase='waiting_verification';}render();};}
  else{$('#toRem').onclick=()=>{S.phase='remedial_prep';render();};$('#exit').onclick=()=>{clearResume();initState();render();resolveRound();};}
 }
@@ -1157,13 +1231,11 @@ function xvAttemptLabel(a){if(a.kind==='first')return 'สอบครั้ง�
 function xvHistory(){var L=(S.attempts||[]).slice().sort(function(x,y){return (x.at||0)-(y.at||0);});if(!L.length)return '';
  var cnt={};L.forEach(function(a){cnt[a.kind]=(cnt[a.kind]||0)+1;if(!a.no)a.no=cnt[a.kind];});
  var rows=L.map(function(a){var ps=(a.parts||[]).slice().sort(function(x,y){return x-y;});
-   var chips=ps.map(function(pt){var v=(a.perPart&&a.perPart[pt]!=null)?a.perPart[pt]:null;var ok=v!=null&&v>=PASS;
-     return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap;background:'+(ok?'#E7F8EF':'#FDECEC')+';color:'+(ok?'#0B7A45':'#C0352B')+'">พาร์ต '+pt+' <b class="num">'+(v==null?'-':v)+'</b>/'+QPP+'</span>';}).join('');
+   var chips=ps.map(function(pt){var v=(a.perPart&&a.perPart[pt]!=null)?a.perPart[pt]:null;var cls=v==null?'na':(v>=PASS?'ok':'no');
+     return '<span class="hc '+cls+'"><small>พาร์ต '+pt+'</small><b class="num">'+(v==null?'-':v)+'<em>/'+QPP+'</em></b></span>';}).join('');
    var d=a.at?new Date(a.at):null;var tm=d?(('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' น.'):'';
-   return '<div style="border:1px solid #E1E9F5;border-radius:14px;padding:12px 14px;text-align:left;background:#fff">'
-     +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px"><b style="color:#0A2A64;font-size:14.5px">'+xvAttemptLabel(a)+'</b><span style="color:#6B7A93;font-size:12.5px;white-space:nowrap">'+tm+(a.expired?'  หมดเวลา':'')+'</span></div>'
-     +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div></div>';}).join('');
- return '<div style="margin-top:var(--space-5);text-align:left"><div style="font-weight:800;color:#0A2A64;margin-bottom:10px;font-size:15px">คะแนนของคุณทุกครั้ง</div><div style="display:flex;flex-direction:column;gap:8px">'+rows+'</div></div>';}
+   return '<div class="hx-i"><div class="hx-h"><b>'+xvAttemptLabel(a)+'</b><span>'+tm+(a.expired?'  หมดเวลา':'')+'</span></div><div class="hx-g">'+chips+'</div></div>';}).join('');
+ return '<section class="hx"><h3>คะแนนของคุณทุกครั้ง<small>ผ่านเมื่อได้ '+PASS+' คะแนนขึ้นไป</small></h3><div class="hx-l">'+rows+'</div></section>';}
 /* ---------- ถูกยุติการสอบโดยทีมงาน ---------- */
 function renderDisqualified(){app.innerHTML=`${appbar()}<div class="card msg"><div class="mic warn">${I.info}</div>
    <h2>การสอบของคุณถูกยุติโดยทีมงาน</h2><p><span style="display:block">ทีมงานพบพฤติกรรมที่ผิดกติกาการสอบ</span><span style="display:block">จึงยุติการสอบในรอบนี้</span></p><p><span style="display:block">หากมีข้อสงสัย</span><span style="display:block;white-space:nowrap">ติดต่อทาง LINE @cloverxth</span></p>${xvHistory()}</div>`;}
