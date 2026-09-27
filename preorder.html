@@ -648,7 +648,7 @@
     else{m[p.id]={id:p.id,parent:p.id,nm:p.nm,desc:p.desc,price:p.price,was:p.was,url:p.url,ic:p.ic};}
   });return m;}
   // [POLO] เสื้อยืดโปโล X-Visor สีกรมท่า — เลือกไซซ์ (SS–3XL), 1 ตัว/คน; ใช้กลไก variant เดิม (สี → ไซซ์)
-  MAIN_P.push({id:'polo',nm:'[POLO] เสื้อยืดโปโล X-Visor สีกรมท่า',desc:'เสื้อยืดโปโล สีกรมท่า CloverX & X-Visor · ระบุไซซ์',price:290,was:590,ic:'band',img:'/polo.jpg',hot:true,isSize:true,colors:[{c:'SS',id:'polo-SS'},{c:'S',id:'polo-S'},{c:'M',id:'polo-M'},{c:'L',id:'polo-L'},{c:'XL',id:'polo-XL'},{c:'2XL',id:'polo-2XL'},{c:'3XL',id:'polo-3XL'}]});
+  if(false)MAIN_P.push({id:'polo',nm:'[POLO] เสื้อยืดโปโล X-Visor สีกรมท่า',desc:'เสื้อยืดโปโล สีกรมท่า CloverX & X-Visor · ระบุไซซ์',price:290,was:590,ic:'band',img:'/polo.jpg',hot:true,isSize:true,colors:[{c:'SS',id:'polo-SS'},{c:'S',id:'polo-S'},{c:'M',id:'polo-M'},{c:'L',id:'polo-L'},{c:'XL',id:'polo-XL'},{c:'2XL',id:'polo-2XL'},{c:'3XL',id:'polo-3XL'}]});
   var VMAIN=buildVariants(MAIN_P),VFAM=buildVariants(FAM_P);
   var ICONS={
     band:'<path d="M8 7V4h8v3M8 17v3h8v-3M6 7h12v10H6z" fill="none" stroke="currentColor" stroke-width="2"/>',
@@ -1446,7 +1446,7 @@
   TH.polo='/polo.jpg';
   var SIZES={polo:['SS','S','M','L','XL','2XL','3XL']};
   // เปิดขายสินค้าทุกชิ้น: เซตหลักครบ + เสื้อโปโล + เซตครอบครัว
-  ORDER.push('polo');
+  /* ORDER.push('polo'); เสื้อโปโลปิดไว้ก่อน ยังไม่มีรูป */
   var byId=function(id){return document.getElementById(id);};
   var THB=function(n){return '<span class="thb">฿</span>'+Number(n).toLocaleString('en-US');};
   var cart=[],pay='bank',curPid=null,detailQty=1,bdQty=1;var geoSel=null,geoData=null,mSlipData=null;var shipMode='post';

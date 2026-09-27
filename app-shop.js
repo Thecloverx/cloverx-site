@@ -281,11 +281,11 @@ function barHtml(title,back,opt){ opt=opt||{};
 function cartIcon(){ return '<a href="#cart" aria-label="ตะกร้าสินค้า">'+sv('cart',24,'#0f172a')+'<span class="cbadge" style="display:none">0</span></a>'; }
 
 /* ---------- 81:4 รายการสินค้า ---------- */
-var TABS=[['all','ทั้งหมด'],['set','เซตสุดคุ้ม'],['device','อุปกรณ์'],['supp','อาหารเสริม'],['fashion','แฟชั่น'],['family','ครอบครัว']];
-var SECS=[['set','gift','เซตสุดคุ้ม (Best Value)'],['device','activity','อุปกรณ์สุขภาพ (Xircle)'],['supp','heart','อาหารเสริม (Supplements)'],['fashion','bag','แฟชั่น (Fashion)'],['family','users','ครอบครัว (Family Package)']];
+var TABS=[['all','ทั้งหมด'],['set','เซตสุดคุ้ม'],['device','อุปกรณ์'],['supp','อาหารเสริม'],['family','ครอบครัว']];   // แฟชั่น (เสื้อโปโล) ปิดไว้ก่อน ยังไม่มีรูปสินค้า
+var SECS=[['set','gift','เซตสุดคุ้ม (Best Value)'],['device','activity','อุปกรณ์สุขภาพ (Xircle)'],['supp','heart','อาหารเสริม (Supplements)'],['family','users','ครอบครัว (Family Package)']];
 var STAB='all', SQ='', TIMER=0;
 function cardsFor(cat){ // การ์ดตามแบบ: สินค้าที่มีสีแยกการ์ดตามสี
-  var out=[]; (SHOP.products||[]).filter(function(p){return p.cat===cat;}).forEach(function(p){
+  var out=[]; (SHOP.products||[]).filter(function(p){return p.cat===cat&&p.id!=='polo';}).forEach(function(p){
     if(p.colors.length&&p.id!=='duo'&&p.id!=='fam-band') p.colors.forEach(function(c){ out.push({p:p,c:c.c}); }); else out.push({p:p,c:''}); });
   return out; }
 function cardHtml(o,wide){ var p=o.p, c=o.c, d=DISP[p.id]||{}, img=imgOf(p.id,c), off=p.was?Math.round((1-p.price/p.was)*100):0;
@@ -328,6 +328,7 @@ function tick(){ clearInterval(TIMER); var el=$('#shTimer'); if(!el||!SHOP||!SHO
 var PSEL={};
 function renderProduct(key){ var v=$('#v-product'); var parts=String(key||'').split('-'), id=parts[0], c=parts.slice(1).join('-');
   if(id==='fam'){ id='fam-band'; c=parts.slice(2).join('-'); }
+  if(id==='polo'){ location.replace('#shop'); return; }   // เสื้อโปโลปิดไว้ก่อน
   v.innerHTML=barHtml('รายละเอียดสินค้า','#shop',{center:true,right:'<div class="act"><button type="button" id="pdShare" aria-label="แชร์">'+sv('share',24,'#0f172a')+'</button>'+cartIcon()+'</div>'})+'<div class="sempty">กำลังโหลด…</div>';
   paintBadges();
   loadShop().then(function(){ var p=prod(id); if(!p){ v.querySelector('.sempty').textContent='ไม่พบสินค้านี้'; return; }
