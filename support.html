@@ -902,7 +902,7 @@
     return ''
       + '<div class="memhead"><div><h1>Lean Lab · Management</h1><p class="sub">จัดการรายการซื้อและการชำระเงิน</p></div>'
       +   '<div class="memhead-act">'
-      +     '<button class="btn ghost" onclick="llExportOrdersXlsx()">⬇ ส่งออก Excel</button>'
+      +     '<button class="btn ghost" id="llExportBtn" onclick="llExportOrdersXlsx()">⬇ ส่งออก Excel</button>'
       +     '<button class="btn ghost" id="llRefresh">รีเฟรช ⟳</button>'
       +   '</div></div>'
       + '<div class="mgrid">'
@@ -962,10 +962,10 @@
   function memberView(mode){
     MEM_MODE=mode; MEM_SEL=null; MEM_TAB='info';
     return ''
-    + '<div class="memhead"><div><h1>Lean Lab · Member</h1><p class="sub">รายชื่อสมาชิกที่ชำระเงินแล้ว</p></div>'
+    + '<div class="memhead"><div><h1>Lean Lab · Member</h1><p class="sub">'+(mode==='later'?'After Member: สมาชิกที่ชำระแล้ว และเลือกเริ่มทีหลัง':'Start Member: สมาชิกที่ชำระแล้ว และเลือกเริ่มเลย')+'</p></div>'
     +   '<div class="memhead-act">'
     +     '<button class="btn ghost" onclick="memImportOpen()">⬆ นำเข้าข้อมูล</button>'
-    +     '<button class="btn ghost" onclick="llExportMembers(MEM_MODE)">⬇ ส่งออกข้อมูล</button>'
+    +     '<button class="btn ghost" id="memExportBtn" onclick="llExportMembers(MEM_MODE)">⬇ ส่งออก Excel</button>'
     +     '<button class="btn pri" onclick="memAddOpen()">+ เพิ่มสมาชิก</button>'
     +   '</div></div>'
     + '<div class="mkpis" id="memKpis"></div>'
@@ -1035,8 +1035,11 @@
     male:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5 20 4M15 4h5v5"/></svg>',
     female:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M12 15v7M9 19h6"/></svg>'};return m[n]||'';}
   function memKpi(bg,fg,ic,lb,v){return '<div class="mkpi"><div class="k-top"><span class="k-ic" style="background:'+bg+';color:'+fg+'">'+memKpiIc(ic)+'</span><span class="k-lb">'+lb+'</span></div><div class="k-v">'+v+'</div></div>';}
+  function memModeOf(r){return r.startChoice==='later'?'later':'now';}
+  function memModeBase(){var m=MEM_MODE;return (window.LL_MEM_ALL||[]).filter(function(r){return memModeOf(r)===m;});}
   function memRender(){
-    var base=window.LL_MEM_ALL||[];
+    var allPaid=window.LL_MEM_ALL||[];
+    var base=memModeBase();
     var kp=document.getElementById('memKpis');
     if(kp){
       var total=base.length;
@@ -1045,7 +1048,7 @@
       var now=new Date(),mStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
       var newM=base.filter(function(r){return new Date(r.reviewedAt||r.createdAt||0).getTime()>=mStart;}).length;
       function cnt(n){return n.toLocaleString('en-US')+'<span style="font-size:.8rem;font-weight:600;color:var(--muted);margin-left:5px">คน</span>';}
-      kp.innerHTML=memKpi('#EEF0FF','#4F6DF5','users','สมาชิกทั้งหมด',cnt(total))
+            kp.innerHTML=memKpi('#EEF0FF','#4F6DF5','users',(MEM_MODE==='later'?'After Member':'Start Member')+'<span style="display:block;font-weight:500;font-size:.72rem;margin-top:2px">จากสมาชิกทั้งหมด '+allPaid.length+' คน</span>',cnt(total))
         +memKpi('#E7F7EE','#15A34A','male','ชาย',cnt(male))
         +memKpi('#FCE9F3','#DB4A94','female','หญิง',cnt(female))
         +memKpi('#EFEAFB','#7C5CFF','plus','เริ่มโปรแกรมเดือนนี้',cnt(newM));
@@ -1056,6 +1059,7 @@
     if(MEM_PAGE>pages)MEM_PAGE=pages; if(MEM_PAGE<1)MEM_PAGE=1;
     var from=list.length?((MEM_PAGE-1)*PS+1):0,to=Math.min(list.length,MEM_PAGE*PS);
     var cnt=document.getElementById('memCount'); if(cnt)cnt.textContent='แสดง '+from+'-'+to+' จาก '+list.length.toLocaleString('en-US')+' รายการ';
+    var eb=document.getElementById('memExportBtn'); if(eb)eb.textContent='⬇ ส่งออก Excel ('+list.length+' คน)';
     if(!list.length){tb.innerHTML='<tr><td colspan="8" class="mempty">'+(base.length?'ไม่พบสมาชิกที่ตรงกับตัวกรอง':'ยังไม่มีสมาชิก')+'</td></tr>';}
     else{tb.innerHTML=list.slice((MEM_PAGE-1)*PS,MEM_PAGE*PS).map(memRowHtml).join('');}
     var pg=document.getElementById('memPager'); if(pg)pg.innerHTML=memPagerHtml(MEM_PAGE,pages);
@@ -1244,18 +1248,43 @@
     llDownloadCSV('leanlab-orders-'+new Date().toISOString().slice(0,10)+'.csv',header,rows);
   };
   window.llExportMembers=function(mode){
-    var all=window.LL_ALL||[]; var mem=all.filter(function(r){return r.status==='confirmed'&&r.startChoice===mode;});
-    if(typeof memFilterList==='function')mem=memFilterList(mem);
+    // ใช้รายการเดียวกับที่เห็นบนหน้าจอ (Start หรือ After + ตัวกรอง) จำนวนแถวจึงตรงกับตัวเลขบนหน้า
+    var mem=memFilterList(memModeBase());
     if(!mem.length){alert('ไม่มีข้อมูลให้ส่งออก');return;}
-    var header=['ชื่อ-นามสกุล','อีเมล','เบอร์โทร','โค้ช','ผู้แนะนำ','เพศ','อายุ','ส่วนสูง(ซม.)','แพ็กเกจ','ยอด(บาท)','ที่อยู่จัดส่ง','รหัสไปรษณีย์','ยืนยันเมื่อ'];
-    var rows=mem.map(function(r){
-      var ins=r.installment; var amt=ins?(ins.total||44940):(r.fee||0);
-      var pkg=ins?('Special ผ่อน '+(ins.perMonth||7490)+'x'+(ins.months||6)):(r.promoPlan==='full'?('Grand Slam '+(r.promoTier||'')):'ค่าสมัครปกติ');
-      var cr=llEffCR(r);
-      return [r.name||'',r.email||'',r.phone||'',cr.coach||'',cr.referrer||'',r.gender||'',r.age||'',r.heightCm||'',pkg,amt,r.address||'',r.postcode||'',(r.reviewedAt||r.createdAt||'').slice(0,10)];
+    llLoadExcelJS(function(){
+      try{
+        var wb=new ExcelJS.Workbook();
+        var ws=wb.addWorksheet(mode==='later'?'After Member':'Start Member',{views:[{state:'frozen',ySplit:1}]});
+        ws.columns=[
+          {header:'ลำดับ',key:'no',width:7},{header:'เลขคำสั่งซื้อ',key:'po',width:15},{header:'ชื่อ-นามสกุล',key:'name',width:26},
+          {header:'อีเมล',key:'email',width:28},{header:'เบอร์โทร',key:'phone',width:13},
+          {header:'โค้ช',key:'coach',width:13},{header:'ผู้แนะนำ',key:'ref',width:18},
+          {header:'เพศ',key:'gender',width:7},{header:'อายุ',key:'age',width:7},{header:'ส่วนสูง (ซม.)',key:'h',width:11},
+          {header:'เริ่มโปรแกรม',key:'start',width:13},{header:'แพ็กเกจ',key:'pkg',width:20},{header:'ยอด (บาท)',key:'amt',width:12},
+          {header:'ที่อยู่จัดส่ง',key:'addr',width:46},{header:'รหัสไปรษณีย์',key:'zip',width:11},{header:'ยืนยันเมื่อ',key:'rev',width:12}
+        ];
+        llXlsxHeader(ws);
+        mem.forEach(function(r,i){
+          var ins=r.installment; var amt=ins?(ins.total||44940):(r.fee||0);
+          var pkg=ins?('Special ผ่อน '+(ins.perMonth||7490)+' x '+(ins.months||6)):(r.promoPlan==='full'?('Grand Slam '+(r.promoTier||'')):'ค่าสมัครปกติ');
+          var cr=llEffCR(r);
+          var row=ws.addRow({no:i+1,po:r.po||'',name:r.name||'',email:r.email||'',phone:r.phone||'',coach:cr.coach||'',ref:cr.referrer||'',gender:r.gender||'',age:r.age||'',h:r.heightCm||'',start:memModeOf(r)==='later'?'เริ่มทีหลัง':'เริ่มเลย',pkg:pkg,amt:amt,addr:r.address||'',zip:r.postcode||'',rev:memDate(r.reviewedAt||r.createdAt)});
+          llXlsxRow(row,i);
+        });
+        ws.autoFilter={from:{row:1,column:1},to:{row:1,column:16}};
+        llXlsxSave(wb,'leanlab-'+(mode==='later'?'after':'start')+'-members-'+new Date().toISOString().slice(0,10)+'.xlsx');
+      }catch(e){alert('สร้างไฟล์ Excel ไม่สำเร็จ: '+e.message);}
     });
-    llDownloadCSV('leanlab-'+(mode==='now'?'start':'after')+'-members-'+new Date().toISOString().slice(0,10)+'.csv',header,rows);
   };
+  function llXlsxHeader(ws){var hr=ws.getRow(1); hr.height=24; hr.eachCell(function(c){ c.font={bold:true,color:{argb:'FFFFFFFF'},size:11}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0077B6'}}; c.alignment={vertical:'middle',horizontal:'center'}; });}
+  function llXlsxRow(row,i){ row.height=19; if(i%2===1){ row.eachCell(function(c){ c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF6FAFD'}}; }); } var a=row.getCell('amt'); if(a){a.numFmt='#,##0';a.alignment={horizontal:'right'};} row.getCell('phone').alignment={horizontal:'left'}; }
+  function llXlsxSave(wb,fname){
+    wb.xlsx.writeBuffer().then(function(buf){
+      var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      var url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download=fname;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1500);
+    }).catch(function(){alert('สร้างไฟล์ Excel ไม่สำเร็จ ลองใหม่อีกครั้ง');});
+  }
   // ---- ส่งออก Excel (.xlsx) จัดรูปแบบสวย (โหลด ExcelJS ตอนกดปุ่มเท่านั้น) ----
   function llLoadExcelJS(cb){
     if(window.ExcelJS){cb();return;}
@@ -1298,6 +1327,12 @@
           if(stFill[stl]){ sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:stFill[stl]}}; sc.font={color:{argb:(stFont[stl]||'FF12233B')},bold:true}; sc.alignment={horizontal:'center'}; }
         });
         ws.autoFilter={from:{row:1,column:1},to:{row:1,column:14}};
+        // ชีตสรุป: ไฟล์นี้มีทุกสถานะตามตัวกรอง บอกชัดว่าชำระแล้วกี่รายการ
+        var sm=wb.addWorksheet('สรุปสถานะ'); sm.columns=[{header:'สถานะ',key:'k',width:22},{header:'จำนวน (รายการ)',key:'v',width:16}];
+        llXlsxHeader(sm); var cntSt={}; regs.forEach(function(r){var l=llStLabel(r.status);cntSt[l]=(cntSt[l]||0)+1;});
+        Object.keys(cntSt).sort(function(x,y){return cntSt[y]-cntSt[x];}).forEach(function(k){sm.addRow({k:k,v:cntSt[k]});});
+        var tr=sm.addRow({k:'รวมทั้งไฟล์',v:regs.length}); tr.font={bold:true};
+        sm.addRow({}); sm.addRow({k:'หมายเหตุ: ตัวเลขสมาชิกบน Dashboard นับเฉพาะ "ยืนยันแล้ว"'});
         wb.xlsx.writeBuffer().then(function(buf){
           var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
           var url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -1414,6 +1449,7 @@
     if(LL_PAGE>pages)LL_PAGE=pages; if(LL_PAGE<1)LL_PAGE=1;
     var from=regs.length?((LL_PAGE-1)*PS+1):0, to=Math.min(regs.length,LL_PAGE*PS);
     var cnt=document.getElementById('llCount');if(cnt)cnt.textContent='แสดง '+from+'-'+to+' จาก '+regs.length.toLocaleString('en-US')+' รายการ';
+    var eb=document.getElementById('llExportBtn'); if(eb)eb.textContent='⬇ ส่งออก Excel ('+regs.length+' รายการ)';
     var pg=document.getElementById('llPager');
     if(!regs.length){tb.innerHTML='<tr><td colspan="8" class="mempty">'+(all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีรายการ')+'</td></tr>';if(pg)pg.innerHTML='';ordMarkSel();return;}
     tb.innerHTML=regs.slice((LL_PAGE-1)*PS,LL_PAGE*PS).map(ordRowHtml).join('');
