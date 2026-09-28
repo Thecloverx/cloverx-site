@@ -196,14 +196,16 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
   // Lean Lab Special Option — งวดผ่อนถัดไป (subscription invoices)
   if (type === 'invoice.paid' || type === 'invoice.payment_succeeded') {
     const inv = (evt.data && evt.data.object) || {};
-    if (inv.subscription && (inv.status === 'paid' || type === 'invoice.paid')) {
-      try { if (req.app.locals.leanlabInstallmentInvoicePaid) req.app.locals.leanlabInstallmentInvoicePaid(inv.subscription, inv); } catch (e) { console.log('[lean-lab] inv.paid err', e.message); }
+    const subP = inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription) || null; // API 2025+ ย้าย subscription ไปไว้ใน parent
+    if (subP && (inv.status === 'paid' || type === 'invoice.paid')) {
+      try { if (req.app.locals.leanlabInstallmentInvoicePaid) req.app.locals.leanlabInstallmentInvoicePaid(subP, inv); } catch (e) { console.log('[lean-lab] inv.paid err', e.message); }
     }
   }
   if (type === 'invoice.payment_failed') {
     const inv = (evt.data && evt.data.object) || {};
-    if (inv.subscription) {
-      try { if (req.app.locals.leanlabInstallmentInvoiceFailed) req.app.locals.leanlabInstallmentInvoiceFailed(inv.subscription, inv); } catch (e) { console.log('[lean-lab] inv.failed err', e.message); }
+    const subF = inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription) || null;
+    if (subF) {
+      try { if (req.app.locals.leanlabInstallmentInvoiceFailed) req.app.locals.leanlabInstallmentInvoiceFailed(subF, inv); } catch (e) { console.log('[lean-lab] inv.failed err', e.message); }
     }
   }
   res.json({ received: true });

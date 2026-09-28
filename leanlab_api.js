@@ -943,6 +943,8 @@ module.exports = function (app, DATA_DIR, opts) {
   };
 
   // ---- ซิงก์สถานะตาม Stripe อัตโนมัติ (ทีมงานทำใน Stripe Dashboard โดยตรง ระบบเปลี่ยนตาม) ----
+  function llInvSub(inv) { return (inv && (inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription))) || null; }
+  app.locals.leanlabInvSub = llInvSub;
   function llNote(r, txt) { (r.stripeLog = r.stripeLog || []).push({ at: new Date().toISOString(), note: String(txt).slice(0, 200) }); }
   // webhook: charge.refunded
   app.locals.leanlabChargeRefunded = function (c) {
@@ -958,11 +960,10 @@ module.exports = function (app, DATA_DIR, opts) {
       writeR(l); console.log('[lean-lab] ' + r.id + ' refunded via Stripe webhook ' + amt);
       return true;
     }
-    // งวดผ่อน: หา subscription จาก invoice ของ charge
-    var invId = c.invoice || null;
-    if (!invId) return false;
-    stripeApi('GET', '/v1/invoices/' + encodeURIComponent(invId), []).then(function (inv) {
-      var subId = inv && (inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription));
+    // งวดผ่อน: หา subscription จาก invoice ของ charge (API ใหม่ไม่มี charge.invoice → หาผ่าน invoice_payments)
+    var findInv = c.invoice ? Promise.resolve(c.invoice) : (pi ? stripeApi('GET', '/v1/invoice_payments?payment[type]=payment_intent&payment[payment_intent]=' + encodeURIComponent(pi) + '&limit=1', []).then(function (j) { return (j && j.data && j.data[0] && j.data[0].invoice) || null; }) : Promise.resolve(null));
+    findInv.then(function (invId) { return invId ? stripeApi('GET', '/v1/invoices/' + encodeURIComponent(invId), []) : null; }).then(function (inv) {
+      var subId = llInvSub(inv);
       if (!subId) return;
       var l2 = readR();
       var cur = l2.find(function (x) { return x.installment && x.installment.subId === subId; });
