@@ -1433,7 +1433,7 @@
     return '<tr data-id="'+llEsc(r.id)+'" onclick="ordSelect(\''+r.id+'\')"'+(r.id===ORD_SEL?' class="sel"':'')+'>'
       +'<td style="color:var(--muted);white-space:nowrap" data-label="วันที่ซื้อ">'+memDateTime(r.createdAt)+'</td>'
       +'<td style="color:var(--muted);white-space:nowrap" data-label="รหัสสมาชิก">'+llEsc(r.po||'-')+'</td>'
-      +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span></div></td>'
+      +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span>'+(r.needsReview?'<span class="mstat mstat-refund" style="margin-left:6px;white-space:nowrap" title="'+llEsc(r.needsReview)+'">⚠ ต้องตรวจ</span>':'')+'</div></td>'
       +'<td style="white-space:nowrap" data-label="แพ็คเกจ">'+llEsc(memSeg(r).label)+'</td>'
       +'<td style="white-space:nowrap;color:var(--muted)" data-label="ช่องทางการชำระ">'+llEsc(memPayChannel(r))+'</td>'
       +'<td data-label="สถานะ"><span class="mstat '+ps.cls+'">'+ps.label+'</span></td>'

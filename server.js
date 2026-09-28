@@ -170,6 +170,12 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
       }
     }
   }
+  if (type === 'charge.refunded') {
+    try { if (req.app.locals.leanlabChargeRefunded) req.app.locals.leanlabChargeRefunded((evt.data && evt.data.object) || null); } catch (e) { console.log('[lean-lab] refund webhook err', e.message); }
+  }
+  if (type === 'customer.subscription.deleted') {
+    try { if (req.app.locals.leanlabSubDeleted) req.app.locals.leanlabSubDeleted((evt.data && evt.data.object) || null); } catch (e) { console.log('[lean-lab] sub.deleted webhook err', e.message); }
+  }
   // ยกเลิก — ลูกค้าไม่ชำระจน checkout session หมดอายุ
   if (type === 'checkout.session.expired') {
     const s = (evt.data && evt.data.object) || {};

@@ -797,6 +797,8 @@ module.exports = function (app, DATA_DIR, opts) {
     var l = readR(); var r = l.find(function (x) { return x.id === regId; });
     if (!r) return false;
     r.status = 'confirmed'; r.pay = 'card'; assignPO(r);
+    // เคยเลือกผ่อนมาก่อน แล้วเปลี่ยนมาจ่ายเต็มด้วยบัตร → ย้ายข้อมูลผ่อนเก่าไปเก็บไว้ ไม่ให้ค้างในออเดอร์
+    if (r.installment) { r.prevInstallment = r.installment; delete r.installment; if (r.promoPlan === 'special') r.promoPlan = 'full'; }
     r.stripe = { sessionId: (s && s.id) || null, paymentIntent: (s && s.payment_intent) || null, amount: (s && s.amount_total != null ? s.amount_total / 100 : null), at: new Date().toISOString() };
     r.reviewedAt = new Date().toISOString();
     writeR(l);
@@ -940,6 +942,62 @@ module.exports = function (app, DATA_DIR, opts) {
     return true;
   };
 
+  // ---- ซิงก์สถานะตาม Stripe อัตโนมัติ (ทีมงานทำใน Stripe Dashboard โดยตรง ระบบเปลี่ยนตาม) ----
+  function llNote(r, txt) { (r.stripeLog = r.stripeLog || []).push({ at: new Date().toISOString(), note: String(txt).slice(0, 200) }); }
+  // webhook: charge.refunded
+  app.locals.leanlabChargeRefunded = function (c) {
+    if (!c) return false;
+    var pi = c.payment_intent || null, amt = (c.amount_refunded != null ? c.amount_refunded / 100 : 0), full = !!(c.refunded || (c.amount_refunded != null && c.amount_refunded === c.amount));
+    var l = readR();
+    var r = pi ? l.find(function (x) { return x.stripe && x.stripe.paymentIntent === pi; }) : null;
+    if (r) { // ออเดอร์จ่ายเต็มด้วยบัตร
+      r.refund = { mode: 'stripe', chargeId: c.id || null, amount: amt, full: full, at: new Date().toISOString() };
+      r.status = full ? 'refunded' : 'partially_refunded';
+      if (r.needsReview) r.needsReview = null;
+      llNote(r, 'คืนเงินใน Stripe ' + amt + ' บาท' + (full ? ' (เต็มจำนวน)' : ' (บางส่วน)'));
+      writeR(l); console.log('[lean-lab] ' + r.id + ' refunded via Stripe webhook ' + amt);
+      return true;
+    }
+    // งวดผ่อน: หา subscription จาก invoice ของ charge
+    var invId = c.invoice || null;
+    if (!invId) return false;
+    stripeApi('GET', '/v1/invoices/' + encodeURIComponent(invId), []).then(function (inv) {
+      var subId = inv && (inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription));
+      if (!subId) return;
+      var l2 = readR();
+      var cur = l2.find(function (x) { return x.installment && x.installment.subId === subId; });
+      var old = cur ? null : l2.find(function (x) { return x.prevInstallment && x.prevInstallment.subId === subId; });
+      var r2 = cur || old; if (!r2) return;
+      var rec = cur ? r2.installment : r2.prevInstallment;
+      rec.refunds = rec.refunds || {}; rec.refunds[c.id || invId] = amt;
+      var refTotal = Object.keys(rec.refunds).reduce(function (a, k) { return a + (Number(rec.refunds[k]) || 0); }, 0);
+      if (cur) {
+        var paid = (Number(rec.perMonth) || 0) * (Number(rec.paidCount) || 0);
+        if (paid > 0 && refTotal >= paid) { r2.status = 'refunded'; r2.refund = { mode: 'stripe_installment', amount: refTotal, full: true, at: new Date().toISOString() }; }
+        else { r2.status = 'partially_refunded'; r2.refund = { mode: 'stripe_installment', amount: refTotal, full: false, at: new Date().toISOString() }; }
+        llNote(r2, 'คืนเงินงวดผ่อนใน Stripe ' + amt + ' บาท รวมคืนแล้ว ' + refTotal + ' บาท');
+      } else {
+        llNote(r2, 'คืนเงินแผนผ่อนเก่าใน Stripe ' + amt + ' บาท (ออเดอร์จ่ายเต็มแล้ว สถานะไม่เปลี่ยน)');
+      }
+      writeR(l2); console.log('[lean-lab] ' + r2.id + ' installment refund via Stripe ' + amt + (cur ? '' : ' (stale plan)'));
+    });
+    return true;
+  };
+  // webhook: customer.subscription.deleted
+  app.locals.leanlabSubDeleted = function (sub) {
+    var subId = sub && sub.id; if (!subId) return false;
+    var l = readR(); var r = l.find(function (x) { return x.installment && x.installment.subId === subId; });
+    if (!r) return false;
+    var ins = r.installment, months = ins.months || 6;
+    if (ins.status === 'completed' || (ins.paidCount || 0) >= months) { ins.status = 'completed'; ins.completedAt = ins.completedAt || new Date().toISOString(); writeR(l); return true; }
+    if (ins.status === 'cancelled') return true; // ยกเลิกจากระบบเราเองอยู่แล้ว
+    ins.status = 'cancelled'; ins.cancelledAt = new Date().toISOString(); ins.cancelledIn = 'stripe';
+    r.needsReview = 'แผนผ่อนถูกยกเลิกใน Stripe (จ่ายแล้ว ' + (ins.paidCount || 0) + '/' + months + ' งวด) ตรวจว่าจะคงสิทธิ์ ยกเลิก หรือคืนเงิน';
+    llNote(r, 'ยกเลิกแผนผ่อนใน Stripe');
+    writeR(l); console.log('[lean-lab] ' + r.id + ' subscription cancelled in Stripe → needs review');
+    return true;
+  };
+
   // ---- Back-office (Support dept manages Lean Lab) ----
   // ล็อกทุก endpoint หลังบ้านด้วย ADMIN_KEY (env) — ยังไม่ตั้ง env ใช้ค่าเริ่มต้น '@dev1234' (เปลี่ยนได้ภายหลังผ่าน Railway Variables)
   var LL_ADMIN_KEY = process.env.LEANLAB_ADMIN_KEY || '@dev1234';
@@ -972,7 +1030,7 @@ module.exports = function (app, DATA_DIR, opts) {
       autoVerified: !!r.autoVerified, autoVerifyInfo: r.autoVerifyInfo || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, total: r.installment.total, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null, subId: r.installment.subId || null, nextChargeTs: r.installment.nextChargeTs || null, lastFail: r.installment.lastFail || null } : null,
       slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null,
-      cancelReason: r.cancelReason || null, rejectReason: r.rejectReason || null, refund: r.refund || null, autoCancelled: !!r.autoCancelled
+      cancelReason: r.cancelReason || null, rejectReason: r.rejectReason || null, refund: r.refund || null, needsReview: r.needsReview || null, autoCancelled: !!r.autoCancelled
     };
   }
   // ยกเลิกอัตโนมัติ: ใบสมัครที่รอชำระเงินเกิน 1 วัน (ยังไม่จ่าย) → cancelled
@@ -1213,8 +1271,20 @@ module.exports = function (app, DATA_DIR, opts) {
       return done(r);
     }
 
+    // ---- จ่ายเต็มด้วยบัตรแล้ว แต่ยังมีข้อมูลผ่อนเก่าค้าง → ปิดแค่แผนผ่อนเก่า สถานะออเดอร์คงเดิม ----
+    if (r.installment && r.stripe && r.stripe.paymentIntent && b.mode !== 'full' && b.mode !== 'partial') {
+      var oldSub = r.installment.subId, oldOpen = !(r.installment.status === 'cancelled' || r.installment.status === 'completed');
+      var closeStale = function () {
+        var l3 = readR(); var r3 = l3.find(function (x) { return x.id === req.params.id; });
+        if (r3 && r3.installment) { r3.prevInstallment = Object.assign({}, r3.installment, { status: 'cancelled', cancelledAt: new Date().toISOString() }); delete r3.installment; writeR(l3); }
+        console.log('[lean-lab] ' + req.params.id + ' stale installment closed (order status unchanged)');
+        done(r3 || r);
+      };
+      if (oldSub && oldOpen) { stripeApi('DELETE', '/v1/subscriptions/' + encodeURIComponent(oldSub), []).then(function (j) { if (!j || !j.id) return res.status(502).json({ ok: false, error: 'stripe_error' }); closeStale(); }); return; }
+      return closeStale();
+    }
     // ---- แผนผ่อน: ยกเลิก subscription (หยุดตัดบัตรงวดถัดไป) — งวดที่จ่ายมาแล้วไม่คืน ----
-    if (r.installment) {
+    if (r.installment && !(r.stripe && r.stripe.paymentIntent)) {
       var subId = (r.installment && r.installment.subId) || (r.stripe && r.stripe.subscriptionId);
       if (!subId) return res.status(400).json({ ok: false, error: 'no_subscription' });
       var paidKept = (Number(r.installment.perMonth) || 0) * (Number(r.installment.paidCount) || 0);
@@ -1231,6 +1301,7 @@ module.exports = function (app, DATA_DIR, opts) {
           if (r2.installment) { r2.installment.status = 'cancelled'; r2.installment.cancelledAt = new Date().toISOString(); }
           r2.status = 'refunded';
           r2.refund = { mode: 'installment_cancel', subId: subId, paidKept: paidKept, paidCount: (r2.installment ? r2.installment.paidCount : 0), amount: 0, at: new Date().toISOString() };
+          r2.needsReview = null;
           writeR(l2);
         }
         console.log('[lean-lab] installment ' + req.params.id + ' cancelled by admin (sub=' + subId + ', paidKept=' + paidKept + ' not refunded)');
@@ -1256,6 +1327,28 @@ module.exports = function (app, DATA_DIR, opts) {
       if (r2) { r2.refund = { id: j.id, amount: (j.amount != null ? j.amount / 100 : null), mode: (b.mode === 'partial' ? 'partial' : 'full'), at: new Date().toISOString() }; if (b.mode !== 'partial') r2.status = 'refunded'; writeR(l2); }
       done(r2);
     });
+  });
+  // แก้ออเดอร์ที่จ่ายบัตรเต็มแล้วแต่สถานะผิด: บันทึกการจ่าย Stripe ให้ตรง (ต้องใส่เหตุผล เก็บประวัติไว้)
+  app.post('/api/leanlab/admin/registration/:id/fix-card-paid', function (req, res) {
+    if (!adminGuard(req, res)) return;
+    var b = req.body || {};
+    var pi = String(b.paymentIntent || ''), amt = Number(b.amount), why = String(b.reason || '').trim();
+    if (!/^pi_[A-Za-z0-9]+$/.test(pi) || !(amt > 0) || why.length < 5) return res.status(400).json({ ok: false, error: 'bad_input' });
+    var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
+    if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    var before = { status: r.status, pay: r.pay, promoPlan: r.promoPlan, installment: r.installment ? r.installment.status : null, refund: r.refund ? r.refund.mode : null };
+    if (r.installment) { r.prevInstallment = Object.assign({}, r.installment, { status: 'cancelled' }); delete r.installment; }
+    if (r.refund) { r.prevRefund = r.refund; delete r.refund; }
+    r.status = 'confirmed'; r.pay = 'card'; r.promo = true; r.promoPlan = 'full';
+    r.fee = amt; r.promoAmount = amt; r.rejectReason = null;
+    r.stripe = { sessionId: (typeof b.sessionId === 'string' ? b.sessionId.slice(0, 120) : null), paymentIntent: pi, amount: amt, at: (typeof b.paidAt === 'string' ? b.paidAt.slice(0, 30) : new Date().toISOString()) };
+    assignPO(r); r.reviewedAt = r.reviewedAt || new Date().toISOString(); r.updatedAt = new Date().toISOString();
+    r.needsReview = null;
+    (r.fixLog = r.fixLog || []).push({ at: new Date().toISOString(), action: 'fix-card-paid', reason: why.slice(0, 300), before: before });
+    writeR(l);
+    console.log('[lean-lab] ' + req.params.id + ' fixed → confirmed (card ' + pi + ', ' + amt + ')');
+    var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
+    res.json({ ok: true, registration: adminReg(r, byId) });
   });
   // ลบผู้สมัคร (ลบทั้งใบสมัคร + บัญชีสมาชิก ถ้า withMember=1)
   app.post('/api/leanlab/admin/registration/:id/delete', function (req, res) {
