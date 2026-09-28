@@ -990,7 +990,7 @@
   function memFilterList(list){
     var f=MEM_FILT;
     var _mb=llDateBounds(f.dr,f.from,f.to), lo=_mb.lo, hi=_mb.hi;
-    var q=(f.q||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
+    var q=(f.q||'').trim().toLowerCase(),qd=(/^[\d\s-]{3,}$/.test(q)?q.replace(/\D/g,''):''); // ค้นเบอร์เฉพาะตอนพิมพ์ตัวเลขล้วน
     return (list||[]).filter(function(r){
       var t=new Date(r.reviewedAt||r.createdAt||0).getTime();
       if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false;
@@ -1074,6 +1074,7 @@
     return 'โอนธนาคาร';
   }
   function memPayStatus(r){
+    if(r.movedTo&&r.status==='cancelled')return {label:'ยกเลิก (ออกเลขใหม่)',cls:'mstat-refund'};
     if(r.status==='confirmed')return {label:'ชำระเงินแล้ว',cls:'mstat-on'};
     if(r.status==='partially_refunded')return {label:'คืนเงินบางส่วน',cls:'mstat-refund'};
     if(r.status==='refunded')return {label:'คืนเงิน',cls:'mstat-refund'};
@@ -1402,7 +1403,7 @@
   function llFilterList(regs){
     var f=LL_FILT;
     var _b=llDateBounds(f.date,f.from,f.to), lo=_b.lo, hi=_b.hi;
-    var q=(f.q||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
+    var q=(f.q||'').trim().toLowerCase(), qd=(/^[\d\s-]{3,}$/.test(q)?q.replace(/\D/g,''):'');
     return (regs||[]).filter(function(r){
       var t=new Date(r.createdAt||0).getTime();
       if(lo!=null&&t<lo)return false; if(hi!=null&&t>=hi)return false;
@@ -1428,12 +1429,18 @@
     }).catch(function(){var tb=document.getElementById('llBody');if(tb)tb.innerHTML='<tr><td colspan="8" class="mempty" style="color:var(--bad)">โหลดข้อมูลไม่สำเร็จ</td></tr>';});
   }
   var LL_PAGE_SIZE=10, ORD_SEL=null;
+  // เลขออเดอร์ที่เชื่อมกัน: รอบเดิมที่ถูกยกเลิก ↔ รอบใหม่ (1 เลข = 1 รายการจ่าย)
+  function llPoLink(r){
+    if(r.movedTo){var n=(window.LL_REGS||{})[r.movedTo];return '<span style="font-size:.74rem;color:var(--muted);margin-left:6px;white-space:nowrap">ย้ายไปเลขใหม่ '+llEsc((n&&n.po)||'(รอชำระ)')+'</span>';}
+    if(r.prevPOs&&r.prevPOs.length)return '<span style="font-size:.74rem;color:var(--muted);margin-left:6px;white-space:nowrap">เลขเดิม '+llEsc(r.prevPOs.join(', '))+'</span>';
+    return '';
+  }
   function ordRowHtml(r){
     var ps=memPayStatus(r);
     return '<tr data-id="'+llEsc(r.id)+'" onclick="ordSelect(\''+r.id+'\')"'+(r.id===ORD_SEL?' class="sel"':'')+'>'
       +'<td style="color:var(--muted);white-space:nowrap" data-label="วันที่ซื้อ">'+memDateTime(r.createdAt)+'</td>'
       +'<td style="color:var(--muted);white-space:nowrap" data-label="รหัสสมาชิก">'+llEsc(r.po||'-')+'</td>'
-      +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span>'+(r.needsReview?'<span class="mstat mstat-refund" style="margin-left:6px;white-space:nowrap" title="'+llEsc(r.needsReview)+'">⚠ ต้องตรวจ</span>':'')+'</div></td>'
+      +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span>'+(r.needsReview?'<span class="mstat mstat-refund" style="margin-left:6px;white-space:nowrap" title="'+llEsc(r.needsReview)+'">⚠ ต้องตรวจ</span>':'')+llPoLink(r)+'</div></td>'
       +'<td style="white-space:nowrap" data-label="แพ็คเกจ">'+llEsc(memSeg(r).label)+'</td>'
       +'<td style="white-space:nowrap;color:var(--muted)" data-label="ช่องทางการชำระ">'+llEsc(memPayChannel(r))+'</td>'
       +'<td data-label="สถานะ"><span class="mstat '+ps.cls+'">'+ps.label+'</span></td>'

@@ -1032,7 +1032,7 @@ module.exports = function (app, DATA_DIR, opts) {
       autoVerified: !!r.autoVerified, autoVerifyInfo: r.autoVerifyInfo || null,
       installment: r.installment ? { months: r.installment.months, perMonth: r.installment.perMonth, total: r.installment.total, day: r.installment.day, paidCount: r.installment.paidCount || 0, status: r.installment.status || null, subId: r.installment.subId || null, nextChargeTs: r.installment.nextChargeTs || null, lastFail: r.installment.lastFail || null } : null,
       slipUrl: r.slipUrl || null, status: r.status, createdAt: r.createdAt, slipAt: r.slipAt || null,
-      cancelReason: r.cancelReason || null, rejectReason: r.rejectReason || null, refund: r.refund || null, needsReview: r.needsReview || null, autoCancelled: !!r.autoCancelled
+      cancelReason: r.cancelReason || null, rejectReason: r.rejectReason || null, refund: r.refund || null, needsReview: r.needsReview || null, movedTo: r.movedTo || null, prevPOs: r.prevPOs || null, archived: !!r.archived, autoCancelled: !!r.autoCancelled
     };
   }
   // ยกเลิกอัตโนมัติ: ใบสมัครที่รอชำระเงินเกิน 1 วัน (ยังไม่จ่าย) → cancelled
@@ -1149,6 +1149,22 @@ module.exports = function (app, DATA_DIR, opts) {
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.id === req.params.id; });
     if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+    var reason0 = String(b.reason || '').slice(0, 200);
+    // รอบเดิมเคยได้เลขออเดอร์แล้ว (เคยชำระ/ยืนยัน) → เก็บรอบเดิมเป็นประวัติ "ยกเลิก" และให้รอบใหม่ได้เลขใหม่ตอนชำระ
+    // 1 เลขออเดอร์ = 1 รายการจ่ายใน Stripe เสมอ ไม่ปนกัน
+    var oldSub = null;
+    if (r.po) {
+      var hist = JSON.parse(JSON.stringify(r));
+      hist.id = genRid(); hist.archived = true; hist.archivedAt = new Date().toISOString();
+      hist.status = 'cancelled'; hist.cancelReason = reason0 || 'ทีมงานให้เลือกวันเริ่มและชำระเงินใหม่';
+      hist.cancelledAt = new Date().toISOString(); hist.movedTo = r.id;
+      if (hist.installment && !(hist.installment.status === 'cancelled' || hist.installment.status === 'completed')) { oldSub = hist.installment.subId || null; hist.installment.status = 'cancelled'; hist.installment.cancelledAt = new Date().toISOString(); hist.installment.cancelPending = new Date().toISOString(); }
+      l.push(hist);
+      (r.prevPOs = r.prevPOs || []).push(r.po);
+      r.po = null; r.stripe = null; r.installment = null; r.refund = null; r.cardSessionId = null; r.needsReview = null;
+      r.promo = false; r.promoPlan = null; r.promoTier = null; r.promoAmount = null; r.promoVerify = null; r.autoVerified = false; r.autoVerifyInfo = null;
+      r.fee = EVENT.fee; r.pay = 'bank';
+    }
     r.status = 'awaiting_payment';
     r.slipUrl = null; r.slip = null;
     r.cancelReason = null; r.cancelledAt = null; r.autoCancelled = false;
@@ -1158,6 +1174,8 @@ module.exports = function (app, DATA_DIR, opts) {
     r.rejectReason = reason || null;
     r.reviewedAt = new Date().toISOString();
     writeR(l);
+    // แผนผ่อนของรอบเดิมยังตัดบัตรอยู่ → หยุดใน Stripe ด้วย (ไม่คืนเงินอัตโนมัติ ทีมงานคืนเองจากเลขเดิมถ้าต้องการ)
+    if (oldSub) stripeApi('DELETE', '/v1/subscriptions/' + encodeURIComponent(oldSub), []).then(function (j) { console.log('[lean-lab] ' + r.id + ' old round subscription ' + oldSub + ' cancel ' + (j && j.id ? 'ok' : 'FAILED')); });
     var byId = {}; readM().forEach(function (m) { byId[m.id] = m; });
     res.json({ ok: true, registration: adminReg(r, byId) });
   });
