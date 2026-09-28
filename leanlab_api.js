@@ -93,9 +93,11 @@ module.exports = function (app, DATA_DIR, opts) {
   // ================= ระบบรายงานสรุป Lean Lab เข้า Lark (4 รอบ/วัน + กดส่งเอง) =================
   var REPORT_TIERS = [
     { key: 't0', label: 'เซต 1', price: 44940 },
+    { key: 't5', label: 'เซต Band ครอบครัว', price: 40580 },
     { key: 't4', label: 'เซต Band', price: 40350 },
     { key: 't1', label: 'เซต 2', price: 39950 },
     { key: 't2', label: 'เซต 3', price: 37450 },
+    { key: 't6', label: 'เซต Band + Band ครอบครัว', price: 35990 },
     { key: 't3', label: 'เซต 4', price: 32460 }
   ];
   function money(n) { return '฿' + Number(n || 0).toLocaleString('en-US'); }
@@ -120,8 +122,8 @@ module.exports = function (app, DATA_DIR, opts) {
   function buildReportData() {
     var regs = readR().filter(function (r) { return r.status === 'confirmed'; });
     var d = { totalPaid: 0, buyers: regs.length, startNow: 0, startLater: 0,
-      setCount: { t0: 0, t4: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 },
-      setAmt: { t0: 0, t4: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 }, coach: {}, ref: {} };
+      setCount: { t0: 0, t5: 0, t4: 0, t6: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 },
+      setAmt: { t0: 0, t5: 0, t4: 0, t6: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 }, coach: {}, ref: {} };
     regs.forEach(function (r) {
       if (r.startChoice === 'now') d.startNow++; else if (r.startChoice === 'later') d.startLater++;
       var key, val = 0;
@@ -240,9 +242,11 @@ module.exports = function (app, DATA_DIR, opts) {
       conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินเพียงครั้งเดียว (ไม่เข้าร่วมบริการผ่อนชำระ)', 'หักยอดจากที่สั่งซื้อ Pre-Order และ Order ปกติได้', 'รายการ Protein ไม่เข้าร่วมโปรโมชั่นทุกกรณี'],
       tiers: [
         { key: 't0', amount: 44940, label: 'ยังไม่ PreOrder สินค้าใด ๆ', needProof: false },
+        { key: 't5', amount: 40580, label: 'เคยซื้อเฉพาะ Xircle Band 5% (แบบครอบครัว)', needProof: true },
         { key: 't4', amount: 40350, label: 'เคยซื้อ Xircle Band', needProof: true },
         { key: 't1', amount: 39950, label: 'เคยซื้อ Xircle Band + Xircle Scale', needProof: true },
         { key: 't2', amount: 37450, label: 'เคยซื้อ RoutineX 1 Set', needProof: true },
+        { key: 't6', amount: 35990, label: 'เคยซื้อ Xircle Band + Xircle Band 5% (แบบครอบครัว)', needProof: true },
         { key: 't3', amount: 32460, label: 'เคยซื้อ Xircle Band + Xircle Scale + RoutineX', needProof: true }
       ]
     },
@@ -588,7 +592,7 @@ module.exports = function (app, DATA_DIR, opts) {
   // รวมสินค้าที่ลูกค้า (เบอร์/อีเมลนี้) เคยซื้อจากออเดอร์พรีออเดอร์ที่ "ชำระเงินแล้ว"
   function ownedFromPreorder(phone, email) {
     var pd = String(phone || '').replace(/\D/g, ''), em = String(email || '').trim().toLowerCase();
-    var owned = { band: false, scale: false, routinex: false, matchedOrders: [] };
+    var owned = { band: false, famBand: false, scale: false, routinex: false, matchedOrders: [] };
     if (!pd && !em) return owned;
     readOrders().forEach(function (o) {
       if (ORDER_PAID.indexOf(o.status) < 0) return;   // เฉพาะออเดอร์ที่จ่ายจริง
@@ -597,6 +601,8 @@ module.exports = function (app, DATA_DIR, opts) {
       owned.matchedOrders.push(o.id);
       (o.items || []).forEach(function (it) {
         var nm = String(it.nm || '').toLowerCase();
+        // Band ครอบครัว (4,360) นับแยก ไม่นับเป็น Xircle Band ตัวหลัก
+        if (it.fam || nm.indexOf('ครอบครัว') >= 0) { if (nm.indexOf('band') >= 0) owned.famBand = true; return; }
         if (nm.indexOf('triple') >= 0) { owned.band = owned.scale = owned.routinex = true; }
         if (nm.indexOf('duo') >= 0) { owned.band = owned.scale = true; }
         if (nm.indexOf('routinex') >= 0) owned.routinex = true;
@@ -607,6 +613,8 @@ module.exports = function (app, DATA_DIR, opts) {
     return owned;
   }
   function tierQualifies(tierKey, o) {
+    if (tierKey === 't5') return !!o.famBand;                           // Band 5% (ครอบครัว)
+    if (tierKey === 't6') return !!(o.band && o.famBand);               // Band + Band 5% (ครอบครัว)
     if (tierKey === 't4') return !!o.band;                              // Band (เครื่องเดียว)
     if (tierKey === 't1') return !!(o.band && o.scale);                 // Band + Scale
     if (tierKey === 't2') return !!o.routinex;                          // RoutineX

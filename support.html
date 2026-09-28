@@ -661,7 +661,7 @@
       var now=R.filter(function(x){return x.startChoice==='now';}).length;
       var later=R.filter(function(x){return x.startChoice==='later';}).length;
       var std=R.filter(function(x){return !x.promo;}).length;
-      var full={t0:0,t4:0,t1:0,t2:0,t3:0}, special=0;
+      var full={t0:0,t5:0,t4:0,t6:0,t1:0,t2:0,t3:0}, special=0;
       R.forEach(function(x){ if(x.promoPlan==='full'&&x.promoTier){full[x.promoTier]=(full[x.promoTier]||0)+1;} else if(x.promoPlan==='special'){special++;} });
       var male=R.filter(function(x){return x.gender==='ชาย';}).length;
       var female=R.filter(function(x){return x.gender==='หญิง';}).length;
@@ -669,7 +669,7 @@
       R.forEach(function(x){var a=Number(x.age); if(!(a>0))return; if(a<=24)ab.a++; else if(a<=34)ab.b++; else if(a<=44)ab.c++; else ab.d++;});
       // รายชื่อ (ชื่อ · เบอร์) ของแต่ละกลุ่ม สำหรับโชว์ตอน hover
       var _pp=function(x){var n=String(x.name||x.fullName||'').trim();var ph=String(x.phone||x.mobile||x.tel||'').replace(/\D/g,'');return n+(ph?' · '+ph:'');};
-      var mStartNow=[],mStartLater=[],mMale=[],mFemale=[],mAgeL={a:[],b:[],c:[],d:[]},mPayL={std:[],t0:[],t4:[],t1:[],t2:[],t3:[],special:[]};
+      var mStartNow=[],mStartLater=[],mMale=[],mFemale=[],mAgeL={a:[],b:[],c:[],d:[]},mPayL={std:[],t0:[],t5:[],t4:[],t6:[],t1:[],t2:[],t3:[],special:[]};
       R.forEach(function(x){
         if(x.startChoice==='now')mStartNow.push(_pp(x)); else if(x.startChoice==='later')mStartLater.push(_pp(x));
         if(x.gender==='ชาย')mMale.push(_pp(x)); else if(x.gender==='หญิง')mFemale.push(_pp(x));
@@ -705,7 +705,7 @@
       var DASH_PGSZ=5, DASH_PG={coach:0,ref:0}; // หน้าละ 5 · สถานะหน้าปัจจุบันของแต่ละการ์ด
       var mCoachV=Math.max(1,(coachRank[0]||{}).v||0), mRefC=Math.max(1,(refRank[0]||{}).c||0);
       var pctT=Math.min(100,Math.round(total/TARGET*100));
-      var mPay=Math.max(std,full.t0,full.t4,full.t1,full.t2,full.t3,special,1);
+      var mPay=Math.max(std,full.t0,full.t5,full.t4,full.t6,full.t1,full.t2,full.t3,special,1);
       var mAge=Math.max(ab.a,ab.b,ab.c,ab.d,1), mG=Math.max(male,female,1), mS=Math.max(now,later,1);
       var pctOf=function(n){return total?Math.round(n/total*100):0;};
       var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
@@ -770,9 +770,11 @@
         +   '<div class="c"><div class="c-h"><span class="cic">💳</span><span class="ct">เงื่อนไขการชำระเงิน</span><span class="ctag">แยกตามตัวเลือก</span></div><div class="bd">'
         +     brow('ชำระเลย · ฿3,900','<span class="cnt">'+std+' คน</span>',std/mPay*100,'g',null,null,tipOf(mPayL.std))
         +     brow('Grand Slam · เซต 1 <span class="rsub">฿44,940</span>','<span class="cnt">'+full.t0+' คน</span>',full.t0/mPay*100,'',null,null,tipOf(mPayL.t0))
+        +     brow('Grand Slam (มีเฉพาะ Band 5%) <span class="rsub">฿40,580</span>','<span class="cnt">'+full.t5+' คน</span>',full.t5/mPay*100,'',null,null,tipOf(mPayL.t5))
         +     brow('Grand Slam (มี Xircle Band) <span class="rsub">฿40,350</span>','<span class="cnt">'+full.t4+' คน</span>',full.t4/mPay*100,'',null,null,tipOf(mPayL.t4))
         +     brow('Grand Slam · เซต 2 <span class="rsub">฿39,950</span>','<span class="cnt">'+full.t1+' คน</span>',full.t1/mPay*100,'',null,null,tipOf(mPayL.t1))
         +     brow('Grand Slam · เซต 3 <span class="rsub">฿37,450</span>','<span class="cnt">'+full.t2+' คน</span>',full.t2/mPay*100,'',null,null,tipOf(mPayL.t2))
+        +     brow('Grand Slam (มี Band + Band 5%) <span class="rsub">฿35,990</span>','<span class="cnt">'+full.t6+' คน</span>',full.t6/mPay*100,'',null,null,tipOf(mPayL.t6))
         +     brow('Grand Slam · เซต 4 <span class="rsub">฿32,460</span>','<span class="cnt">'+full.t3+' คน</span>',full.t3/mPay*100,'',null,null,tipOf(mPayL.t3))
         +     brow('เซต 5 · ทยอยจ่าย <span class="rsub">฿7,490 × 6</span>','<span class="cnt">'+special+' คน</span>',special/mPay*100,'p',null,null,tipOf(mPayL.special))
         +   '</div></div>'
