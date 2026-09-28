@@ -704,7 +704,8 @@
           <div class="group subgrp" id="g-ll">
             <button class="item ghead subhead" data-toggle="g-ll"><span class="pdot" style="background:#16a34a"></span><span class="lbl">Lean Lab</span><svg class="caret" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
             <div class="children">
-              <button class="item lvl3" data-view="llmember"><span class="dot"></span><span class="lbl">Member</span></button>
+              <button class="item lvl3" data-view="llmember"><span class="dot"></span><span class="lbl">Start Member</span></button>
+              <button class="item lvl3" data-view="llmafter"><span class="dot"></span><span class="lbl">After Member</span></button>
               <button class="item lvl3" data-view="llmanage"><span class="dot"></span><span class="lbl">Management</span></button>
               <button class="item lvl3" data-view="channels"><span class="dot"></span><span class="lbl">Channels</span></button>
             </div>
@@ -4752,7 +4753,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     if(!isExam)document.getElementById('view-generic').classList.remove('xv');
     document.getElementById('view-overview').classList.toggle('active',isOv);
     document.getElementById('view-generic').classList.toggle('active',!isOv);
-    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v.indexOf('rn-')===0){ if(window.CXRN)CXRN.render(v); else window.addEventListener('DOMContentLoaded',function(){ if(window.CXRN)CXRN.render(v); }); } else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
+    if(!isOv){ if(v.indexOf('mapp-')===0)renderMApp(v); else if(v==='preorder')renderPreorder(); else if(v==='podash')renderPoDash(); else if(v==='qr')renderQR(); else if(v==='stock')renderStockView(); else if(v.indexOf('rn-')===0){ if(window.CXRN)CXRN.render(v); else window.addEventListener('DOMContentLoaded',function(){ if(window.CXRN)CXRN.render(v); }); } else if(v==='ret-overview')renderRetOverview(); else if(v==='ret-orders')renderReturns(); else if(v==='ret-manage')renderRetManage(); else if(v==='ret-customer')renderRetCustomer(); else if(v==='llmanage')renderLLEmbed('llorder','Lean Lab<span class=mdiv></span>จัดการออเดอร์'); else if(v==='llmember')renderLLEmbed('llmstart','Lean Lab<span class=mdiv></span>Start Member'); else if(v==='llmafter')renderLLEmbed('llmafter','Lean Lab<span class=mdiv></span>After Member'); else if(isExam)examEnter(v); else renderGeneric(v); }
     // nav active state
     document.querySelectorAll('#nav .item[data-view]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
     // mark the group that holds the active item (so the collapsed rail shows it)
