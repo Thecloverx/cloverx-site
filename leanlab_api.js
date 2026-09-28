@@ -166,7 +166,7 @@ module.exports = function (app, DATA_DIR, opts) {
     return L;
   }
   function larkReportCard(roundLabel) {
-    return larkCard({ title: '📊 รายงานผล Lean Lab', color: 'blue', lines: reportLines(buildReportData(), roundLabel), note: '⏰ รายงานอัตโนมัติ 4 รอบ/วัน · 09:00 / 12:00 / 17:00 / 20:00 น. (เวลาไทย) · ดึงข้อมูลสด' });
+    return larkCard({ title: '📊 รายงานผล Lean Lab', color: 'blue', lines: reportLines(buildReportData(), roundLabel), note: '⏰ รายงานอัตโนมัติเฉพาะรอบที่มียอดใหม่ (สูงสุด 4 รอบ/วัน) · 09:00 / 12:00 / 17:00 / 20:00 น. (เวลาไทย) · ดึงข้อมูลสด' });
   }
   // ---- อัปโหลดรูปเข้า Lark ผ่าน Custom App แล้วส่งเป็นข้อความรูปผ่าน webhook ----
   var _larkTok = { v: null, exp: 0 }, _dashSnap = null;   // _dashSnap = ภาพแดชบอร์ดล่าสุดจากเบราว์เซอร์
@@ -218,10 +218,18 @@ module.exports = function (app, DATA_DIR, opts) {
       var key = th.getUTCFullYear() + '-' + th.getUTCMonth() + '-' + th.getUTCDate() + '_' + hhmm;
       if (_lastReportKey === key) return;
       _lastReportKey = key;
+      // ส่งเฉพาะรอบที่มียอดใหม่ตั้งแต่รายงานอัตโนมัติครั้งก่อน (ยอดเงินหรือจำนวนคนเปลี่ยน) — ไม่มียอดเพิ่ม = ไม่ส่ง
+      var d0 = buildReportData(), fp = d0.buyers + '|' + d0.totalPaid;
+      var stF = path.join(DIR, 'report_state.json'), st = {};
+      try { st = JSON.parse(fs.readFileSync(stF, 'utf8')) || {}; } catch (e) {}
+      if (st.fp === fp) { console.log('[lean-lab] auto report ' + hhmm + ' skipped (ไม่มียอดใหม่)'); return; }
+      try { fs.writeFileSync(stF, JSON.stringify({ fp: fp, at: new Date().toISOString() })); } catch (e) {}
       console.log('[lean-lab] auto report ' + hhmm);
       sendLeanLabReport('รอบ ' + hhmm + ' น.', _dashSnap);
     } catch (e) { console.log('[lean-lab] reportTick err ' + e.message); }
   }
+  // ครั้งแรกหลังติดตั้ง: จำยอดปัจจุบันไว้ก่อน เพื่อให้รอบถัดไปส่งเฉพาะเมื่อมียอดใหม่จริง
+  try { var _rsF = path.join(DIR, 'report_state.json'); if (!fs.existsSync(_rsF)) { var _d = buildReportData(); fs.writeFileSync(_rsF, JSON.stringify({ fp: _d.buyers + '|' + _d.totalPaid, at: new Date().toISOString(), seeded: true })); } } catch (e) {}
   setInterval(reportTick, 30000);
 
   // ---- Lean Lab event config (Season 1) ----
