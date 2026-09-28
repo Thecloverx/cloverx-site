@@ -1623,13 +1623,20 @@
       }else alert(j&&j.error==='email_taken'?'อีเมลนี้ถูกใช้แล้ว':j&&j.error==='bad_email'?'รูปแบบอีเมลไม่ถูกต้อง':j&&j.error==='not_found'?'ไม่พบข้อมูล':'บันทึกไม่สำเร็จ (ชื่อสั้นเกินไป?)');}).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');});};
   };
   window.llRefund=function(id){var r=LL_REGS[id]||{};
-    // แผนผ่อน: ยกเลิก subscription หยุดตัดบัตรงวดถัดไป — งวดที่จ่ายมาแล้วไม่คืน
+    // แผนผ่อน: เลือกได้ว่า (ก) หยุดผ่อนอย่างเดียว หรือ (ข) ยกเลิก 2 จังหวะ = ยกเลิก subscription + คืนเงินงวดที่จ่ายแล้ว
     if(r.installment){
       var paidN=r.installment.paidCount||0, paid=(r.installment.perMonth||0)*paidN, mo=r.installment.months||6;
-      llModal('<h3>ยกเลิกแผนผ่อน</h3><p class="sub">หยุดตัดบัตรงวดถัดไปผ่าน Stripe ทันที · งวดที่จ่ายมาแล้ว <b>'+paidN+'/'+mo+' งวด (฿'+Number(paid).toLocaleString("en-US")+')</b> จะไม่ถูกคืน</p>'
-        +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="rfG">ยืนยันยกเลิกแผนผ่อน</button></div>');
-      document.getElementById('rfG').onclick=function(){var b=this;b.disabled=true;b.textContent='กำลังยกเลิก…';
-        llPost(id,'/refund',{mode:'cancel'}).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent='ยืนยันยกเลิกแผนผ่อน';alert(j&&j.error==='no_subscription'?'ไม่พบข้อมูล subscription ของแผนผ่อนนี้':j&&j.error==='stripe_error'?'ยกเลิกกับ Stripe ไม่สำเร็จ ลองใหม่':'ยกเลิกไม่สำเร็จ');}}).catch(function(){b.disabled=false;b.textContent='ยืนยันยกเลิกแผนผ่อน';alert('เชื่อมต่อไม่สำเร็จ');});};
+      llModal('<h3>ยกเลิกแผนผ่อน</h3><p class="sub">จ่ายแล้ว <b>'+paidN+'/'+mo+' งวด (฿'+Number(paid).toLocaleString("en-US")+')</b></p>'
+        +'<label class="rfopt" style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:12px;margin:10px 0 8px;cursor:pointer"><input type="radio" name="icM" value="cancel_refund" checked style="margin-top:4px;width:auto;flex:none"><span><b>ยกเลิกและคืนเงิน</b><br><span style="font-size:.84rem;color:var(--muted)">ทำ 2 อย่างในครั้งเดียว: ยกเลิกการตัดบัตรงวดถัดไปใน Stripe และคืนเงินงวดที่จ่ายแล้วเข้าบัตรลูกค้า</span></span></label>'
+        +'<div id="icAW" style="margin:0 0 10px 30px"><label style="font-size:.82rem;color:var(--muted)">ยอดคืน (บาท) เว้นว่าง = คืนทั้งหมด ฿'+Number(paid).toLocaleString("en-US")+'</label><input id="icA" type="number" min="1" max="'+paid+'" placeholder="'+paid+'" style="width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;margin-top:4px;font:inherit"></div>'
+        +'<label class="rfopt" style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:12px;margin:0 0 12px;cursor:pointer"><input type="radio" name="icM" value="cancel" style="margin-top:4px;width:auto;flex:none"><span><b>หยุดผ่อนอย่างเดียว</b><br><span style="font-size:.84rem;color:var(--muted)">ยกเลิกการตัดบัตรงวดถัดไปใน Stripe งวดที่จ่ายแล้วไม่คืน</span></span></label>'
+        +'<div class="mrow"><button class="btn ghost" onclick="llCloseModal()">ปิด</button><button class="btn pri" id="rfG">ยืนยันยกเลิกและคืนเงิน</button></div>');
+      var icSync=function(){var m=(document.querySelector('input[name=icM]:checked')||{}).value;document.getElementById('icAW').style.display=m==='cancel_refund'?'block':'none';document.getElementById('rfG').textContent=m==='cancel_refund'?'ยืนยันยกเลิกและคืนเงิน':'ยืนยันหยุดผ่อน';};
+      [].forEach.call(document.querySelectorAll('input[name=icM]'),function(x){x.onchange=icSync;});
+      document.getElementById('rfG').onclick=function(){var b=this,m=(document.querySelector('input[name=icM]:checked')||{}).value||'cancel',body={mode:m},lbl=b.textContent;
+        if(m==='cancel_refund'){var a=Number(document.getElementById('icA').value);if(a){if(!(a>0)||a>paid){alert('ยอดคืนต้องไม่เกิน ฿'+Number(paid).toLocaleString('en-US'));return;}body.amount=a;}}
+        b.disabled=true;b.textContent='กำลังดำเนินการ…';
+        llPost(id,'/refund',body).then(function(j){if(j&&j.ok){llCloseModal();orderLoad();}else{b.disabled=false;b.textContent=lbl;alert(j&&j.error==='no_subscription'?'ไม่พบข้อมูล subscription ของแผนผ่อนนี้':j&&j.error==='partial_refund_failed'?'ยกเลิกแล้ว แต่คืนเงินบางงวดไม่สำเร็จ (คืนได้ ฿'+Number(j.refunded||0).toLocaleString('en-US')+') ตรวจต่อใน Stripe':j&&j.error==='stripe_error'?'ทำรายการกับ Stripe ไม่สำเร็จ ลองใหม่':'ไม่สำเร็จ');if(j&&j.error==='partial_refund_failed')orderLoad();}}).catch(function(){b.disabled=false;b.textContent=lbl;alert('เชื่อมต่อไม่สำเร็จ');});};
       return;
     }
     var max=(r.promoAmount||r.fee||0);

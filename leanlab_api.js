@@ -992,6 +992,7 @@ module.exports = function (app, DATA_DIR, opts) {
     var ins = r.installment, months = ins.months || 6;
     if (ins.status === 'completed' || (ins.paidCount || 0) >= months) { ins.status = 'completed'; ins.completedAt = ins.completedAt || new Date().toISOString(); writeR(l); return true; }
     if (ins.status === 'cancelled') return true; // ยกเลิกจากระบบเราเองอยู่แล้ว
+    if (ins.cancelPending) { ins.status = 'cancelled'; ins.cancelledAt = new Date().toISOString(); writeR(l); return true; }
     ins.status = 'cancelled'; ins.cancelledAt = new Date().toISOString(); ins.cancelledIn = 'stripe';
     r.needsReview = 'แผนผ่อนถูกยกเลิกใน Stripe (จ่ายแล้ว ' + (ins.paidCount || 0) + '/' + months + ' งวด) ตรวจว่าจะคงสิทธิ์ ยกเลิก หรือคืนเงิน';
     llNote(r, 'ยกเลิกแผนผ่อนใน Stripe');
@@ -1288,6 +1289,55 @@ module.exports = function (app, DATA_DIR, opts) {
     if (r.installment && !(r.stripe && r.stripe.paymentIntent)) {
       var subId = (r.installment && r.installment.subId) || (r.stripe && r.stripe.subscriptionId);
       if (!subId) return res.status(400).json({ ok: false, error: 'no_subscription' });
+      r.installment.cancelPending = new Date().toISOString(); writeR(l); // บอก webhook ว่าทีมงานยกเลิกจากระบบเอง ไม่ต้องขึ้น "ต้องตรวจ"
+      // ยกเลิก 2 จังหวะในครั้งเดียว: (1) ยกเลิก subscription หยุดตัดงวดถัดไป (2) คืนเงินงวดที่จ่ายแล้ว (ทั้งหมด หรือระบุยอด)
+      if (b.mode === 'cancel_refund') {
+        var want = (Number(b.amount) > 0) ? Number(b.amount) : null;
+        var insOpen = !(r.installment.status === 'cancelled' || r.installment.status === 'completed');
+        var step1 = insOpen ? stripeApi('DELETE', '/v1/subscriptions/' + encodeURIComponent(subId), []) : Promise.resolve({ id: subId });
+        step1.then(function (j) {
+          if (!j || !j.id) return res.status(502).json({ ok: false, error: 'stripe_error', step: 'cancel_subscription' });
+          return stripeApi('GET', '/v1/invoices?subscription=' + encodeURIComponent(subId) + '&status=paid&limit=24', []).then(function (list) {
+            var invs = (list && list.data) || [];
+            // หา payment_intent ของแต่ละงวด (API ใหม่ต้องหาผ่าน invoice_payments)
+            return Promise.all(invs.map(function (inv) {
+              if (inv.payment_intent) return Promise.resolve({ pi: inv.payment_intent, amt: (inv.amount_paid || 0) / 100 });
+              return stripeApi('GET', '/v1/invoice_payments?invoice=' + encodeURIComponent(inv.id) + '&limit=5', []).then(function (p) {
+                var d = ((p && p.data) || []).filter(function (x) { return x.status === 'paid' && x.payment && x.payment.payment_intent; })[0];
+                return d ? { pi: d.payment.payment_intent, amt: (d.amount_paid != null ? d.amount_paid : inv.amount_paid || 0) / 100 } : null;
+              });
+            }));
+          }).then(function (pays) {
+            pays = (pays || []).filter(Boolean);
+            var left = want, jobs = [];
+            pays.forEach(function (p) {
+              if (left != null && left <= 0) return;
+              var amt = (left != null) ? Math.min(left, p.amt) : p.amt;
+              if (!(amt > 0)) return;
+              if (left != null) left -= amt;
+              var prm = [['payment_intent', p.pi]]; if (amt < p.amt) prm.push(['amount', String(Math.round(amt * 100))]);
+              jobs.push(stripeApi('POST', '/v1/refunds', prm).then(function (rf) { return rf && rf.id ? { id: rf.id, amount: rf.amount / 100 } : { failed: p.pi }; }));
+            });
+            return Promise.all(jobs);
+          }).then(function (done2) {
+            var ok = done2.filter(function (x) { return x && x.id; }), bad = done2.filter(function (x) { return x && x.failed; });
+            var refTotal = ok.reduce(function (a, x) { return a + x.amount; }, 0);
+            var paidAll = (Number(r.installment.perMonth) || 0) * (Number(r.installment.paidCount) || 0);
+            var l2 = readR(); var r2 = l2.find(function (x) { return x.id === req.params.id; });
+            if (r2) {
+              if (r2.installment) { r2.installment.status = 'cancelled'; r2.installment.cancelledAt = new Date().toISOString(); }
+              r2.status = (refTotal > 0 && refTotal + 0.5 >= paidAll) ? 'refunded' : (refTotal > 0 ? 'partially_refunded' : 'refunded');
+              r2.refund = { mode: 'installment_cancel_refund', subId: subId, amount: refTotal, refunds: ok.map(function (x) { return x.id; }), failed: bad.length, at: new Date().toISOString() };
+              r2.needsReview = bad.length ? ('คืนเงินไม่สำเร็จ ' + bad.length + ' งวด ตรวจใน Stripe') : null;
+              writeR(l2);
+            }
+            console.log('[lean-lab] installment ' + req.params.id + ' cancelled + refunded ' + refTotal + (bad.length ? (' (' + bad.length + ' failed)') : ''));
+            if (bad.length) return res.status(207).json({ ok: false, error: 'partial_refund_failed', refunded: refTotal });
+            done(r2);
+          });
+        }).catch(function (e) { res.status(502).json({ ok: false, error: 'stripe_error' }); });
+        return;
+      }
       var paidKept = (Number(r.installment.perMonth) || 0) * (Number(r.installment.paidCount) || 0);
       // subscription ปิดไปแล้ว (ครบ 6 งวด หรือยกเลิกไปแล้ว) → ไม่ต้องเรียก Stripe ซ้ำ แค่บันทึกสถานะ
       if (r.installment.status === 'completed' || r.installment.status === 'cancelled') {
