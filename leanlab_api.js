@@ -93,6 +93,7 @@ module.exports = function (app, DATA_DIR, opts) {
   // ================= ระบบรายงานสรุป Lean Lab เข้า Lark (4 รอบ/วัน + กดส่งเอง) =================
   var REPORT_TIERS = [
     { key: 't0', label: 'เซต 1', price: 44940 },
+    { key: 't4', label: 'เซต Band', price: 40350 },
     { key: 't1', label: 'เซต 2', price: 39950 },
     { key: 't2', label: 'เซต 3', price: 37450 },
     { key: 't3', label: 'เซต 4', price: 32460 }
@@ -119,8 +120,8 @@ module.exports = function (app, DATA_DIR, opts) {
   function buildReportData() {
     var regs = readR().filter(function (r) { return r.status === 'confirmed'; });
     var d = { totalPaid: 0, buyers: regs.length, startNow: 0, startLater: 0,
-      setCount: { t0: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 },
-      setAmt: { t0: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 }, coach: {}, ref: {} };
+      setCount: { t0: 0, t4: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 },
+      setAmt: { t0: 0, t4: 0, t1: 0, t2: 0, t3: 0, special: 0, base: 0 }, coach: {}, ref: {} };
     regs.forEach(function (r) {
       if (r.startChoice === 'now') d.startNow++; else if (r.startChoice === 'later') d.startLater++;
       var key, val = 0;
@@ -239,6 +240,7 @@ module.exports = function (app, DATA_DIR, opts) {
       conditions: ['ซื้อ RoutineX แบบเซต 6 เดือน (บริษัทจัดส่งเดือนละ 1 เซต)', 'ชำระเงินเพียงครั้งเดียว (ไม่เข้าร่วมบริการผ่อนชำระ)', 'หักยอดจากที่สั่งซื้อ Pre-Order และ Order ปกติได้', 'รายการ Protein ไม่เข้าร่วมโปรโมชั่นทุกกรณี'],
       tiers: [
         { key: 't0', amount: 44940, label: 'ยังไม่ PreOrder สินค้าใด ๆ', needProof: false },
+        { key: 't4', amount: 40350, label: 'เคยซื้อ Xircle Band', needProof: true },
         { key: 't1', amount: 39950, label: 'เคยซื้อ Xircle Band + Xircle Scale', needProof: true },
         { key: 't2', amount: 37450, label: 'เคยซื้อ RoutineX 1 Set', needProof: true },
         { key: 't3', amount: 32460, label: 'เคยซื้อ Xircle Band + Xircle Scale + RoutineX', needProof: true }
@@ -605,6 +607,7 @@ module.exports = function (app, DATA_DIR, opts) {
     return owned;
   }
   function tierQualifies(tierKey, o) {
+    if (tierKey === 't4') return !!o.band;                              // Band (เครื่องเดียว)
     if (tierKey === 't1') return !!(o.band && o.scale);                 // Band + Scale
     if (tierKey === 't2') return !!o.routinex;                          // RoutineX
     if (tierKey === 't3') return !!(o.band && o.scale && o.routinex);   // ครบทั้งสาม
