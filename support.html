@@ -987,6 +987,8 @@
     + '<div class="mdrawer-scrim" id="memScrim"></div>';
   }
   window.memDR=function(r){MEM_FILT.dr=r;MEM_PAGE=1;var cb=document.getElementById('memCustom');if(cb)cb.style.display=(r==='custom')?'inline-flex':'none';llToggleChips('memDR',r);memRender();};
+  // ค้นหาแบบไม่สนวรรณยุกต์/การันต์/ช่องว่าง: พิมพ์ "พิศิลณี" ก็เจอ "พิศิล์ณี"
+  function llNorm(t){return String(t||'').toLowerCase().replace(/[\u0E31\u0E47-\u0E4E]/g,'').replace(/\s+/g,'');}
   function memFilterList(list){
     var f=MEM_FILT;
     var _mb=llDateBounds(f.dr,f.from,f.to), lo=_mb.lo, hi=_mb.hi;
@@ -1001,7 +1003,7 @@
         if(f.age==='30-39'&&!(a>=30&&a<=39))return false;
         if(f.age==='40-49'&&!(a>=40&&a<=49))return false;
         if(f.age==='50-'&&!(a>=50))return false;}
-      if(q){var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')).toLowerCase();var okT=hay.indexOf(q)>=0;var okP=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0);if(!okT&&!okP)return false;}
+      if(q){var hay=llNorm((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||''));var okT=hay.indexOf(llNorm(q))>=0;var okP=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0);if(!okT&&!okP)return false;}
       return true;
     });
   }
@@ -1412,7 +1414,7 @@
       if(f.status&&f.status!=='all'&&ordStatusBucket(r.status)!==f.status)return false;
       if(q){
         var hay=((r.name||'')+' '+(r.email||'')+' '+(r.po||'')+' '+(r.postcode||'')+' '+(r.address||'')+' '+memSeg(r).label+' '+memPayChannel(r)).toLowerCase();
-        var okText=hay.indexOf(q)>=0;
+        var okText=llNorm(hay).indexOf(llNorm(q))>=0;
         var okPhone=qd&&(String(r.phone||'').replace(/\D/g,'').indexOf(qd)>=0||String(r.postcode||'').indexOf(qd)>=0);
         if(!okText&&!okPhone)return false;
       }
