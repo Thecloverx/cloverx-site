@@ -163,8 +163,11 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), funct
       const list = read();
       const o = list.find(function (x) { return x.stripe && x.stripe.paymentIntent === pi; });
       if (o) {
-        o.status = 'refunded';
-        o.refund = { at: new Date().toISOString(), amount: (c.amount_refunded != null ? c.amount_refunded / 100 : null), full: (c.amount_refunded === c.amount) };
+        var _full = (c.amount_refunded === c.amount);
+        o.status = _full ? 'refunded' : 'partially_refunded';
+        var _amt = (c.amount_refunded != null ? c.amount_refunded / 100 : null);
+        if (_amt != null && _amt > (Number(o.refundedTotal) || 0)) o.refundedTotal = _amt;
+        if (!Array.isArray(o.refunds) || !o.refunds.length) o.refund = { at: new Date().toISOString(), amount: _amt, full: _full };
         write(list);
         console.log('[stripe] order ' + o.id + ' refunded via webhook, pi=' + pi);
       }
@@ -937,7 +940,7 @@ app.post('/api/returns', function (req, res) {
   res.json({ ok: true, rid: rid, amount: amount, choice: choice });
 });
 // แอดมิน: รายการคำขอคืนทั้งหมด
-app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderTeam: o.team || '', orderPhone: o.phone || '', orderEmail: o.email || '' }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
+app.get('/api/returns', function (req, res) { if (!staffOrKey(req, res)) return; res.json({ ok: true, returnDeadline: RETURN_DEADLINE_ISO, deadlinePassed: retDeadlinePassed(), returns: (function () { var om = {}; read().forEach(function (o) { om[o.id] = o; }); return readReturns().map(function (r) { var o = om[r.orderId] || {}; var x = Object.assign({}, r, { orderName: o.name || '', orderRef: o.ref || '', orderTeam: o.team || '', orderPhone: o.phone || '', orderEmail: o.email || '', stripeRefundable: !!(o.stripe && o.stripe.paymentIntent && (o.pay === 'card' || o.pay === 'promptpay')) }); if (retOverdue(r)) x.overdue = true; return x; }); })() }); });   // แนบชื่อ/เบอร์จากออเดอร์ เพื่อให้ทีมงานค้นหาด้วยชื่อจริงได้ แม้ลูกค้าพิมพ์ชื่อไม่ตรงตอนยื่นคำขอ
 // ลูกค้า: แนบเลขพัสดุ/สลิปการส่งคืน → เปลี่ยนสถานะเป็น "กำลังส่งคืน/รอตรวจรับ"
 app.post('/api/returns/:rid/ship', function (req, res) {
   var b = req.body || {}; var rlist = readReturns(); var r = rlist.find(function (x) { return x.rid === req.params.rid; });
@@ -1007,13 +1010,36 @@ app.post('/api/returns/:rid/refund', function (req, res) {
   var amount = type === 'full' ? (Number(r.amount) || 0) : (Number(b.amount) || 0);
   if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'invalid_amount' });
   if (type === 'partial' && amount > (Number(r.amount) || 0) + 0.001) return res.status(400).json({ ok: false, error: 'amount_exceeds_request' });
-  // หลักฐานการโอนเงินคืน (ถ้าแนบ) — บันทึกเป็นหลักฐานเท่านั้น ระบบไม่ได้โอนเงินเอง
+  if (r.status === 'refunded') return res.status(409).json({ ok: false, error: 'already_refunded' });
+  if (r._refunding) return res.status(409).json({ ok: false, error: 'refund_in_progress' });
+  // หลักฐานการโอนเงินคืน (ถ้าแนบ) — บันทึกเป็นหลักฐานเท่านั้น
   var rfSlip = saveDataImage(b.slip, 'RFD-' + r.rid + '-' + crypto.randomBytes(8).toString('hex')); // ชื่อไฟล์เดาไม่ได้ (สลิปมีเลขบัญชี)
-  r.refund = { type: type, amount: amount, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60), note: String(b.note || '').slice(0, 300), slip: rfSlip || null };
-  r.approvedAmount = amount; r.status = 'refunded';
-  retLog(r, 'อนุมัติคืนเงิน' + (type === 'full' ? 'เต็มจำนวน' : 'บางส่วน') + ' ' + amount.toLocaleString('en-US') + ' บาท' + (rfSlip ? ' · แนบหลักฐานการโอน' : ''));
-  writeReturns(rlist);
-  res.json({ ok: true, ret: r });
+  // ออเดอร์จ่ายบัตร/PromptPay ผ่าน Stripe ของเว็บ → คืนเงินผ่าน Stripe อัตโนมัติ (เข้าบัตร/บัญชีเดิมของลูกค้า)
+  var olist = read(); var o = olist.find(function (x) { return x.id === r.orderId; });
+  var pi = o && o.stripe && o.stripe.paymentIntent;
+  var viaStripe = !!(pi && (o.pay === 'card' || o.pay === 'promptpay') && b.via !== 'manual');
+  function finish(method, stripeRefundId) {
+    var rl = readReturns(); var rr = rl.find(function (x) { return x.rid === req.params.rid; }); if (!rr) return res.status(404).json({ ok: false, error: 'not_found' });
+    delete rr._refunding;
+    rr.refund = { type: type, amount: amount, at: new Date().toISOString(), actor: (b.actor || 'staff').slice(0, 60), note: String(b.note || '').slice(0, 300), slip: rfSlip || null, method: method, stripeRefundId: stripeRefundId || null };
+    rr.approvedAmount = amount; rr.status = 'refunded';
+    retLog(rr, 'อนุมัติคืนเงิน' + (type === 'full' ? 'เต็มจำนวน' : 'บางส่วน') + ' ' + amount.toLocaleString('en-US') + ' บาท' + (method === 'stripe' ? ' (คืนเข้าบัตร/บัญชีเดิมผ่าน Stripe อัตโนมัติ)' : ' (บันทึกอย่างเดียว ทีมงานโอนคืนเอง)') + (rfSlip ? ' แนบหลักฐานแล้ว' : ''));
+    writeReturns(rl);
+    if (method === 'stripe') {   // บันทึกยอดคืนลงออเดอร์ด้วย ให้ตัวเลขตรงกัน
+      var ol = read(); var oo = ol.find(function (x) { return x.id === rr.orderId; });
+      if (oo) { var tot = Number(oo.total) || 0; oo.refunds = Array.isArray(oo.refunds) ? oo.refunds : []; var rec = { amount: amount, full: false, category: 'ลูกค้าคืนสินค้า', note: 'คำขอคืน ' + rr.rid, at: new Date().toISOString(), method: 'stripe', stripeRefundId: stripeRefundId || null }; oo.refunds.push(rec); oo.refund = rec; oo.refundedTotal = (Number(oo.refundedTotal) || 0) + amount; oo.status = (oo.refundedTotal >= tot - 0.001) ? 'refunded' : 'partially_refunded'; write(ol); }
+    }
+    res.json({ ok: true, method: method, ret: rr });
+  }
+  if (!viaStripe) return finish('manual', null);
+  var remain = (Number(o.total) || 0) - (Number(o.refundedTotal) || 0);
+  if (amount > remain + 0.001) return res.status(400).json({ ok: false, error: 'exceeds_order_remaining', remaining: remain });
+  r._refunding = true; writeReturns(rlist);   // กันกดซ้ำระหว่างรอ Stripe
+  createRefund(pi, Math.round(amount * 100), { return_id: r.rid, order_id: r.orderId }).then(function (x) {
+    if (x.ok) return finish('stripe', x.refund && x.refund.id);
+    var rl = readReturns(); var rr = rl.find(function (y) { return y.rid === req.params.rid; }); if (rr) { delete rr._refunding; writeReturns(rl); }
+    res.status(502).json({ ok: false, error: 'stripe_refund_failed', detail: x.error || '' });
+  });
 });
 // แอดมิน: บันทึกภายใน (Internal Notes) — ทีมงานเห็นเท่านั้น ไม่แสดงให้ลูกค้า
 app.post('/api/returns/:rid/note', function (req, res) {

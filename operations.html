@@ -3892,6 +3892,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function retDateBar(){ return '<div style="margin-bottom:12px">'+drpTrigger('ret')+'</div>'; }
   function retOPager(pages){if(pages<=1)return '';var out='<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap">';for(var i=1;i<=pages;i++){out+='<button class="ret-opgbtn" data-pg="'+i+'" style="min-width:36px;height:36px;border:1px solid '+(i===RET_OPAGE?'var(--brand)':'var(--line)')+';background:'+(i===RET_OPAGE?'var(--brand)':'#fff')+';color:'+(i===RET_OPAGE?'#fff':'var(--ink)')+';border-radius:9px;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">'+i+'</button>';}return out+'</div>';}
   function retBulkDeleteO(){var ids=Object.keys(RET_OSEL);if(!ids.length)return;if(!confirm('ลบคำขอที่เลือก '+ids.length+' รายการ? การลบไม่สามารถกู้คืนได้'))return;var done=0,ok=0;ids.forEach(function(rid){fetch('/api/returns/'+encodeURIComponent(rid),{method:'DELETE'}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok)ok++;}).catch(function(){}).then(function(){done++;if(done>=ids.length){RET_OSEL={};xvToast('ลบแล้ว '+ok+' รายการ','ok');retRefresh();}});});}
+  function retRfHow(r){return r&&r.stripeRefundable?'ระบบจะคืนเงินเข้าบัตร/บัญชีเดิมของลูกค้าผ่าน Stripe ให้อัตโนมัติ':'ออเดอร์นี้ไม่ได้จ่ายผ่าน Stripe ระบบบันทึกอย่างเดียว ทีมงานต้องโอนคืนลูกค้าเอง';}
   function retBulkConfirmO(){
     var ids=Object.keys(RET_OSEL);
     var eligible=RET_ALL.filter(function(r){return RET_OSEL[r.rid]&&r.status==='refund_review';});
@@ -4251,7 +4252,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   function retPost(rid,pathSeg,body,okmsg){
     fetch('/api/returns/'+encodeURIComponent(rid)+'/'+pathSeg,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})})
       .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
-      .then(function(o){if(o.j&&o.j.ok){xvToast(okmsg||'บันทึกแล้ว','ok');retRefresh();}else xvToast('ทำรายการไม่สำเร็จ: '+((o.j&&o.j.error)||o.s),'bad');})
+      .then(function(o){if(o.j&&o.j.ok){xvToast(okmsg||'บันทึกแล้ว','ok');retRefresh();}else{var e=(o.j&&o.j.error)||o.s;xvToast(e==='stripe_refund_failed'?('Stripe คืนเงินไม่สำเร็จ ยังไม่ได้บันทึก: '+((o.j&&o.j.detail)||'')):e==='exceeds_order_remaining'?'ยอดคืนเกินยอดที่ยังคืนได้ของออเดอร์นี้':e==='refund_in_progress'?'กำลังคืนเงินรายการนี้อยู่ รอสักครู่':e==='already_refunded'?'รายการนี้คืนเงินไปแล้ว':('ทำรายการไม่สำเร็จ: '+e),'bad');}})
       .catch(function(){xvToast('เชื่อมต่อไม่สำเร็จ','bad');});
   }
   function retAct(act,rid,btn){
@@ -4274,11 +4275,11 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       if(result==='reject'&&!confirm('ยืนยันปฏิเสธการรับคืนและส่งกลับคืนลูกค้า?'))return;
       retPost(rid,'inspect',{result:result,reason:reason,actor:'staff'}, result==='reject'?'ปฏิเสธการรับคืนแล้ว':'ตรวจรับแล้ว — เข้าสู่การอนุมัติคืนเงิน');
     } else if(act==='refund_full'){
-      if(!confirm('อนุมัติคืนเงินเต็มจำนวน '+retBaht(r.amount)+' สำหรับ '+rid+' ?'))return;
-      retPost(rid,'refund',{type:'full',actor:'staff'},'อนุมัติคืนเงินเต็มจำนวนแล้ว');
+      if(!confirm('อนุมัติคืนเงินเต็มจำนวน '+retBaht(r.amount)+' สำหรับ '+rid+' ?\n\n'+retRfHow(r)))return;
+      retPost(rid,'refund',{type:'full',actor:'staff'},r.stripeRefundable?'คืนเงินเข้าบัตร/บัญชีเดิมผ่าน Stripe แล้ว':'บันทึกการคืนเงินแล้ว โปรดโอนคืนลูกค้าเอง');
     } else if(act==='refund_partial'){
-      var amt=prompt('ยอดคืนบางส่วน (บาท) — สูงสุด '+r.amount, String(r.amount||0)); if(amt==null)return; amt=Number(amt); if(!(amt>0)){xvToast('ยอดไม่ถูกต้อง','bad');return;}
-      retPost(rid,'refund',{type:'partial',amount:amt,actor:'staff'},'อนุมัติคืนเงินบางส่วนแล้ว');
+      var amt=prompt('ยอดคืนบางส่วน (บาท) สูงสุด '+r.amount+'\n'+retRfHow(r), String(r.amount||0)); if(amt==null)return; amt=Number(amt); if(!(amt>0)){xvToast('ยอดไม่ถูกต้อง','bad');return;}
+      retPost(rid,'refund',{type:'partial',amount:amt,actor:'staff'},r.stripeRefundable?'คืนเงินเข้าบัตร/บัญชีเดิมผ่าน Stripe แล้ว':'บันทึกการคืนเงินแล้ว โปรดโอนคืนลูกค้าเอง');
     }
   }
 
