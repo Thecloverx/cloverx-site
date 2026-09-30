@@ -1266,7 +1266,8 @@
           {header:'ลำดับ',key:'no',width:7},{header:'เลขคำสั่งซื้อ',key:'po',width:15},{header:'ชื่อ-นามสกุล',key:'name',width:26},
           {header:'อีเมล',key:'email',width:28},{header:'เบอร์โทร',key:'phone',width:13},
           {header:'โค้ช',key:'coach',width:13},{header:'ผู้แนะนำ',key:'ref',width:18},
-          {header:'เพศ',key:'gender',width:7},{header:'อายุ',key:'age',width:7},{header:'ส่วนสูง (ซม.)',key:'h',width:11},
+          {header:'เพศ',key:'gender',width:7},{header:'วันเกิด',key:'dob',width:12},{header:'อายุ',key:'age',width:7},{header:'ส่วนสูง (ซม.)',key:'h',width:11},
+          {header:'น้ำหนัก (กก.)',key:'w',width:11},{header:'ไขมัน (%)',key:'fat',width:10},{header:'ไขมันช่องท้อง',key:'vfat',width:12},{header:'กล้ามเนื้อ (กก.)',key:'mus',width:13},{header:'น้ำในร่างกาย (%)',key:'water',width:14},{header:'รูป Before',key:'photo',width:40},
           {header:'เริ่มโปรแกรม',key:'start',width:13},{header:'แพ็กเกจ',key:'pkg',width:20},{header:'ยอด (บาท)',key:'amt',width:12},
           {header:'ที่อยู่จัดส่ง',key:'addr',width:46},{header:'รหัสไปรษณีย์',key:'zip',width:11},{header:'ยืนยันเมื่อ',key:'rev',width:12}
         ];
@@ -1274,11 +1275,13 @@
         mem.forEach(function(r,i){
           var ins=r.installment; var amt=ins?(ins.total||44940):(r.fee||0);
           var pkg=ins?('Special ผ่อน '+(ins.perMonth||7490)+' x '+(ins.months||6)):(r.promoPlan==='full'?('Grand Slam '+(r.promoTier||'')):'ค่าสมัครปกติ');
-          var cr=llEffCR(r);
-          var row=ws.addRow({no:i+1,po:r.po||'',name:r.name||'',email:r.email||'',phone:r.phone||'',coach:cr.coach||'',ref:cr.referrer||'',gender:r.gender||'',age:r.age||'',h:r.heightCm||'',start:memModeOf(r)==='later'?'เริ่มทีหลัง':'เริ่มเลย',pkg:pkg,amt:amt,addr:r.address||'',zip:r.postcode||'',rev:memDate(r.reviewedAt||r.createdAt)});
+          var cr=llEffCR(r); var bl=r.baseline||{};
+          var ph=(bl.beforePhotoUrls&&bl.beforePhotoUrls.length?bl.beforePhotoUrls:(bl.beforePhotoUrl?[bl.beforePhotoUrl]:[])).map(function(u){return /^https?:/.test(u)?u:(location.origin+u);}).join('\n');
+          var dobTxt=''; if(r.dob){var dd=String(r.dob).split('-'); dobTxt=dd.length===3?(dd[2]+'/'+dd[1]+'/'+(Number(dd[0])+543)):String(r.dob);}
+          var row=ws.addRow({no:i+1,dob:dobTxt,w:bl.weightKg!=null?bl.weightKg:'',fat:bl.fatPct!=null?bl.fatPct:'',vfat:bl.vFat!=null?bl.vFat:'',mus:bl.muscleKg!=null?bl.muscleKg:'',water:bl.waterPct!=null?bl.waterPct:'',photo:ph,po:r.po||'',name:r.name||'',email:r.email||'',phone:r.phone||'',coach:cr.coach||'',ref:cr.referrer||'',gender:r.gender||'',age:r.age||'',h:r.heightCm||'',start:memModeOf(r)==='later'?'เริ่มทีหลัง':'เริ่มเลย',pkg:pkg,amt:amt,addr:r.address||'',zip:r.postcode||'',rev:memDate(r.reviewedAt||r.createdAt)});
           llXlsxRow(row,i);
         });
-        ws.autoFilter={from:{row:1,column:1},to:{row:1,column:16}};
+        ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columnCount}};
         llXlsxSave(wb,'leanlab-'+(mode==='later'?'after':'start')+'-members-'+new Date().toISOString().slice(0,10)+'.xlsx');
       }catch(e){alert('สร้างไฟล์ Excel ไม่สำเร็จ: '+e.message);}
     });

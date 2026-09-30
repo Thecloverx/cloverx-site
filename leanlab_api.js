@@ -1058,7 +1058,7 @@ module.exports = function (app, DATA_DIR, opts) {
     return {
       id: r.id, po: r.po || null, memberId: r.memberId, name: r.name || mem.name || '', email: r.email || mem.email || '', phone: r.phone || mem.phone || '',
       address: r.address || '', postcode: r.postcode || '',
-      age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
+      dob: r.dob || '', age: r.age, gender: r.gender, heightCm: r.heightCm, startChoice: r.startChoice, baseline: r.baseline || null,
       coach: r.coach || '', coachOther: r.coachOther || '', referrer: r.referrer || '',
       fee: r.fee, pay: r.pay, promo: !!r.promo, promoPlan: r.promoPlan || null, promoTier: r.promoTier || null,
       promoAmount: r.promoAmount || null, promoVerify: r.promoVerify || null, promoProofUrl: r.promoProofUrl || null,
