@@ -927,7 +927,7 @@
       +       '<select id="osSelect" class="mfsel"><option value="all">สถานะการชำระเงิน · ทั้งหมด</option><option value="paid">ชำระเงินแล้ว</option><option value="refunded">คืนเงิน</option><option value="cancelled">ยกเลิก</option><option value="pending">รอชำระเงิน</option></select>'
       +     '</div>'
       +     '<div class="mlistmeta"><span id="llCount" class="mcount">–</span><div class="mlistmeta-right"><select id="ofPS" class="mfsel sm"><option value="10">10 / หน้า</option><option value="20">20 / หน้า</option><option value="50">50 / หน้า</option><option value="100">100 / หน้า</option></select><div id="llPager" class="mpager"></div></div></div>'
-      +     '<div class="mtblwrap"><table class="memtbl"><thead><tr><th>วันที่ซื้อ</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th><th>แพ็คเกจ</th><th>ช่องทางการชำระ</th><th>สถานะ</th><th class="num">ยอดชำระ</th><th>การจัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="8" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
+      +     '<div class="mtblwrap"><div id="llBulkBar"></div><table class="memtbl"><thead><tr><th style="width:34px;text-align:center"><input type="checkbox" id="llSelAll" title="เลือกทั้งหมดตามตัวกรอง" onclick="llSelAllToggle(this.checked)" style="width:17px;height:17px;cursor:pointer;accent-color:var(--brand,#2563EB)"></th><th>วันที่ซื้อ</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th><th>แพ็คเกจ</th><th>ช่องทางการชำระ</th><th>สถานะ</th><th class="num">ยอดชำระ</th><th>การจัดการ</th></tr></thead><tbody id="llBody"><tr><td colspan="9" class="mempty">กำลังโหลด…</td></tr></tbody></table></div>'
       +   '</div>'
       +   '<div class="mcard mdetail" id="ordDetail"><div class="mdetail-empty">เลือกรายการเพื่อดูรายละเอียด</div></div>'
       + '</div>'
@@ -1304,10 +1304,11 @@
     });
   }
   function llAbs(u){return u?(/^https?:/.test(u)?u:(location.origin+u)):'';}
-  window.llExportFull=function(btnEl){
+  window.llExportFull=function(btnEl,onlyIds){
     if(LL_FULL_BUSY)return;
-    var OLD='⬇ ส่งออกทั้งหมด (ไฟล์เดียว)';
-    function say(t){[].forEach.call(document.querySelectorAll('.llfullbtn'),function(b){b.textContent=t;b.disabled=(t!==OLD);});}
+    var OLD='⬇ ส่งออกทั้งหมด (ไฟล์เดียว)', SELB=document.querySelector('.llfullbtn-sel'), SELOLD=SELB?SELB.textContent:'';
+    var only=null; if(onlyIds&&onlyIds.length){only={};onlyIds.forEach(function(x){only[x]=1;});}
+    function say(t){ var busy=(t!==OLD); [].forEach.call(document.querySelectorAll('.llfullbtn'),function(b){b.textContent=(only&&busy)?OLD:t;b.disabled=busy;}); var sb=document.querySelector('.llfullbtn-sel'); if(sb){sb.textContent=busy?t:SELOLD;sb.disabled=busy;} }
     LL_FULL_BUSY=true; say('กำลังเตรียมข้อมูล…');
     function end(){LL_FULL_BUSY=false; say(OLD);}
     Promise.all([
@@ -1318,7 +1319,7 @@
       if(!j.ok){alert('โหลดข้อมูลไม่สำเร็จ');end();return;}
       var tiers={}; ((plans.full&&plans.full.tiers)||[]).forEach(function(t){tiers[t.key]=t;});
       var ORDER={confirmed:0,pending_review:1,promo_review:2,awaiting_payment:3,promo_select:4,promo_rejected:5,rejected:6,cancelled:7,refunded:8};
-      var R=(j.registrations||[]).filter(function(r){return !r.archived;}).sort(function(a,b){var d=(ORDER[a.status]!=null?ORDER[a.status]:9)-(ORDER[b.status]!=null?ORDER[b.status]:9); return d||String(a.createdAt||'').localeCompare(String(b.createdAt||''));});
+      var R=(j.registrations||[]).filter(function(r){return only?!!only[r.id]:!r.archived;}).sort(function(a,b){var d=(ORDER[a.status]!=null?ORDER[a.status]:9)-(ORDER[b.status]!=null?ORDER[b.status]:9); return d||String(a.createdAt||'').localeCompare(String(b.createdAt||''));});
       if(!R.length){alert('ไม่มีข้อมูลให้ส่งออก');end();return;}
       function planOf(r){
         if(r.installment||r.promoPlan==='special'){var ins=r.installment||{};return {plan:'Special Option (ผ่อน 6 งวด)',detail:'฿'+Number(ins.perMonth||7490).toLocaleString('en-US')+' x '+(ins.months||6)+' งวด',price:ins.total||44940};}
@@ -1400,10 +1401,9 @@
             sm.addRow({}); sm.addRow({k:'ไฟล์นี้มีข้อมูลส่วนบุคคล ใช้ภายในทีมเท่านั้น'});
             var ALLI=R.map(function(r,ri){return {r:r,ri:ri};});
             addSheet('ทั้งหมด',ALLI);
-            addSheet('Start Member',ALLI.filter(function(x){return grpOf(x.r)==='Start Member';}));
-            addSheet('After Member',ALLI.filter(function(x){return grpOf(x.r)==='After Member';}));
-            addSheet('ยังไม่ชำระ หรืออื่น ๆ',ALLI.filter(function(x){return grpOf(x.r)==='ยังไม่ชำระ/อื่น ๆ';}));
-            llXlsxSave(wb,'leanlab-all-members-'+new Date().toISOString().slice(0,10)+'.xlsx');
+            [['Start Member','Start Member'],['After Member','After Member'],['ยังไม่ชำระ หรืออื่น ๆ','ยังไม่ชำระ/อื่น ๆ']].forEach(function(g){ var L=ALLI.filter(function(x){return grpOf(x.r)===g[1];}); if(only&&!L.length)return; addSheet(g[0],L); });
+            var fnm=only?(R.length===1?('leanlab-'+String(R[0].po||R[0].id).replace(/[^A-Za-z0-9-]/g,'')):('leanlab-selected-'+R.length)):'leanlab-all-members';
+            llXlsxSave(wb,fnm+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
             end(); if(failN)alert('ส่งออกแล้ว มีรูป '+failN+' รูปโหลดไม่สำเร็จ ดูจากคอลัมน์ลิงก์แทนได้');
           }catch(e){alert('สร้างไฟล์ Excel ไม่สำเร็จ: '+e.message);end();}
         });
@@ -1570,7 +1570,8 @@
   }
   function ordRowHtml(r){
     var ps=memPayStatus(r);
-    return '<tr data-id="'+llEsc(r.id)+'" onclick="ordSelect(\''+r.id+'\')"'+(r.id===ORD_SEL?' class="sel"':'')+'>'
+    return '<tr data-id="'+llEsc(r.id)+'" onclick="ordSelect(\''+r.id+'\')"'+(r.id===ORD_SEL?' class="sel"':'')+(LL_OSEL[r.id]?' style="background:#EEF4FF"':'')+'>'
+      +'<td style="width:34px;text-align:center" onclick="event.stopPropagation()" data-label="เลือก"><input type="checkbox" '+(LL_OSEL[r.id]?'checked ':'')+'onclick="llSelToggle(\''+r.id+'\',this.checked)" style="width:17px;height:17px;cursor:pointer;accent-color:var(--brand,#2563EB)" aria-label="เลือก"></td>'
       +'<td style="color:var(--muted);white-space:nowrap" data-label="วันที่ซื้อ">'+memDateTime(r.createdAt)+'</td>'
       +'<td style="color:var(--muted);white-space:nowrap" data-label="รหัสสมาชิก">'+llEsc(r.po||'-')+'</td>'
       +'<td class="mnametd" data-label="ชื่อ-นามสกุล"><div class="mnamecell">'+memAvatar(r.name,32)+'<span class="mname-t">'+llEsc(r.name||'-')+'</span>'+(r.needsReview?'<span class="mstat mstat-refund" style="margin-left:6px;white-space:nowrap" title="'+llEsc(r.needsReview)+'">⚠ ต้องตรวจ</span>':'')+llPoLink(r)+'</div></td>'
@@ -1580,6 +1581,23 @@
       +'<td class="num" data-label="ยอดชำระ">'+Number(memAmount(r)).toLocaleString('en-US')+'</td>'
       +'<td class="mactd" onclick="event.stopPropagation()">'+llMenuHtml(r)+'</td>'
       +'</tr>';
+  }
+  // ---- เลือกรายคน (checkbox) เพื่อส่งออกเฉพาะคนที่เลือก ----
+  var LL_OSEL={};
+  window.llSelToggle=function(id,on){ if(on)LL_OSEL[id]=1; else delete LL_OSEL[id]; llRenderOrders(); };
+  window.llSelAllToggle=function(on){ var regs=llFilterList(window.LL_ALL||[]); regs.forEach(function(r){ if(on)LL_OSEL[r.id]=1; else delete LL_OSEL[r.id]; }); llRenderOrders(); };
+  window.llSelClear=function(){ LL_OSEL={}; llRenderOrders(); };
+  window.llExportSelected=function(btn){ var ids=Object.keys(LL_OSEL); if(!ids.length)return; llExportFull(btn,ids); };
+  function llRenderBulk(regs){
+    var bb=document.getElementById('llBulkBar'); if(!bb)return;
+    var have={}; (window.LL_ALL||[]).forEach(function(r){have[r.id]=1;}); Object.keys(LL_OSEL).forEach(function(k){if(!have[k])delete LL_OSEL[k];});
+    var n=Object.keys(LL_OSEL).length;
+    var sa=document.getElementById('llSelAll'); if(sa){ var inF=regs.filter(function(r){return LL_OSEL[r.id];}).length; sa.checked=regs.length>0&&inF===regs.length; sa.indeterminate=inF>0&&inF<regs.length; }
+    bb.innerHTML=n?('<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;background:#EEF4FF;border:1px solid #CBDBFF;border-radius:12px">'
+      +'<b style="font-size:.88rem;color:#1E3A8A">เลือกไว้ '+n+' คน</b>'
+      +'<button class="btn pri llfullbtn-sel" onclick="llExportSelected(this)" style="padding:8px 14px;font-size:.84rem">⬇ ส่งออกเฉพาะที่เลือก ('+n+' คน)</button>'
+      +'<button class="btn ghost" onclick="llSelClear()" style="padding:8px 14px;font-size:.84rem">ล้างที่เลือก</button>'
+      +'<span style="font-size:.76rem;color:var(--muted)">ไฟล์ละเอียดแบบเดียวกับ "ส่งออกทั้งหมด" พร้อมรูปที่แนบ</span></div>'):'';
   }
   window.llRenderOrders=function(){
     var tb=document.getElementById('llBody'); if(!tb)return;
@@ -1591,7 +1609,8 @@
     var cnt=document.getElementById('llCount');if(cnt)cnt.textContent='แสดง '+from+'-'+to+' จาก '+regs.length.toLocaleString('en-US')+' รายการ';
     var eb=document.getElementById('llExportBtn'); if(eb)eb.textContent='⬇ ส่งออก Excel ('+regs.length+' รายการ)';
     var pg=document.getElementById('llPager');
-    if(!regs.length){tb.innerHTML='<tr><td colspan="8" class="mempty">'+(all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีรายการ')+'</td></tr>';if(pg)pg.innerHTML='';ordMarkSel();return;}
+    llRenderBulk(regs);
+    if(!regs.length){tb.innerHTML='<tr><td colspan="9" class="mempty">'+(all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีรายการ')+'</td></tr>';if(pg)pg.innerHTML='';ordMarkSel();return;}
     tb.innerHTML=regs.slice((LL_PAGE-1)*PS,LL_PAGE*PS).map(ordRowHtml).join('');
     if(pg)pg.innerHTML=ordPager(LL_PAGE,pages);
     ordMarkSel();
@@ -1661,7 +1680,7 @@
     if(r.slipUrl||r.promoProofUrl) items+=sep;
     if(r.status==='confirmed'){ if(instm) items+=mi('warn','↩','ยกเลิกแผนผ่อน (หยุดตัดบัตร)','llRefund(\''+id+'\')'); else if(card) items+=mi('warn','↩','คืนเงิน','llRefund(\''+id+'\')'); items+=mi('','✅','บันทึกว่าคืนเงิน/ยกเลิกแล้ว (นอกระบบ)','llMarkRefunded(\''+id+'\')')+mi('','🧾','ใบรับเงินมัดจำ','llReceipt(\''+id+'\')'); }
     if(['awaiting_payment','confirmed','refunded'].indexOf(r.status)<0) items+=mi('warn','↩','ยกเลิก · ส่งกลับให้เลือกเริ่มใหม่','llCancel(\''+id+'\')');
-    items+=sep+mi('','✏️','แก้ไขข้อมูลลูกค้า','llEdit(\''+id+'\')')+mi('danger','🗑','ลบข้อมูล','llDel(\''+id+'\')');
+    items+=sep+mi('','⬇','ส่งออกข้อมูลคนนี้ (มีรูป)','llExportFull(null,[\''+id+'\'])')+mi('','✏️','แก้ไขข้อมูลลูกค้า','llEdit(\''+id+'\')')+mi('danger','🗑','ลบข้อมูล','llDel(\''+id+'\')');
     return '<div class="menuwrap"><button class="kebab" onclick="llMenu(this)" aria-label="จัดการ">⋮</button><div class="menu">'+items+'</div></div>';
   }
   window.llMenu=function(btn){var menu=btn.nextElementSibling,open=menu.classList.contains('open');llCloseMenus();if(open)return;
