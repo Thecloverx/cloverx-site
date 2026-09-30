@@ -970,6 +970,7 @@
     +   '<div class="memhead-act">'
     +     '<button class="btn ghost" onclick="memImportOpen()">⬆ นำเข้าข้อมูล</button>'
     +     '<button class="btn ghost" id="memExportBtn" onclick="llExportMembers(MEM_MODE)">⬇ ส่งออก Excel</button>'
+    +     '<button class="btn ghost" id="memExportFullBtn" onclick="llExportFull()" title="ผู้สมัครทุกคน ทุกสถานะ พร้อมแผนที่เลือก รูปแบบการเริ่ม ค่าร่างกาย และรูปที่แนบ">⬇ ส่งออกแบบละเอียด (มีรูป)</button>'
     +     '<button class="btn pri" onclick="memAddOpen()">+ เพิ่มสมาชิก</button>'
     +   '</div></div>'
     + '<div class="mkpis" id="memKpis"></div>'
@@ -1285,6 +1286,114 @@
         llXlsxSave(wb,'leanlab-'+(mode==='later'?'after':'start')+'-members-'+new Date().toISOString().slice(0,10)+'.xlsx');
       }catch(e){alert('สร้างไฟล์ Excel ไม่สำเร็จ: '+e.message);}
     });
+  };
+  // ---- ส่งออกแบบละเอียด: ผู้สมัครทุกคน ทุกสถานะ + แผนที่เลือก + รูปแบบการเริ่ม + ค่าร่างกาย + รูปที่แนบ (ฝังรูปย่อในไฟล์) ----
+  var LL_FULL_BUSY=false;
+  function llThumb(url,max){ // โหลดรูปแล้วย่อ (JPEG) เพื่อฝังใน Excel — คืน {b64,w,h} หรือ null
+    return new Promise(function(resolve){
+      var done=false, to=setTimeout(function(){if(!done){done=true;resolve(null);}},25000);
+      fetch(url,{credentials:'same-origin',cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.blob();}).then(function(b){
+        var u=URL.createObjectURL(b), im=new Image();
+        im.onload=function(){ try{ var k=Math.min(1,max/Math.max(im.width,im.height)), w=Math.max(1,Math.round(im.width*k)), h=Math.max(1,Math.round(im.height*k));
+          var c=document.createElement('canvas'); c.width=w; c.height=h; var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(im,0,0,w,h);
+          var d=c.toDataURL('image/jpeg',0.8); URL.revokeObjectURL(u); if(!done){done=true;clearTimeout(to);resolve({b64:d.split(',')[1],w:w,h:h});} }catch(e){ if(!done){done=true;clearTimeout(to);resolve(null);} } };
+        im.onerror=function(){URL.revokeObjectURL(u); if(!done){done=true;clearTimeout(to);resolve(null);}};
+        im.src=u;
+      }).catch(function(){ if(!done){done=true;clearTimeout(to);resolve(null);} });
+    });
+  }
+  function llAbs(u){return u?(/^https?:/.test(u)?u:(location.origin+u)):'';}
+  window.llExportFull=function(){
+    if(LL_FULL_BUSY)return;
+    var btn=document.getElementById('memExportFullBtn'); var old=btn?btn.textContent:'';
+    function say(t){if(btn)btn.textContent=t;}
+    LL_FULL_BUSY=true; say('กำลังเตรียมข้อมูล…');
+    function end(){LL_FULL_BUSY=false; say(old||'⬇ ส่งออกแบบละเอียด (มีรูป)');}
+    Promise.all([
+      fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin',headers:admHdr()}).then(function(r){return r.json();}),
+      fetch('/api/leanlab/promo/plans',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {};})
+    ]).then(function(res){
+      var j=res[0]||{}, plans=(res[1]&&res[1].plans)||{};
+      if(!j.ok){alert('โหลดข้อมูลไม่สำเร็จ');end();return;}
+      var tiers={}; ((plans.full&&plans.full.tiers)||[]).forEach(function(t){tiers[t.key]=t;});
+      var ORDER={confirmed:0,pending_review:1,promo_review:2,awaiting_payment:3,promo_select:4,promo_rejected:5,rejected:6,cancelled:7,refunded:8};
+      var R=(j.registrations||[]).filter(function(r){return !r.archived;}).sort(function(a,b){var d=(ORDER[a.status]!=null?ORDER[a.status]:9)-(ORDER[b.status]!=null?ORDER[b.status]:9); return d||String(a.createdAt||'').localeCompare(String(b.createdAt||''));});
+      if(!R.length){alert('ไม่มีข้อมูลให้ส่งออก');end();return;}
+      function planOf(r){
+        if(r.installment||r.promoPlan==='special'){var ins=r.installment||{};return {plan:'Special Option (ผ่อน 6 งวด)',detail:'฿'+Number(ins.perMonth||7490).toLocaleString('en-US')+' x '+(ins.months||6)+' งวด',price:ins.total||44940};}
+        if(r.promoPlan==='full'){var t=tiers[r.promoTier]||{};return {plan:'Grand Slam (จ่ายเต็ม)',detail:(t.label||r.promoTier||'')+(t.amount?(' ฿'+Number(t.amount).toLocaleString('en-US')):''),price:r.promoAmount||t.amount||r.fee||0};}
+        return {plan:'ชำระเลย (ค่าสมัครปกติ)',detail:'฿'+Number(r.fee||3900).toLocaleString('en-US'),price:r.fee||3900};
+      }
+      function paidOf(r){ if(r.status!=='confirmed')return 0; if(r.installment)return (r.installment.perMonth||0)*(r.installment.paidCount||0); return r.promoAmount||r.fee||0; }
+      function photosOf(r){var bl=r.baseline||{};return (bl.beforePhotoUrls&&bl.beforePhotoUrls.length)?bl.beforePhotoUrls.slice(0,3):(bl.beforePhotoUrl?[bl.beforePhotoUrl]:[]);}
+      // โหลดรูปทั้งหมด (3 คนพร้อมกัน) เพื่อฝังเป็นรูปย่อ
+      var jobs=[]; R.forEach(function(r,ri){photosOf(r).forEach(function(u,pi){jobs.push({ri:ri,pi:pi,u:u});});});
+      var thumbs={}, idx=0, doneN=0, failN=0;
+      function worker(){ if(idx>=jobs.length)return Promise.resolve(); var jb=jobs[idx++]; return llThumb(jb.u,360).then(function(t){ if(t)thumbs[jb.ri+'_'+jb.pi]=t; else failN++; doneN++; say('กำลังโหลดรูป '+doneN+'/'+jobs.length+'…'); return worker(); }); }
+      say(jobs.length?('กำลังโหลดรูป 0/'+jobs.length+'…'):'กำลังสร้างไฟล์…');
+      Promise.all([worker(),worker(),worker()]).then(function(){
+        llLoadExcelJS(function(){
+          try{
+            say('กำลังสร้างไฟล์…');
+            var wb=new ExcelJS.Workbook();
+            var ws=wb.addWorksheet('ข้อมูลผู้สมัครทั้งหมด',{views:[{state:'frozen',ySplit:1,xSplit:3}]});
+            var IMG_W=110, IMG_H=146, ROW_H=112;
+            ws.columns=[
+              {header:'ลำดับ',key:'no',width:6},{header:'เลขคำสั่งซื้อ',key:'po',width:14},{header:'ชื่อ-นามสกุล',key:'name',width:24},
+              {header:'สถานะ',key:'st',width:14},{header:'แผนที่เลือก',key:'plan',width:24},{header:'รายละเอียดแผน',key:'pdet',width:40},
+              {header:'ราคาแผน (บาท)',key:'price',width:13},{header:'ชำระแล้ว (บาท)',key:'paid',width:13},{header:'งวดที่ชำระ (ผ่อน)',key:'inst',width:14},{header:'วิธีชำระเงิน',key:'pay',width:13},
+              {header:'รูปแบบการเริ่ม',key:'start',width:18},
+              {header:'น้ำหนัก (กก.)',key:'w',width:11},{header:'ไขมัน (%)',key:'fat',width:10},{header:'ไขมันช่องท้อง',key:'vfat',width:12},{header:'กล้ามเนื้อ (กก.)',key:'mus',width:13},{header:'มวลน้ำ (%)',key:'water',width:11},{header:'BMI',key:'bmi',width:8},
+              {header:'รูป Before 1',key:'img1',width:17},{header:'รูป Before 2',key:'img2',width:17},{header:'รูป Before 3',key:'img3',width:17},{header:'ลิงก์รูป Before',key:'plinks',width:40},
+              {header:'หลักฐานสิทธิ์ Grand Slam',key:'proof',width:40},{header:'สลิปโอนเงิน',key:'slip',width:40},
+              {header:'เพศ',key:'gender',width:7},{header:'วันเกิด',key:'dob',width:12},{header:'อายุ',key:'age',width:7},{header:'ส่วนสูง (ซม.)',key:'h',width:11},
+              {header:'เบอร์โทร',key:'phone',width:13},{header:'อีเมล',key:'email',width:28},
+              {header:'ทีมโค้ช',key:'coach',width:13},{header:'ผู้แนะนำ',key:'ref',width:18},
+              {header:'ที่อยู่จัดส่ง',key:'addr',width:46},{header:'รหัสไปรษณีย์',key:'zip',width:11},
+              {header:'วันที่สมัคร',key:'created',width:16},{header:'วันที่ชำระ/ส่งสลิป',key:'slipAt',width:16}
+            ];
+            llXlsxHeader(ws); ws.getRow(1).height=30; ws.getRow(1).eachCell(function(c){c.alignment={vertical:'middle',horizontal:'center',wrapText:true};});
+            var colImg=ws.getColumn('img1').number; // index (1-based)
+            function dt(x){return x?String(x).slice(0,16).replace('T',' '):'';}
+            var cnt={now:0,later:0,none:0}, planCnt={}, stCnt={};
+            R.forEach(function(r,i){
+              var p=planOf(r), bl=r.baseline||{}, cr=llEffCR(r), ph=photosOf(r);
+              var dobTxt=''; if(r.dob){var dd=String(r.dob).split('-'); dobTxt=dd.length===3?(dd[2]+'/'+dd[1]+'/'+(Number(dd[0])+543)):String(r.dob);}
+              var bmi=''; if(bl.weightKg>0&&r.heightCm>0){bmi=Math.round(bl.weightKg/Math.pow(r.heightCm/100,2)*10)/10;}
+              var start=r.startChoice==='now'?'เริ่มเลย':(r.startChoice==='later'?('เริ่มวันที่ '+LL_LATER_LABEL):'ยังไม่เลือก');
+              cnt[r.startChoice==='now'?'now':(r.startChoice==='later'?'later':'none')]++;
+              planCnt[p.plan]=(planCnt[p.plan]||0)+1; var stl=llStLabel(r.status); stCnt[stl]=(stCnt[stl]||0)+1;
+              var row=ws.addRow({no:i+1,po:r.po||'',name:r.name||'',st:stl,plan:p.plan,pdet:p.detail,price:p.price,paid:paidOf(r),
+                inst:r.installment?((r.installment.paidCount||0)+'/'+(r.installment.months||6)):'',pay:llPayLabel2(r),start:start,
+                w:bl.weightKg!=null?bl.weightKg:'',fat:bl.fatPct!=null?bl.fatPct:'',vfat:bl.vFat!=null?bl.vFat:'',mus:bl.muscleKg!=null?bl.muscleKg:'',water:bl.waterPct!=null?bl.waterPct:'',bmi:bmi,
+                img1:'',img2:'',img3:'',plinks:ph.map(llAbs).join('\n'),proof:llAbs(r.promoProofUrl),slip:llAbs(r.slipUrl),
+                gender:r.gender||'',dob:dobTxt,age:r.age||'',h:r.heightCm||'',phone:r.phone||'',email:r.email||'',coach:cr.coach||'',ref:cr.referrer||'',
+                addr:r.address||'',zip:r.postcode||'',created:dt(r.createdAt),slipAt:dt(r.slipAt)});
+              if(i%2===1){row.eachCell({includeEmpty:true},function(c){c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF6FAFD'}};});} row.getCell('price').numFmt='#,##0'; row.getCell('paid').numFmt='#,##0'; row.getCell('paid').alignment={horizontal:'right'};
+              row.eachCell({includeEmpty:true},function(c){c.alignment=Object.assign({},c.alignment||{},{vertical:'middle',wrapText:true});});
+              var has=false;
+              ph.forEach(function(u,pi){ var t=thumbs[i+'_'+pi]; if(!t)return; has=true;
+                var id=wb.addImage({base64:t.b64,extension:'jpeg'}); var w=Math.round(t.w*Math.min(1,(ROW_H*1.3)/t.h)), h=Math.round(t.h*Math.min(1,(ROW_H*1.3)/t.h));
+                if(w>IMG_W){h=Math.round(h*IMG_W/w);w=IMG_W;}
+                ws.addImage(id,{tl:{col:colImg-1+pi+0.05,row:row.number-1+0.05},ext:{width:w,height:h},editAs:'oneCell'}); });
+              row.height=has?ROW_H:22;
+            });
+            ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columnCount}};
+            // สรุป
+            var sm=wb.addWorksheet('สรุป'); sm.columns=[{header:'หัวข้อ',key:'k',width:34},{header:'จำนวน (คน)',key:'v',width:14}]; llXlsxHeader(sm);
+            sm.addRow({k:'ผู้สมัครทั้งหมด (ไม่รวมใบประวัติ)',v:R.length});
+            sm.addRow({}); sm.addRow({k:'รูปแบบการเริ่ม'}).font={bold:true};
+            sm.addRow({k:'เริ่มเลย',v:cnt.now}); sm.addRow({k:'เริ่มวันที่ '+LL_LATER_LABEL,v:cnt.later}); if(cnt.none)sm.addRow({k:'ยังไม่เลือก',v:cnt.none});
+            sm.addRow({}); sm.addRow({k:'แผนที่เลือก'}).font={bold:true}; Object.keys(planCnt).forEach(function(k){sm.addRow({k:k,v:planCnt[k]});});
+            sm.addRow({}); sm.addRow({k:'สถานะ'}).font={bold:true}; Object.keys(stCnt).forEach(function(k){sm.addRow({k:k,v:stCnt[k]});});
+            sm.addRow({}); sm.addRow({k:'รูป Before ที่ฝังในไฟล์',v:Object.keys(thumbs).length}); if(failN)sm.addRow({k:'รูปที่โหลดไม่สำเร็จ (ดูจากลิงก์แทน)',v:failN});
+            sm.addRow({}); sm.addRow({k:'ไฟล์นี้มีข้อมูลส่วนบุคคล ใช้ภายในทีมเท่านั้น'});
+            llXlsxSave(wb,'leanlab-full-export-'+new Date().toISOString().slice(0,10)+'.xlsx');
+            end(); if(failN)alert('ส่งออกแล้ว มีรูป '+failN+' รูปโหลดไม่สำเร็จ ดูจากคอลัมน์ลิงก์แทนได้');
+          }catch(e){alert('สร้างไฟล์ Excel ไม่สำเร็จ: '+e.message);end();}
+        });
+      });
+    }).catch(function(){alert('เชื่อมต่อไม่สำเร็จ');end();});
   };
   function llXlsxHeader(ws){var hr=ws.getRow(1); hr.height=24; hr.eachCell(function(c){ c.font={bold:true,color:{argb:'FFFFFFFF'},size:11}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0077B6'}}; c.alignment={vertical:'middle',horizontal:'center'}; });}
   function llXlsxRow(row,i){ row.height=19; if(i%2===1){ row.eachCell(function(c){ c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF6FAFD'}}; }); } var a=row.getCell('amt'); if(a){a.numFmt='#,##0';a.alignment={horizontal:'right'};} row.getCell('phone').alignment={horizontal:'left'}; }
