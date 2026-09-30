@@ -239,6 +239,8 @@
   .pordt tbody tr.clk:hover{background:var(--soft)}
   .pordt tbody tr.clk.sel{background:var(--brand-tint)}
   .polink{color:var(--brand);font-weight:700}
+  .poold{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:999px;background:#F1F3F7;color:#5B6478;font-size:.7rem;font-weight:700;white-space:nowrap;word-break:keep-all;cursor:help}
+  .poold-note{margin-top:6px;padding:6px 10px;border-radius:9px;background:#F1F3F7;color:#5B6478;font-size:.76rem;font-weight:600;line-height:1.5;word-break:keep-all}
   .popager{display:flex;gap:6px;justify-content:flex-end;align-items:center;margin-top:14px;flex-wrap:wrap}
   .popager button{min-width:34px;height:34px;padding:0 8px;border:1px solid var(--line);background:#fff;border-radius:9px;font-family:inherit;font-weight:600;font-size:.85rem;color:var(--ink);cursor:pointer}
   .popager button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
@@ -3363,11 +3365,12 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
             'ทีม':o.team||'',
             'ผู้แนะนำ':o.ref||'',
             'การจัดส่ง':o.ship==='pickup'?'รับหน้างาน':'จัดส่ง',
-            'ที่อยู่':[o.addr,o.subdistrict,o.district,o.province,o.postal].filter(Boolean).join(' ')||''
+            'ที่อยู่':[o.addr,o.subdistrict,o.district,o.province,o.postal].filter(Boolean).join(' ')||'',
+            'แหล่งที่มา':poIsOld(o)?'ออเดอร์เก่า (นำเข้าจากระบบเดิม)':'ออเดอร์ใหม่'
           };
         });
         var ws=XLSX.utils.json_to_sheet(rows);
-        ws['!cols']=[{wch:14},{wch:12},{wch:20},{wch:13},{wch:28},{wch:12},{wch:12},{wch:13},{wch:12},{wch:12},{wch:14},{wch:11},{wch:34}];
+        ws['!cols']=[{wch:14},{wch:12},{wch:20},{wch:13},{wch:28},{wch:12},{wch:12},{wch:13},{wch:12},{wch:12},{wch:14},{wch:11},{wch:34},{wch:26}];
         var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Pre-Order');
         var d=new Date(); var pad=function(n){return ('0'+n).slice(-2);};
         XLSX.writeFile(wb,'PreOrder_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes())+'.xlsx');
@@ -3470,7 +3473,10 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
   }
 
   /* ---------- ฟีลเตอร์ Pre-Order (ค้นหา + ช่วงเวลา + ประเภทสินค้า) ---------- */
-  var PO_Q='',PO_RANGE='all',PO_CFROM='',PO_CTO='',PO_PRODF='all';
+  var PO_Q='',PO_RANGE='all',PO_CFROM='',PO_CTO='',PO_PRODF='all',PO_SRCF='all';
+  // ออเดอร์เก่า = นำเข้าจากระบบเดิม (สั่งช่วง 9 ส.ค. ถึง 21 ก.ย. 69) ใช้เลขรูปแบบ PO-วันที่-R…
+  function poIsOld(o){return !!(o&&o.imported);}
+  var PO_OLD_TIP='ออเดอร์เก่าที่นำเข้าจากระบบเดิม (สั่งช่วง 9 ส.ค. ถึง 21 ก.ย. 69) ใช้เลขรูปแบบของระบบเดิม';
   function poBaseName(nm){return String(nm||'').split('<span class=mdiv></span>')[0].split(' x')[0].split(' ×')[0].trim();}
   DRP_CB.po=function(){PO_PAGE=1;poRenderOrderRows();};
   function poDateInRange(at){ return drpIn('po',at); }
@@ -3489,6 +3495,8 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var q=(PO_Q||'').trim().toLowerCase();
     return (list||[]).filter(function(o){
       if(!poDateInRange(o.at))return false;
+      if(PO_SRCF==='new'&&poIsOld(o))return false;
+      if(PO_SRCF==='old'&&!poIsOld(o))return false;
       if(PO_PRODF!=='all'){ if(!(o.items||[]).some(function(it){return poBaseName(it.nm)===PO_PRODF;}))return false; }
       if(q){ var hay=[o.id,o.name,o.phone,o.team,o.ref,(o.items||[]).map(function(it){return it.nm;}).join(' ')].join(' ').toLowerCase(); if(hay.indexOf(q)<0)return false; }
       return true;
@@ -3696,7 +3704,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     return '<tr class="clk'+(o.id===PO_SEL?' sel':'')+'" onclick="poOrderDetail(\''+o.id+'\')"'+(PO_OSEL[o.id]?' style="background:var(--brand-tint)"':'')+'>'
       +'<td style="width:34px;text-align:center" onclick="event.stopPropagation()"><input type="checkbox" '+(PO_OSEL[o.id]?'checked ':'')+'onclick="poToggleSel(\''+o.id+'\',this.checked)" style="width:17px;height:17px;accent-color:var(--brand);cursor:pointer"></td>'
       +'<td style="white-space:nowrap"><div style="font-weight:600">'+poDateOnly(o.at)+'</div><div style="font-size:.72rem;color:var(--muted)">'+poTimeOnly(o.at)+'</div></td>'
-      +'<td><span class="polink">'+poEsc(o.id)+'</span></td>'
+      +'<td><span class="polink">'+poEsc(o.id)+'</span>'+(poIsOld(o)?'<div><span class="poold" title="'+PO_OLD_TIP+'">ออเดอร์เก่า</span></div>':'')+'</td>'
       +'<td><div style="font-weight:600">'+poEsc(o.name||'-')+'</div><div style="font-size:.74rem;color:var(--muted)">'+poEsc(o.phone||'')+'</div></td>'
       +'<td>'+poItemsCellStatic(o)+'</td>'
       +'<td style="white-space:nowrap;color:var(--muted)">'+poChannel(o)+'</td>'
@@ -3731,7 +3739,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var bb=document.getElementById('poBulkBar');
     if(bb)bb.innerHTML=selN?('<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:9px 13px;background:var(--brand-tint);border:1px solid #CBDBFF;border-radius:11px;flex-wrap:wrap"><b style="color:var(--brand-ink);font-size:.86rem">เลือกไว้ '+selN+' รายการ</b><button onclick="poBulkDelete()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:9px;padding:7px 13px;font-family:inherit;font-weight:700;font-size:.82rem;cursor:pointer">🗑 ลบที่เลือก</button><button onclick="poBulkClear()" style="border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-family:inherit;font-weight:600;font-size:.82rem;color:var(--muted);cursor:pointer">ล้างการเลือก</button></div>'):'';
   }
-  function poClearFilter(){PO_Q='';PO_STATUSF='all';PO_RANGE='all';PO_CFROM='';PO_CTO='';PO_PAGE=1;drpReset('po');poDraw();}
+  function poClearFilter(){PO_Q='';PO_STATUSF='all';PO_SRCF='all';PO_RANGE='all';PO_CFROM='';PO_CTO='';PO_PAGE=1;drpReset('po');poDraw();}
   function poSetDateRange(r){PO_RANGE=r;PO_PAGE=1;var cb=document.getElementById('poCustomBox');if(cb)cb.style.display=(r==='custom')?'inline-flex':'none';[].forEach.call(document.querySelectorAll('.podchip'),function(b){b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+r+"'")>=0);});poRenderOrderRows();}
   function poDetailActions(o){
     var isSettled=(o.status==='paid'||o.status==='confirmed');
@@ -3773,7 +3781,7 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
     var paid=(o.status==='paid'||o.status==='confirmed'||o.status==='partially_refunded'||o.status==='refunded'||!!o.invoiceNo);
     var step1='<div class="step done"><div class="dot">'+PO_CHK+'</div><div><div class="sl">รับออเดอร์</div><div class="ss">'+poFullTime(o.at)+'<span class=mdiv></span>ลูกค้าสั่งซื้อเข้ามา</div></div></div>';
     var step2='<div class="step '+(paid?'done':'')+'"><div class="dot">'+(paid?PO_CHK:'')+'</div><div><div class="sl">ยืนยันการชำระเงิน</div><div class="ss">'+(paid?(poFullTime(o.confirmedAt||o.paidAt||o.slipAt||o.at)+'<span class=mdiv></span>ตรวจสลิป/ตัดบัตรผ่าน'):'รอตรวจสอบการชำระเงิน')+'</div></div></div>';
-    pnl.innerHTML='<div class="podh"><div><h3>รายละเอียดออเดอร์</h3><div class="oid">'+poEsc(o.id)+'</div></div><button class="podx" onclick="poOrderClose()">✕</button></div>'
+    pnl.innerHTML='<div class="podh"><div><h3>รายละเอียดออเดอร์</h3><div class="oid">'+poEsc(o.id)+'</div>'+(poIsOld(o)?'<div class="poold-note">ออเดอร์เก่า นำเข้าจากระบบเดิม (สั่งช่วง 9 ส.ค. ถึง 21 ก.ย. 69)</div>':'')+'</div><button class="podx" onclick="poOrderClose()">✕</button></div>'
       +'<div class="posec"><div class="posec-t">👤 ข้อมูลลูกค้า</div>'
       +'<div class="poinfo"><span class="k">ชื่อลูกค้า</span><span class="v">'+poEsc(o.name||'-')+'</span></div>'
       +'<div class="poinfo"><span class="k">เบอร์โทรศัพท์</span><span class="v">'+poEsc(o.phone||'-')+'</span></div>'
@@ -3808,12 +3816,15 @@ var PO_IMG={"TRIPLE SET":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAAAAAAD/2wB
       +kc('#EAF4FB','#0077B6',IC_BAHT,'ยอดขายรวม','฿'+salesN.toLocaleString('en-US'))
       +'</div>';
     var statusOpts=[['all','สถานะการชำระเงิน<span class=mdiv></span>ทั้งหมด'],['paid','ชำระเงินแล้ว'],['pending','รอชำระ/ตรวจสอบ'],['refunded','คืนเงิน'],['cancelled','ยกเลิก/ปฏิเสธ']].map(function(s){return '<option value="'+s[0]+'"'+(PO_STATUSF===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('');
+    var nOld=PO_ORDERS.filter(poIsOld).length;
+    var srcOpts=[['all','ออเดอร์ทั้งหมด'],['new','ออเดอร์ใหม่ ('+(PO_ORDERS.length-nOld)+')'],['old','ออเดอร์เก่า ('+nOld+')']].map(function(s){return '<option value="'+s[0]+'"'+(PO_SRCF===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('');
     var psOpts=[10,20,50].map(function(n){return '<option value="'+n+'"'+(PO_PS===n?' selected':'')+'>'+n+' / หน้า</option>';}).join('');
     var head='<div class="pomemhead"><div><h1>Pre-Order<span class=mdiv></span>Order</h1><p class="sub">รายการคำสั่งซื้อ ตรวจสอบสถานะการชำระเงิน และจัดการแต่ละรายการ</p></div>'
       +'<div class="pomemhead-act"><button onclick="poRefresh()" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">รีเฟรช ⟳</button><button onclick="go(\'qr\')" style="background:none;border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--brand);font-family:inherit;font-weight:600;font-size:.84rem;cursor:pointer">QR / ลิงก์ส่งลูกค้า →</button><button onclick="poExportExcel()" style="background:var(--brand);border:1px solid var(--brand);border-radius:9px;padding:8px 16px;color:#fff;font-family:inherit;font-weight:700;font-size:.84rem;cursor:pointer">ส่งออก Excel</button></div></div>';
     var listCard='<div class="pomcard"><div class="pomfilters">'
       +'<div class="pomsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="poSearch" value="'+poEsc(PO_Q)+'" oninput="PO_Q=this.value;PO_PAGE=1;poRenderOrderRows()" placeholder="ค้นหาเลขคำสั่งซื้อ ชื่อลูกค้า เบอร์ หรือสินค้า"></div>'
       +'<select class="pomsel" onchange="PO_STATUSF=this.value;PO_PAGE=1;poRenderOrderRows()">'+statusOpts+'</select>'
+      +'<select class="pomsel" title="ออเดอร์ใหม่ = สั่งผ่านระบบนี้ (เลข PO-000xxx) / ออเดอร์เก่า = นำเข้าจากระบบเดิม" onchange="PO_SRCF=this.value;PO_PAGE=1;poRenderOrderRows()">'+srcOpts+'</select>'
       +'<button class="pomsel" onclick="poClearFilter()" style="color:var(--muted);font-weight:600;cursor:pointer">ล้างข้อมูล</button>'
       +'</div>'
       +'<div class="pomfilters">'

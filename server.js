@@ -548,7 +548,11 @@ function placeOrder(o, req) { return new Promise(function (done) {
   }
 
   const list = read();
-  const seq = (list.length ? Math.max.apply(null, list.map(x => x.seq || 0)) : 0) + 1;
+  // เลขออเดอร์ใหม่นับต่อจาก "ออเดอร์ใหม่ในระบบนี้" เท่านั้น — ออเดอร์เก่าที่นำเข้า (imported) ใช้เลขรูปแบบของตัวเอง ไม่กินลำดับเลข PO
+  const _own = list.filter(x => !x.imported);
+  let seq = (_own.length ? Math.max.apply(null, _own.map(x => x.seq || 0)) : 0) + 1;
+  const _ids = {}; list.forEach(function (x) { if (x && x.id) _ids[x.id] = 1; });
+  while (_ids['PO-' + String(1000000 + seq).slice(-6)]) seq++;   // กันเลขชนกับออเดอร์ที่มีอยู่แล้ว
   const id = 'PO-' + String(1000000 + seq).slice(-6);
 
   let slipUrl = null;
