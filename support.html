@@ -957,8 +957,11 @@
   function memPkgOf(r){ return (r.installment||r.promoPlan==='special')?'special':(r.promoPlan==='full'?'grand':'base'); }
   function memSeg(r){var k=memPkgOf(r);if(k==='grand')return {key:'grand',label:'Grand Slam',cls:'mseg-grand'};if(k==='special')return {key:'special',label:'Special',cls:'mseg-special'};return {key:'base',label:'ค่าสมัคร',cls:'mseg-base'};}
   function memAmount(r){var ins=r.installment;return ins?(ins.total||44940):(r.fee||0);}
-  function memDate(iso){iso=String(iso||'');if(iso.length<10)return '-';var p=iso.slice(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
-  function memDateTime(iso){iso=String(iso||'');if(iso.length<10)return '-';return memDate(iso)+' '+iso.slice(11,16);}
+  // เวลาในระบบเก็บเป็น UTC (ลงท้าย Z) → แสดงเป็นเวลาไทย (UTC+7) เสมอ ไม่ขึ้นกับเครื่องที่เปิด
+  function llTH(iso){iso=String(iso||'');if(iso.length<10)return null;if(iso.length===10)return {d:iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4),t:''};var ms=Date.parse(iso);if(isNaN(ms))return null;var x=new Date(ms+7*3600000),z=function(n){return ('0'+n).slice(-2);};return {d:z(x.getUTCDate())+'/'+z(x.getUTCMonth()+1)+'/'+x.getUTCFullYear(),t:z(x.getUTCHours())+':'+z(x.getUTCMinutes()),ymd:x.getUTCFullYear()+'-'+z(x.getUTCMonth()+1)+'-'+z(x.getUTCDate())};}
+  function llTHdt(iso){var o=llTH(iso);return o?(o.ymd?(o.ymd+' '+o.t):o.d):'';}
+  function memDate(iso){var o=llTH(iso);return o?o.d:'-';}
+  function memDateTime(iso){var o=llTH(iso);return o?(o.d+(o.t?' '+o.t:'')):'-';}
   function memIsNew(r){var t=new Date(r.reviewedAt||r.createdAt||0).getTime();return !!t&&(Date.now()-t)<30*86400000;}
   function memInitials(nm){nm=String(nm||'').trim();if(!nm)return '?';var p=nm.split(/\s+/);if(p.length>=2&&/^[A-Za-z]/.test(nm))return (p[0].charAt(0)+p[1].charAt(0)).toUpperCase();return nm.charAt(0);}
   var MEM_AV=['#6366F1','#0EA5E9','#10B981','#F59E0B','#EC4899','#8B5CF6','#14B8A6','#F97316'];
@@ -1252,7 +1255,7 @@
       var amt=r.installment?(r.installment.total||44940):((r.promoPlan&&r.promoAmount)?r.promoAmount:(r.fee||0));
       var promo=r.promoPlan==='special'?'Special (ผ่อน)':(r.promo?('Grand Slam'+(r.promoTier?(' '+r.promoTier):'')):'ค่าสมัครปกติ');
       var cr=llEffCR(r); // ใช้กฎเดียวกับ Dashboard: ผู้แนะนำที่เป็นชื่อโค้ช → นับเป็นโค้ช
-      return [r.po||'',r.name||'',r.email||'',r.phone||'',cr.coach||'',cr.referrer||'',llStLabel(r.status),llPayLabel2(r),promo,amt,r.address||'',r.postcode||'',(r.createdAt||'').slice(0,16).replace('T',' '),(r.reviewedAt||'').slice(0,16).replace('T',' ')];
+      return [r.po||'',r.name||'',r.email||'',r.phone||'',cr.coach||'',cr.referrer||'',llStLabel(r.status),llPayLabel2(r),promo,amt,r.address||'',r.postcode||'',llTHdt(r.createdAt),llTHdt(r.reviewedAt)];
     });
     llDownloadCSV('leanlab-orders-'+new Date().toISOString().slice(0,10)+'.csv',header,rows);
   };
@@ -1340,7 +1343,7 @@
             var wb=new ExcelJS.Workbook();
             var IMG_W=110, ROW_H=112, imgIds={};
             function imgId(key){ if(imgIds[key]!=null)return imgIds[key]; var t=thumbs[key]; if(!t)return null; imgIds[key]=wb.addImage({base64:t.b64,extension:'jpeg'}); return imgIds[key]; }
-            function dt(x){return x?String(x).slice(0,16).replace('T',' '):'';}
+            function dt(x){return llTHdt(x);}
             var COLS=[
               {header:'ลำดับ',key:'no',width:6},{header:'เลขคำสั่งซื้อ',key:'po',width:14},{header:'ชื่อ-นามสกุล',key:'name',width:24},
               {header:'สถานะ',key:'st',width:14},{header:'กลุ่มสมาชิก',key:'grp',width:14},{header:'แผนที่เลือก',key:'plan',width:24},{header:'รายละเอียดแผน',key:'pdet',width:40},
@@ -1452,7 +1455,7 @@
           var amt=r.installment?(r.installment.total||44940):((r.promoPlan&&r.promoAmount)?r.promoAmount:(r.fee||0));
           var promo=r.promoPlan==='special'?'Special (ผ่อน)':(r.promo?('Grand Slam'+(r.promoTier?(' '+r.promoTier):'')):'ค่าสมัครปกติ');
           var cr=llEffCR(r); var stl=llStLabel(r.status);
-          var row=ws.addRow({po:r.po||'',name:r.name||'',email:r.email||'',phone:r.phone||'',coach:cr.coach||'',ref:cr.referrer||'',status:stl,pay:llPayLabel2(r),pkg:promo,amt:amt,addr:r.address||'',zip:r.postcode||'',created:(r.createdAt||'').slice(0,16).replace('T',' '),reviewed:(r.reviewedAt||'').slice(0,16).replace('T',' ')});
+          var row=ws.addRow({po:r.po||'',name:r.name||'',email:r.email||'',phone:r.phone||'',coach:cr.coach||'',ref:cr.referrer||'',status:stl,pay:llPayLabel2(r),pkg:promo,amt:amt,addr:r.address||'',zip:r.postcode||'',created:llTHdt(r.createdAt),reviewed:llTHdt(r.reviewedAt)});
           row.height=19;
           if(i%2===1){ row.eachCell(function(c){ if(!c.fill||!c.fill.fgColor) c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF6FAFD'}}; }); }
           row.getCell('amt').numFmt='#,##0'; row.getCell('amt').alignment={horizontal:'right'};
