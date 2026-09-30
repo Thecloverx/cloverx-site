@@ -610,7 +610,7 @@
   // ---------- DASHBOARD (Lean Lab event overview) ----------
   function dashView(){
     return '<div class="memhead"><div><h1>Dashboard <span class="pill lean" style="vertical-align:middle;margin-left:4px">Lean Lab</span></h1><p class="sub">ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
-      + '<div class="memhead-act"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><button class="btn pri" id="dashLark">📤 ส่งรายงานเข้า Lark</button><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
+      + '<div class="memhead-act"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><button class="btn ghost llfullbtn" onclick="llExportFull(this)" title="กดครั้งเดียวได้ทุกคน ทุกสถานะ ทุกรายละเอียด พร้อมรูปที่แนบ ในไฟล์เดียว">⬇ ส่งออกทั้งหมด (ไฟล์เดียว)</button><button class="btn pri" id="dashLark">📤 ส่งรายงานเข้า Lark</button><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
       + '<div class="mcard" style="padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:.82rem;color:var(--muted);font-weight:700">ช่วงวันที่</span>'
       +   '<div class="ofchips" id="dfChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="week">สัปดาห์</button><button class="ofc" data-d="month">เดือน</button><button class="ofc" data-d="custom">กำหนดวัน</button></div>'
       +   '<div class="mdaterange" id="dfRange" style="display:none"><span class="mdr-ic">📅</span><input type="date" id="dfFrom"><span style="color:var(--muted)">–</span><input type="date" id="dfTo"></div>'
@@ -907,6 +907,7 @@
       + '<div class="memhead"><div><h1>Lean Lab · Management</h1><p class="sub">จัดการรายการซื้อและการชำระเงิน</p></div>'
       +   '<div class="memhead-act">'
       +     '<button class="btn ghost" id="llExportBtn" onclick="llExportOrdersXlsx()">⬇ ส่งออก Excel</button>'
+      +     '<button class="btn pri llfullbtn" onclick="llExportFull(this)" title="กดครั้งเดียวได้ทุกคน ทุกสถานะ ทุกรายละเอียด พร้อมรูปที่แนบ ในไฟล์เดียว">⬇ ส่งออกทั้งหมด (ไฟล์เดียว)</button>'
       +     '<button class="btn ghost" id="llRefresh">รีเฟรช ⟳</button>'
       +   '</div></div>'
       + '<div class="mgrid">'
@@ -970,7 +971,7 @@
     +   '<div class="memhead-act">'
     +     '<button class="btn ghost" onclick="memImportOpen()">⬆ นำเข้าข้อมูล</button>'
     +     '<button class="btn ghost" id="memExportBtn" onclick="llExportMembers(MEM_MODE)">⬇ ส่งออก Excel</button>'
-    +     '<button class="btn ghost" id="memExportFullBtn" onclick="llExportFull()" title="ผู้สมัครทุกคน ทุกสถานะ พร้อมแผนที่เลือก รูปแบบการเริ่ม ค่าร่างกาย และรูปที่แนบ">⬇ ส่งออกแบบละเอียด (มีรูป)</button>'
+    +     '<button class="btn pri llfullbtn" onclick="llExportFull(this)" title="กดครั้งเดียวได้ทุกคน ทุกสถานะ ทุกรายละเอียด พร้อมรูปที่แนบ ในไฟล์เดียว">⬇ ส่งออกทั้งหมด (ไฟล์เดียว)</button>'
     +     '<button class="btn pri" onclick="memAddOpen()">+ เพิ่มสมาชิก</button>'
     +   '</div></div>'
     + '<div class="mkpis" id="memKpis"></div>'
@@ -1303,12 +1304,12 @@
     });
   }
   function llAbs(u){return u?(/^https?:/.test(u)?u:(location.origin+u)):'';}
-  window.llExportFull=function(){
+  window.llExportFull=function(btnEl){
     if(LL_FULL_BUSY)return;
-    var btn=document.getElementById('memExportFullBtn'); var old=btn?btn.textContent:'';
-    function say(t){if(btn)btn.textContent=t;}
+    var OLD='⬇ ส่งออกทั้งหมด (ไฟล์เดียว)';
+    function say(t){[].forEach.call(document.querySelectorAll('.llfullbtn'),function(b){b.textContent=t;b.disabled=(t!==OLD);});}
     LL_FULL_BUSY=true; say('กำลังเตรียมข้อมูล…');
-    function end(){LL_FULL_BUSY=false; say(old||'⬇ ส่งออกแบบละเอียด (มีรูป)');}
+    function end(){LL_FULL_BUSY=false; say(OLD);}
     Promise.all([
       fetch('/api/leanlab/admin/registrations'+admQ(),{credentials:'same-origin',headers:admHdr()}).then(function(r){return r.json();}),
       fetch('/api/leanlab/promo/plans',{credentials:'same-origin'}).then(function(r){return r.json();}).catch(function(){return {};})
@@ -1327,7 +1328,7 @@
       function paidOf(r){ if(r.status!=='confirmed')return 0; if(r.installment)return (r.installment.perMonth||0)*(r.installment.paidCount||0); return r.promoAmount||r.fee||0; }
       function photosOf(r){var bl=r.baseline||{};return (bl.beforePhotoUrls&&bl.beforePhotoUrls.length)?bl.beforePhotoUrls.slice(0,3):(bl.beforePhotoUrl?[bl.beforePhotoUrl]:[]);}
       // โหลดรูปทั้งหมด (3 คนพร้อมกัน) เพื่อฝังเป็นรูปย่อ
-      var jobs=[]; R.forEach(function(r,ri){photosOf(r).forEach(function(u,pi){jobs.push({ri:ri,pi:pi,u:u});});});
+      var jobs=[]; R.forEach(function(r,ri){photosOf(r).forEach(function(u,pi){jobs.push({ri:ri,pi:pi,u:u});}); if(r.promoProofUrl)jobs.push({ri:ri,pi:'proof',u:r.promoProofUrl}); if(r.slipUrl)jobs.push({ri:ri,pi:'slip',u:r.slipUrl});});
       var thumbs={}, idx=0, doneN=0, failN=0;
       function worker(){ if(idx>=jobs.length)return Promise.resolve(); var jb=jobs[idx++]; return llThumb(jb.u,360).then(function(t){ if(t)thumbs[jb.ri+'_'+jb.pi]=t; else failN++; doneN++; say('กำลังโหลดรูป '+doneN+'/'+jobs.length+'…'); return worker(); }); }
       say(jobs.length?('กำลังโหลดรูป 0/'+jobs.length+'…'):'กำลังสร้างไฟล์…');
@@ -1336,59 +1337,73 @@
           try{
             say('กำลังสร้างไฟล์…');
             var wb=new ExcelJS.Workbook();
-            var ws=wb.addWorksheet('ข้อมูลผู้สมัครทั้งหมด',{views:[{state:'frozen',ySplit:1,xSplit:3}]});
-            var IMG_W=110, IMG_H=146, ROW_H=112;
-            ws.columns=[
+            var IMG_W=110, ROW_H=112, imgIds={};
+            function imgId(key){ if(imgIds[key]!=null)return imgIds[key]; var t=thumbs[key]; if(!t)return null; imgIds[key]=wb.addImage({base64:t.b64,extension:'jpeg'}); return imgIds[key]; }
+            function dt(x){return x?String(x).slice(0,16).replace('T',' '):'';}
+            var COLS=[
               {header:'ลำดับ',key:'no',width:6},{header:'เลขคำสั่งซื้อ',key:'po',width:14},{header:'ชื่อ-นามสกุล',key:'name',width:24},
-              {header:'สถานะ',key:'st',width:14},{header:'แผนที่เลือก',key:'plan',width:24},{header:'รายละเอียดแผน',key:'pdet',width:40},
+              {header:'สถานะ',key:'st',width:14},{header:'กลุ่มสมาชิก',key:'grp',width:14},{header:'แผนที่เลือก',key:'plan',width:24},{header:'รายละเอียดแผน',key:'pdet',width:40},
               {header:'ราคาแผน (บาท)',key:'price',width:13},{header:'ชำระแล้ว (บาท)',key:'paid',width:13},{header:'งวดที่ชำระ (ผ่อน)',key:'inst',width:14},{header:'วิธีชำระเงิน',key:'pay',width:13},
               {header:'รูปแบบการเริ่ม',key:'start',width:18},
               {header:'น้ำหนัก (กก.)',key:'w',width:11},{header:'ไขมัน (%)',key:'fat',width:10},{header:'ไขมันช่องท้อง',key:'vfat',width:12},{header:'กล้ามเนื้อ (กก.)',key:'mus',width:13},{header:'มวลน้ำ (%)',key:'water',width:11},{header:'BMI',key:'bmi',width:8},
-              {header:'รูป Before 1',key:'img1',width:17},{header:'รูป Before 2',key:'img2',width:17},{header:'รูป Before 3',key:'img3',width:17},{header:'ลิงก์รูป Before',key:'plinks',width:40},
-              {header:'หลักฐานสิทธิ์ Grand Slam',key:'proof',width:40},{header:'สลิปโอนเงิน',key:'slip',width:40},
+              {header:'รูป Before 1',key:'img1',width:17},{header:'รูป Before 2',key:'img2',width:17},{header:'รูป Before 3',key:'img3',width:17},
+              {header:'หลักฐานสิทธิ์ Grand Slam',key:'imgp',width:17},{header:'สลิปโอนเงิน',key:'imgs',width:17},
+              {header:'ลิงก์รูป Before',key:'plinks',width:40},{header:'ลิงก์หลักฐานสิทธิ์',key:'proof',width:40},{header:'ลิงก์สลิป',key:'slip',width:40},
               {header:'เพศ',key:'gender',width:7},{header:'วันเกิด',key:'dob',width:12},{header:'อายุ',key:'age',width:7},{header:'ส่วนสูง (ซม.)',key:'h',width:11},
               {header:'เบอร์โทร',key:'phone',width:13},{header:'อีเมล',key:'email',width:28},
               {header:'ทีมโค้ช',key:'coach',width:13},{header:'ผู้แนะนำ',key:'ref',width:18},
               {header:'ที่อยู่จัดส่ง',key:'addr',width:46},{header:'รหัสไปรษณีย์',key:'zip',width:11},
               {header:'วันที่สมัคร',key:'created',width:16},{header:'วันที่ชำระ/ส่งสลิป',key:'slipAt',width:16}
             ];
-            llXlsxHeader(ws); ws.getRow(1).height=30; ws.getRow(1).eachCell(function(c){c.alignment={vertical:'middle',horizontal:'center',wrapText:true};});
-            var colImg=ws.getColumn('img1').number; // index (1-based)
-            function dt(x){return x?String(x).slice(0,16).replace('T',' '):'';}
-            var cnt={now:0,later:0,none:0}, planCnt={}, stCnt={};
-            R.forEach(function(r,i){
-              var p=planOf(r), bl=r.baseline||{}, cr=llEffCR(r), ph=photosOf(r);
-              var dobTxt=''; if(r.dob){var dd=String(r.dob).split('-'); dobTxt=dd.length===3?(dd[2]+'/'+dd[1]+'/'+(Number(dd[0])+543)):String(r.dob);}
-              var bmi=''; if(bl.weightKg>0&&r.heightCm>0){bmi=Math.round(bl.weightKg/Math.pow(r.heightCm/100,2)*10)/10;}
-              var start=r.startChoice==='now'?'เริ่มเลย':(r.startChoice==='later'?('เริ่มวันที่ '+LL_LATER_LABEL):'ยังไม่เลือก');
-              cnt[r.startChoice==='now'?'now':(r.startChoice==='later'?'later':'none')]++;
-              planCnt[p.plan]=(planCnt[p.plan]||0)+1; var stl=llStLabel(r.status); stCnt[stl]=(stCnt[stl]||0)+1;
-              var row=ws.addRow({no:i+1,po:r.po||'',name:r.name||'',st:stl,plan:p.plan,pdet:p.detail,price:p.price,paid:paidOf(r),
-                inst:r.installment?((r.installment.paidCount||0)+'/'+(r.installment.months||6)):'',pay:llPayLabel2(r),start:start,
-                w:bl.weightKg!=null?bl.weightKg:'',fat:bl.fatPct!=null?bl.fatPct:'',vfat:bl.vFat!=null?bl.vFat:'',mus:bl.muscleKg!=null?bl.muscleKg:'',water:bl.waterPct!=null?bl.waterPct:'',bmi:bmi,
-                img1:'',img2:'',img3:'',plinks:ph.map(llAbs).join('\n'),proof:llAbs(r.promoProofUrl),slip:llAbs(r.slipUrl),
-                gender:r.gender||'',dob:dobTxt,age:r.age||'',h:r.heightCm||'',phone:r.phone||'',email:r.email||'',coach:cr.coach||'',ref:cr.referrer||'',
-                addr:r.address||'',zip:r.postcode||'',created:dt(r.createdAt),slipAt:dt(r.slipAt)});
-              if(i%2===1){row.eachCell({includeEmpty:true},function(c){c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF6FAFD'}};});} row.getCell('price').numFmt='#,##0'; row.getCell('paid').numFmt='#,##0'; row.getCell('paid').alignment={horizontal:'right'};
-              row.eachCell({includeEmpty:true},function(c){c.alignment=Object.assign({},c.alignment||{},{vertical:'middle',wrapText:true});});
-              var has=false;
-              ph.forEach(function(u,pi){ var t=thumbs[i+'_'+pi]; if(!t)return; has=true;
-                var id=wb.addImage({base64:t.b64,extension:'jpeg'}); var w=Math.round(t.w*Math.min(1,(ROW_H*1.3)/t.h)), h=Math.round(t.h*Math.min(1,(ROW_H*1.3)/t.h));
-                if(w>IMG_W){h=Math.round(h*IMG_W/w);w=IMG_W;}
-                ws.addImage(id,{tl:{col:colImg-1+pi+0.05,row:row.number-1+0.05},ext:{width:w,height:h},editAs:'oneCell'}); });
-              row.height=has?ROW_H:22;
-            });
-            ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columnCount}};
+            function grpOf(r){ if(r.status!=='confirmed')return 'ยังไม่ชำระ/อื่น ๆ'; return r.startChoice==='later'?'After Member':'Start Member'; }
+            var cnt={now:0,later:0,none:0}, planCnt={}, stCnt={}, grpCnt={};
+            R.forEach(function(r){ var p=planOf(r); cnt[r.startChoice==='now'?'now':(r.startChoice==='later'?'later':'none')]++; planCnt[p.plan]=(planCnt[p.plan]||0)+1; var stl=llStLabel(r.status); stCnt[stl]=(stCnt[stl]||0)+1; var g=grpOf(r); grpCnt[g]=(grpCnt[g]||0)+1; });
+            function addSheet(name,list){
+              var ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:1,xSplit:3}]});
+              ws.columns=COLS.map(function(c){return Object.assign({},c);});
+              llXlsxHeader(ws); ws.getRow(1).height=30; ws.getRow(1).eachCell(function(c){c.alignment={vertical:'middle',horizontal:'center',wrapText:true};});
+              var cImg=ws.getColumn('img1').number, cP=ws.getColumn('imgp').number, cS=ws.getColumn('imgs').number;
+              list.forEach(function(it,i){
+                var r=it.r, ri=it.ri, p=planOf(r), bl=r.baseline||{}, cr=llEffCR(r), ph=photosOf(r);
+                var dobTxt=''; if(r.dob){var dd=String(r.dob).split('-'); dobTxt=dd.length===3?(dd[2]+'/'+dd[1]+'/'+(Number(dd[0])+543)):String(r.dob);}
+                var bmi=''; if(bl.weightKg>0&&r.heightCm>0){bmi=Math.round(bl.weightKg/Math.pow(r.heightCm/100,2)*10)/10;}
+                var start=r.startChoice==='now'?'เริ่มเลย':(r.startChoice==='later'?('เริ่มวันที่ '+LL_LATER_LABEL):'ยังไม่เลือก');
+                var row=ws.addRow({no:i+1,po:r.po||'',name:r.name||'',st:llStLabel(r.status),grp:grpOf(r),plan:p.plan,pdet:p.detail,price:p.price,paid:paidOf(r),
+                  inst:r.installment?((r.installment.paidCount||0)+'/'+(r.installment.months||6)):'',pay:llPayLabel2(r),start:start,
+                  w:bl.weightKg!=null?bl.weightKg:'',fat:bl.fatPct!=null?bl.fatPct:'',vfat:bl.vFat!=null?bl.vFat:'',mus:bl.muscleKg!=null?bl.muscleKg:'',water:bl.waterPct!=null?bl.waterPct:'',bmi:bmi,
+                  plinks:ph.map(llAbs).join('\n'),proof:llAbs(r.promoProofUrl),slip:llAbs(r.slipUrl),
+                  gender:r.gender||'',dob:dobTxt,age:r.age||'',h:r.heightCm||'',phone:r.phone||'',email:r.email||'',coach:cr.coach||'',ref:cr.referrer||'',
+                  addr:r.address||'',zip:r.postcode||'',created:dt(r.createdAt),slipAt:dt(r.slipAt)});
+                if(i%2===1){row.eachCell({includeEmpty:true},function(c){c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF6FAFD'}};});}
+                row.getCell('price').numFmt='#,##0'; row.getCell('paid').numFmt='#,##0';
+                row.eachCell({includeEmpty:true},function(c){c.alignment=Object.assign({},c.alignment||{},{vertical:'middle',wrapText:true});});
+                var has=false;
+                function put(key,col){ var id=imgId(key), t=thumbs[key]; if(id==null)return; has=true;
+                  var h=Math.min(t.h,ROW_H*1.3), w=Math.round(t.w*h/t.h); if(w>IMG_W){h=Math.round(h*IMG_W/w);w=IMG_W;}
+                  ws.addImage(id,{tl:{col:col-1+0.05,row:row.number-1+0.05},ext:{width:w,height:Math.round(h)},editAs:'oneCell'}); }
+                ph.forEach(function(u,pi){put(ri+'_'+pi,cImg+pi);});
+                if(r.promoProofUrl)put(ri+'_proof',cP);
+                if(r.slipUrl)put(ri+'_slip',cS);
+                row.height=has?ROW_H:22;
+              });
+              ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columnCount}};
+            }
             // สรุป
             var sm=wb.addWorksheet('สรุป'); sm.columns=[{header:'หัวข้อ',key:'k',width:34},{header:'จำนวน (คน)',key:'v',width:14}]; llXlsxHeader(sm);
             sm.addRow({k:'ผู้สมัครทั้งหมด (ไม่รวมใบประวัติ)',v:R.length});
-            sm.addRow({}); sm.addRow({k:'รูปแบบการเริ่ม'}).font={bold:true};
+            sm.addRow({}); sm.addRow({k:'กลุ่มสมาชิก (ตามชีต)'}).font={bold:true}; ['Start Member','After Member','ยังไม่ชำระ/อื่น ๆ'].forEach(function(k){sm.addRow({k:k,v:grpCnt[k]||0});});
+            sm.addRow({}); sm.addRow({k:'รูปแบบการเริ่ม (ทุกสถานะ)'}).font={bold:true};
             sm.addRow({k:'เริ่มเลย',v:cnt.now}); sm.addRow({k:'เริ่มวันที่ '+LL_LATER_LABEL,v:cnt.later}); if(cnt.none)sm.addRow({k:'ยังไม่เลือก',v:cnt.none});
             sm.addRow({}); sm.addRow({k:'แผนที่เลือก'}).font={bold:true}; Object.keys(planCnt).forEach(function(k){sm.addRow({k:k,v:planCnt[k]});});
             sm.addRow({}); sm.addRow({k:'สถานะ'}).font={bold:true}; Object.keys(stCnt).forEach(function(k){sm.addRow({k:k,v:stCnt[k]});});
-            sm.addRow({}); sm.addRow({k:'รูป Before ที่ฝังในไฟล์',v:Object.keys(thumbs).length}); if(failN)sm.addRow({k:'รูปที่โหลดไม่สำเร็จ (ดูจากลิงก์แทน)',v:failN});
+            sm.addRow({}); sm.addRow({k:'รูปที่ฝังในไฟล์ (Before หลักฐาน สลิป)',v:Object.keys(thumbs).length}); if(failN)sm.addRow({k:'รูปที่โหลดไม่สำเร็จ (ดูจากลิงก์แทน)',v:failN});
             sm.addRow({}); sm.addRow({k:'ไฟล์นี้มีข้อมูลส่วนบุคคล ใช้ภายในทีมเท่านั้น'});
-            llXlsxSave(wb,'leanlab-full-export-'+new Date().toISOString().slice(0,10)+'.xlsx');
+            var ALLI=R.map(function(r,ri){return {r:r,ri:ri};});
+            addSheet('ทั้งหมด',ALLI);
+            addSheet('Start Member',ALLI.filter(function(x){return grpOf(x.r)==='Start Member';}));
+            addSheet('After Member',ALLI.filter(function(x){return grpOf(x.r)==='After Member';}));
+            addSheet('ยังไม่ชำระ หรืออื่น ๆ',ALLI.filter(function(x){return grpOf(x.r)==='ยังไม่ชำระ/อื่น ๆ';}));
+            llXlsxSave(wb,'leanlab-all-members-'+new Date().toISOString().slice(0,10)+'.xlsx');
             end(); if(failN)alert('ส่งออกแล้ว มีรูป '+failN+' รูปโหลดไม่สำเร็จ ดูจากคอลัมน์ลิงก์แทนได้');
           }catch(e){alert('สร้างไฟล์ Excel ไม่สำเร็จ: '+e.message);end();}
         });
