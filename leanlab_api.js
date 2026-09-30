@@ -560,6 +560,15 @@ module.exports = function (app, DATA_DIR, opts) {
   // รายละเอียดแพ็กเกจโปรโมชั่น (Full / Special)
   app.get('/api/leanlab/promo/plans', function (req, res) { res.json({ ok: true, plans: PROMO }); });
 
+  // Grand Slam: บังคับเลือกทีมโค้ช (4 โค้ช XGEN) + ผู้แนะนำ (ไม่ทราบใส่ "-") ก่อนเลือกแพ็กเกจ
+  var GS_COACHES = ['โค้ชซิง', 'โค้ชนุ่น', 'โค้ชจา', 'โค้ชต๊ะ'];
+  function gsCoachRef(r, b) {
+    var c = String(b.coach || '').trim(), ref = String(b.referrer || '').replace(/\s+/g, ' ').trim();
+    if (GS_COACHES.indexOf(c) < 0) return 'coach_required';
+    if (!ref) return 'referrer_required';
+    r.coach = c; r.coachOther = ''; r.referrer = ref.slice(0, 80);
+    return null;
+  }
   // เลือกแพ็กเกจ + ระดับราคา (Full Option)
   app.post('/api/leanlab/register/promo/plan', function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
@@ -569,6 +578,7 @@ module.exports = function (app, DATA_DIR, opts) {
     if (b.plan === 'special') return res.status(400).json({ ok: false, error: 'special_not_available' });
     if (b.plan !== 'full') return res.status(400).json({ ok: false, error: 'bad_plan' });
     var t = fullTier(b.tier); if (!t) return res.status(400).json({ ok: false, error: 'bad_tier' });
+    var crErr = gsCoachRef(r, b); if (crErr) return res.status(400).json({ ok: false, error: crErr });
     r.promo = true; r.promoPlan = 'full'; r.promoTier = t.key; r.promoAmount = t.amount; r.fee = t.amount; r.pay = 'bank';
     if (t.needProof) {
       r.promoVerify = 'awaiting_proof'; r.status = 'promo_select';   // รอลูกค้าแนบหลักฐาน
@@ -586,6 +596,7 @@ module.exports = function (app, DATA_DIR, opts) {
     if (!PROMO.special.available) return res.status(400).json({ ok: false, error: 'special_not_available' });
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    var crErr2 = gsCoachRef(r, req.body || {}); if (crErr2) return res.status(400).json({ ok: false, error: crErr2 });
     var ins = PROMO.special.installment;
     r.promo = true; r.promoPlan = 'special'; r.promoTier = 'special'; r.promoAmount = ins.total;
     r.fee = ins.perMonth; r.pay = 'installment'; r.promoVerify = 'not_required';

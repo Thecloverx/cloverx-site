@@ -1229,6 +1229,7 @@ document.addEventListener('click',function(e){
      +'<div class="eyebrow" style="margin:0 0 8px;color:var(--muted);background:transparent;border:0;padding:0;font-size:.72rem">◦ Full Option — จ่ายครั้งเดียว รับของครบทุกชิ้น</div>'
      +'<div class="tiers">'+tiersHtml+'</div>'
      +(sp.available?('<div class="eyebrow" style="margin:16px 0 8px;color:var(--blue);background:transparent;border:0;padding:0;font-size:.72rem">◦ Special Option — ผ่อนบัตร 6 งวด ('+spItems+')</div><div class="tiers">'+specialBtn+'</div>'+dayPick):'')
+     +gsCoachRefHTML()
      +'<div class="msg" id="pmMsg"></div>'
      +'<div class="rowbtns"><button class="btn ghost block" id="pmBack">ย้อนกลับ</button><button class="btn lime block" id="pmNext" disabled>ดำเนินการต่อ</button></div>'
      +'</div>';
@@ -1243,12 +1244,33 @@ document.addEventListener('click',function(e){
     };});
     $('#pmBack').onclick=vChoosePay;
     $('#pmNext').onclick=submitPromoPlan;
+    var gc=$('#gs_coach'); if(gc)gc.onchange=function(){$('#fGsCoach').classList.remove('bad');};
+    var gr=$('#gs_ref'); if(gr)gr.oninput=function(){$('#fGsRef').classList.remove('bad');};
+  }
+  // Grand Slam: ทีมโค้ช (บังคับเลือก 1 ใน 4) + ผู้แนะนำ (บังคับกรอก ไม่ทราบใส่ "-")
+  var GS_COACHES=['โค้ชซิง','โค้ชนุ่น','โค้ชจา','โค้ชต๊ะ'];
+  function gsCoachRefHTML(){
+    var c=(REG&&REG.coach)||W.coach||''; if(GS_COACHES.indexOf(c)<0)c='';
+    var rf=(REG&&REG.referrer)||W.referrer||'';
+    return '<h3 style="font-family:var(--ff-d);margin:20px 0 10px;font-size:1.05rem">ข้อมูลทีมโค้ชและผู้แนะนำ</h3>'
+      +'<div class="field" id="fGsCoach"><label>ทีมโค้ช <span class="req">*</span></label><select class="in" id="gs_coach"><option value="">เลือกทีมโค้ช</option>'
+      +GS_COACHES.map(function(cn){return '<option value="'+cn+'"'+(c===cn?' selected':'')+'>'+cn+'</option>';}).join('')
+      +'</select><div class="err">กรุณาเลือกทีมโค้ช</div></div>'
+      +'<div class="field" id="fGsRef"><label>ผู้แนะนำ <span class="req">*</span></label><input class="in" id="gs_ref" maxlength="80" placeholder="ชื่อผู้แนะนำ" value="'+esc(rf)+'"><div class="hint">หากไม่ทราบ ให้ใส่เครื่องหมาย “-”</div><div class="err">กรุณากรอกผู้แนะนำ หากไม่ทราบให้ใส่ “-”</div></div>';
+  }
+  function gsCoachRefRead(){
+    var c=($('#gs_coach')||{}).value||'', rf=((($('#gs_ref')||{}).value)||'').trim();
+    var ok=bad($('#fGsCoach'),GS_COACHES.indexOf(c)<0);
+    ok=bad($('#fGsRef'),rf.length<1)&&ok;
+    if(!ok){var f=document.querySelector('#fGsCoach.bad,#fGsRef.bad');if(f&&f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'center'});return null;}
+    W.coach=c;W.referrer=rf;return {coach:c,referrer:rf};
   }
   function submitPromoPlan(){
     if(!promoPlanSel)return;
+    var cr=gsCoachRefRead(); if(!cr)return;
     var b=$('#pmNext');b.disabled=true;var old=b.textContent;b.textContent='กำลังดำเนินการ…';clearMsg($('#pmMsg'));
     if(promoPlanSel==='special'){
-      fetch('/api/leanlab/register/promo/special',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({})})
+      fetch('/api/leanlab/register/promo/special',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(cr)})
         .then(function(r){return r.json();}).then(function(j){
           if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
           REG=j.registration;vPay();
@@ -1256,7 +1278,7 @@ document.addEventListener('click',function(e){
       return;
     }
     if(!promoTierSel){b.disabled=false;b.textContent=old;return;}
-    fetch('/api/leanlab/register/promo/plan',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({plan:'full',tier:promoTierSel})})
+    fetch('/api/leanlab/register/promo/plan',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({plan:'full',tier:promoTierSel,coach:cr.coach,referrer:cr.referrer})})
       .then(function(r){return r.json();}).then(function(j){
         if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
         REG=j.registration;
