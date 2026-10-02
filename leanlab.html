@@ -863,6 +863,11 @@ document.addEventListener('click',function(e){
     stopPoll();
     if(!ME.loggedIn){renderAuth();return;}
     var p=$('#sidePanel'), st=REG&&REG.status;
+    if(CFG&&CFG.salesClosed&&!(st==='confirmed'||st==='pending_review')){
+      p.innerHTML='<div class="card"><h2 class="tt">ปิดการจำหน่ายชั่วคราว</h2><p class="sub">ขออภัย ขณะนี้ Lean Lab ปิดการจำหน่ายชั่วคราว สอบถามเพิ่มเติมทาง LINE @cloverxth</p>'
+        +'<a class="btn lime block lg" href="https://line.me/R/ti/p/@cloverxth" target="_blank" rel="noopener" style="margin-top:14px">ติดต่อ LINE @cloverxth</a></div>';
+      return;
+    }
     if(!REG){
       p.innerHTML='<div class="card"><h2 class="tt">พร้อมเปลี่ยนแปลงหรือยัง? 🔥</h2><p class="sub">คุณเข้าสู่ระบบแล้ว เริ่มลงทะเบียนเข้าร่วม Lean Lab Season 1 ได้เลย</p><button class="btn lime block lg" id="ctaReg">ลงทะเบียนเข้าร่วม</button></div>';
       $('#ctaReg').onclick=function(){W={};vStep1();};
