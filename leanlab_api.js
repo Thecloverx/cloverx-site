@@ -28,6 +28,9 @@ module.exports = function (app, DATA_DIR, opts) {
   function writeSettings(s) { try { fs.writeFileSync(SETTINGS, JSON.stringify(s, null, 2)); } catch (e) {} }
   // โหมด "ปิดการตรวจสอบชั่วคราว" — ลูกค้าชำระเงินแล้วยืนยันอัตโนมัติ ไม่ต้องรอแอดมิน (เปิด/ปิดผ่าน admin settings)
   function noReviewOn() { return !!readSettings().noReview; }
+  // ปิด/เปิดการจำหน่าย Grand Slam (ทุกแบบ ทั้งจ่ายเต็มและผ่อน) — ค่าเริ่มต้น "ปิด" จนกว่าแอดมินจะกดเปิด (promoOpen=true)
+  function salesClosedOn() { return readSettings().salesOpen !== true; }   // ปิดการจำหน่าย Lean Lab ทั้งหมด (ค่าสมัคร + Grand Slam) ค่าเริ่มต้น "ปิด"
+  function promoClosedOn() { return salesClosedOn() || readSettings().promoOpen !== true; }
 
   // ---- แจ้งเตือนเข้า Lark (มาตรฐาน CloverX Bridge) ----
   // ค่าลับทั้งหมดอ่านจาก Railway Variables เท่านั้น (ห้ามเก็บในซอร์ส/ไฟล์ตั้งค่า)
@@ -404,6 +407,12 @@ module.exports = function (app, DATA_DIR, opts) {
   const lineConfigured = function () { return !!(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET); };
   const googleConfigured = function () { return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET); };
 
+  // ---- ปิดการจำหน่ายชั่วคราว: กันทุกขั้นตอนการซื้อ (สมัคร เลือกแผน แนบหลักฐาน ส่งสลิป ชำระบัตร/ผ่อน) ----
+  var SALE_PATHS = { '/api/leanlab/register': 1, '/api/leanlab/register/promo': 1, '/api/leanlab/register/promo/plan': 1, '/api/leanlab/register/promo/special': 1, '/api/leanlab/register/promo/proof': 1, '/api/leanlab/register/slip': 1, '/api/leanlab/register/pay/card': 1, '/api/leanlab/register/pay/installment': 1, '/api/leanlab/register/reorder': 1 };
+  app.use(function (req, res, next) {
+    if (req.method === 'POST' && SALE_PATHS[req.path] && salesClosedOn()) return res.status(409).json({ ok: false, error: 'sales_closed', message: 'ปิดการจำหน่ายชั่วคราว' });
+    next();
+  });
   // ============================ EMAIL AUTH ============================
   app.post('/api/leanlab/auth/register', limit('auth', 60, 300000), function (req, res) {
     const b = req.body || {};
@@ -479,7 +488,8 @@ module.exports = function (app, DATA_DIR, opts) {
       lineLogin: !!(lineConfigured() || process.env.LINE_DEV_FAKE === '1'),
       liffId: process.env.LEANLAB_LIFF_ID || process.env.LINE_LIFF_ID || '',
       googleLogin: false,
-      card: !!process.env.STRIPE_SECRET_KEY
+      card: !!process.env.STRIPE_SECRET_KEY,
+      salesClosed: salesClosedOn(), promoClosed: promoClosedOn()
     });
   });
 
@@ -530,7 +540,7 @@ module.exports = function (app, DATA_DIR, opts) {
   function promoStats() {
     var used = readR().filter(function (r) { return r.promo && r.status === 'confirmed'; }).length;
     var quota = EVENT.promoQuota;
-    return { quota: quota, used: used, left: Math.max(0, quota - used), full: used >= quota };
+    return { quota: quota, used: used, left: Math.max(0, quota - used), full: used >= quota, closed: promoClosedOn(), salesClosed: salesClosedOn(), closedMsg: 'ปิดการจำหน่ายชั่วคราว' };
   }
   app.get('/api/leanlab/promo', function (req, res) { res.json(Object.assign({ ok: true }, promoStats())); });
   app.post('/api/leanlab/register/promo', function (req, res) {
@@ -539,6 +549,7 @@ module.exports = function (app, DATA_DIR, opts) {
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
     if (claim) {
+      if (promoClosedOn() && !r.promoPlan) return res.status(409).json(Object.assign({ ok: false, error: 'promo_closed' }, promoStats()));
       var st = promoStats();
       if (st.full && !r.promo) return res.status(409).json(Object.assign({ ok: false, error: 'promo_full' }, st));
       r.promo = true;
@@ -558,7 +569,7 @@ module.exports = function (app, DATA_DIR, opts) {
   });
 
   // รายละเอียดแพ็กเกจโปรโมชั่น (Full / Special)
-  app.get('/api/leanlab/promo/plans', function (req, res) { res.json({ ok: true, plans: PROMO }); });
+  app.get('/api/leanlab/promo/plans', function (req, res) { res.json({ ok: true, plans: PROMO, closed: promoClosedOn() }); });
 
   // Grand Slam: บังคับเลือกทีมโค้ช (4 โค้ช XGEN) + ผู้แนะนำ (ไม่ทราบใส่ "-") ก่อนเลือกแพ็กเกจ
   var GS_COACHES = ['โค้ชซิง', 'โค้ชนุ่น', 'โค้ชจา', 'โค้ชต๊ะ'];
@@ -575,6 +586,7 @@ module.exports = function (app, DATA_DIR, opts) {
     var b = req.body || {};
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
+    if (promoClosedOn()) return res.status(409).json({ ok: false, error: 'promo_closed', message: 'ปิดการจำหน่ายชั่วคราว' });
     if (b.plan === 'special') return res.status(400).json({ ok: false, error: 'special_not_available' });
     if (b.plan !== 'full') return res.status(400).json({ ok: false, error: 'bad_plan' });
     var t = fullTier(b.tier); if (!t) return res.status(400).json({ ok: false, error: 'bad_tier' });
@@ -593,6 +605,7 @@ module.exports = function (app, DATA_DIR, opts) {
   // เลือกแพ็กเกจ Special Option (ผ่อน 6 งวด) — วันตัดบัตร = วันที่ชำระงวดแรก (กำหนดตอน checkout ไม่ต้องเลือกเอง)
   app.post('/api/leanlab/register/promo/special', function (req, res) {
     var m = currentMember(req); if (!m) return res.status(401).json({ ok: false, error: 'not_logged_in' });
+    if (promoClosedOn()) return res.status(409).json({ ok: false, error: 'promo_closed', message: 'ปิดการจำหน่ายชั่วคราว' });
     if (!PROMO.special.available) return res.status(400).json({ ok: false, error: 'special_not_available' });
     var l = readR(); var r = l.find(function (x) { return x.memberId === m.id && !x.archived; });
     if (!r) return res.status(404).json({ ok: false, error: 'no_registration' });
@@ -1106,6 +1119,8 @@ module.exports = function (app, DATA_DIR, opts) {
     if (!adminGuard(req, res)) return;
     var b = req.body || {}; var s = readSettings();
     if (typeof b.noReview === 'boolean') s.noReview = b.noReview;
+    if (typeof b.salesOpen === 'boolean') { s.salesOpen = b.salesOpen; console.log('[lean-lab] Lean Lab ' + (b.salesOpen ? 'เปิดขาย' : 'ปิดการจำหน่าย')); }
+    if (typeof b.promoOpen === 'boolean') { s.promoOpen = b.promoOpen; console.log('[lean-lab] Grand Slam ' + (b.promoOpen ? 'เปิดขาย' : 'ปิดการจำหน่าย')); }
     s.updatedAt = new Date().toISOString();
     writeSettings(s);
     console.log('[lean-lab] settings updated: noReview=' + (!!s.noReview));

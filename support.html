@@ -611,6 +611,7 @@
   function dashView(){
     return '<div class="memhead"><div><h1>Dashboard <span class="pill lean" style="vertical-align:middle;margin-left:4px">Lean Lab</span></h1><p class="sub">ภาพรวมผู้สมัคร การชำระเงิน และสัดส่วน · Season 1 · เป้าหมาย 300 คน</p></div>'
       + '<div class="memhead-act"><button class="btn ghost" id="dashRefresh">รีเฟรช ⟳</button><button class="btn ghost llfullbtn" onclick="llExportFull(this)" title="กดครั้งเดียวได้ทุกคน ทุกสถานะ ทุกรายละเอียด พร้อมรูปที่แนบ ในไฟล์เดียว">⬇ ส่งออกทั้งหมด (ไฟล์เดียว)</button><button class="btn pri" id="dashLark">📤 ส่งรายงานเข้า Lark</button><a class="btn ghost" href="/leanlab" target="_blank" rel="noopener">เปิดหน้าลูกค้า ↗</a></div></div>'
+      + '<div class="mcard" id="gsSaleBar" style="padding:12px 16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px"><span style="font-size:.84rem;color:var(--muted)">กำลังโหลดสถานะการจำหน่าย…</span></div>'
       + '<div class="mcard" style="padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:.82rem;color:var(--muted);font-weight:700">ช่วงวันที่</span>'
       +   '<div class="ofchips" id="dfChips"><button class="ofc on" data-d="all">ทั้งหมด</button><button class="ofc" data-d="today">วันนี้</button><button class="ofc" data-d="week">สัปดาห์</button><button class="ofc" data-d="month">เดือน</button><button class="ofc" data-d="custom">กำหนดวัน</button></div>'
       +   '<div class="mdaterange" id="dfRange" style="display:none"><span class="mdr-ic">📅</span><input type="date" id="dfFrom"><span style="color:var(--muted)">–</span><input type="date" id="dfTo"></div>'
@@ -641,7 +642,29 @@
       + '<div style="flex:1;min-width:60px;height:20px;background:var(--soft);border-radius:6px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+color+';min-width:3px"></div></div>'
       + '<div class="num" style="width:78px;text-align:right;font-weight:800;font-size:.92rem">'+value+(suffix||'')+'</div></div>';
   }
+  // สวิตช์เปิด/ปิดการจำหน่าย: ทั้งโครงการ (ค่าสมัคร + Grand Slam) และ Grand Slam แยก
+  function gsSaleLoad(){
+    var bar=document.getElementById('gsSaleBar'); if(!bar)return;
+    fetch('/api/leanlab/admin/settings'+admQ(),{credentials:'same-origin',headers:admHdr()}).then(function(r){return r.json();}).then(function(j){
+      if(!j||!j.ok){bar.innerHTML='<span style="color:var(--muted);font-size:.84rem">โหลดสถานะการจำหน่ายไม่สำเร็จ</span>';return;}
+      var st=j.settings||{}, sales=st.salesOpen===true, promo=st.promoOpen===true;
+      function row(key,label,open,note,dis){
+        return '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%"><span style="font-size:.86rem;font-weight:800;min-width:150px">'+label+'</span>'
+          +(open?'<span style="color:#15803d;font-weight:800;font-size:.84rem">● เปิดขายอยู่</span>':'<span style="color:#dc2626;font-weight:800;font-size:.84rem">● ปิดการจำหน่ายชั่วคราว</span>')
+          +'<span style="font-size:.78rem;color:var(--muted)">'+note+'</span>'
+          +'<button class="btn '+(open?'ghost':'pri')+'" data-k="'+key+'" data-open="'+(open?1:0)+'" style="margin-left:auto;padding:7px 14px;font-size:.82rem"'+(dis?' disabled':'')+'>'+(open?'ปิดการจำหน่าย':'เปิดขาย')+'</button></div>';
+      }
+      bar.innerHTML=row('salesOpen','การจำหน่าย Lean Lab',sales,sales?'ลูกค้าสมัครและชำระได้ตามปกติ':'ลูกค้าเห็น "ปิดการจำหน่ายชั่วคราว" สมัครและชำระไม่ได้ทุกแบบ',false)
+        +row('promoOpen','Grand Slam',sales&&promo,!sales?'ปิดตามการจำหน่ายทั้งโครงการ':(promo?'ลูกค้าเลือก Grand Slam ได้ทุกแบบ':'ลูกค้าเลือกได้เฉพาะค่าสมัครปกติ'),!sales);
+      [].forEach.call(bar.querySelectorAll('button[data-k]'),function(bt){bt.onclick=function(){
+        var k=bt.getAttribute('data-k'), open=bt.getAttribute('data-open')==='1', lbl=(k==='salesOpen'?'การจำหน่าย Lean Lab ทั้งหมด (ค่าสมัคร + Grand Slam)':'Grand Slam ทุกแบบ');
+        if(!confirm((open?'ปิด':'เปิด')+lbl+'?'))return; bt.disabled=true; var body={}; body[k]=!open;
+        fetch('/api/leanlab/admin/settings'+admQ(),{method:'POST',credentials:'same-origin',headers:admHdr({'Content-Type':'application/json'}),body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(){gsSaleLoad();}).catch(function(){bt.disabled=false;alert('บันทึกไม่สำเร็จ');});
+      };});
+    }).catch(function(){bar.innerHTML='<span style="color:var(--muted);font-size:.84rem">โหลดสถานะการจำหน่ายไม่สำเร็จ</span>';});
+  }
   function dashLoad(){
+    gsSaleLoad();
     var rb=document.getElementById('dashRefresh'); if(rb)rb.onclick=dashLoad;
     var dc=document.getElementById('dfChips');
     if(dc){[].forEach.call(dc.querySelectorAll('.ofc'),function(b){b.onclick=function(){[].forEach.call(dc.querySelectorAll('.ofc'),function(x){x.classList.remove('on');});b.classList.add('on');DASH_FILT.date=b.getAttribute('data-d');var rg=document.getElementById('dfRange');if(rg)rg.style.display=(DASH_FILT.date==='custom')?'flex':'none';dashLoad();};});}

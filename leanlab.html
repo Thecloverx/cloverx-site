@@ -587,6 +587,18 @@ document.addEventListener('click',function(e){
   // ---------- LANDING (image mockup + real register form) ----------
   function showLanding(){document.body.classList.add('on-landing');}
   function showApp(){document.body.classList.remove('on-landing');try{window.scrollTo(0,0);}catch(e){}}
+  // ปิดการจำหน่ายชั่วคราว: ลูกค้าที่ยังไม่ได้ชำระ (ยกเว้นยืนยันแล้ว/รอตรวจสลิป) จะเห็นหน้าปิดการจำหน่ายแทนขั้นตอนสมัครและชำระเงิน
+  function salesClosedView(){
+    if(!(CFG&&CFG.salesClosed))return false;
+    if(REG&&(REG.status==='confirmed'||REG.status==='pending_review'))return false;
+    showApp();
+    app.innerHTML='<div class="card" style="text-align:center">'
+      +'<span class="eyebrow">Lean Lab</span>'
+      +'<h2 class="tt" style="margin-top:14px">ปิดการจำหน่ายชั่วคราว</h2>'
+      +'<p class="sub" style="margin:8px auto 18px;max-width:420px">ขออภัย ขณะนี้ Lean Lab ปิดการจำหน่ายชั่วคราว สอบถามเพิ่มเติมทาง LINE @cloverxth</p>'
+      +'<div class="rowbtns"><a class="btn lime block" href="https://line.me/R/ti/p/@cloverxth" target="_blank" rel="noopener">ติดต่อ LINE @cloverxth</a></div></div>';
+    return true;
+  }
   function scrollToJoin(login){
     if(login&&!ME.loggedIn){authMode='login';fillSide();}
     var el=document.getElementById('joinSec'); if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
@@ -595,6 +607,7 @@ document.addEventListener('click',function(e){
   // ---------- welcome popup (carousel: slide 1 → 2s → slide 2 → ปิดได้) ----------
   var WELCOME_SHOWN=false;
   function welcomePopup(){
+    if(CFG&&CFG.salesClosed)return;   // ปิดการจำหน่าย: ไม่เด้งป๊อปอัปโปรโมชั่น
     if(WELCOME_SHOWN)return;
     try{if(sessionStorage.getItem('ll_welcome'))return;}catch(e){}
     if(REG&&REG.status==='confirmed')return;   // ข้ามเฉพาะคนที่ยืนยันจ่ายเงินแล้ว
@@ -796,6 +809,7 @@ document.addEventListener('click',function(e){
     }
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(st){
       var el=$('#promoBadge'); if(!el||st.quota==null)return;
+      if(st.salesClosed||st.closed){ el.innerHTML='<div class="promotag full" style="margin:0 0 14px;text-align:center">'+(st.salesClosed?'Lean Lab ปิดการจำหน่ายชั่วคราว':'🎁 Grand Slam ปิดการจำหน่ายชั่วคราว')+'</div>'; return; }
       el.innerHTML='<div class="promotag'+(st.full?' full':'')+'" style="margin:0 0 14px;text-align:center">'+(st.full?'🎁 สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>';
     }).catch(function(){});
   }
@@ -894,6 +908,13 @@ document.addEventListener('click',function(e){
   function renderAuth(){
     var c=$('#sidePanel');
     if(authMode==='login'){ renderLogin(); return; }
+    if(CFG&&CFG.salesClosed){
+      c.innerHTML='<h2 class="tt">ปิดการจำหน่ายชั่วคราว</h2><p class="sub">ขออภัย ขณะนี้ Lean Lab ปิดการจำหน่ายชั่วคราว สอบถามเพิ่มเติมทาง LINE @cloverxth</p>'
+        +'<a class="btn lime block lg" href="https://line.me/R/ti/p/@cloverxth" target="_blank" rel="noopener" style="margin-top:14px">ติดต่อ LINE @cloverxth</a>'
+        +'<p class="hint" style="text-align:center;margin-top:14px">เป็นสมาชิกอยู่แล้ว? <span class="lnk" id="toLogin">เข้าสู่ระบบ</span></p>';
+      var tl0=$('#toLogin'); if(tl0)tl0.onclick=function(){authMode='login';renderAuth();};
+      return;
+    }
     authMode='signup';
     c.innerHTML=''
     +'<h2 class="tt">สมัครเข้าร่วมโครงการ</h2>'
@@ -1029,6 +1050,7 @@ document.addEventListener('click',function(e){
   }
 
   function vStep1(){
+    if(salesClosedView())return;
     showApp();
     app.innerHTML='<div class="card">'+stepper(1)
     +'<h2 class="tt">ข้อมูลผู้สมัคร</h2><p class="sub">กรอกข้อมูลพื้นฐานเพื่อสมัครเข้าร่วม Lean Lab</p>'
@@ -1055,6 +1077,7 @@ document.addEventListener('click',function(e){
   }
 
   function vStep2(){
+    if(salesClosedView())return;
     showApp();
     app.innerHTML='<div class="card">'+stepper(2)
     +'<h2 class="tt">เลือกรูปแบบการเริ่ม</h2><p class="sub">คุณต้องการเริ่มลดเมื่อไหร่?</p>'
@@ -1070,6 +1093,7 @@ document.addEventListener('click',function(e){
   }
 
   function vStep3(){
+    if(salesClosedView())return;
     app.innerHTML='<div class="card">'+stepper(3)
     +'<h2 class="tt">ค่าตั้งต้น (Before)</h2><p class="sub">กรอกค่าจากเครื่องวัด และแนบรูปถ่าย Before ความละเอียดสูง</p>'
     +'<div class="grid2">'
@@ -1111,6 +1135,7 @@ document.addEventListener('click',function(e){
   }
 
   function vConfirm(){
+    if(salesClosedView())return;
     var rows='<div class="r"><span>ชื่อ–นามสกุล</span><b>'+esc(W.name)+'</b></div>'
       +'<div class="r"><span>อายุ</span><b>'+esc(W.age)+' ปี</b></div>'
       +'<div class="r"><span>เพศ</span><b>'+esc(W.gender)+'</b></div>'
@@ -1160,14 +1185,15 @@ document.addEventListener('click',function(e){
 
   // ---------- CHOOSE: pay now OR special promotion (จำกัด 100 สิทธิ์) ----------
   function vChoosePay(){
+    if(salesClosedView())return;
     showApp();
     fetch('/api/leanlab/promo',{credentials:'same-origin'}).then(function(r){return r.json();})
       .then(function(st){renderChoose(st||{});}).catch(function(){renderChoose({});});
   }
   function renderChoose(st){
     var fee=thb((REG&&REG.fee)||EVENT.fee);
-    var full=!!st.full;
-    var statusHtml = (st.quota!=null)
+    var closed=!!st.closed, full=!!st.full||closed;
+    var statusHtml = closed ? '<div class="promotag full">ปิดการจำหน่ายชั่วคราว</div>' : (st.quota!=null)
       ? '<div class="promotag'+(full?' full':'')+'">'+(full?'สิทธิ์เต็มแล้ว':('🎁 จำกัดสิทธิ์เพียง '+st.quota+' สิทธิ์เท่านั้น'))+'</div>'
       : '<div class="promotag">🎁 สิทธิ์พิเศษจำนวนจำกัด</div>';
     app.innerHTML='<div class="card">'
@@ -1190,7 +1216,7 @@ document.addEventListener('click',function(e){
     fetch('/api/leanlab/register/promo',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({claim:true})})
       .then(function(r){return r.json();})
       .then(function(j){
-        if(!j||!j.ok){ if(j&&j.error==='promo_full'){msg($('#chMsg'),'err','ขออภัย สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว');setTimeout(vChoosePay,1200);} else {b.classList.remove('dis');msg($('#chMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');} return; }
+        if(!j||!j.ok){ if(j&&j.error==='promo_closed'){msg($('#chMsg'),'err','Grand Slam ปิดการจำหน่ายชั่วคราว');setTimeout(vChoosePay,1500);return;} if(j&&j.error==='promo_full'){msg($('#chMsg'),'err','ขออภัย สิทธิ์โปรโมชั่นพิเศษเต็มแล้ว');setTimeout(vChoosePay,1200);} else {b.classList.remove('dis');msg($('#chMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');} return; }
         REG=j.registration; vPromo(j);
       })
       .catch(function(){b.classList.remove('dis');msg($('#chMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
@@ -1199,9 +1225,18 @@ document.addEventListener('click',function(e){
   // ---------- SPECIAL PROMOTION — Grand Slam Offer (Full Option) ----------
   var promoTierSel=null;
   function vPromo(){
+    if(salesClosedView())return;
     showApp();
-    fetch('/api/leanlab/promo/plans',{credentials:'same-origin'}).then(function(r){return r.json();})
-      .then(function(j){renderPromo((j&&j.plans)||{});}).catch(function(){renderPromo({});});
+    fetch('/api/leanlab/promo/plans',{credentials:'same-origin',cache:'no-store'}).then(function(r){return r.json();})
+      .then(function(j){ if(j&&j.closed)return renderPromoClosed(); renderPromo((j&&j.plans)||{});}).catch(function(){renderPromo({});});
+  }
+  function renderPromoClosed(){
+    app.innerHTML='<div class="card" style="text-align:center">'
+     +'<span class="eyebrow" style="color:var(--orange);background:rgba(255,196,107,.1);border-color:rgba(255,196,107,.3)">Grand Slam Offer</span>'
+     +'<h2 class="tt" style="margin-top:14px">ปิดการจำหน่ายชั่วคราว</h2>'
+     +'<p class="sub" style="margin:8px auto 18px;max-width:420px">ขออภัย ขณะนี้ Grand Slam ปิดการจำหน่ายชั่วคราว ท่านยังสมัครเข้าร่วม Lean Lab แบบชำระค่าสมัครปกติได้ สอบถามเพิ่มเติมทาง LINE @cloverxth</p>'
+     +'<div class="rowbtns"><button class="btn lime block" id="pcBack">กลับไปเลือกวิธีชำระเงิน</button></div></div>';
+    $('#pcBack').onclick=vChoosePay;
   }
   var promoPlanSel=null; // 'full' | 'special'
   function renderPromo(plans){
@@ -1272,7 +1307,7 @@ document.addEventListener('click',function(e){
     if(promoPlanSel==='special'){
       fetch('/api/leanlab/register/promo/special',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(cr)})
         .then(function(r){return r.json();}).then(function(j){
-          if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
+          if(!j||!j.ok){b.disabled=false;b.textContent=old;if(j&&j.error==='promo_closed')return renderPromoClosed();return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
           REG=j.registration;vPay();
         }).catch(function(){b.disabled=false;b.textContent=old;msg($('#pmMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
       return;
@@ -1280,12 +1315,13 @@ document.addEventListener('click',function(e){
     if(!promoTierSel){b.disabled=false;b.textContent=old;return;}
     fetch('/api/leanlab/register/promo/plan',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({plan:'full',tier:promoTierSel,coach:cr.coach,referrer:cr.referrer})})
       .then(function(r){return r.json();}).then(function(j){
-        if(!j||!j.ok){b.disabled=false;b.textContent=old;return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
+        if(!j||!j.ok){b.disabled=false;b.textContent=old;if(j&&j.error==='promo_closed')return renderPromoClosed();return msg($('#pmMsg'),'err','ทำรายการไม่สำเร็จ ลองใหม่');}
         REG=j.registration;
         if(j.needProof) vPromoProof(); else vPay();
       }).catch(function(){b.disabled=false;b.textContent=old;msg($('#pmMsg'),'err','เชื่อมต่อไม่สำเร็จ');});
   }
   function vPromoProof(){
+    if(salesClosedView())return;
     showApp();
     var amt=thb((REG&&REG.promoAmount)||(REG&&REG.fee));
     app.innerHTML='<div class="card">'
@@ -1346,6 +1382,7 @@ document.addEventListener('click',function(e){
   document.addEventListener('click',function(ev){var t=ev.target;var b=t&&t.closest?t.closest('#p_geoBtn'):null;if(b){ev.preventDefault();LLopenGeo();}},true);
   // ---------- PAYMENT ----------
   function vPay(){
+    if(salesClosedView())return;
     showApp();
     // Special Option — ผ่อนชำระผ่านบัตร (Stripe subscription) เท่านั้น
     if(REG&&REG.promoPlan==='special'&&REG.installment){ return vPayInstallment(); }
@@ -1407,6 +1444,7 @@ document.addEventListener('click',function(e){
 
   // ---------- PAYMENT · Special Option (ผ่อน 6 งวด) ----------
   function vPayInstallment(){
+    if(salesClosedView())return;
     if(REG&&REG.status&&REG.status!=='awaiting_payment'){ return route(); }
     var ins=REG.installment||{};var per=ins.perMonth||7490;var months=ins.months||6;var total=ins.total||44940;var day=ins.day;
     app.innerHTML='<div class="card">'
