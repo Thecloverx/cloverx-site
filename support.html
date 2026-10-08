@@ -1345,7 +1345,7 @@
       if(!j.ok){alert('โหลดข้อมูลไม่สำเร็จ');end();return;}
       var tiers={}; ((plans.full&&plans.full.tiers)||[]).forEach(function(t){tiers[t.key]=t;});
       var ORDER={confirmed:0,pending_review:1,promo_review:2,awaiting_payment:3,promo_select:4,promo_rejected:5,rejected:6,cancelled:7,refunded:8};
-      var R=(j.registrations||[]).filter(function(r){return only?!!only[r.id]:!r.archived;}).sort(function(a,b){var d=(ORDER[a.status]!=null?ORDER[a.status]:9)-(ORDER[b.status]!=null?ORDER[b.status]:9); return d||String(a.createdAt||'').localeCompare(String(b.createdAt||''));});
+      var R=(j.registrations||[]).filter(function(r){return only?!!only[r.id]:(!r.archived||r.status==='confirmed');})  /* ใบที่ยืนยันแล้วแต่ถูกเก็บเป็นประวัติ (ลูกค้ากดสั่งซื้อรายการใหม่) = ยังเป็นสมาชิกที่จ่ายแล้ว ต้องนับรวม; ใบประวัติจากการยกเลิก/ย้ายเลข (cancelled) ไม่นับ */.sort(function(a,b){var d=(ORDER[a.status]!=null?ORDER[a.status]:9)-(ORDER[b.status]!=null?ORDER[b.status]:9); return d||String(a.createdAt||'').localeCompare(String(b.createdAt||''));});
       if(!R.length){alert('ไม่มีข้อมูลให้ส่งออก');end();return;}
       function planOf(r){
         if(r.installment||r.promoPlan==='special'){var ins=r.installment||{};return {plan:'Special Option (ผ่อน 6 งวด)',detail:'฿'+Number(ins.perMonth||7490).toLocaleString('en-US')+' x '+(ins.months||6)+' งวด',price:ins.total||44940};}
@@ -1417,7 +1417,7 @@
             }
             // สรุป
             var sm=wb.addWorksheet('สรุป'); sm.columns=[{header:'หัวข้อ',key:'k',width:34},{header:'จำนวน (คน)',key:'v',width:14}]; llXlsxHeader(sm);
-            sm.addRow({k:'ผู้สมัครทั้งหมด (ไม่รวมใบประวัติ)',v:R.length});
+            sm.addRow({k:'ผู้สมัครทั้งหมด (ไม่รวมใบประวัติที่ยกเลิก)',v:R.length});
             sm.addRow({}); sm.addRow({k:'กลุ่มสมาชิก (ตามชีต)'}).font={bold:true}; ['Start Member','After Member','ยังไม่ชำระ/อื่น ๆ'].forEach(function(k){sm.addRow({k:k,v:grpCnt[k]||0});});
             sm.addRow({}); sm.addRow({k:'รูปแบบการเริ่ม (ทุกสถานะ)'}).font={bold:true};
             sm.addRow({k:'เริ่มเลย',v:cnt.now}); sm.addRow({k:'เริ่มวันที่ '+LL_LATER_LABEL,v:cnt.later}); if(cnt.none)sm.addRow({k:'ยังไม่เลือก',v:cnt.none});
